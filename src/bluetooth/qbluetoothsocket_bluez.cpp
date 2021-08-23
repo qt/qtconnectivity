@@ -371,10 +371,10 @@ void QBluetoothSocketPrivateBluez::_q_writeNotify()
 void QBluetoothSocketPrivateBluez::_q_readNotify()
 {
     Q_Q(QBluetoothSocket);
-    char *writePointer = buffer.reserve(QPRIVATELINEARBUFFER_BUFFERSIZE);
+    char *writePointer = rxBuffer.reserve(QPRIVATELINEARBUFFER_BUFFERSIZE);
 //    qint64 readFromDevice = q->readData(writePointer, QPRIVATELINEARBUFFER_BUFFERSIZE);
     int readFromDevice = ::read(socket, writePointer, QPRIVATELINEARBUFFER_BUFFERSIZE);
-    buffer.chop(QPRIVATELINEARBUFFER_BUFFERSIZE - (readFromDevice < 0 ? 0 : readFromDevice));
+    rxBuffer.chop(QPRIVATELINEARBUFFER_BUFFERSIZE - (readFromDevice < 0 ? 0 : readFromDevice));
     if(readFromDevice <= 0){
         int errsv = errno;
         readNotifier->setEnabled(false);
@@ -611,8 +611,8 @@ qint64 QBluetoothSocketPrivateBluez::readData(char *data, qint64 maxSize)
         return -1;
     }
 
-    if (!buffer.isEmpty()) {
-        int i = buffer.read(data, maxSize);
+    if (!rxBuffer.isEmpty()) {
+        int i = rxBuffer.read(data, maxSize);
         return i;
     }
 
@@ -660,7 +660,7 @@ bool QBluetoothSocketPrivateBluez::setSocketDescriptor(int socketDescriptor, QBl
 
 qint64 QBluetoothSocketPrivateBluez::bytesAvailable() const
 {
-    return buffer.size();
+    return rxBuffer.size();
 }
 
 qint64 QBluetoothSocketPrivateBluez::bytesToWrite() const
@@ -670,7 +670,7 @@ qint64 QBluetoothSocketPrivateBluez::bytesToWrite() const
 
 bool QBluetoothSocketPrivateBluez::canReadLine() const
 {
-    return buffer.canReadLine();
+    return rxBuffer.canReadLine();
 }
 
 QT_END_NAMESPACE

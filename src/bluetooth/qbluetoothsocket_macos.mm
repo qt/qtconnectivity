@@ -214,20 +214,20 @@ qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
         return -1;
     }
 
-    if (!buffer.isEmpty())
-        return buffer.read(data, int(maxSize));
+    if (!rxBuffer.isEmpty())
+        return rxBuffer.read(data, int(maxSize));
 
     return 0;
 }
 
 qint64 QBluetoothSocketPrivate::bytesAvailable() const
 {
-    return buffer.size();
+    return rxBuffer.size();
 }
 
 bool QBluetoothSocketPrivate::canReadLine() const
 {
-    return buffer.canReadLine();
+    return rxBuffer.canReadLine();
 }
 
 qint64 QBluetoothSocketPrivate::bytesToWrite() const
@@ -349,7 +349,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
 
     socketError = QBluetoothSocket::SocketError::NoSocketError;
     errorString.clear();
-    buffer.clear();
+    rxBuffer.clear();
     txBuffer.clear();
 
     IOReturn status = kIOReturnError;
@@ -393,12 +393,12 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
             q_ptr->setOpenMode(openMode);
             q_ptr->setSocketState(QBluetoothSocket::SocketState::ConnectedState);
             emit q_ptr->connected();
-            if (buffer.size()) // We also have some data already ...
+            if (rxBuffer.size()) // We also have some data already ...
                 emit q_ptr->readyRead();
         } else if (state == QBluetoothSocket::SocketState::UnconnectedState) {
             // Even if we have some data, we can not read it if
             // state != ConnectedState.
-            buffer.clear();
+            rxBuffer.clear();
             state = oldState;
             q_ptr->setSocketError(QBluetoothSocket::SocketError::UnknownSocketError);
         } else {
@@ -553,7 +553,7 @@ void QBluetoothSocketPrivate::readChannelData(void *data, std::size_t size)
     Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     const char *src = static_cast<char *>(data);
-    char *dst = buffer.reserve(int(size));
+    char *dst = rxBuffer.reserve(int(size));
     std::copy(src, src + size, dst);
 
     if (!isConnecting) {
