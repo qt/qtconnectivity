@@ -108,9 +108,6 @@ public:
     int serverChannel() const;
 private:
 #if QT_CONFIG(bluez)
-    bool ensureSdpConnection(const QBluetoothAddress &localAdapter = QBluetoothAddress());
-
-    OrgBluezServiceInterface *service = nullptr;
     OrgBluezProfileManager1Interface *serviceBluez5 = nullptr;
     quint32 serviceRecord;
     QBluetoothAddress currentLocalAdapter;
