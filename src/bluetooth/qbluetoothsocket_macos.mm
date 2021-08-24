@@ -68,17 +68,17 @@ using ObjCRFCOMMChannel = QT_MANGLE_NAMESPACE(DarwinBTRFCOMMChannel);
 
 } // unnamed namespace
 
-QBluetoothSocketPrivate::QBluetoothSocketPrivate()
+QBluetoothSocketPrivateDarwin::QBluetoothSocketPrivateDarwin()
   : writeChunk(std::numeric_limits<UInt16>::max())
 {
     q_ptr = nullptr;
 }
 
-QBluetoothSocketPrivate::~QBluetoothSocketPrivate()
+QBluetoothSocketPrivateDarwin::~QBluetoothSocketPrivateDarwin()
 {
 }
 
-bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
+bool QBluetoothSocketPrivateDarwin::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
 {
     // For now - very simplistic, we don't call it in this file, public class
     // only calls it in a ctor, setting the protocol RFCOMM (in case of Android)
@@ -88,24 +88,24 @@ bool QBluetoothSocketPrivate::ensureNativeSocket(QBluetoothServiceInfo::Protocol
     return type != QBluetoothServiceInfo::UnknownProtocol;
 }
 
-QString QBluetoothSocketPrivate::localName() const
+QString QBluetoothSocketPrivateDarwin::localName() const
 {
     const QBluetoothLocalDevice device;
     return device.name();
 }
 
-QBluetoothAddress QBluetoothSocketPrivate::localAddress() const
+QBluetoothAddress QBluetoothSocketPrivateDarwin::localAddress() const
 {
     const QBluetoothLocalDevice device;
     return device.address();
 }
 
-quint16 QBluetoothSocketPrivate::localPort() const
+quint16 QBluetoothSocketPrivateDarwin::localPort() const
 {
     return 0;
 }
 
-QString QBluetoothSocketPrivate::peerName() const
+QString QBluetoothSocketPrivateDarwin::peerName() const
 {
     QT_BT_MAC_AUTORELEASEPOOL;
 
@@ -124,7 +124,7 @@ QString QBluetoothSocketPrivate::peerName() const
     return QString();
 }
 
-QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
+QBluetoothAddress QBluetoothSocketPrivateDarwin::peerAddress() const
 {
     BluetoothDeviceAddress addr = {};
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
@@ -138,7 +138,7 @@ QBluetoothAddress QBluetoothSocketPrivate::peerAddress() const
     return DarwinBluetooth::qt_address(&addr);
 }
 
-quint16 QBluetoothSocketPrivate::peerPort() const
+quint16 QBluetoothSocketPrivateDarwin::peerPort() const
 {
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         if (rfcommChannel)
@@ -151,7 +151,7 @@ quint16 QBluetoothSocketPrivate::peerPort() const
     return 0;
 }
 
-void QBluetoothSocketPrivate::abort()
+void QBluetoothSocketPrivateDarwin::abort()
 {
     // Can never be called while we're in connectToService:
     Q_ASSERT_X(!isConnecting, Q_FUNC_INFO, "internal inconsistency - "
@@ -169,7 +169,7 @@ void QBluetoothSocketPrivate::abort()
 
 }
 
-void QBluetoothSocketPrivate::close()
+void QBluetoothSocketPrivateDarwin::close()
 {
     // Can never be called while we're in connectToService:
     Q_ASSERT_X(!isConnecting, Q_FUNC_INFO, "internal inconsistency - "
@@ -180,7 +180,7 @@ void QBluetoothSocketPrivate::close()
 }
 
 
-qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
+qint64 QBluetoothSocketPrivateDarwin::writeData(const char *data, qint64 maxSize)
 {
     Q_ASSERT_X(data, Q_FUNC_INFO, "invalid data (null)");
     Q_ASSERT_X(maxSize > 0, Q_FUNC_INFO, "invalid data size");
@@ -203,7 +203,7 @@ qint64 QBluetoothSocketPrivate::writeData(const char *data, qint64 maxSize)
     return maxSize;
 }
 
-qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
+qint64 QBluetoothSocketPrivateDarwin::readData(char *data, qint64 maxSize)
 {
     if (!data)
         return 0;
@@ -220,22 +220,22 @@ qint64 QBluetoothSocketPrivate::readData(char *data, qint64 maxSize)
     return 0;
 }
 
-qint64 QBluetoothSocketPrivate::bytesAvailable() const
+qint64 QBluetoothSocketPrivateDarwin::bytesAvailable() const
 {
     return buffer.size();
 }
 
-bool QBluetoothSocketPrivate::canReadLine() const
+bool QBluetoothSocketPrivateDarwin::canReadLine() const
 {
     return buffer.canReadLine();
 }
 
-qint64 QBluetoothSocketPrivate::bytesToWrite() const
+qint64 QBluetoothSocketPrivateDarwin::bytesToWrite() const
 {
     return txBuffer.size();
 }
 
-bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
+bool QBluetoothSocketPrivateDarwin::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType,
                                                   QBluetoothSocket::SocketState socketState, QIODevice::OpenMode openMode)
 {
     Q_UNUSED(socketDescriptor);
@@ -248,7 +248,7 @@ bool QBluetoothSocketPrivate::setSocketDescriptor(int socketDescriptor, QBluetoo
     return true;
 }
 
-void QBluetoothSocketPrivate::connectToServiceHelper(const QBluetoothAddress &address, quint16 port,
+void QBluetoothSocketPrivateDarwin::connectToServiceHelper(const QBluetoothAddress &address, quint16 port,
                                                      QIODevice::OpenMode openMode)
 {
     Q_UNUSED(address);
@@ -256,7 +256,7 @@ void QBluetoothSocketPrivate::connectToServiceHelper(const QBluetoothAddress &ad
     Q_UNUSED(openMode);
 }
 
-void QBluetoothSocketPrivate::connectToService(const QBluetoothServiceInfo &service, QIODevice::OpenMode openMode)
+void QBluetoothSocketPrivateDarwin::connectToService(const QBluetoothServiceInfo &service, QIODevice::OpenMode openMode)
 {
     Q_ASSERT(q_ptr);
 
@@ -299,7 +299,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothServiceInfo &serv
     }
 }
 
-void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
+void QBluetoothSocketPrivateDarwin::connectToService(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
                                                QIODevice::OpenMode openMode)
 {
     Q_ASSERT(q_ptr);
@@ -328,7 +328,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     q_ptr->doDeviceDiscovery(service, openMode);
 }
 
-void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address, quint16 port,
+void QBluetoothSocketPrivateDarwin::connectToService(const QBluetoothAddress &address, quint16 port,
                                                QIODevice::OpenMode mode)
 {
     Q_ASSERT(q_ptr);
@@ -414,7 +414,7 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
     }
 }
 
-void QBluetoothSocketPrivate::_q_writeNotify()
+void QBluetoothSocketPrivateDarwin::_q_writeNotify()
 {
     Q_ASSERT_X(socketType == QBluetoothServiceInfo::L2capProtocol
                || socketType == QBluetoothServiceInfo::RfcommProtocol,
@@ -448,7 +448,7 @@ void QBluetoothSocketPrivate::_q_writeNotify()
         close();
 }
 
-bool QBluetoothSocketPrivate::setRFCOMChannel(void *generic)
+bool QBluetoothSocketPrivateDarwin::setRFCOMChannel(void *generic)
 {
     // A special case "constructor": on OS X we do not have a real listening socket,
     // instead a bluetooth server "listens" for channel open notifications and
@@ -473,7 +473,7 @@ bool QBluetoothSocketPrivate::setRFCOMChannel(void *generic)
     return rfcommChannel;
 }
 
-bool QBluetoothSocketPrivate::setL2CAPChannel(void *generic)
+bool QBluetoothSocketPrivateDarwin::setL2CAPChannel(void *generic)
 {
     // A special case "constructor": on OS X we do not have a real listening socket,
     // instead a bluetooth server "listens" for channel open notifications and
@@ -498,7 +498,7 @@ bool QBluetoothSocketPrivate::setL2CAPChannel(void *generic)
     return l2capChannel;
 }
 
-void QBluetoothSocketPrivate::setChannelError(IOReturn errorCode)
+void QBluetoothSocketPrivateDarwin::setChannelError(IOReturn errorCode)
 {
     Q_UNUSED(errorCode);
 
@@ -513,7 +513,7 @@ void QBluetoothSocketPrivate::setChannelError(IOReturn errorCode)
     }
 }
 
-void QBluetoothSocketPrivate::channelOpenComplete()
+void QBluetoothSocketPrivateDarwin::channelOpenComplete()
 {
     Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
@@ -528,7 +528,7 @@ void QBluetoothSocketPrivate::channelOpenComplete()
     }
 }
 
-void QBluetoothSocketPrivate::channelClosed()
+void QBluetoothSocketPrivateDarwin::channelClosed()
 {
     Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
@@ -546,7 +546,7 @@ void QBluetoothSocketPrivate::channelClosed()
     }
 }
 
-void QBluetoothSocketPrivate::readChannelData(void *data, std::size_t size)
+void QBluetoothSocketPrivateDarwin::readChannelData(void *data, std::size_t size)
 {
     Q_ASSERT_X(data, Q_FUNC_INFO, "invalid data (null)");
     Q_ASSERT_X(size, Q_FUNC_INFO, "invalid data size (0)");
@@ -562,7 +562,7 @@ void QBluetoothSocketPrivate::readChannelData(void *data, std::size_t size)
     }   // else connectToService must check and emit readyRead!
 }
 
-void QBluetoothSocketPrivate::writeComplete()
+void QBluetoothSocketPrivateDarwin::writeComplete()
 {
     _q_writeNotify();
 }

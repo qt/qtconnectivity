@@ -77,14 +77,14 @@ QT_BEGIN_NAMESPACE
 
 class QBluetoothAddress;
 
-class QBluetoothSocketPrivate : public QBluetoothSocketBasePrivate, public DarwinBluetooth::ChannelDelegate
+class QBluetoothSocketPrivateDarwin : public QBluetoothSocketBasePrivate, public DarwinBluetooth::ChannelDelegate
 {
     friend class QBluetoothSocket;
     friend class QBluetoothServer;
 
 public:
-    QBluetoothSocketPrivate();
-    ~QBluetoothSocketPrivate();
+    QBluetoothSocketPrivateDarwin();
+    ~QBluetoothSocketPrivateDarwin();
 
     //
     bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type) override;

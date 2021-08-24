@@ -187,7 +187,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
         /* Negative socket descriptor is not always an error case
          * Another cause could be a call to close()/abort()
          * Check whether we can recover by re-creating the socket
-         * we should really call Bluez::QBluetoothSocketPrivate::ensureNativeSocket
+         * we should really call Bluez::QBluetoothSocketPrivateDarwin::ensureNativeSocket
          * but a re-creation of the socket will do as well.
          */
 

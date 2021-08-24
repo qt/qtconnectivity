@@ -271,7 +271,7 @@ static QBluetoothSocketBasePrivate *createSocketPrivate()
 #elif defined(QT_WINRT_BLUETOOTH)
     return new QBluetoothSocketPrivateWinRT();
 #elif defined(QT_OSX_BLUETOOTH)
-    return new QBluetoothSocketPrivate();
+    return new QBluetoothSocketPrivateDarwin();
 #else
     return new QBluetoothSocketPrivateDummy();
 #endif

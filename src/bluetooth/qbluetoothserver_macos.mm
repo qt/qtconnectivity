@@ -390,10 +390,10 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
     d_ptr->pendingConnections.pop_front();
 
     if (d_ptr->serverType == ServiceInfo::RfcommProtocol) {
-        if (!static_cast<QBluetoothSocketPrivate *>(newSocket->d_ptr)->setRFCOMChannel(channel.getAs<IOBluetoothRFCOMMChannel>()))
+        if (!static_cast<QBluetoothSocketPrivateDarwin *>(newSocket->d_ptr)->setRFCOMChannel(channel.getAs<IOBluetoothRFCOMMChannel>()))
             return nullptr;
     } else {
-        if (!static_cast<QBluetoothSocketPrivate *>(newSocket->d_ptr)->setL2CAPChannel(channel.getAs<IOBluetoothL2CAPChannel>()))
+        if (!static_cast<QBluetoothSocketPrivateDarwin *>(newSocket->d_ptr)->setL2CAPChannel(channel.getAs<IOBluetoothL2CAPChannel>()))
             return nullptr;
     }
 
