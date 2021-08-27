@@ -160,6 +160,7 @@ void QLeAdvertiserBluez::toggleAdvertising(bool enable)
 void QLeAdvertiserBluez::setAdvertisingParams()
 {
     // Spec v4.2, Vol 2, Part E, 7.8.5
+    // or Spec v5.3, Vol 4, Part E, 7.8.5
     AdvParams params;
     static_assert(sizeof params == 15, "unexpected struct size");
     using namespace std;
