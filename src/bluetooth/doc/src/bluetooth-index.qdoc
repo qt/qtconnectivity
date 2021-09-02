@@ -97,7 +97,7 @@ Further details can be found in the
 
 See also the \l {Build with CMake} overview.
 
-\section2 Building with qmake
+\section2 Building with \c qmake
 
 Add \c bluetooth to the \c QT variable:
 
