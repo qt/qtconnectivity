@@ -490,13 +490,6 @@ void QLowEnergyControllerPrivateBluez::connectToDevice()
     // check for active running connections
     // BlueZ 5.37+ (maybe even earlier versions) can have pending BTLE connections
     // Only one active L2CP socket to CID 0x4 possible at a time
-    // this check is not performed for BlueZ 4 based platforms as bluetoothd
-    // does not support BTLE management
-
-    if (!isBluez5()) {
-        establishL2cpClientSocket();
-        return;
-    }
 
     QList<quint16> activeHandles = hciManager->activeLowEnergyConnections();
     if (!activeHandles.isEmpty()) {

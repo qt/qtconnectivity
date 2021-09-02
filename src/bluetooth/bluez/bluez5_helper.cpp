@@ -65,26 +65,16 @@ Q_GLOBAL_STATIC_WITH_ARGS(QVersionNumber, bluezDaemonVersion, (QVersionNumber())
 /*!
     Ensures that the DBus types are registered
  */
+
 void initializeBluez5()
-{
-    static bool initRequired = true;
-    if (!initRequired)
-        return;
-
-    // do not run this twice
-    initRequired = false;
-    qDBusRegisterMetaType<InterfaceList>();
-    qDBusRegisterMetaType<ManagedObjectList>();
-    qDBusRegisterMetaType<ManufacturerDataList>();
-}
-
-bool isBluez5()
 {
     if (*bluezVersion() == BluezVersionUnknown) {
         OrgFreedesktopDBusObjectManagerInterface manager(QStringLiteral("org.bluez"),
                                                          QStringLiteral("/"),
                                                          QDBusConnection::systemBus());
-        initializeBluez5();
+        qDBusRegisterMetaType<InterfaceList>();
+        qDBusRegisterMetaType<ManagedObjectList>();
+        qDBusRegisterMetaType<ManufacturerDataList>();
 
         QDBusPendingReply<ManagedObjectList> reply = manager.GetManagedObjects();
         reply.waitForFinished();
@@ -98,8 +88,6 @@ bool isBluez5()
             qCDebug(QT_BT_BLUEZ) << "Bluez 5 detected.";
         }
     }
-
-    return (*bluezVersion() == BluezVersion5);
 }
 
 /*
@@ -359,11 +347,7 @@ QtBluezDiscoveryManager::~QtBluezDiscoveryManager()
 
 QtBluezDiscoveryManager *QtBluezDiscoveryManager::instance()
 {
-    if (isBluez5())
-        return discoveryManager();
-
-    Q_ASSERT(false);
-    return nullptr;
+    return discoveryManager();
 }
 
 bool QtBluezDiscoveryManager::registerDiscoveryInterest(const QString &adapterPath)

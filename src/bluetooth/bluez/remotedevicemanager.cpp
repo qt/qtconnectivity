@@ -58,8 +58,7 @@ RemoteDeviceManager::RemoteDeviceManager(
         const QBluetoothAddress &address, QObject *parent)
     : QObject(parent), localAddress(address)
 {
-    if (!isBluez5())
-        return;
+    initializeBluez5();
 
     bool ok = false;
     adapterPath = findAdapterForAddress(address, &ok);
