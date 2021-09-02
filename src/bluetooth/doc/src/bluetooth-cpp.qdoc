@@ -36,8 +36,7 @@
 
 
     The \l{Qt Bluetooth} C++ API enables an application to scan for devices and
-    connect and interact with them in a more flexible way than the \l {Qt
-    Bluetooth QML Types}.
+    connect and interact with them in a more flexible way.
 
     To use the C++ library in your application, add the following configuration
     option to your \c .pro file:
