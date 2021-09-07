@@ -29,7 +29,7 @@ qhp.QtBluetooth.subprojects.examples.selectors = fake:example
 
 tagfile                 = ../../../doc/qtbluetooth/qtbluetooth.tags
 
-depends += qtcore qtdoc qtquick qtcmake
+depends += qtcore qtdoc qtquick qtcmake qmake
 
 headerdirs  += ..
 
