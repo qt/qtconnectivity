@@ -19,6 +19,8 @@ SOURCES += main.cpp \
     devicehandler.cpp \
     bluetoothbaseclass.cpp
 
+ios: QMAKE_INFO_PLIST = Info.plist
+
 RESOURCES += qml.qrc \
     images.qrc
 
