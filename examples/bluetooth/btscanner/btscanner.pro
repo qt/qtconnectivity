@@ -9,6 +9,8 @@ SOURCES = \
     device.cpp \
     service.cpp
 
+ios: QMAKE_INFO_PLIST = Info.plist
+
 HEADERS = \
     device.h \
     service.h
