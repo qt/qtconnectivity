@@ -10,6 +10,8 @@ SOURCES += main.cpp \
     serviceinfo.cpp \
     characteristicinfo.cpp
 
+ios: QMAKE_INFO_PLIST = Info.plist
+
 OTHER_FILES += assets/*.qml
 
 HEADERS += \
