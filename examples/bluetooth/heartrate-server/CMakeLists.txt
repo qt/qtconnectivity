@@ -37,6 +37,13 @@ if(ANDROID)
     )
 endif()
 
+if(APPLE)
+    set_target_properties(heartrate-server PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
+    )
+endif()
+
+
 install(TARGETS heartrate-server
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
     BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"

@@ -40,6 +40,12 @@ target_link_libraries(lowenergyscanner PUBLIC
     Qt::Quick
 )
 
+if(APPLE)
+    set_target_properties(lowenergyscanner PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
+    )
+endif()
+
 
 # Resources:
 set(resources_resource_files

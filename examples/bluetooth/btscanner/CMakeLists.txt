@@ -26,6 +26,12 @@ set_target_properties(btscanner PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+if(APPLE)
+    set_target_properties(btscanner PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
+    )
+endif()
+
 target_link_libraries(btscanner PUBLIC
     Qt::Bluetooth
     Qt::Core

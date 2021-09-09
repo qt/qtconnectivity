@@ -40,6 +40,13 @@ target_link_libraries(heartrate-game PUBLIC
     Qt::Quick
 )
 
+if(APPLE)
+    set_target_properties(heartrate-game PROPERTIES
+        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
+    )
+endif()
+
+
 
 # Resources:
 set(qml_resource_files
