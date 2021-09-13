@@ -319,7 +319,7 @@ QLowEnergyService *QLowEnergyControllerPrivate::addServiceHelper(
     }
 
     if (localServices.contains(servicePrivate->uuid)) {
-        qWarning() << "Overriding existing local service with uuid"
+        qCWarning(QT_BT) << "Overriding existing local service with uuid"
                    << servicePrivate->uuid;
     }
     this->localServices.insert(servicePrivate->uuid, servicePrivate);

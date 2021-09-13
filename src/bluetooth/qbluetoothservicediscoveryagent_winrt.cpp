@@ -214,7 +214,7 @@ void QWinRTBluetoothServiceDiscoveryWorker::processServiceSearchResult(quint64 a
         hr = service->GetSdpRawAttributesAsync(op.GetAddressOf());
         if (FAILED(hr)) {
             emit errorOccured();
-            qDebug() << "Check manifest capabilities";
+            qCDebug(QT_BT_WINDOWS) << "Check manifest capabilities";
             continue;
         }
         ComPtr<IMapView<UINT32, IBuffer *>> mapView;

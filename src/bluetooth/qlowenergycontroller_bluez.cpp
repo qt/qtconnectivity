@@ -1843,7 +1843,7 @@ int QLowEnergyControllerPrivateBluez::securityLevel() const
         if (optval & L2CAP_LM_SECURE)
             level = BT_SECURITY_HIGH;
 
-        qDebug() << "Current l2cp sec level (old):" << level;
+        qCDebug(QT_BT_BLUEZ) << "Current l2cp sec level (old):" << level;
         return level;
     }
 
@@ -1890,7 +1890,7 @@ bool QLowEnergyControllerPrivateBluez::setSecurityLevel(int level)
     }
 
     if (setsockopt(socket, SOL_L2CAP, L2CAP_LM, &optval, sizeof(optval)) == 0) {
-        qDebug(QT_BT_BLUEZ) << "Old l2cp sec level:" << optval;
+        qCDebug(QT_BT_BLUEZ) << "Old l2cp sec level:" << optval;
         return true;
     }
 
