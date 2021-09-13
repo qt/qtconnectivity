@@ -232,7 +232,7 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
                                   &writer);
     Q_ASSERT_SUCCEEDED(hr);
 
-    switch (int(attribute.type())) {
+    switch (attribute.typeId()) {
     case QMetaType::Void:
         qCDebug(QT_BT_WINDOWS) << Q_FUNC_INFO << "Registering attribute of type QMetaType::Void:";
         hr = writer->WriteByte(TYPE_VOID);
@@ -321,7 +321,7 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
         qCWarning(QT_BT_WINDOWS) << "Don't know how to register QMetaType::QUrl";
         return nullptr;
         break;
-    case QVariant::UserType:
+    case QMetaType::User:
         if (attribute.userType() == qMetaTypeId<QBluetoothUuid>()) {
             QBluetoothUuid uuid = attribute.value<QBluetoothUuid>();
             const int minimumSize = uuid.minimumSize();
