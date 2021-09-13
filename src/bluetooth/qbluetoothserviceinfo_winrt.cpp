@@ -582,7 +582,7 @@ bool QBluetoothServiceInfoPrivate::writeSdpAttributes()
         hr = rawAttributes->Insert(key, buffer.Get(), &replaced);
         Q_ASSERT_SUCCEEDED(hr);
         Q_ASSERT(!replaced);
-        qCDebug(QT_BT_WINDOWS) << Q_FUNC_INFO << "Registered attribute" << QString::number(key, 16).rightJustified(4, '0') << "with value" << attribute;
+        qCDebug(QT_BT_WINDOWS) << Q_FUNC_INFO << "Registered attribute" << QString::number(key, 16).rightJustified(4, QLatin1Char('0')) << "with value" << attribute;
     }
     return true;
 }
