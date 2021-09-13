@@ -586,7 +586,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::onError()
     Q_Q(QBluetoothServiceDiscoveryAgent);
     discoveredDevices.clear();
     error = QBluetoothServiceDiscoveryAgent::InputOutputError;
-    errorString = "errorDescription";
+    errorString = QStringLiteral("errorDescription");
     emit q->errorOccurred(error);
 }
 

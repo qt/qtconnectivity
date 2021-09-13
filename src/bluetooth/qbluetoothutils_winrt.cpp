@@ -91,7 +91,7 @@ QByteArray byteArrayFromBuffer(const ComPtr<NativeBuffer> &buffer, bool isWCharS
     hr = buffer->get_Length(&size);
     RETURN_IF_FAILED("Could not obtain buffer size", return QByteArray())
     if (isWCharString) {
-        QString valueString = QString::fromUtf16(reinterpret_cast<ushort *>(data)).left(size / 2);
+        QString valueString = QString::fromUtf16(reinterpret_cast<char16_t *>(data)).left(size / 2);
         return valueString.toUtf8();
     }
     return QByteArray(data, qint32(size));
