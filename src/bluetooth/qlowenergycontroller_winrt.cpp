@@ -93,10 +93,7 @@ typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharCo
 
 #define CHECK_FOR_DEVICE_CONNECTION_ERROR_IMPL(this, hr, msg, ret) \
     if (FAILED(hr)) { \
-        qCWarning(QT_BT_WINDOWS) << msg; \
-        this->unregisterFromStatusChanges(); \
-        this->setError(QLowEnergyController::ConnectionError); \
-        this->setState(QLowEnergyController::UnconnectedState); \
+        this->handleConnectionError(msg); \
         ret; \
     }
 
@@ -483,7 +480,7 @@ void QLowEnergyControllerPrivateWinRT::connectToDevice()
                                 QWinRTFunctions::ProcessMainThreadEvents, 5000);
     if (FAILED(hr) || !mDevice) {
         qCWarning(QT_BT_WINDOWS) << "Could not find LE device";
-        setError(QLowEnergyController::InvalidBluetoothAdapterError);
+        setError(QLowEnergyController::UnknownRemoteDeviceError);
         setState(QLowEnergyController::UnconnectedState);
         return;
     }
@@ -1632,25 +1629,19 @@ void QLowEnergyControllerPrivateWinRT::connectToPairedDevice()
         GattCommunicationStatus commStatus;
         hr = deviceServicesResult->get_Status(&commStatus);
         if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
-            qCWarning(QT_BT_WINDOWS()) << "Service operation failed";
-            setError(QLowEnergyController::ConnectionError);
-            setState(QLowEnergyController::UnconnectedState);
-            unregisterFromStatusChanges();
+            handleConnectionError("Service operation failed");
             return;
         }
 
         ComPtr<IVectorView <GattDeviceService *>> deviceServices;
         hr = deviceServicesResult->get_Services(&deviceServices);
         CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain list of services", return)
-            uint serviceCount;
+        uint serviceCount;
         hr = deviceServices->get_Size(&serviceCount);
         CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain service count", return)
 
         if (serviceCount == 0) {
-            qCWarning(QT_BT_WINDOWS()) << "Found devices without services";
-            setError(QLowEnergyController::ConnectionError);
-            setState(QLowEnergyController::UnconnectedState);
-            unregisterFromStatusChanges();
+            handleConnectionError("Found devices without services");
             return;
         }
 
@@ -1679,13 +1670,10 @@ void QLowEnergyControllerPrivateWinRT::connectToPairedDevice()
             ComPtr<IVectorView<GattCharacteristic *>> characteristics;
             hr = characteristicsResult->get_Characteristics(&characteristics);
             if (hr == E_ACCESSDENIED) {
-                // Everything will work as expected up until this point if the manifest capabilties
-                // for bluetooth LE are not set.
-                qCWarning(QT_BT_WINDOWS) << "Could not obtain characteristic list. Please check your "
-                    "manifest capabilities";
-                setState(QLowEnergyController::UnconnectedState);
-                setError(QLowEnergyController::ConnectionError);
-                unregisterFromStatusChanges();
+                // Everything will work as expected up until this point if the
+                // manifest capabilties for bluetooth LE are not set.
+                handleConnectionError("Could not obtain characteristic list. "
+                                      "Please check your manifest capabilities");
                 return;
             }
             CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain characteristic list", return);
@@ -1730,12 +1718,8 @@ void QLowEnergyControllerPrivateWinRT::connectToPairedDevice()
             }
         }
     }
-    if (deadline.hasExpired()) {
-        qCWarning(QT_BT_WINDOWS) << "Connect to device failed due to timeout!";
-        setError(QLowEnergyController::ConnectionError);
-        setState(QLowEnergyController::UnconnectedState);
-        unregisterFromStatusChanges();
-    }
+    if (deadline.hasExpired())
+        handleConnectionError("Connect to device failed due to timeout!");
 }
 
 void QLowEnergyControllerPrivateWinRT::connectToUnpairedDevice()
@@ -1764,21 +1748,22 @@ void QLowEnergyControllerPrivateWinRT::connectToUnpairedDevice()
             continue;
 
         if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
-            qCWarning(QT_BT_WINDOWS()) << "Service operation failed";
-            setError(QLowEnergyController::ConnectionError);
-            setState(QLowEnergyController::UnconnectedState);
-            unregisterFromStatusChanges();
+            handleConnectionError("Service operation failed");
             return;
         }
 
         break;
     }
-    if (deadline.hasExpired()) {
-        qCWarning(QT_BT_WINDOWS) << "Connect to device failed due to timeout!";
-        setError(QLowEnergyController::ConnectionError);
-        setState(QLowEnergyController::UnconnectedState);
-        unregisterFromStatusChanges();
-    }
+    if (deadline.hasExpired())
+        handleConnectionError("Connect to device failed due to timeout!");
+}
+
+void QLowEnergyControllerPrivateWinRT::handleConnectionError(const char *logMessage)
+{
+    qCWarning(QT_BT_WINDOWS) << logMessage;
+    setError(QLowEnergyController::ConnectionError);
+    setState(QLowEnergyController::UnconnectedState);
+    unregisterFromStatusChanges();
 }
 
 QT_END_NAMESPACE
