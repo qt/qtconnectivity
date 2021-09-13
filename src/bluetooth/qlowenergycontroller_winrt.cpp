@@ -49,6 +49,7 @@
 #include <QtCore/QtEndian>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/private/qfunctions_winrt_p.h>
+#include <QtCore/QDeadlineTimer>
 
 #include <functional>
 #include <robuffer.h>
@@ -111,6 +112,8 @@ typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharCo
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS_SERVICE_THREAD)
+
+static constexpr qint64 kMaxConnectTimeout = 20000; // 20 sec
 
 static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattResult,
                                           bool isWCharString = false)
@@ -1617,7 +1620,8 @@ void QLowEnergyControllerPrivateWinRT::connectToPairedDevice()
     HRESULT hr = mDevice.As(&device3);
     CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not cast device", return)
     ComPtr<IAsyncOperation<GattDeviceServicesResult *>> deviceServicesOp;
-    while (!mAbortPending) {
+    QDeadlineTimer deadline(kMaxConnectTimeout);
+    while (!mAbortPending && !deadline.hasExpired()) {
         hr = device3->GetGattServicesAsync(&deviceServicesOp);
         CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain services", return)
         ComPtr<IGattDeviceServicesResult> deviceServicesResult;
@@ -1726,6 +1730,12 @@ void QLowEnergyControllerPrivateWinRT::connectToPairedDevice()
             }
         }
     }
+    if (deadline.hasExpired()) {
+        qCWarning(QT_BT_WINDOWS) << "Connect to device failed due to timeout!";
+        setError(QLowEnergyController::ConnectionError);
+        setState(QLowEnergyController::UnconnectedState);
+        unregisterFromStatusChanges();
+    }
 }
 
 void QLowEnergyControllerPrivateWinRT::connectToUnpairedDevice()
@@ -1739,7 +1749,8 @@ void QLowEnergyControllerPrivateWinRT::connectToUnpairedDevice()
     HRESULT hr = mDevice.As(&device3);
     CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not cast device", return)
     ComPtr<IGattDeviceServicesResult> deviceServicesResult;
-    while (!mAbortPending) {
+    QDeadlineTimer deadline(kMaxConnectTimeout);
+    while (!mAbortPending && !deadline.hasExpired()) {
         ComPtr<IAsyncOperation<GattDeviceServicesResult *>> deviceServicesOp;
         hr = device3->GetGattServicesAsync(&deviceServicesOp);
         CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain services", return)
@@ -1761,6 +1772,12 @@ void QLowEnergyControllerPrivateWinRT::connectToUnpairedDevice()
         }
 
         break;
+    }
+    if (deadline.hasExpired()) {
+        qCWarning(QT_BT_WINDOWS) << "Connect to device failed due to timeout!";
+        setError(QLowEnergyController::ConnectionError);
+        setState(QLowEnergyController::UnconnectedState);
+        unregisterFromStatusChanges();
     }
 }
 
