@@ -140,6 +140,7 @@ private slots:
 private:
     void connectToPairedDevice();
     void connectToUnpairedDevice();
+    void handleConnectionError(const char *logMessage);
 
     bool mAbortPending = false;
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
