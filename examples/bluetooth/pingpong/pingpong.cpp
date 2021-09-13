@@ -125,9 +125,9 @@ void PingPong::updateRightBlock(const float &rY)
 
 void PingPong::checkBoundaries()
 {
-    float ballWidth = 1. / 27;
-    float blockSize = 1. / 27;
-    float blockHeight = 1. / 5;
+    float ballWidth = 1.f / 27;
+    float blockSize = 1.f / 27;
+    float blockHeight = 1.f / 5;
 
     float ballCenterY = m_ballY + ballWidth / 2.;
     //! [Checking the boundaries]
@@ -195,8 +195,8 @@ void PingPong::checkBoundaries()
     //! [Checking the boundaries]
     else if ((m_ballX + ballWidth) > 1.f) {
         m_resultLeft++;
-        m_speedx = -0.002;
-        m_speedy = -0.002;
+        m_speedx = -0.002f;
+        m_speedy = -0.002f;
         m_ballX = 0.5f;
         m_ballY = 0.9f;
 
@@ -215,8 +215,8 @@ void PingPong::checkBoundaries()
         emit resultChanged();
     } else if (m_ballX < 0) {
         m_resultRight++;
-        m_speedx = 0.002;
-        m_speedy = -0.002;
+        m_speedx = 0.002f;
+        m_speedy = -0.002f;
         m_ballX = 0.5f;
         m_ballY = 0.9f;
 
