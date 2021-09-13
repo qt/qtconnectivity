@@ -154,7 +154,7 @@ void QLowEnergyControllerPrivateAndroid::connectToDevice()
 
     // required to pass unit test on default backend
     if (remoteDevice.isNull()) {
-        qWarning() << "Invalid/null remote device address";
+        qCWarning(QT_BT_ANDROID) << "Invalid/null remote device address";
         setError(QLowEnergyController::UnknownRemoteDeviceError);
         return;
     }

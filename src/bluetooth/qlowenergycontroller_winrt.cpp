@@ -464,7 +464,7 @@ void QLowEnergyControllerPrivateWinRT::connectToDevice()
     mAbortPending = false;
     Q_Q(QLowEnergyController);
     if (remoteDevice.isNull()) {
-        qWarning() << "Invalid/null remote device address";
+        qCWarning(QT_BT_WINDOWS) << "Invalid/null remote device address";
         setError(QLowEnergyController::UnknownRemoteDeviceError);
         return;
     }
