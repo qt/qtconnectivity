@@ -260,14 +260,22 @@ void QLowEnergyControllerPrivateWinRT::init()
 void QLowEnergyControllerPrivateWinRT::connectToDevice()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
-    Q_Q(QLowEnergyController);
     if (remoteDevice.isNull()) {
         qWarning() << "Invalid/null remote device address";
         setError(QLowEnergyController::UnknownRemoteDeviceError);
         return;
     }
-
     setState(QLowEnergyController::ConnectingState);
+    // Queue the device connecting to happen in the background
+    QMetaObject::invokeMethod(this,
+                          &QLowEnergyControllerPrivateWinRT::doConnectToDevice,
+                          Qt::QueuedConnection);
+}
+
+void QLowEnergyControllerPrivateWinRT::doConnectToDevice()
+{
+    qCDebug(QT_BT_WINRT) << __FUNCTION__;
+    Q_Q(QLowEnergyController);
 
     ComPtr<IBluetoothLEDeviceStatics> deviceStatics;
     HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothLEDevice).Get(), &deviceStatics);

@@ -136,6 +136,7 @@ signals:
 private slots:
     void handleCharacteristicChanged(quint16 charHandle, const QByteArray &data);
     void handleServiceHandlerError(const QString &error);
+    void doConnectToDevice();
 
 private:
     void connectToPairedDevice();
