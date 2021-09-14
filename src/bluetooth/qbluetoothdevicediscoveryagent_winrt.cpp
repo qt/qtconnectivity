@@ -155,6 +155,7 @@ private:
 #if QT_CONFIG(winrt_btle_no_pairing)
     HRESULT onBluetoothLEDeviceFound(ComPtr<IBluetoothLEDevice> device);
 #endif
+    HRESULT onBluetoothLEAdvertisementReceived(IBluetoothLEAdvertisementReceivedEventArgs *args);
 
 public slots:
     void finishDiscovery();
@@ -334,6 +335,115 @@ void QWinRTBluetoothDeviceDiscoveryWorker::gatherMultipleDeviceInformation(quint
     }
 }
 
+HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEAdvertisementReceived(IBluetoothLEAdvertisementReceivedEventArgs *args)
+{
+    quint64 address;
+    HRESULT hr;
+    hr = args->get_BluetoothAddress(&address);
+    EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain bluetooth address",
+                                   QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                   return S_OK);
+    qint16 rssi;
+    hr = args->get_RawSignalStrengthInDBm(&rssi);
+    EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain signal strength",
+                                   QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                   return S_OK);
+    ComPtr<IBluetoothLEAdvertisement> ad;
+    hr = args->get_Advertisement(&ad);
+    EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could get advertisement",
+                                   QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                   return S_OK);
+    const ManufacturerData manufacturerData = extractManufacturerData(ad);
+    QBluetoothDeviceInfo::Fields changedFields = QBluetoothDeviceInfo::Field::None;
+    if (!m_foundLEManufacturerData.contains(address)) {
+        m_foundLEManufacturerData.insert(address, manufacturerData);
+        changedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
+    } else if (m_foundLEManufacturerData.value(address) != manufacturerData) {
+        m_foundLEManufacturerData[address] = manufacturerData;
+        changedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
+    }
+#if QT_CONFIG(winrt_btle_no_pairing)
+    if (supportsNewLEApi()) {
+        ComPtr<IVector<GUID>> guids;
+        hr = ad->get_ServiceUuids(&guids);
+        EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain service uuid list",
+                                       QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                       return S_OK);
+        quint32 size;
+        hr = guids->get_Size(&size);
+        EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain service uuid list size",
+                                       QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                       return S_OK);
+        QVector<QBluetoothUuid> serviceUuids;
+        for (quint32 i = 0; i < size; ++i) {
+            GUID guid;
+            hr = guids->GetAt(i, &guid);
+            EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain uuid",
+                                           QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                           return S_OK);
+            QBluetoothUuid uuid(guid);
+            serviceUuids.append(uuid);
+        }
+        QMutexLocker locker(&m_foundDevicesMutex);
+        // Merge newly found services with list of currently found ones
+        if (m_foundLEDevicesMap.contains(address)) {
+            if (size == 0)
+                return S_OK;
+            const LEAdvertisingInfo adInfo = m_foundLEDevicesMap.value(address);
+            QVector<QBluetoothUuid> foundServices = adInfo.services;
+            if (adInfo.rssi != rssi) {
+                m_foundLEDevicesMap[address].rssi = rssi;
+                changedFields.setFlag(QBluetoothDeviceInfo::Field::RSSI);
+            }
+            bool newServiceAdded = false;
+            for (const QBluetoothUuid &uuid : qAsConst(serviceUuids)) {
+                if (!foundServices.contains(uuid)) {
+                    foundServices.append(uuid);
+                    newServiceAdded = true;
+                }
+            }
+            if (!newServiceAdded) {
+                if (!changedFields.testFlag(QBluetoothDeviceInfo::Field::None)) {
+                    QMetaObject::invokeMethod(this, "deviceDataChanged", Qt::AutoConnection,
+                                              Q_ARG(QBluetoothAddress, QBluetoothAddress(address)),
+                                              Q_ARG(QBluetoothDeviceInfo::Fields, changedFields),
+                                              Q_ARG(qint16, rssi),
+                                              Q_ARG(ManufacturerData, manufacturerData));
+                }
+                return S_OK;
+            }
+            m_foundLEDevicesMap[address].services = foundServices;
+        } else {
+            LEAdvertisingInfo info;
+            info.services = std::move(serviceUuids);
+            info.rssi = rssi;
+            m_foundLEDevicesMap.insert(address, info);
+        }
+
+        locker.unlock();
+    } else
+#endif // QT_CONFIG(winrt_btle_no_pairing)
+    {
+        if (m_foundLEDevices.contains(address)) {
+            if (m_foundLEDevices.value(address) != rssi) {
+                m_foundLEDevices[address] = rssi;
+                changedFields.setFlag(QBluetoothDeviceInfo::Field::RSSI);
+            }
+            if (!changedFields.testFlag(QBluetoothDeviceInfo::Field::None)) {
+                QMetaObject::invokeMethod(this, "deviceDataChanged", Qt::AutoConnection,
+                                          Q_ARG(QBluetoothAddress, QBluetoothAddress(address)),
+                                          Q_ARG(QBluetoothDeviceInfo::Fields, changedFields),
+                                          Q_ARG(qint16, rssi),
+                                          Q_ARG(ManufacturerData, manufacturerData));
+            }
+            return S_OK;
+        }
+        m_foundLEDevices.insert(address, rssi);
+    }
+    leBluetoothInfoFromAddressAsync(address);
+    return S_OK;
+}
+
 void QWinRTBluetoothDeviceDiscoveryWorker::setupLEDeviceWatcher()
 {
     HRESULT hr = RoActivateInstance(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_Advertisement_BluetoothLEAdvertisementWatcher).Get(), &m_leWatcher);
@@ -347,112 +457,14 @@ void QWinRTBluetoothDeviceDiscoveryWorker::setupLEDeviceWatcher()
                                                QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
                                                return);
     }
-#endif // winrt_btle_no_pairing
-    hr = m_leWatcher->add_Received(Callback<ITypedEventHandler<BluetoothLEAdvertisementWatcher *, BluetoothLEAdvertisementReceivedEventArgs *>>([this](IBluetoothLEAdvertisementWatcher *, IBluetoothLEAdvertisementReceivedEventArgs *args) {
-        quint64 address;
-        HRESULT hr;
-        hr = args->get_BluetoothAddress(&address);
-        EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain bluetooth address",
-                                       QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
-                                       return S_OK);
-        qint16 rssi;
-        hr = args->get_RawSignalStrengthInDBm(&rssi);
-        EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain signal strength",
-                                       QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
-                                       return S_OK);
-        ComPtr<IBluetoothLEAdvertisement> ad;
-        hr = args->get_Advertisement(&ad);
-        EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could get advertisement",
-                                       QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
-                                       return S_OK);
-        const ManufacturerData manufacturerData = extractManufacturerData(ad);
-        QBluetoothDeviceInfo::Fields changedFields = QBluetoothDeviceInfo::Field::None;
-        if (!m_foundLEManufacturerData.contains(address)) {
-            m_foundLEManufacturerData.insert(address, manufacturerData);
-            changedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
-        } else if (m_foundLEManufacturerData.value(address) != manufacturerData) {
-            m_foundLEManufacturerData[address] = manufacturerData;
-            changedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
-        }
-#if QT_CONFIG(winrt_btle_no_pairing)
-        if (supportsNewLEApi()) {
-            ComPtr<IVector<GUID>> guids;
-            hr = ad->get_ServiceUuids(&guids);
-            EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain service uuid list",
-                                           QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
-                                           return S_OK);
-            quint32 size;
-            hr = guids->get_Size(&size);
-            QVector<QBluetoothUuid> serviceUuids;
-            EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain service uuid list size",
-                                           QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
-                                           return S_OK);
-            for (quint32 i = 0; i < size; ++i) {
-                GUID guid;
-                hr = guids->GetAt(i, &guid);
-                EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain uuid",
-                                               QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
-                                               return S_OK);
-                QBluetoothUuid uuid(guid);
-                serviceUuids.append(uuid);
-            }
-            QMutexLocker locker(&m_foundDevicesMutex);
-            // Merge newly found services with list of currently found ones
-            if (m_foundLEDevicesMap.contains(address)) {
-                if (size == 0)
-                    return S_OK;
-                const LEAdvertisingInfo adInfo = m_foundLEDevicesMap.value(address);
-                QVector<QBluetoothUuid> foundServices = adInfo.services;
-                if (adInfo.rssi != rssi) {
-                    m_foundLEDevicesMap[address].rssi = rssi;
-                    changedFields.setFlag(QBluetoothDeviceInfo::Field::RSSI);
-                }
-                bool newServiceAdded = false;
-                for (const QBluetoothUuid &uuid : qAsConst(serviceUuids)) {
-                    if (!foundServices.contains(uuid)) {
-                        foundServices.append(uuid);
-                        newServiceAdded = true;
-                    }
-                }
-                if (!newServiceAdded) {
-                    if (!changedFields.testFlag(QBluetoothDeviceInfo::Field::None)) {
-                        QMetaObject::invokeMethod(this, "deviceDataChanged", Qt::AutoConnection,
-                                                  Q_ARG(QBluetoothAddress, QBluetoothAddress(address)),
-                                                  Q_ARG(QBluetoothDeviceInfo::Fields, changedFields),
-                                                  Q_ARG(qint16, rssi),
-                                                  Q_ARG(ManufacturerData, manufacturerData));
-                    }
-                    return S_OK;
-                }
-                m_foundLEDevicesMap[address].services = foundServices;
-            } else {
-                LEAdvertisingInfo info;
-                info.services = std::move(serviceUuids);
-                info.rssi = rssi;
-                m_foundLEDevicesMap.insert(address, info);
-            }
+#endif // QT_CONFIG(winrt_btle_no_pairing)
+    QPointer<QWinRTBluetoothDeviceDiscoveryWorker> thisPointer(this);
+    hr = m_leWatcher->add_Received(
+                Callback<ITypedEventHandler<BluetoothLEAdvertisementWatcher *, BluetoothLEAdvertisementReceivedEventArgs *>>(
+                    [thisPointer](IBluetoothLEAdvertisementWatcher *, IBluetoothLEAdvertisementReceivedEventArgs *args) {
+        if (thisPointer)
+            return thisPointer->onBluetoothLEAdvertisementReceived(args);
 
-            locker.unlock();
-        } else
-#endif
-        {
-            if (m_foundLEDevices.contains(address)) {
-                if (m_foundLEDevices.value(address) != rssi) {
-                    m_foundLEDevices[address] = rssi;
-                    changedFields.setFlag(QBluetoothDeviceInfo::Field::RSSI);
-                }
-                if (!changedFields.testFlag(QBluetoothDeviceInfo::Field::None)) {
-                    QMetaObject::invokeMethod(this, "deviceDataChanged", Qt::AutoConnection,
-                                              Q_ARG(QBluetoothAddress, QBluetoothAddress(address)),
-                                              Q_ARG(QBluetoothDeviceInfo::Fields, changedFields),
-                                              Q_ARG(qint16, rssi),
-                                              Q_ARG(ManufacturerData, manufacturerData));
-                }
-                return S_OK;
-            }
-            m_foundLEDevices.insert(address, rssi);
-        }
-        leBluetoothInfoFromAddressAsync(address);
         return S_OK;
     }).Get(), &m_leDeviceAddedToken);
     EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not add device callback",
