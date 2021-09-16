@@ -76,9 +76,6 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 
     \note Since Android 6.0 the ability to detect devices requires ACCESS_COARSE_LOCATION.
 
-    \note Due to API limitations it is only possible to find devices that have been paired using
-    Windows' settings on Windows.
-
     \note The Win32 backend currently does not support the Received Signal Strength
     Indicator (RSSI), as well as the Manufacturer Specific Data, or other data
     updates advertised by Bluetooth LE devices after discovery.
