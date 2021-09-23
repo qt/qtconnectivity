@@ -82,10 +82,16 @@ typedef ITypedEventHandler<GattCharacteristic *, GattValueChangedEventArgs *> Va
 typedef GattReadClientCharacteristicConfigurationDescriptorResult ClientCharConfigDescriptorResult;
 typedef IGattReadClientCharacteristicConfigurationDescriptorResult IClientCharConfigDescriptorResult;
 
-#define EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr, ret) \
+#define EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr) \
     if (FAILED(hr)) { \
         emitErrorAndQuitThread(hr); \
-        ret; \
+        return; \
+    }
+
+#define EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, message) \
+    if (FAILED(hr)) { \
+        emitErrorAndQuitThread(message); \
+        return; \
     }
 
 #define WARN_AND_CONTINUE_IF_FAILED(hr, msg) \
@@ -166,24 +172,24 @@ public slots:
         ComPtr<IAsyncOperation<GattCharacteristicsResult *>> characteristicsOp;
         ComPtr<IGattCharacteristicsResult> characteristicsResult;
         HRESULT hr = mDeviceService->GetCharacteristicsAsync(&characteristicsOp);
-        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr, return);
+        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr);
         hr = QWinRTFunctions::await(characteristicsOp, characteristicsResult.GetAddressOf(),
                                     QWinRTFunctions::ProcessMainThreadEvents, 5000);
-        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr, return);
+        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr);
         GattCommunicationStatus status;
         hr = characteristicsResult->get_Status(&status);
-        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr, return);
+        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr);
         if (status != GattCommunicationStatus_Success) {
             emitErrorAndQuitThread(QLatin1String("Could not obtain char list"));
             return;
         }
         ComPtr<IVectorView<GattCharacteristic *>> characteristics;
         hr = characteristicsResult->get_Characteristics(&characteristics);
-        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr, return);
+        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr);
 
         uint characteristicsCount;
         hr = characteristics->get_Size(&characteristicsCount);
-        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr, return);
+        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr);
 
         mCharacteristicsCountToBeDiscovered = characteristicsCount;
         for (uint i = 0; i < characteristicsCount; ++i) {
@@ -435,6 +441,292 @@ void QWinRTLowEnergyServiceHandlerNew::emitErrorAndQuitThread(const QString &err
     QThread::currentThread()->quit();
 }
 
+class QWinRTLowEnergyConnectionHandler : public QObject
+{
+    Q_OBJECT
+public:
+    explicit QWinRTLowEnergyConnectionHandler(const QBluetoothAddress &address) : mAddress(address)
+    {
+        qCDebug(QT_BT_WINRT) << __FUNCTION__;
+        // This should be checked before the handler is created
+        Q_ASSERT(!mAddress.isNull());
+        qRegisterMetaType<ComPtr<IBluetoothLEDevice>>("ComPtr<IBluetoothLEDevice>");
+    }
+    ~QWinRTLowEnergyConnectionHandler()
+    {
+        qCDebug(QT_BT_WINRT) << __FUNCTION__;
+        // To close the COM library gracefully, each successful call to
+        // CoInitialize, including those that return S_FALSE, must be balanced
+        // by a corresponding call to CoUninitialize.
+        if (mInitialized == S_OK || mInitialized == S_FALSE)
+            CoUninitialize();
+    }
+
+public slots:
+    void connectToDevice();
+    void handleDeviceDisconnectRequest();
+
+signals:
+    void deviceConnected(ComPtr<IBluetoothLEDevice> device);
+    void errorOccurred(const QString &error);
+
+private:
+    void connectToPairedDevice();
+    void connectToUnpairedDevice();
+    void emitErrorAndQuitThread(const QString &error);
+    void emitErrorAndQuitThread(const char *error);
+    void emitConnectedAndQuitThread();
+
+    ComPtr<IBluetoothLEDevice> mDevice = nullptr;
+    ComPtr<IGattSession> mGattSession = nullptr;
+    const QBluetoothAddress mAddress;
+    bool mAbortConnection = false;
+    HRESULT mInitialized = E_UNEXPECTED; // some error code
+};
+
+void QWinRTLowEnergyConnectionHandler::connectToDevice()
+{
+    qCDebug(QT_BT_WINRT) << __FUNCTION__;
+    mInitialized = CoInitialize(NULL);
+    qCDebug(QT_BT_WINRT) << qt_error_string(mInitialized);
+
+    auto earlyExit = [this]() { return mAbortConnection; };
+    ComPtr<IBluetoothLEDeviceStatics> deviceStatics;
+    HRESULT hr = GetActivationFactory(
+            HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothLEDevice).Get(),
+            &deviceStatics);
+    EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not obtain device factory");
+    ComPtr<IAsyncOperation<BluetoothLEDevice *>> deviceFromIdOperation;
+    hr = deviceStatics->FromBluetoothAddressAsync(mAddress.toUInt64(), &deviceFromIdOperation);
+    EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not find LE device from address");
+    hr = QWinRTFunctions::await(deviceFromIdOperation, mDevice.GetAddressOf(),
+                                QWinRTFunctions::ProcessMainThreadEvents, 5000, earlyExit);
+    if (FAILED(hr) || !mDevice) {
+        emitErrorAndQuitThread("Could not find LE device");
+        return;
+    }
+
+    // get GattSession: 1. get device id
+    ComPtr<IBluetoothLEDevice4> device4;
+    hr = mDevice.As(&device4);
+    EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not cast device");
+
+    ComPtr<IBluetoothDeviceId> deviceId;
+    hr = device4->get_BluetoothDeviceId(&deviceId);
+    EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not get bluetooth device id");
+
+    // get GattSession: 2. get session statics
+    ComPtr<IGattSessionStatics> sessionStatics;
+    hr = GetActivationFactory(
+            HString::MakeReference(
+                    RuntimeClass_Windows_Devices_Bluetooth_GenericAttributeProfile_GattSession)
+                    .Get(),
+            &sessionStatics);
+    EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not obtain GattSession statics");
+
+    // get GattSession: 3. get session
+    ComPtr<IAsyncOperation<GattSession *>> gattSessionFromIdOperation;
+    hr = sessionStatics->FromDeviceIdAsync(deviceId.Get(), &gattSessionFromIdOperation);
+    EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not get GattSession from id");
+    hr = QWinRTFunctions::await(gattSessionFromIdOperation, mGattSession.GetAddressOf(),
+                                QWinRTFunctions::ProcessMainThreadEvents, 5000, earlyExit);
+    EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not complete Gatt session acquire");
+
+    BluetoothConnectionStatus status;
+    hr = mDevice->get_ConnectionStatus(&status);
+    EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not obtain device's connection status");
+    if (status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
+        emitConnectedAndQuitThread();
+        return;
+    }
+
+    QBluetoothLocalDevice localDevice;
+    QBluetoothLocalDevice::Pairing pairing = localDevice.pairingStatus(mAddress);
+    if (pairing == QBluetoothLocalDevice::Unpaired)
+        connectToUnpairedDevice();
+    else
+        connectToPairedDevice();
+}
+
+void QWinRTLowEnergyConnectionHandler::handleDeviceDisconnectRequest()
+{
+    mAbortConnection = true;
+    // Disconnect from the QLowEnergyControllerPrivateWinRT, so that it does
+    // not get notifications. It's absolutely fine to keep doing smth in
+    // background, as multiple connections to the same device should be handled
+    // correctly by OS.
+    disconnect(this, &QWinRTLowEnergyConnectionHandler::deviceConnected, nullptr, nullptr);
+    disconnect(this, &QWinRTLowEnergyConnectionHandler::errorOccurred, nullptr, nullptr);
+}
+
+void QWinRTLowEnergyConnectionHandler::connectToPairedDevice()
+{
+    qCDebug(QT_BT_WINRT) << __FUNCTION__;
+    ComPtr<IBluetoothLEDevice3> device3;
+    HRESULT hr = mDevice.As(&device3);
+    EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not cast device");
+    ComPtr<IAsyncOperation<GattDeviceServicesResult *>> deviceServicesOp;
+    auto earlyExit = [this]() { return mAbortConnection; };
+    QDeadlineTimer deadline(kMaxConnectTimeout);
+    while (!mAbortConnection && !deadline.hasExpired()) {
+        hr = device3->GetGattServicesAsync(&deviceServicesOp);
+        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not obtain services");
+        ComPtr<IGattDeviceServicesResult> deviceServicesResult;
+        hr = QWinRTFunctions::await(deviceServicesOp, deviceServicesResult.GetAddressOf(),
+                                    QWinRTFunctions::ProcessThreadEvents, 5000, earlyExit);
+        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not await services operation");
+
+        GattCommunicationStatus commStatus;
+        hr = deviceServicesResult->get_Status(&commStatus);
+        if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
+            emitErrorAndQuitThread("Service operation failed");
+            return;
+        }
+
+        ComPtr<IVectorView<GattDeviceService *>> deviceServices;
+        hr = deviceServicesResult->get_Services(&deviceServices);
+        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not obtain list of services");
+        uint serviceCount;
+        hr = deviceServices->get_Size(&serviceCount);
+        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not obtain service count");
+
+        if (serviceCount == 0) {
+            emitErrorAndQuitThread("Found devices without services");
+            return;
+        }
+
+        // Windows automatically connects to the device as soon as a service value is read/written.
+        // Thus we read one value in order to establish the connection.
+        for (uint i = 0; i < serviceCount; ++i) {
+            ComPtr<IGattDeviceService> service;
+            hr = deviceServices->GetAt(i, &service);
+            EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not obtain service");
+            ComPtr<IGattDeviceService3> service3;
+            hr = service.As(&service3);
+            EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not cast service");
+            ComPtr<IAsyncOperation<GattCharacteristicsResult *>> characteristicsOp;
+            hr = service3->GetCharacteristicsAsync(&characteristicsOp);
+            EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not obtain characteristic");
+            ComPtr<IGattCharacteristicsResult> characteristicsResult;
+            hr = QWinRTFunctions::await(characteristicsOp, characteristicsResult.GetAddressOf(),
+                                        QWinRTFunctions::ProcessThreadEvents, 5000, earlyExit);
+            EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not await characteristic operation");
+            GattCommunicationStatus commStatus;
+            hr = characteristicsResult->get_Status(&commStatus);
+            if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
+                qCWarning(QT_BT_WINRT) << "Characteristic operation failed";
+                break;
+            }
+            ComPtr<IVectorView<GattCharacteristic *>> characteristics;
+            hr = characteristicsResult->get_Characteristics(&characteristics);
+            if (hr == E_ACCESSDENIED) {
+                // Everything will work as expected up until this point if the
+                // manifest capabilties for bluetooth LE are not set.
+                emitErrorAndQuitThread("Could not obtain characteristic list. "
+                                       "Please check your manifest capabilities");
+                return;
+            }
+            EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not obtain characteristic list");
+            uint characteristicsCount;
+            hr = characteristics->get_Size(&characteristicsCount);
+            EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr,
+                                                   "Could not obtain characteristic list's size");
+            for (uint j = 0; j < characteristicsCount; ++j) {
+                ComPtr<IGattCharacteristic> characteristic;
+                hr = characteristics->GetAt(j, &characteristic);
+                EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not obtain characteristic");
+                ComPtr<IAsyncOperation<GattReadResult *>> op;
+                GattCharacteristicProperties props;
+                hr = characteristic->get_CharacteristicProperties(&props);
+                EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(
+                        hr, "Could not obtain characteristic's properties");
+                if (!(props & GattCharacteristicProperties_Read))
+                    continue;
+                hr = characteristic->ReadValueWithCacheModeAsync(
+                        BluetoothCacheMode::BluetoothCacheMode_Uncached, &op);
+                EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not read characteristic value");
+                ComPtr<IGattReadResult> result;
+                // Reading characteristics can take surprisingly long at the
+                // first time, so we need to have a large the timeout here.
+                hr = QWinRTFunctions::await(op, result.GetAddressOf(),
+                                            QWinRTFunctions::ProcessThreadEvents, 5000, earlyExit);
+                // E_ILLEGAL_METHOD_CALL will be the result for a device, that is not reachable at
+                // the moment. In this case we should jump back into the outer loop and keep trying.
+                if (hr == E_ILLEGAL_METHOD_CALL)
+                    break;
+                EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not await characteristic read");
+                ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
+                hr = result->get_Value(&buffer);
+                EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not obtain characteristic value");
+                if (!buffer) {
+                    qCDebug(QT_BT_WINRT) << "Problem reading value";
+                    break;
+                }
+
+                emitConnectedAndQuitThread();
+                return;
+            }
+        }
+    }
+    // If we got here because of mAbortConnection == true, the error message
+    // will not be delivered, so it does not matter. But we need to terminate
+    // the thread anyway!
+    emitErrorAndQuitThread("Connect to device failed due to timeout!");
+}
+
+void QWinRTLowEnergyConnectionHandler::connectToUnpairedDevice()
+{
+    qCDebug(QT_BT_WINRT) << __FUNCTION__;
+    ComPtr<IBluetoothLEDevice3> device3;
+    HRESULT hr = mDevice.As(&device3);
+    EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not cast device");
+    ComPtr<IGattDeviceServicesResult> deviceServicesResult;
+    auto earlyExit = [this]() { return mAbortConnection; };
+    QDeadlineTimer deadline(kMaxConnectTimeout);
+    while (!mAbortConnection && !deadline.hasExpired()) {
+        ComPtr<IAsyncOperation<GattDeviceServicesResult *>> deviceServicesOp;
+        hr = device3->GetGattServicesAsync(&deviceServicesOp);
+        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not obtain services");
+        hr = QWinRTFunctions::await(deviceServicesOp, deviceServicesResult.GetAddressOf(),
+                                    QWinRTFunctions::ProcessMainThreadEvents, 0, earlyExit);
+        EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED_2(hr, "Could not await services operation");
+
+        GattCommunicationStatus commStatus;
+        hr = deviceServicesResult->get_Status(&commStatus);
+        if (commStatus == GattCommunicationStatus_Unreachable)
+            continue;
+
+        if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
+            emitErrorAndQuitThread("Service operation failed");
+            return;
+        }
+
+        emitConnectedAndQuitThread();
+        return;
+    }
+    // If we got here because of mAbortConnection == true, the error message
+    // will not be delivered, so it does not matter. But we need to terminate
+    // the thread anyway!
+    emitErrorAndQuitThread("Connect to device failed due to timeout!");
+}
+
+void QWinRTLowEnergyConnectionHandler::emitErrorAndQuitThread(const QString &error)
+{
+    emit errorOccurred(error);
+    QThread::currentThread()->quit();
+}
+
+void QWinRTLowEnergyConnectionHandler::emitErrorAndQuitThread(const char *error)
+{
+    emitErrorAndQuitThread(QString::fromUtf8(error));
+}
+
+void QWinRTLowEnergyConnectionHandler::emitConnectedAndQuitThread()
+{
+    emit deviceConnected(mDevice);
+    QThread::currentThread()->quit();
+}
+
 QLowEnergyControllerPrivateWinRTNew::QLowEnergyControllerPrivateWinRTNew()
     : QLowEnergyControllerPrivate()
 {
@@ -448,7 +740,6 @@ QLowEnergyControllerPrivateWinRTNew::~QLowEnergyControllerPrivateWinRTNew()
 {
     unregisterFromStatusChanges();
     unregisterFromValueChanges();
-    mAbortPending = true;
 }
 
 void QLowEnergyControllerPrivateWinRTNew::init()
@@ -458,56 +749,39 @@ void QLowEnergyControllerPrivateWinRTNew::init()
 void QLowEnergyControllerPrivateWinRTNew::connectToDevice()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
-    mAbortPending = false;
     if (remoteDevice.isNull()) {
         qWarning() << "Invalid/null remote device address";
         setError(QLowEnergyController::UnknownRemoteDeviceError);
         return;
     }
     setState(QLowEnergyController::ConnectingState);
-    // Queue the device connecting to happen in the background
-    QMetaObject::invokeMethod(this,
-                          &QLowEnergyControllerPrivateWinRTNew::doConnectToDevice,
-                          Qt::QueuedConnection);
-}
 
-
-void QLowEnergyControllerPrivateWinRTNew::doConnectToDevice()
-{
-    qCDebug(QT_BT_WINRT) << __FUNCTION__;
-    Q_Q(QLowEnergyController);
-
-    ComPtr<IBluetoothLEDeviceStatics> deviceStatics;
-    HRESULT hr = GetActivationFactory(
-                HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothLEDevice).Get(),
-                &deviceStatics);
-    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain device factory", return)
-    ComPtr<IAsyncOperation<BluetoothLEDevice *>> deviceFromIdOperation;
-    hr = deviceStatics->FromBluetoothAddressAsync(remoteDevice.toUInt64(), &deviceFromIdOperation);
-    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not find LE device from address", return)
-    hr = QWinRTFunctions::await(deviceFromIdOperation, mDevice.GetAddressOf(),
-                                QWinRTFunctions::ProcessMainThreadEvents, 5000);
-    if (FAILED(hr) || !mDevice) {
-        qCWarning(QT_BT_WINRT) << "Could not find LE device";
-        setError(QLowEnergyController::InvalidBluetoothAdapterError);
-        setState(QLowEnergyController::UnconnectedState);
-        return;
-    }
-    BluetoothConnectionStatus status;
-    hr = mDevice->get_ConnectionStatus(&status);
-    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain device's connection status", return)
-    if (status == BluetoothConnectionStatus::BluetoothConnectionStatus_Connected) {
-        setState(QLowEnergyController::ConnectedState);
-        emit q->connected();
-        return;
-    }
-
-    QBluetoothLocalDevice localDevice;
-    QBluetoothLocalDevice::Pairing pairing = localDevice.pairingStatus(remoteDevice);
-    if (pairing == QBluetoothLocalDevice::Unpaired)
-        connectToUnpairedDevice();
-    else
-        connectToPairedDevice();
+    QWinRTLowEnergyConnectionHandler *worker = new QWinRTLowEnergyConnectionHandler(remoteDevice);
+    QThread *thread = new QThread;
+    worker->moveToThread(thread);
+    connect(this, &QLowEnergyControllerPrivateWinRTNew::abortConnection, worker,
+            &QWinRTLowEnergyConnectionHandler::handleDeviceDisconnectRequest);
+    connect(thread, &QThread::started, worker, &QWinRTLowEnergyConnectionHandler::connectToDevice);
+    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
+    connect(thread, &QThread::finished, worker, &QObject::deleteLater);
+    connect(worker, &QWinRTLowEnergyConnectionHandler::errorOccurred, this,
+            [this](const QString &msg) { handleConnectionError(msg.toUtf8().constData()); });
+    connect(worker, &QWinRTLowEnergyConnectionHandler::deviceConnected, this,
+            [this](ComPtr<IBluetoothLEDevice> device) {
+                if (!device) {
+                    handleConnectionError("Failed to get device");
+                    return;
+                }
+                mDevice = device;
+                if (!registerForStatusChanges()) {
+                    handleConnectionError("Failed to register for changes");
+                    return;
+                }
+                Q_Q(QLowEnergyController);
+                setState(QLowEnergyController::ConnectedState);
+                emit q->connected();
+            });
+    thread->start();
 }
 
 void QLowEnergyControllerPrivateWinRTNew::disconnectFromDevice()
@@ -515,9 +789,9 @@ void QLowEnergyControllerPrivateWinRTNew::disconnectFromDevice()
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
     Q_Q(QLowEnergyController);
     setState(QLowEnergyController::ClosingState);
+    emit abortConnection();
     unregisterFromValueChanges();
     unregisterFromStatusChanges();
-    mAbortPending = true;
     mDevice = nullptr;
     setState(QLowEnergyController::UnconnectedState);
     emit q->disconnected();
@@ -701,6 +975,9 @@ void QLowEnergyControllerPrivateWinRTNew::obtainIncludedServices(
     ComPtr<IGattDeviceServicesResult> result;
     hr = QWinRTFunctions::await(op, result.GetAddressOf(), QWinRTFunctions::ProcessMainThreadEvents, 5000);
     RETURN_IF_FAILED("Could not await service operation", return);
+    // The device can be disconnected by the time we return from await()
+    if (state != QLowEnergyController::DiscoveringState)
+        return;
     GattCommunicationStatus status;
     hr = result->get_Status(&status);
     if (FAILED(hr) || status != GattCommunicationStatus_Success) {
@@ -747,6 +1024,15 @@ void QLowEnergyControllerPrivateWinRTNew::obtainIncludedServices(
 
 HRESULT QLowEnergyControllerPrivateWinRTNew::onServiceDiscoveryFinished(ABI::Windows::Foundation::IAsyncOperation<GattDeviceServicesResult *> *op, AsyncStatus status)
 {
+    // Check if the device is in the proper state, because it can already be
+    // disconnected when the callback arrives.
+    // Also the callback can theoretically come when the connection is
+    // reestablisheed again (for example, if the user quickly clicks
+    // "Disconnect" and then "Connect" again in some UI). But we can probably
+    // omit such details, as we are connecting to the same device anyway.
+    if (state != QLowEnergyController::DiscoveringState)
+        return S_OK;
+
     Q_Q(QLowEnergyController);
     if (status != AsyncStatus::Completed) {
         qCDebug(QT_BT_WINRT) << "Could not obtain services";
@@ -798,6 +1084,14 @@ HRESULT QLowEnergyControllerPrivateWinRTNew::onServiceDiscoveryFinished(ABI::Win
         pointer->type |= QLowEnergyService::PrimaryService;
 
         obtainIncludedServices(pointer, deviceService);
+        // The obtainIncludedServices method calls await(), so the device can be
+        // disconnected by the time we return from it. TODO - rewrite in an
+        // async way!
+        if (state != QLowEnergyController::DiscoveringState) {
+            emit q->discoveryFinished(); // Probably not needed when the device
+                                         // is already disconnected?
+            return S_OK;
+        }
 
         emit q->serviceDiscovered(service);
     }
@@ -1320,7 +1614,7 @@ void QLowEnergyControllerPrivateWinRTNew::writeCharacteristic(
             }
             // only update cache when property is readable. Otherwise it remains
             // empty.
-            if (charData.properties & QLowEnergyCharacteristic::Read)
+            if (thisPtr && charData.properties & QLowEnergyCharacteristic::Read)
                 thisPtr->updateValueOfCharacteristic(charHandle, newValue, false);
             if (writeWithResponse)
                 emit service->characteristicWritten(QLowEnergyCharacteristic(service, charHandle),
@@ -1422,7 +1716,8 @@ void QLowEnergyControllerPrivateWinRTNew::writeDescriptor(
                     service->setError(QLowEnergyService::DescriptorWriteError);
                     return S_OK;
                 }
-                thisPtr->updateValueOfDescriptor(charHandle, descHandle, newValue, false);
+                if (thisPtr)
+                    thisPtr->updateValueOfDescriptor(charHandle, descHandle, newValue, false);
                 emit service->descriptorWritten(QLowEnergyDescriptor(service, charHandle, descHandle),
                                                 newValue);
                 return S_OK;
@@ -1516,7 +1811,8 @@ void QLowEnergyControllerPrivateWinRTNew::writeDescriptor(
                     service->setError(QLowEnergyService::DescriptorWriteError);
                     return S_OK;
                 }
-                thisPtr->updateValueOfDescriptor(charHandle, descHandle, newValue, false);
+                if (thisPtr)
+                    thisPtr->updateValueOfDescriptor(charHandle, descHandle, newValue, false);
                 emit service->descriptorWritten(QLowEnergyDescriptor(service, charHandle, descHandle),
                                                 newValue);
                 return S_OK;
@@ -1579,172 +1875,12 @@ void QLowEnergyControllerPrivateWinRTNew::handleServiceHandlerError(const QStrin
     setError(QLowEnergyController::ConnectionError);
 }
 
-void QLowEnergyControllerPrivateWinRTNew::connectToPairedDevice()
+void QLowEnergyControllerPrivateWinRTNew::handleConnectionError(const char *logMessage)
 {
-    Q_Q(QLowEnergyController);
-    ComPtr<IBluetoothLEDevice3> device3;
-    HRESULT hr = mDevice.As(&device3);
-    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not cast device", return)
-    ComPtr<IAsyncOperation<GattDeviceServicesResult *>> deviceServicesOp;
-    QDeadlineTimer deadline(kMaxConnectTimeout);
-    while (!mAbortPending && !deadline.hasExpired()) {
-        hr = device3->GetGattServicesAsync(&deviceServicesOp);
-        CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain services", return)
-        ComPtr<IGattDeviceServicesResult> deviceServicesResult;
-        hr = QWinRTFunctions::await(deviceServicesOp, deviceServicesResult.GetAddressOf(),
-                                    QWinRTFunctions::ProcessThreadEvents, 5000);
-        CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not await services operation", return)
-
-        GattCommunicationStatus commStatus;
-        hr = deviceServicesResult->get_Status(&commStatus);
-        if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
-            qCWarning(QT_BT_WINRT()) << "Service operation failed";
-            setError(QLowEnergyController::ConnectionError);
-            setState(QLowEnergyController::UnconnectedState);
-            unregisterFromStatusChanges();
-            return;
-        }
-
-        ComPtr<IVectorView <GattDeviceService *>> deviceServices;
-        hr = deviceServicesResult->get_Services(&deviceServices);
-        CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain list of services", return)
-            uint serviceCount;
-        hr = deviceServices->get_Size(&serviceCount);
-        CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain service count", return)
-
-        if (serviceCount == 0) {
-            qCWarning(QT_BT_WINRT()) << "Found devices without services";
-            setError(QLowEnergyController::ConnectionError);
-            setState(QLowEnergyController::UnconnectedState);
-            unregisterFromStatusChanges();
-            return;
-        }
-
-        // Windows automatically connects to the device as soon as a service value is read/written.
-        // Thus we read one value in order to establish the connection.
-        for (uint i = 0; i < serviceCount; ++i) {
-            ComPtr<IGattDeviceService> service;
-            hr = deviceServices->GetAt(i, &service);
-            CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain service", return);
-            ComPtr<IGattDeviceService3> service3;
-            hr = service.As(&service3);
-            CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not cast service", return);
-            ComPtr<IAsyncOperation<GattCharacteristicsResult *>> characteristicsOp;
-            hr = service3->GetCharacteristicsAsync(&characteristicsOp);
-            CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain characteristic", return);
-            ComPtr<IGattCharacteristicsResult> characteristicsResult;
-            hr = QWinRTFunctions::await(characteristicsOp, characteristicsResult.GetAddressOf(),
-                QWinRTFunctions::ProcessThreadEvents, 5000);
-            CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not await characteristic operation", return);
-            GattCommunicationStatus commStatus;
-            hr = characteristicsResult->get_Status(&commStatus);
-            if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
-                qCWarning(QT_BT_WINRT) << "Characteristic operation failed";
-                break;
-            }
-            ComPtr<IVectorView<GattCharacteristic *>> characteristics;
-            hr = characteristicsResult->get_Characteristics(&characteristics);
-            if (hr == E_ACCESSDENIED) {
-                // Everything will work as expected up until this point if the manifest capabilties
-                // for bluetooth LE are not set.
-                qCWarning(QT_BT_WINRT) << "Could not obtain characteristic list. Please check your "
-                    "manifest capabilities";
-                setState(QLowEnergyController::UnconnectedState);
-                setError(QLowEnergyController::ConnectionError);
-                unregisterFromStatusChanges();
-                return;
-            }
-            CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain characteristic list", return);
-            uint characteristicsCount;
-            hr = characteristics->get_Size(&characteristicsCount);
-            CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain characteristic list's size", return);
-            for (uint j = 0; j < characteristicsCount; ++j) {
-                ComPtr<IGattCharacteristic> characteristic;
-                hr = characteristics->GetAt(j, &characteristic);
-                CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain characteristic", return);
-                ComPtr<IAsyncOperation<GattReadResult *>> op;
-                GattCharacteristicProperties props;
-                hr = characteristic->get_CharacteristicProperties(&props);
-                CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain characteristic's properties", return);
-                if (!(props & GattCharacteristicProperties_Read))
-                    continue;
-                hr = characteristic->ReadValueWithCacheModeAsync(BluetoothCacheMode::BluetoothCacheMode_Uncached, &op);
-                CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not read characteristic value", return);
-                ComPtr<IGattReadResult> result;
-                hr = QWinRTFunctions::await(op, result.GetAddressOf(), QWinRTFunctions::ProcessThreadEvents, 500);
-                // E_ILLEGAL_METHOD_CALL will be the result for a device, that is not reachable at
-                // the moment. In this case we should jump back into the outer loop and keep trying.
-                if (hr == E_ILLEGAL_METHOD_CALL)
-                    break;
-                CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not await characteristic read", return);
-                ComPtr<ABI::Windows::Storage::Streams::IBuffer> buffer;
-                hr = result->get_Value(&buffer);
-                CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain characteristic value", return);
-                if (!buffer) {
-                    qCDebug(QT_BT_WINRT) << "Problem reading value";
-                    break;
-                }
-
-                setState(QLowEnergyController::ConnectedState);
-                emit q->connected();
-                if (!registerForStatusChanges()) {
-                    setError(QLowEnergyController::ConnectionError);
-                    setState(QLowEnergyController::UnconnectedState);
-                    return;
-                }
-                return;
-            }
-        }
-    }
-    if (deadline.hasExpired()) {
-        qCWarning(QT_BT_WINRT) << "Connect to device failed due to timeout!";
-        setError(QLowEnergyController::ConnectionError);
-        setState(QLowEnergyController::UnconnectedState);
-        unregisterFromStatusChanges();
-    }
-}
-
-void QLowEnergyControllerPrivateWinRTNew::connectToUnpairedDevice()
-{
-    if (!registerForStatusChanges()) {
-        setError(QLowEnergyController::ConnectionError);
-        setState(QLowEnergyController::UnconnectedState);
-        return;
-    }
-    ComPtr<IBluetoothLEDevice3> device3;
-    HRESULT hr = mDevice.As(&device3);
-    CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not cast device", return)
-    ComPtr<IGattDeviceServicesResult> deviceServicesResult;
-    QDeadlineTimer deadline(kMaxConnectTimeout);
-    while (!mAbortPending && !deadline.hasExpired()) {
-        ComPtr<IAsyncOperation<GattDeviceServicesResult *>> deviceServicesOp;
-        hr = device3->GetGattServicesAsync(&deviceServicesOp);
-        CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not obtain services", return)
-        hr = QWinRTFunctions::await(deviceServicesOp, deviceServicesResult.GetAddressOf(),
-                                    QWinRTFunctions::ProcessMainThreadEvents);
-        CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not await services operation", return)
-
-        GattCommunicationStatus commStatus;
-        hr = deviceServicesResult->get_Status(&commStatus);
-        if (commStatus == GattCommunicationStatus_Unreachable)
-            continue;
-
-        if (FAILED(hr) || commStatus != GattCommunicationStatus_Success) {
-            qCWarning(QT_BT_WINRT()) << "Service operation failed";
-            setError(QLowEnergyController::ConnectionError);
-            setState(QLowEnergyController::UnconnectedState);
-            unregisterFromStatusChanges();
-            return;
-        }
-
-        break;
-    }
-    if (deadline.hasExpired()) {
-        qCWarning(QT_BT_WINRT) << "Connect to device failed due to timeout!";
-        setError(QLowEnergyController::ConnectionError);
-        setState(QLowEnergyController::UnconnectedState);
-        unregisterFromStatusChanges();
-    }
+    qCWarning(QT_BT_WINRT) << logMessage;
+    setError(QLowEnergyController::ConnectionError);
+    setState(QLowEnergyController::UnconnectedState);
+    unregisterFromStatusChanges();
 }
 
 QT_END_NAMESPACE

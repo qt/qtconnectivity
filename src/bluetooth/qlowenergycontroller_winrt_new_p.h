@@ -132,17 +132,15 @@ public:
 
 signals:
     void characteristicChanged(quint16 charHandle, const QByteArray &data);
+    void abortConnection();
 
 private slots:
     void handleCharacteristicChanged(quint16 charHandle, const QByteArray &data);
     void handleServiceHandlerError(const QString &error);
-    void doConnectToDevice();
 
 private:
-    void connectToPairedDevice();
-    void connectToUnpairedDevice();
+    void handleConnectionError(const char *logMessage);
 
-    bool mAbortPending = false;
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
     EventRegistrationToken mStatusChangedToken;
     struct ValueChangedEntry {
