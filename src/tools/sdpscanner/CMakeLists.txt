@@ -16,6 +16,7 @@ qt_internal_add_tool(${target_name}
     PUBLIC_LIBRARIES
         PkgConfig::BLUEZ
 )
+qt_internal_return_unless_building_tools()
 
 #### Keys ignored in scope 1:.:.:sdpscanner.pro:<TRUE>:
 # QT_FOR_CONFIG = "bluetooth-private"
