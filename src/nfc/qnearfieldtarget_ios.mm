@@ -44,9 +44,11 @@
 #import <CoreNFC/NFCISO7816Tag.h>
 #import <CoreNFC/NFCTag.h>
 
+#include <QtCore/qapplicationstatic.h>
+
 QT_BEGIN_NAMESPACE
 
-Q_GLOBAL_STATIC(ResponseProvider, responseProvider)
+Q_APPLICATION_STATIC(ResponseProvider, responseProvider)
 
 void ResponseProvider::provideResponse(QNearFieldTarget::RequestId requestId, bool success, QByteArray recvBuffer) {
     Q_EMIT responseReceived(requestId, success, recvBuffer);
