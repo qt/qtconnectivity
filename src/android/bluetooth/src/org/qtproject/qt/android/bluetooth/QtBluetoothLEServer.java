@@ -57,6 +57,7 @@ import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.os.ParcelUuid;
 import android.util.Log;
+import android.util.Pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,6 +88,31 @@ public class QtBluetoothLEServer {
 
     private String mRemoteAddress = "";
     public String remoteAddress() { return mRemoteAddress; }
+
+    // Implementation defined limit
+    private static final int MAX_PENDING_WRITE_COUNT = 1024;
+    // BT Core v5.3, 3.4.6.1, Vol 3, Part F
+    private static final int GATT_ERROR_PREPARE_QUEUE_FULL = 0x9;
+    // BT Core v5.3, 3.2.9, Vol 3, Part F
+    private static final int BTLE_MAX_ATTRIBUTE_VALUE_SIZE = 512;
+
+    // The class stores queued writes from the remote device. The writes are
+    // executed later when instructed to do so by onExecuteWrite() callback.
+    private class WriteEntry {
+        WriteEntry(BluetoothDevice remoteDevice, Object target) {
+                this.remoteDevice = remoteDevice;
+                this.target = target;
+                this.writes = new ArrayList<Pair<byte[], Integer>>();
+        }
+        // Returns true if this is a proper entry for given device + target
+        public boolean match(BluetoothDevice device, Object target) {
+            return remoteDevice.equals(device) && target.equals(target);
+        }
+        public final BluetoothDevice remoteDevice; // Device that issued the writes
+        public final Object target; // Characteristic or Descriptor
+        public final List<Pair<byte[], Integer>> writes; // Value, offset
+    }
+    private final List<WriteEntry> mPendingCharacteristicWrites = new ArrayList<>();
 
     /*
         As per Bluetooth specification each connected device can have individual and persistent
@@ -235,6 +261,7 @@ public class QtBluetoothLEServer {
             switch (newState) {
                 case BluetoothProfile.STATE_DISCONNECTED:
                     qtControllerState = 0; // QLowEnergyController::UnconnectedState
+                    mPendingCharacteristicWrites.clear();
                     clientCharacteristicManager.markDeviceConnectivity(device, false);
                     mGattServer.close();
                     mGattServer = null;
@@ -286,7 +313,7 @@ public class QtBluetoothLEServer {
         public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic,
                                                  boolean preparedWrite, boolean responseNeeded, int offset, byte[] value)
         {
-            Log.w(TAG, "onCharacteristicWriteRequest");
+            Log.w(TAG, "onCharacteristicWriteRequest " + preparedWrite + " " + offset + " " + value.length);
             int resultStatus = BluetoothGatt.GATT_SUCCESS;
             boolean sendNotificationOrIndication = false;
             if (!preparedWrite) { // regular write
@@ -302,14 +329,34 @@ public class QtBluetoothLEServer {
 
 
             } else {
-                Log.w(TAG, "onCharacteristicWriteRequest: preparedWrite, offset " + offset + ", Not supported");
-                resultStatus = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED;
+                // BT Core v5.3, 3.4.6, Vol 3, Part F
+                // This is a prepared write which is used to write characteristics larger than MTU.
+                // We need to record all requests and execute them in one go once onExecuteWrite()
+                // is received. We use a queue to remember the pending requests.
 
-                // TODO we need to record all requests and execute them in one go once onExecuteWrite() is received
-                // we use a queue to remember the pending requests
-                // TODO we are ignoring the device identificator for now -> Bluetooth spec requires a queue per device
+                WriteEntry entry = null;
+                int currentWriteCount = 0;
+                // Try to find a pre-existing matching entry. Also while looping, count
+                // the total number of writes so far to know if we exceed the queue size
+                // boundary we have set for ourselves
+                for (WriteEntry e : mPendingCharacteristicWrites) {
+                    if (e.match(device, characteristic))
+                        entry = e;
+                    currentWriteCount += e.writes.size();
+                }
+
+                // BT Core v5.3, 3.4.6.1, Vol 3, Part F
+                if (currentWriteCount > MAX_PENDING_WRITE_COUNT) {
+                    Log.w(TAG, "onCharacteristicWriteRequest: prepared write queue is full.");
+                    resultStatus = GATT_ERROR_PREPARE_QUEUE_FULL;
+                } else {
+                    // If no matching entry, create a new one (this is the first write request)
+                    if (entry == null)
+                        mPendingCharacteristicWrites.add(entry = new WriteEntry(device, characteristic));
+                    // append the newly received chunk of data along with its offset
+                    entry.writes.add(new Pair<byte[], Integer>(value, offset));
+                }
             }
-
 
             if (responseNeeded)
                 mGattServer.sendResponse(device, requestId, resultStatus, offset, value);
@@ -381,8 +428,50 @@ public class QtBluetoothLEServer {
         @Override
         public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute)
         {
-            // TODO not yet implemented -> return proper GATT error for it
-            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED, 0, null);
+            Log.w(TAG, "onExecuteWrite " + device + " " + requestId + " " + execute);
+
+            if (execute) {
+                // BT Core v5.3, 3.4.6.3, Vol 3, Part F
+                // Execute all pending characteristic writes
+                for (WriteEntry entry : mPendingCharacteristicWrites) {
+
+                    BluetoothGattCharacteristic characteristic = (BluetoothGattCharacteristic)entry.target;
+                    byte[] newValue = null;
+
+                    // Iterate writes and apply them to the current value in received order
+                    for (Pair<byte[], Integer> write : entry.writes) {
+                        // write.first is data, write.second.intValue() is offset
+                        if (write.second.intValue() > characteristic.getValue().length) {
+                            mPendingCharacteristicWrites.clear();
+                            // BT Core v5.3, 3.4.6.3, Vol 3, Part F
+                            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_INVALID_OFFSET , 0, null);
+                            return;
+                        }
+
+                        if (write.second.intValue() + write.first.length > BTLE_MAX_ATTRIBUTE_VALUE_SIZE) {
+                            // TODO check against max limit of the characteristic size (set by user).
+                            mPendingCharacteristicWrites.clear();
+                            // BT Core v5.3, 3.4.6.3, Vol 3, Part F
+                            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH, 0, null);
+                            return;
+                        }
+                        // Determine the size of the new value as we may be extending the current
+                        // value size
+                        newValue = new byte[Math.max(write.second.intValue() + write.first.length,
+                                                     characteristic.getValue().length)];
+                        // Copy the current value and then partially overwrite it with the write
+                        System.arraycopy(characteristic.getValue(), 0, newValue, 0, characteristic.getValue().length);
+                        System.arraycopy(write.first, 0, newValue, write.second.intValue(), write.first.length);
+                        // Update the current characteristic value
+                        characteristic.setValue(newValue);
+                    }
+                    leServerCharacteristicChanged(qtObject, characteristic, newValue);
+                }
+            }
+            // Either we executed all writes or were asked to cancel.
+            // In any case clear writes and respond.
+            mPendingCharacteristicWrites.clear();
+            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null);
 
             super.onExecuteWrite(device, requestId, execute);
         }
@@ -421,6 +510,7 @@ public class QtBluetoothLEServer {
         if (mGattServer == null)
             return;
 
+        mPendingCharacteristicWrites.clear();
         mGattServer.close();
         mGattServer = null;
 
