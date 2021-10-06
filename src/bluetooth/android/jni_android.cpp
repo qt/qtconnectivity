@@ -230,6 +230,8 @@ static JNINativeMethod methods_le[] = {
 static JNINativeMethod methods_leServer[] = {
     {"leServerConnectionStateChange", "(JII)V",
                 (void *) LowEnergyNotificationHub::lowEnergy_connectionChange},
+    {"leMtuChanged", "(JI)V",
+                (void *) LowEnergyNotificationHub::lowEnergy_mtuChanged},
     {"leServerAdvertisementError", "(JI)V",
                 (void *) LowEnergyNotificationHub::lowEnergy_advertisementError},
     {"leServerCharacteristicChanged", "(JLandroid/bluetooth/BluetoothGattCharacteristic;[B)V",

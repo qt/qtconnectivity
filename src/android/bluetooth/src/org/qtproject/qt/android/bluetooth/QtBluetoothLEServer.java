@@ -89,6 +89,10 @@ public class QtBluetoothLEServer {
     private String mRemoteAddress = "";
     public String remoteAddress() { return mRemoteAddress; }
 
+    // BT Core v5.3, 5.2.1, Vol 3, Part G
+    private static final int DEFAULT_LE_ATT_MTU = 23;
+    // Holds the currently supported/used MTU
+    private int mSupportedMtu = DEFAULT_LE_ATT_MTU;
     // Implementation defined limit
     private static final int MAX_PENDING_WRITE_COUNT = 1024;
     // BT Core v5.3, 3.4.6.1, Vol 3, Part F
@@ -482,12 +486,18 @@ public class QtBluetoothLEServer {
             Log.w(TAG, "onNotificationSent" + device + " " + status);
         }
 
-        // MTU change disabled since it requires API level 22. Right now we only enforce lvl 21
-//        @Override
-//        public void onMtuChanged(BluetoothDevice device, int mtu) {
-//            super.onMtuChanged(device, mtu);
-//        }
+        @Override
+        public void onMtuChanged(BluetoothDevice device, int mtu) {
+            if (mSupportedMtu == mtu)
+                return;
+            mSupportedMtu = mtu;
+            leMtuChanged(qtObject, mSupportedMtu);
+        }
     };
+
+    public int mtu() {
+        return mSupportedMtu;
+    }
 
     public boolean connectServer()
     {
@@ -694,6 +704,7 @@ public class QtBluetoothLEServer {
     };
 
     public native void leServerConnectionStateChange(long qtObject, int errorCode, int newState);
+    public native void leMtuChanged(long qtObject, int mtu);
     public native void leServerAdvertisementError(long qtObject, int status);
     public native void leServerCharacteristicChanged(long qtObject,
                                                      BluetoothGattCharacteristic characteristic,
