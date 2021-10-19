@@ -225,6 +225,19 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 */
 
 /*!
+    \fn void QLowEnergyController::mtuChanged(int mtu)
+
+    This signal is emitted as a result of a successful MTU change. \a mtu
+    represents the new value.
+
+    \note If the controller is in the \l PeripheralRole, the MTU value is negotiated
+    for each client/central device individually. Therefore this signal can be emitted
+    several times in a row for one or several devices.
+
+    \sa mtu()
+*/
+
+/*!
     \fn void QLowEnergyController::disconnected()
 
     This signal is emitted when the controller disconnects from the remote
@@ -891,6 +904,10 @@ QLowEnergyController::Role QLowEnergyController::role() const
 
    Not every platform exposes the MTU value. On those platforms (e.g. Linux)
    this function always returns \c -1.
+
+   If the controller is in the \l PeripheralRole, there might be several
+   central devices connected to it. In those cases this function returns
+   the MTU of the last connection that was negotiated.
 
    \since 6.2
  */
