@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -50,49 +50,57 @@
 
 #include "device.h"
 #include "service.h"
+#include "ui_device.h"
 
 #include <qbluetoothaddress.h>
 #include <qbluetoothdevicediscoveryagent.h>
 #include <qbluetoothlocaldevice.h>
+
 #include <QMenu>
 #include <QDebug>
 
-DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent)
-:   QDialog(parent), localDevice(new QBluetoothLocalDevice),
+static QColor colorForPairing(QBluetoothLocalDevice::Pairing pairing)
+{
+    return pairing == QBluetoothLocalDevice::Paired
+           || pairing == QBluetoothLocalDevice::AuthorizedPaired
+           ? QColor(Qt::green) : QColor(Qt::red);
+}
+
+DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent) :
+    QDialog(parent),
+    localDevice(new QBluetoothLocalDevice),
     ui(new Ui_DeviceDiscovery)
 {
     ui->setupUi(this);
 
-    /*
-     * In case of multiple Bluetooth adapters it is possible to set adapter
-     * which will be used. Example code:
-     *
-     * QBluetoothAddress address("XX:XX:XX:XX:XX:XX");
-     * discoveryAgent = new QBluetoothDeviceDiscoveryAgent(address);
-     *
-     **/
+    // In case of multiple Bluetooth adapters it is possible to set the adapter
+    // to be used. Example code:
+    //
+    // QBluetoothAddress address("XX:XX:XX:XX:XX:XX");
+    // discoveryAgent = new QBluetoothDeviceDiscoveryAgent(address);
 
     discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
 
-    connect(ui->scan, SIGNAL(clicked()), this, SLOT(startScan()));
+    connect(ui->scan, &QAbstractButton::clicked, this, &DeviceDiscoveryDialog::startScan);
 
-    connect(discoveryAgent, SIGNAL(deviceDiscovered(QBluetoothDeviceInfo)),
-            this, SLOT(addDevice(QBluetoothDeviceInfo)));
-    connect(discoveryAgent, SIGNAL(finished()), this, SLOT(scanFinished()));
+    connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
+            this, &DeviceDiscoveryDialog::addDevice);
+    connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished,
+            this, &DeviceDiscoveryDialog::scanFinished);
 
-    connect(ui->list, SIGNAL(itemActivated(QListWidgetItem*)),
-            this, SLOT(itemActivated(QListWidgetItem*)));
+    connect(ui->list, &QListWidget::itemActivated,
+            this, &DeviceDiscoveryDialog::itemActivated);
 
-    connect(localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)),
-            this, SLOT(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
+    connect(localDevice, &QBluetoothLocalDevice::hostModeStateChanged,
+            this, &DeviceDiscoveryDialog::hostModeStateChanged);
 
     hostModeStateChanged(localDevice->hostMode());
     // add context menu for devices to be able to pair device
     ui->list->setContextMenuPolicy(Qt::CustomContextMenu);
-    connect(ui->list, SIGNAL(customContextMenuRequested(QPoint)), this, SLOT(displayPairingMenu(QPoint)));
-    connect(localDevice, SIGNAL(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing))
-        , this, SLOT(pairingDone(QBluetoothAddress,QBluetoothLocalDevice::Pairing)));
-
+    connect(ui->list, &QWidget::customContextMenuRequested,
+            this, &DeviceDiscoveryDialog::displayPairingMenu);
+    connect(localDevice, &QBluetoothLocalDevice::pairingFinished,
+            this, &DeviceDiscoveryDialog::pairingDone);
 }
 
 DeviceDiscoveryDialog::~DeviceDiscoveryDialog()
@@ -102,19 +110,14 @@ DeviceDiscoveryDialog::~DeviceDiscoveryDialog()
 
 void DeviceDiscoveryDialog::addDevice(const QBluetoothDeviceInfo &info)
 {
-    QString label = QString("%1 %2").arg(info.address().toString()).arg(info.name());
-    QList<QListWidgetItem *> items = ui->list->findItems(label, Qt::MatchExactly);
-    if (items.empty()) {
+    const QString label = info.address().toString() + u' ' + info.name();
+    const auto items = ui->list->findItems(label, Qt::MatchExactly);
+    if (items.isEmpty()) {
         QListWidgetItem *item = new QListWidgetItem(label);
         QBluetoothLocalDevice::Pairing pairingStatus = localDevice->pairingStatus(info.address());
-        if (pairingStatus == QBluetoothLocalDevice::Paired || pairingStatus == QBluetoothLocalDevice::AuthorizedPaired )
-            item->setForeground(QColor(Qt::green));
-        else
-            item->setForeground(QColor(Qt::black));
-
+        item->setForeground(colorForPairing(pairingStatus));
         ui->list->addItem(item);
     }
-
 }
 
 void DeviceDiscoveryDialog::startScan()
@@ -130,10 +133,8 @@ void DeviceDiscoveryDialog::scanFinished()
 
 void DeviceDiscoveryDialog::itemActivated(QListWidgetItem *item)
 {
-    QString text = item->text();
-
-    int index = text.indexOf(' ');
-
+    const QString text = item->text();
+    const auto index = text.indexOf(' ');
     if (index == -1)
         return;
 
@@ -162,19 +163,10 @@ void DeviceDiscoveryDialog::on_power_clicked(bool clicked)
 
 void DeviceDiscoveryDialog::hostModeStateChanged(QBluetoothLocalDevice::HostMode mode)
 {
-    if (mode != QBluetoothLocalDevice::HostPoweredOff)
-        ui->power->setChecked(true);
-    else
-       ui->power->setChecked( false);
+    ui->power->setChecked(mode != QBluetoothLocalDevice::HostPoweredOff);
+    ui->discoverable->setChecked(mode == QBluetoothLocalDevice::HostDiscoverable);
 
-    if (mode == QBluetoothLocalDevice::HostDiscoverable)
-        ui->discoverable->setChecked(true);
-    else
-        ui->discoverable->setChecked(false);
-
-    bool on = !(mode == QBluetoothLocalDevice::HostPoweredOff);
-
-
+    const bool on = mode != QBluetoothLocalDevice::HostPoweredOff;
     ui->scan->setEnabled(on);
     ui->discoverable->setEnabled(on);
 }
@@ -189,7 +181,7 @@ void DeviceDiscoveryDialog::displayPairingMenu(const QPoint &pos)
     QListWidgetItem *currentItem = ui->list->currentItem();
 
     QString text = currentItem->text();
-    int index = text.indexOf(' ');
+    const auto index = text.indexOf(' ');
     if (index == -1)
         return;
 
@@ -200,19 +192,11 @@ void DeviceDiscoveryDialog::displayPairingMenu(const QPoint &pos)
         localDevice->requestPairing(address, QBluetoothLocalDevice::Unpaired);
     }
 }
-void DeviceDiscoveryDialog::pairingDone(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing)
+void DeviceDiscoveryDialog::pairingDone(const QBluetoothAddress &address,
+                                        QBluetoothLocalDevice::Pairing pairing)
 {
-    QList<QListWidgetItem *> items = ui->list->findItems(address.toString(), Qt::MatchContains);
-
-    if (pairing == QBluetoothLocalDevice::Paired || pairing == QBluetoothLocalDevice::AuthorizedPaired ) {
-        for (int var = 0; var < items.count(); ++var) {
-            QListWidgetItem *item = items.at(var);
-            item->setForeground(QColor(Qt::green));
-        }
-    } else {
-        for (int var = 0; var < items.count(); ++var) {
-            QListWidgetItem *item = items.at(var);
-            item->setForeground(QColor(Qt::red));
-        }
-    }
+    const auto items = ui->list->findItems(address.toString(), Qt::MatchContains);
+    const QColor color = colorForPairing(pairing);
+    for (auto *item : items)
+        item->setForeground(color);
 }

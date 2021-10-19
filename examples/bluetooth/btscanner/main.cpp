@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -59,11 +59,7 @@ int main(int argc, char *argv[])
     QApplication app(argc, argv);
 
     DeviceDiscoveryDialog d;
-    QObject::connect(&d, SIGNAL(accepted()), &app, SLOT(quit()));
-    d.show();
-
-    app.exec();
-
+    d.exec();
     return 0;
 }
 

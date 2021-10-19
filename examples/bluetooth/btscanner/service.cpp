@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Copyright (C) 2013 BlackBerry Limited. All rights reserved.
 ** Contact: https://www.qt.io/licensing/
 **
@@ -50,6 +50,7 @@
 ****************************************************************************/
 
 #include "service.h"
+#include "ui_service.h"
 
 #include <qbluetoothaddress.h>
 #include <qbluetoothservicediscoveryagent.h>
@@ -68,14 +69,12 @@ ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
     QBluetoothLocalDevice localDevice;
     QBluetoothAddress adapterAddress = localDevice.address();
 
-    /*
-     * In case of multiple Bluetooth adapters it is possible to
-     * set which adapter will be used by providing MAC Address.
-     * Example code:
-     *
-     * QBluetoothAddress adapterAddress("XX:XX:XX:XX:XX:XX");
-     * discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
-     */
+    // In case of multiple Bluetooth adapters it is possible to
+    // set which adapter will be used by providing MAC Address.
+    // Example code:
+    //
+    // QBluetoothAddress adapterAddress("XX:XX:XX:XX:XX:XX");
+    // discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
 
     discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
 
@@ -83,9 +82,10 @@ ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
 
     setWindowTitle(name);
 
-    connect(discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
-            this, SLOT(addService(QBluetoothServiceInfo)));
-    connect(discoveryAgent, SIGNAL(finished()), ui->status, SLOT(hide()));
+    connect(discoveryAgent, &QBluetoothServiceDiscoveryAgent::serviceDiscovered,
+            this, &ServiceDiscoveryDialog::addService);
+    connect(discoveryAgent, &QBluetoothServiceDiscoveryAgent::finished,
+            ui->status, &QWidget::hide);
 
     discoveryAgent->start();
 }
