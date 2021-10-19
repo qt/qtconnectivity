@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -51,14 +51,15 @@
 #ifndef DEVICE_H
 #define DEVICE_H
 
-#include "ui_device.h"
-
 #include <qbluetoothlocaldevice.h>
 
 #include <QDialog>
 
 QT_FORWARD_DECLARE_CLASS(QBluetoothDeviceDiscoveryAgent)
 QT_FORWARD_DECLARE_CLASS(QBluetoothDeviceInfo)
+QT_FORWARD_DECLARE_CLASS(QListWidgetItem)
+
+QT_FORWARD_DECLARE_CLASS(Ui_DeviceDiscovery)
 
 QT_USE_NAMESPACE
 

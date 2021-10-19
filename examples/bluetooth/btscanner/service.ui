@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>400</width>
-    <height>300</height>
+    <width>539</width>
+    <height>486</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -25,50 +25,45 @@
     </widget>
    </item>
    <item>
-    <layout class="QHBoxLayout" name="horizontalLayout">
-     <item>
-      <spacer name="horizontalSpacer">
-       <property name="orientation">
-        <enum>Qt::Horizontal</enum>
-       </property>
-       <property name="sizeHint" stdset="0">
-        <size>
-         <width>40</width>
-         <height>20</height>
-        </size>
-       </property>
-      </spacer>
-     </item>
-     <item>
-      <widget class="QPushButton" name="close">
-       <property name="text">
-        <string>Close</string>
-       </property>
-      </widget>
-     </item>
-    </layout>
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Close</set>
+     </property>
+    </widget>
    </item>
   </layout>
  </widget>
- <tabstops>
-  <tabstop>list</tabstop>
-  <tabstop>close</tabstop>
- </tabstops>
  <resources/>
  <connections>
   <connection>
-   <sender>close</sender>
-   <signal>clicked()</signal>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
    <receiver>ServiceDiscovery</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>350</x>
-     <y>277</y>
+     <x>396</x>
+     <y>457</y>
     </hint>
     <hint type="destinationlabel">
-     <x>237</x>
-     <y>269</y>
+     <x>535</x>
+     <y>443</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>ServiceDiscovery</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>339</x>
+     <y>464</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>535</x>
+     <y>368</y>
     </hint>
    </hints>
   </connection>

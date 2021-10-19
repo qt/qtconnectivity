@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -51,13 +51,14 @@
 #ifndef SERVICE_H
 #define SERVICE_H
 
-#include "ui_service.h"
 
 #include <QDialog>
 
 QT_FORWARD_DECLARE_CLASS(QBluetoothAddress)
 QT_FORWARD_DECLARE_CLASS(QBluetoothServiceInfo)
 QT_FORWARD_DECLARE_CLASS(QBluetoothServiceDiscoveryAgent)
+
+QT_FORWARD_DECLARE_CLASS(Ui_ServiceDiscovery)
 
 QT_USE_NAMESPACE
 
