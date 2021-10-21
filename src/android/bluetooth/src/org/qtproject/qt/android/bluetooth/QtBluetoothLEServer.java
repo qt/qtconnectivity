@@ -80,6 +80,7 @@ public class QtBluetoothLEServer {
 
     // Bluetooth members
     private final BluetoothAdapter mBluetoothAdapter;
+    private BluetoothManager mBluetoothManager = null;
     private BluetoothGattServer mGattServer = null;
     private BluetoothLeAdvertiser mLeAdvertiser = null;
 
@@ -282,8 +283,8 @@ public class QtBluetoothLEServer {
             return;
         }
 
-        BluetoothManager manager = (BluetoothManager) qtContext.getSystemService(Context.BLUETOOTH_SERVICE);
-        if (manager == null) {
+        mBluetoothManager = (BluetoothManager) qtContext.getSystemService(Context.BLUETOOTH_SERVICE);
+        if (mBluetoothManager == null) {
             Log.w(TAG, "Bluetooth service not available.");
             return;
         }
@@ -303,26 +304,49 @@ public class QtBluetoothLEServer {
     {
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
-            Log.w(TAG, "Our gatt server connection state changed, new state: " + newState + " " + status);
             super.onConnectionStateChange(device, status, newState);
 
-            int qtControllerState = 0;
+            // Multiple GATT devices may be connected. Check if we still have connected
+            // devices or not, and set the server state accordingly. Note: it seems we get
+            // notifications from all GATT clients, not just from the ones interested in
+            // the services provided by this BT LE Server. Furthermore the list of
+            // currently connected devices does not appear to be in any particular order.
+            List<BluetoothDevice> connectedDevices =
+                mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT_SERVER);
+            Log.w(TAG, "Device " + device + " connection state: " + newState + ", status: "
+                  + status + ", connected devices: " + connectedDevices);
+            // 0 == QLowEnergyController::UnconnectedState
+            // 2 == QLowEnergyController::ConnectedState
+            int qtControllerState = connectedDevices.size() > 0 ? 2 : 0;
+
             switch (newState) {
-                case BluetoothProfile.STATE_DISCONNECTED:
-                    qtControllerState = 0; // QLowEnergyController::UnconnectedState
-                    clearPendingPreparedWrites(device);
-                    clientCharacteristicManager.markDeviceConnectivity(device, false);
-                    mGattServer.close();
-                    mGattServer = null;
-                    break;
                 case BluetoothProfile.STATE_CONNECTED:
                     clientCharacteristicManager.markDeviceConnectivity(device, true);
-                    qtControllerState = 2; // QLowEnergyController::ConnectedState
+                    mRemoteName = device.getName();
+                    mRemoteAddress = device.getAddress();
                     break;
+                case BluetoothProfile.STATE_DISCONNECTED:
+                    clientCharacteristicManager.markDeviceConnectivity(device, false);
+                    clearPendingPreparedWrites(device);
+                    // Update the remoteAddress and remoteName if needed
+                    if (device.getAddress().equals(mRemoteAddress) && !connectedDevices.isEmpty()) {
+                        mRemoteName = connectedDevices.get(0).getName();
+                        mRemoteAddress = connectedDevices.get(0).getAddress();
+                    }
+                    break;
+                default:
+                    // According to the API doc of this callback this should not happen
+                    Log.w(TAG, "Unhandled connection state change: " + newState);
+                    return;
             }
 
-            mRemoteName = device.getName();
-            mRemoteAddress = device.getAddress();
+            // If last client disconnected, close down the server
+            if (qtControllerState == 0) { // QLowEnergyController::UnconnectedState
+                mGattServer.close();
+                mGattServer = null;
+                mRemoteName = "";
+                mRemoteAddress = "";
+            }
 
             int qtErrorCode;
             switch (status) {
