@@ -219,9 +219,11 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
     This signal is emitted when the controller successfully connects to the remote
     Low Energy device (if the controller is in the \l CentralRole) or if a remote Low Energy
     device connected to the controller (if the controller is in the \l PeripheralRole).
-    On iOS and OS X this signal is not reliable if the controller is in the \l PeripheralRole
-    - the controller only guesses that some central connected to our peripheral as
-    soon as this central tries to write/read a characteristic/descriptor.
+    On iOS, macOS, and Android this signal is not reliable if the controller is in the
+    \l PeripheralRole. On iOS and macOS the controller only guesses that some central
+    connected to our peripheral as soon as this central tries to write/read a
+    characteristic/descriptor. On Android the controller monitors all connected GATT
+    devices.
 */
 
 /*!
@@ -241,8 +243,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
     \fn void QLowEnergyController::disconnected()
 
     This signal is emitted when the controller disconnects from the remote
-    Low Energy device or vice versa. On iOS and OS X this signal is unreliable
-    if the controller is in the \l PeripheralRole.
+    Low Energy device or vice versa. On iOS and macOS this signal is unreliable
+    if the controller is in the \l PeripheralRole. On Android the signal is emitted
+    when the last connected device is disconnected.
 */
 
 /*!
@@ -505,7 +508,7 @@ QBluetoothAddress QLowEnergyController::localAddress() const
 
     For a controller in the \l CentralRole, this value will always be the one passed in when
     the controller object was created. For a controller in the \l PeripheralRole, this value
-    is the address of the currently connected client device. In particular, this address will
+    is one of the currently connected client device addresses. This address will
     be invalid if the controller is not currently in the \l ConnectedState.
  */
 QBluetoothAddress QLowEnergyController::remoteAddress() const

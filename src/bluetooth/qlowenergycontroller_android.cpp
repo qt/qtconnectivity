@@ -426,19 +426,19 @@ void QLowEnergyControllerPrivateAndroid::peripheralConnectionUpdated(
     if (newState == QLowEnergyController::UnconnectedState)
         stopAdvertising();
 
+    // The remote name and address may have changed
+    if (hub) {
+        remoteDevice = QBluetoothAddress(hub->javaObject().callObjectMethod<jstring>("remoteAddress").toString());
+        remoteName = hub->javaObject().callObjectMethod<jstring>("remoteName").toString();
+    }
 
     Q_Q(QLowEnergyController);
+    // Emit (dis)connected if the connection state changes
     if (oldState == QLowEnergyController::ConnectedState
             && newState != QLowEnergyController::ConnectedState) {
-        remoteDevice.clear();
-        remoteName.clear();
         emit q->disconnected();
     } else if (newState == QLowEnergyController::ConnectedState
                  && oldState != QLowEnergyController::ConnectedState) {
-        if (hub) {
-            remoteDevice = QBluetoothAddress(hub->javaObject().callObjectMethod<jstring>("remoteAddress").toString());
-            remoteName = hub->javaObject().callObjectMethod<jstring>("remoteName").toString();
-        }
         emit q->connected();
     }
 }
