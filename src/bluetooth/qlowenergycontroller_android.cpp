@@ -56,6 +56,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 Q_DECLARE_METATYPE(QJniObject)
 
+// BT Core v5.3, 3.2.9, Vol 3, Part F
+const int BTLE_MAX_ATTRIBUTE_VALUE_SIZE = 512;
+
 // Conversion: QBluetoothUuid -> java.util.UUID
 static QJniObject javaUuidfromQtUuid(const QBluetoothUuid& uuid)
 {
@@ -1208,11 +1211,35 @@ void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEne
     // add characteristics
     const QList<QLowEnergyCharacteristicData> serviceCharsData = serviceData.characteristics();
     for (const auto &charData: serviceCharsData) {
-        QJniObject javaChar = QJniObject("android/bluetooth/BluetoothGattCharacteristic",
-                                                       "(Ljava/util/UUID;II)V",
-                                                       javaUuidfromQtUuid(charData.uuid()).object(),
-                                                       int(charData.properties()),
-                                                       setupCharPermissions(charData));
+
+        // User may have set minimum and/or maximum characteristic value size. Enforce
+        // them here. If the user has not defined these limits, the default values 0..INT_MAX
+        // do not limit anything. If the sizes are violated here (ie. when adding the
+        // characteristics), regard it as a programming error.
+        if (charData.value().size() < charData.minimumValueLength() ||
+            charData.value().size() > charData.maximumValueLength()) {
+            qWarning() << "Warning: Ignoring characteristic" << charData.uuid()
+                       << "with invalid length:"  << charData.value().size()
+                       << "(minimum:" << charData.minimumValueLength()
+                       << "maximum:" << charData.maximumValueLength() << ").";
+            continue;
+        }
+
+        // Issue a warning if the attribute length exceeds the bluetooth standard limit.
+        if (charData.value().size() > BTLE_MAX_ATTRIBUTE_VALUE_SIZE) {
+            qCWarning(QT_BT_ANDROID) << "Warning: characteristic" << charData.uuid() << "size"
+                                     << "exceeds the standard: " << BTLE_MAX_ATTRIBUTE_VALUE_SIZE
+                                     << ", value size:" << charData.value().size();
+        }
+
+        QJniObject javaChar =
+                QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothGattCharacteristic",
+                           "(Ljava/util/UUID;IIII)V",
+                           javaUuidfromQtUuid(charData.uuid()).object(),
+                           int(charData.properties()),
+                           setupCharPermissions(charData),
+                           charData.minimumValueLength(),
+                           charData.maximumValueLength());
 
         QJniEnvironment env;
         jbyteArray jb = env->NewByteArray(charData.value().size());
