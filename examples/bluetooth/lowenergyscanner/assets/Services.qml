@@ -107,7 +107,7 @@ Rectangle {
             border.width: 2
             border.color: "black"
             radius: 5
-            width: parent.width
+            width: servicesview.width
             Component.onCompleted: {
                 info.visible = false
             }
