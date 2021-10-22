@@ -363,17 +363,28 @@ public class QtBluetoothLEServer {
                                                  boolean preparedWrite, boolean responseNeeded, int offset, byte[] value)
         {
             Log.w(TAG, "onCharacteristicWriteRequest " + preparedWrite + " " + offset + " " + value.length);
+            final int minValueLen = ((QtBluetoothGattCharacteristic)characteristic).minValueLength;
+            final int maxValueLen = ((QtBluetoothGattCharacteristic)characteristic).maxValueLength;
+
             int resultStatus = BluetoothGatt.GATT_SUCCESS;
             boolean sendNotificationOrIndication = false;
             if (!preparedWrite) { // regular write
-                if (offset == 0) {
+                // User may have defined minimum and maximum size for the value, which
+                // we enforce here. If the user has not defined these limits, the default
+                // values 0..INT_MAX do not limit anything.
+                if (value.length < minValueLen || value.length > maxValueLen) {
+                    // BT Core v 5.3, 4.9.3, Vol 3, Part G
+                    Log.w(TAG, "onCharacteristicWriteRequest invalid characteristic value length: "
+                          + value.length + ", min: " + minValueLen + ", max: " + maxValueLen);
+                    resultStatus = BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH;
+                } else if (offset == 0) {
                     characteristic.setValue(value);
                     leServerCharacteristicChanged(qtObject, characteristic, value);
                     sendNotificationOrIndication = true;
                 } else {
                     // This should not really happen as per Bluetooth spec
                     Log.w(TAG, "onCharacteristicWriteRequest: !preparedWrite, offset " + offset + ", Not supported");
-                    resultStatus = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED;
+                    resultStatus = BluetoothGatt.GATT_INVALID_OFFSET;
                 }
 
 
@@ -480,11 +491,19 @@ public class QtBluetoothLEServer {
                             return;
                         }
 
-                        if (write.second.intValue() + write.first.length > BTLE_MAX_ATTRIBUTE_VALUE_SIZE) {
-                            // TODO check against max limit of the characteristic size (set by user).
+                        // User may have defined value minimum and maximum sizes for
+                        // characteristics, which we enforce here. If the user has not defined
+                        // these limits, the default values 0..INT_MAX do not limit anything.
+                        // The value size cannot decrease in prepared write (small write is a
+                        // partial update) => no check for the minimum size limit here.
+                        if (entry.target instanceof QtBluetoothGattCharacteristic &&
+                                (write.second.intValue() + write.first.length >
+                                ((QtBluetoothGattCharacteristic)entry.target).maxValueLength)) {
                             clearPendingPreparedWrites(device);
                             // BT Core v5.3, 3.4.6.3, Vol 3, Part F
-                            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH, 0, null);
+                            mGattServer.sendResponse(device, requestId,
+                                        BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH,
+                                        0, null);
                             return;
                         }
 
@@ -656,6 +675,17 @@ public class QtBluetoothLEServer {
 
         if (foundChar == null) {
             Log.w(TAG, "writeCharacteristic: update for unknown characteristic failed");
+            return false;
+        }
+
+        // User may have set minimum and/or maximum characteristic value size. Enforce
+        // them here. If the user has not defined these limits, the default values 0..INT_MAX
+        // do not limit anything.
+        final int minValueLength = ((QtBluetoothGattCharacteristic)foundChar).minValueLength;
+        final int maxValueLength = ((QtBluetoothGattCharacteristic)foundChar).maxValueLength;
+        if (newValue.length < minValueLength || newValue.length > maxValueLength) {
+            Log.w(TAG, "writeCharacteristic: invalid value length: "
+                  + newValue.length + ", min: " + minValueLength + ", max: " + maxValueLength);
             return false;
         }
 
