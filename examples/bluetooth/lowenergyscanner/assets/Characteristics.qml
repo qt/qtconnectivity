@@ -98,7 +98,7 @@ Rectangle {
         delegate: Rectangle {
             id: characteristicbox
             height:300
-            width: parent.width
+            width: characteristicview.width
             color: "lightsteelblue"
             border.width: 2
             border.color: "black"
