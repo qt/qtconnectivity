@@ -51,6 +51,7 @@
 #include <wrl.h>
 
 #include <QtCore/private/qfunctions_winrt_p.h>
+#include <QtCore/QPointer>
 
 using namespace winrt::Windows::Foundation;
 using namespace winrt::Windows::Devices::Enumeration;
