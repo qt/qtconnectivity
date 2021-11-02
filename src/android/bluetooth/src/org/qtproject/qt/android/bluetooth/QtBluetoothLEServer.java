@@ -84,6 +84,11 @@ public class QtBluetoothLEServer {
     private BluetoothGattServer mGattServer = null;
     private BluetoothLeAdvertiser mLeAdvertiser = null;
 
+    // Note: service additions -list is accessed from different threads as it is manipulated
+    // from Qt/JNI as well as from Android callbacks => synchronize the access
+    private ArrayList<BluetoothGattService> mPendingServiceAdditions =
+                      new ArrayList<BluetoothGattService>();
+
     private String mRemoteName = "";
     public String remoteName() { return mRemoteName; }
 
@@ -343,6 +348,10 @@ public class QtBluetoothLEServer {
             // If last client disconnected, close down the server
             if (qtControllerState == 0) { // QLowEnergyController::UnconnectedState
                 mGattServer.close();
+                synchronized (mPendingServiceAdditions)
+                {
+                    mPendingServiceAdditions.clear();
+                }
                 mGattServer = null;
                 mRemoteName = "";
                 mRemoteAddress = "";
@@ -364,6 +373,31 @@ public class QtBluetoothLEServer {
         @Override
         public void onServiceAdded(int status, BluetoothGattService service) {
             super.onServiceAdded(status, service);
+            Log.d(TAG, "Service " + service.getUuid().toString() + " addition result: " + status);
+
+            // Remove the indicated service from the pending queue
+            synchronized (mPendingServiceAdditions)
+            {
+                ListIterator<BluetoothGattService> iterator = mPendingServiceAdditions.listIterator();
+                while (iterator.hasNext()) {
+                    if (iterator.next().getUuid().equals(service.getUuid())) {
+                            iterator.remove();
+                            break;
+                    }
+                }
+
+                // If there are more services in the queue, add the next whose add initiation succeeds
+                iterator = mPendingServiceAdditions.listIterator();
+                while (iterator.hasNext()) {
+                    BluetoothGattService nextService = iterator.next();
+                    if (mGattServer.addService(nextService)) {
+                        break;
+                    } else {
+                        Log.w(TAG, "Adding service " + nextService.getUuid().toString() + " failed");
+                        iterator.remove();
+                    }
+                }
+            }
         }
 
         @Override
@@ -605,6 +639,10 @@ public class QtBluetoothLEServer {
             return;
 
         clearPendingPreparedWrites(null);
+        synchronized (mPendingServiceAdditions)
+        {
+            mPendingServiceAdditions.clear();
+        }
         mGattServer.close();
         mGattServer = null;
 
@@ -646,8 +684,20 @@ public class QtBluetoothLEServer {
             return;
         }
 
-        boolean success = mGattServer.addService(service);
-        Log.w(TAG, "Services successfully added: " + success);
+        // When we add a service, we must wait for onServiceAdded callback before adding the
+        // next one. If the pending service queue is empty it means that there are no ongoing
+        // service additions => add the service to the server. If there are services in the
+        // queue it means there is an initiated addition ongoing, and we only add to the queue.
+        synchronized (mPendingServiceAdditions) {
+            if (mPendingServiceAdditions.isEmpty()) {
+                if (mGattServer.addService(service))
+                    mPendingServiceAdditions.add(service);
+                else
+                    Log.w(TAG, "Adding service " + service.getUuid().toString() + " failed.");
+            } else {
+                mPendingServiceAdditions.add(service);
+            }
+        }
     }
 
     /*
