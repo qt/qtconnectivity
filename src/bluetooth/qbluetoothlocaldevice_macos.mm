@@ -68,6 +68,7 @@ public:
 
     QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *, const QBluetoothAddress & =
                                  QBluetoothAddress());
+    ~QBluetoothLocalDevicePrivate();
 
     bool isValid() const;
     void requestPairing(const QBluetoothAddress &address, Pairing pairing);
@@ -114,7 +115,6 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
         q_ptr(q)
 {
     registerQBluetoothLocalDeviceMetaType();
-
     Q_ASSERT_X(q, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     QT_BT_MAC_AUTORELEASEPOOL;
@@ -151,6 +151,12 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
     // This one is optional, if it fails to initialize, we do not care at all.
     connectionMonitor.reset([[ObjCConnectionMonitor alloc] initWithMonitor:this],
                             DarwinBluetooth::RetainPolicy::noInitialRetain);
+}
+
+QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
+{
+
+    [connectionMonitor stopMonitoring];
 }
 
 bool QBluetoothLocalDevicePrivate::isValid() const

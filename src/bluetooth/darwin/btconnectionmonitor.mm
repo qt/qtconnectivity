@@ -74,14 +74,8 @@ using namespace QT_NAMESPACE;
 
 - (void)dealloc
 {
-    [discoveryNotification unregister];
-    [discoveryNotification release];
-
-    for (IOBluetoothUserNotification *n in foundConnections)
-        [n unregister];
-
-    [foundConnections release];
-
+    Q_ASSERT_X(!monitor, "-dealloc",
+               "Connection monitor was not stopped, calling -stopMonitoring is required");
     [super dealloc];
 }
 
@@ -128,6 +122,20 @@ using namespace QT_NAMESPACE;
 
     Q_ASSERT_X(monitor, "-connectionClosedNotification:withDevice:", "invalid monitor (null)");
     monitor->deviceDisconnected(deviceAddress);
+}
+
+-(void)stopMonitoring
+{
+    monitor = nullptr;
+    [discoveryNotification unregister];
+    [discoveryNotification release];
+    discoveryNotification = nil;
+
+    for (IOBluetoothUserNotification *n in foundConnections)
+        [n unregister];
+
+    [foundConnections release];
+    foundConnections = nil;
 }
 
 @end
