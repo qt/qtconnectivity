@@ -279,7 +279,6 @@ int main(int argc, char *argv[])
 
     for (const auto &serviceData : serviceDefinitions) {
         services.emplaceBack(leController->addService(serviceData));
-        std::this_thread::sleep_for (std::chrono::seconds(1));
     }
 
     leController->startAdvertising(QLowEnergyAdvertisingParameters(), advertisingData,
@@ -290,7 +289,6 @@ int main(int argc, char *argv[])
         connectioncount++;
         for (int i = 0; i < services.size(); ++i) {
             services[i].reset(leController->addService(serviceDefinitions[i]));
-            std::this_thread::sleep_for (std::chrono::seconds(1));
         }
 
 
