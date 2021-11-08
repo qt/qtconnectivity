@@ -60,6 +60,26 @@ using namespace Microsoft::WRL::Wrappers;
 
 QT_BEGIN_NAMESPACE
 
+template <typename T>
+static bool await(IAsyncOperation<T> &&asyncInfo, T &result, uint timeout = 0)
+{
+    using WinRtAsyncStatus = winrt::Windows::Foundation::AsyncStatus;
+    WinRtAsyncStatus status;
+    QElapsedTimer timer;
+    if (timeout)
+        timer.start();
+    do {
+        QCoreApplication::processEvents();
+        status = asyncInfo.Status();
+    } while (status == WinRtAsyncStatus::Started && (!timeout || !timer.hasExpired(timeout)));
+    if (status == WinRtAsyncStatus::Completed) {
+        result = asyncInfo.GetResults();
+        return true;
+    } else {
+        return false;
+    }
+}
+
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent),
     d_ptr(new QBluetoothLocalDevicePrivate(this, QBluetoothAddress()))
@@ -113,12 +133,14 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
     };
 
     const quint64 addr64 = address.toUInt64();
-    BluetoothLEDevice leDevice { BluetoothLEDevice::FromBluetoothAddressAsync(addr64).get() };
-    if (leDevice.BluetoothAddress() != 0)
+    BluetoothLEDevice leDevice(nullptr);
+    bool res = await(BluetoothLEDevice::FromBluetoothAddressAsync(addr64), leDevice, 5000);
+    if (res && leDevice && leDevice.BluetoothAddress() != 0)
         return qtPairingFromPairingInfo(leDevice.DeviceInformation().Pairing());
 
-    BluetoothDevice device { BluetoothDevice::FromBluetoothAddressAsync(addr64).get() };
-    if (device.BluetoothAddress() != 0)
+    BluetoothDevice device(nullptr);
+    res = await(BluetoothDevice::FromBluetoothAddressAsync(addr64), device, 5000);
+    if (res && device && device.BluetoothAddress() != 0)
         return qtPairingFromPairingInfo(device.DeviceInformation().Pairing());
 
     return Unpaired;
