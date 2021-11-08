@@ -11,6 +11,7 @@ SOURCES += main.cpp \
     characteristicinfo.cpp
 
 ios: QMAKE_INFO_PLIST = Info.plist
+macos: QMAKE_INFO_PLIST = ../shared/Info.qmake.macos.plist
 
 OTHER_FILES += assets/*.qml
 
