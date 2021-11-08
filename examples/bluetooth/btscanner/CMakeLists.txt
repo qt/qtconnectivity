@@ -26,10 +26,19 @@ set_target_properties(btscanner PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
-if(APPLE)
-    set_target_properties(btscanner PROPERTIES
-        MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
-    )
+
+if (APPLE)
+    if (IOS)
+        set_target_properties(btscanner PROPERTIES
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
+        )
+    else()
+        # Using absolute path for shared plist files is a Ninja bug workaround
+        get_filename_component(SHARED_PLIST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../shared ABSOLUTE)
+        set_target_properties(btscanner PROPERTIES
+            MACOSX_BUNDLE_INFO_PLIST "${SHARED_PLIST_DIR}/Info.cmake.macos.plist"
+        )
+    endif()
 endif()
 
 target_link_libraries(btscanner PUBLIC
