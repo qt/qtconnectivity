@@ -10,6 +10,7 @@ SOURCES = \
     service.cpp
 
 ios: QMAKE_INFO_PLIST = Info.plist
+macos: QMAKE_INFO_PLIST = ../shared/Info.qmake.macos.plist
 
 HEADERS = \
     device.h \
