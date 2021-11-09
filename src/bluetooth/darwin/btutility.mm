@@ -42,6 +42,7 @@
 #include "qbluetoothuuid.h"
 #include "btutility_p.h"
 
+#include <QtCore/qoperatingsystemversion.h>
 #include <QtCore/qendian.h>
 #include <QtCore/qstring.h>
 
@@ -67,6 +68,8 @@ const int defaultLEScanTimeoutMS = 40000;
 const int maxValueLength = 512;
 
 const int defaultMtu = 23;
+
+NSString *const bluetoothUsageKey = @"NSBluetoothAlwaysUsageDescription";
 
 QString qt_address(NSString *address)
 {
@@ -323,6 +326,22 @@ ObjCStrongReference<NSMutableData> mutable_data_from_bytearray(const QByteArray 
     [result replaceBytesInRange:NSMakeRange(0, qtData.size())
                       withBytes:qtData.constData()];
     return result;
+}
+
+bool qt_appNeedsBluetoothUsageDescription()
+{
+#ifdef Q_OS_MACOS
+    return QOperatingSystemVersion::current() > QOperatingSystemVersion::MacOSBigSur;
+#endif
+    return true;
+}
+
+bool qt_appPlistContainsDescription(NSString *key)
+{
+    Q_ASSERT(key);
+
+    NSDictionary<NSString *, id> *infoDict = NSBundle.mainBundle.infoDictionary;
+    return !!infoDict[key];
 }
 
 // A small RAII class for a dispatch queue.

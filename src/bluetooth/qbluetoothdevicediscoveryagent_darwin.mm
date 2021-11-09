@@ -145,6 +145,8 @@ bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
 {
+    using namespace DarwinBluetooth;
+
     Q_ASSERT(!isActive());
     Q_ASSERT(lastError != QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError);
     Q_ASSERT(methods & (QBluetoothDeviceDiscoveryAgent::ClassicMethod
@@ -157,6 +159,25 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         return;
     }
 #endif // Q_OS_MACOS
+
+    // To be able to scan for devices, iOS requires Info.plist containing
+    // NSBluetoothAlwaysUsageDescription entry with a string, explaining
+    // the usage of Bluetooth interface. macOS also requires this description,
+    // starting from Monterey.
+
+    // No Classic on iOS, and Classic does not require a description on macOS:
+    if (methods.testFlag(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod)
+        && qt_appNeedsBluetoothUsageDescription()
+        && !qt_appPlistContainsDescription(bluetoothUsageKey)) {
+        // This would result in Bluetooth framework throwing an exception
+        // the moment we try to start device discovery.
+        qCWarning(QT_BT_DARWIN)
+                << "A proper Info.plist with NSBluetoothAlwaysUsageDescription"
+                   "entry is required, cannot start device discovery";
+        setError(QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod);
+        emit q_ptr->errorOccurred(lastError);
+        return;
+    }
 
     requestedMethods = methods;
 

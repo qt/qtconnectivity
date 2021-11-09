@@ -165,7 +165,14 @@ bool QLowEnergyControllerPrivateDarwin::isValid() const
 
 void QLowEnergyControllerPrivateDarwin::init()
 {
-    using DarwinBluetooth::LECBManagerNotifier;
+    using namespace DarwinBluetooth;
+
+    if (qt_appNeedsBluetoothUsageDescription() && !qt_appPlistContainsDescription(bluetoothUsageKey)) {
+        qCWarning(QT_BT_DARWIN)
+                << "The Info.plist file is required to contain"
+                   "'NSBluetoothAlwaysUsageDescription' entry";
+        return;
+    }
 
     QScopedPointer<LECBManagerNotifier> notifier(new LECBManagerNotifier);
     if (role == QLowEnergyController::PeripheralRole) {
@@ -202,7 +209,7 @@ void QLowEnergyControllerPrivateDarwin::connectToDevice()
                Q_FUNC_INFO, "invalid state");
 
     if (!isValid()) {
-        // init() had failed for was never called.
+        // init() had failed or was never called.
         return _q_CBManagerError(QLowEnergyController::UnknownError);
     }
 
@@ -234,6 +241,8 @@ void QLowEnergyControllerPrivateDarwin::connectToDevice()
 
 void QLowEnergyControllerPrivateDarwin::disconnectFromDevice()
 {
+    Q_ASSERT(isValid()); // Check for proper state is in q's code.
+
     if (role == QLowEnergyController::PeripheralRole) {
         // CoreBluetooth API intentionally does not provide any way of closing
         // a connection. All we can do here is to stop the advertisement.
@@ -241,29 +250,27 @@ void QLowEnergyControllerPrivateDarwin::disconnectFromDevice()
         return;
     }
 
-    if (isValid()) {
-        const auto oldState = state;
+    const auto oldState = state;
 
-        if (dispatch_queue_t leQueue = DarwinBluetooth::qt_LE_queue()) {
-            setState(QLowEnergyController::ClosingState);
-            invalidateServices();
+    if (dispatch_queue_t leQueue = DarwinBluetooth::qt_LE_queue()) {
+        setState(QLowEnergyController::ClosingState);
+        invalidateServices();
 
-            auto manager = centralManager.getAs<ObjCCentralManager>();
-            dispatch_async(leQueue, ^{
-                [manager disconnectFromDevice];
-            });
+        auto manager = centralManager.getAs<ObjCCentralManager>();
+        dispatch_async(leQueue, ^{
+                           [manager disconnectFromDevice];
+                       });
 
-            if (oldState == QLowEnergyController::ConnectingState) {
-                // With a pending connect attempt there is no
-                // guarantee we'll ever have didDisconnect callback,
-                // set the state here and now to make sure we still
-                // can connect.
-                setState(QLowEnergyController::UnconnectedState);
-            }
-        } else {
-            qCCritical(QT_BT_DARWIN) << "qt LE queue is nil, "
-                                        "can not dispatch 'disconnect'";
+        if (oldState == QLowEnergyController::ConnectingState) {
+            // With a pending connect attempt there is no
+            // guarantee we'll ever have didDisconnect callback,
+            // set the state here and now to make sure we still
+            // can connect.
+            setState(QLowEnergyController::UnconnectedState);
         }
+    } else {
+        qCCritical(QT_BT_DARWIN) << "qt LE queue is nil, "
+                                    "can not dispatch 'disconnect'";
     }
 }
 
@@ -273,6 +280,8 @@ void QLowEnergyControllerPrivateDarwin::discoverServices()
                Q_FUNC_INFO, "not connected to peripheral");
     Q_ASSERT_X(role != QLowEnergyController::PeripheralRole,
                Q_FUNC_INFO, "invalid role (peripheral)");
+
+    Q_ASSERT(isValid()); // Check we're in a proper state is in q's code.
 
     dispatch_queue_t leQueue(DarwinBluetooth::qt_LE_queue());
     Q_ASSERT_X(leQueue, Q_FUNC_INFO, "LE queue not found");
@@ -349,6 +358,11 @@ QLowEnergyService * QLowEnergyControllerPrivateDarwin::addServiceHelper(const QL
     Q_UNUSED(service);
     qCDebug(QT_BT_DARWIN, "peripheral role is not supported on tvOS");
 #else
+    if (!isValid()) {
+        qCWarning(QT_BT_DARWIN) << "invalid peripheral";
+        return nullptr;
+    }
+
     if (role != QLowEnergyController::PeripheralRole) {
         qCWarning(QT_BT_DARWIN) << "not in peripheral role";
         return nullptr;
@@ -1062,11 +1076,13 @@ void QLowEnergyControllerPrivateDarwin::startAdvertising(const QLowEnergyAdverti
     qCWarning(QT_BT_DARWIN) << "advertising is not supported on your platform";
 #else
 
-    if (!isValid())
-        return _q_CBManagerError(QLowEnergyController::UnknownError);
-
     if (role != QLowEnergyController::PeripheralRole) {
         qCWarning(QT_BT_DARWIN) << "controller is not a peripheral, cannot start advertising";
+        return;
+    }
+
+    if (!isValid()) {
+        qCWarning(QT_BT_DARWIN, "LE controller is an invalid peripheral");
         return;
     }
 
