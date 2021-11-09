@@ -1192,8 +1192,8 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
     connect(worker, &QWinRTLowEnergyServiceHandler::errorOccured,
             this, &QLowEnergyControllerPrivateWinRT::handleServiceHandlerError);
-    connect(worker, &QWinRTLowEnergyServiceHandler::charListObtained,
-            [this, thread](const QBluetoothUuid &service, QHash<QLowEnergyHandle,
+    connect(worker, &QWinRTLowEnergyServiceHandler::charListObtained, this,
+            [this](const QBluetoothUuid &service, QHash<QLowEnergyHandle,
             QLowEnergyServicePrivate::CharData> charList, QList<QBluetoothUuid> indicateChars,
             QLowEnergyHandle startHandle, QLowEnergyHandle endHandle) {
         if (!serviceList.contains(service)) {
@@ -1211,7 +1211,6 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(
             registerForValueChanges(service, indicateChar);
 
         pointer->setState(QLowEnergyService::RemoteServiceDiscovered);
-        thread->exit(0);
     });
     thread->start();
 }
