@@ -492,13 +492,25 @@ public class QtBluetoothLEServer {
             int resultStatus = BluetoothGatt.GATT_SUCCESS;
             if (!preparedWrite) { // regular write
                 if (offset == 0) {
-                    descriptor.setValue(value);
-
                     if (descriptor.getUuid().equals(CLIENT_CHARACTERISTIC_CONFIGURATION_UUID)) {
+                        // If both IND and NTF are requested, resort to NTF only. BT specification
+                        // does not prohibit nor mention using both, but it is unlikely what the
+                        // client intended. Stack behaviours vary;
+                        // Apple client-side stack does not allow this, while Bluez client-side stack
+                        // erroneously sends this even if the developer only asked for the other.
+                        // The 0x03 value is a bitwise combination of 0x01 and 0x02 as per specification
+                        // BT Core v5.3, 3.3.3.3, Vol 3, Part G
+                        if (value[0] == 0x03) {
+                            Log.w(TAG, "Warning: In CCC of characteristic: "
+                                  + descriptor.getCharacteristic().getUuid()
+                                  + " enabling both NTF & IND requested, enabling NTF only.");
+                            value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE;
+                        }
                         clientCharacteristicManager.insertOrUpdate(descriptor.getCharacteristic(),
                                                                    device, value);
                     }
 
+                    descriptor.setValue(value);
                     leServerDescriptorWritten(qtObject, descriptor, value);
                 } else {
                     // This should not really happen as per Bluetooth spec

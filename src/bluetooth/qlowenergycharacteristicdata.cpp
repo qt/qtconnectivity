@@ -140,6 +140,9 @@ QLowEnergyCharacteristic::PropertyTypes QLowEnergyCharacteristicData::properties
 /*! Sets the properties of this characteristic to \a properties. */
 void QLowEnergyCharacteristicData::setProperties(QLowEnergyCharacteristic::PropertyTypes properties)
 {
+    if ((properties & QLowEnergyCharacteristic::PropertyType::Notify) &&
+            (properties &  QLowEnergyCharacteristic::PropertyType::Indicate))
+        qCWarning(QT_BT) << "Both NTF and IND properties set for characteristic" << d->uuid;
     d->properties = properties;
 }
 

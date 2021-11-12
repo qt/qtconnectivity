@@ -89,6 +89,11 @@ QT_BEGIN_NAMESPACE
     \value ExtendedProperty         Additional characteristic properties are defined in the characteristic's
                                     extended properties descriptor.
 
+    It is not recommended to set both Notify and Indicate properties on the same characteristic
+    as the underlying Bluetooth stack behaviors differ from platform to platform. Please see
+    \l QLowEnergyCharacteristic::clientCharacteristicConfiguration
+
+
     \sa properties()
 */
 
@@ -408,6 +413,15 @@ QLowEnergyDescriptor QLowEnergyCharacteristic::descriptor(const QBluetoothUuid &
     \note
     Calling \c characteristic.clientCharacteristicConfiguration() is equivalent to calling
     \c characteristic.descriptor(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration).
+
+    \note
+    It is not recommended to use both notifications and indications on the same characteristic.
+    This applies to both server-side when setting up the characteristics, as well as client-side
+    when enabling them. The bluetooth stack behavior differs from platform to platform and the
+    cross-platform behavior will likely be inconsistent. As an example a Bluez Linux client might
+    unconditionally try to enable both mechanisms if both are supported, whereas a macOS client
+    might unconditionally enable just the notifications. If both are needed consider creating two
+    separate characteristics.
 
     \since 6.2
     \sa descriptor()
