@@ -91,8 +91,18 @@ Chat::Chat(QWidget *parent)
     }
 
     // make discoverable
-    QBluetoothLocalDevice adapter(localAdapters.at(0).address());
-    adapter.setHostMode(QBluetoothLocalDevice::HostDiscoverable);
+    if (!localAdapters.isEmpty()) {
+        QBluetoothLocalDevice adapter(localAdapters.at(0).address());
+        adapter.setHostMode(QBluetoothLocalDevice::HostDiscoverable);
+    } else {
+        qWarning("Local adapter is not found! The application might work incorrectly.");
+#ifdef Q_OS_WIN
+        // WinRT implementation does not support adapter information yet. So it
+        // will always return an empty list.
+        qWarning("If the adapter exists, make sure to pair the devices manually before launching"
+                 " the chat.");
+#endif
+    }
 
     //! [Create Chat Server]
     server = new ChatServer(this);
