@@ -393,7 +393,7 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
     QJniEnvironment env;
     QJniObject inputString = QJniObject::fromString(address.toString());
     remoteDevice = adapter.callObjectMethod("getRemoteDevice",
-                                            "(Ljava/lang/String;)Landroid.bluetooth.BluetoothDevice;",
+                                            "(Ljava/lang/String;)Landroid/bluetooth/BluetoothDevice;",
                                             inputString.object<jstring>());
     if (!remoteDevice.isValid()) {
         errorString = QBluetoothSocket::tr("Cannot access address %1", "%1 = Bt address e.g. 11:22:33:44:55:66").arg(address.toString());
