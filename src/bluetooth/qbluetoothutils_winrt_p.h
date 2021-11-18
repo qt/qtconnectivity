@@ -76,8 +76,6 @@ namespace ABI {
 
 QT_BEGIN_NAMESPACE
 
-bool supportsNewLEApi();
-
 using NativeBuffer = ABI::Windows::Storage::Streams::IBuffer;
 QByteArray byteArrayFromBuffer(const Microsoft::WRL::ComPtr<NativeBuffer> &buffer,
                                bool isWCharString = false);

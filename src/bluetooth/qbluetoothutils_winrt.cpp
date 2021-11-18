@@ -53,13 +53,6 @@ using namespace ABI::Windows::Storage::Streams;
 
 QT_BEGIN_NAMESPACE
 
-bool supportsNewLEApi()
-{
-    static bool apiPresent
-            = ApiInformation::IsApiContractPresent(L"Windows.Foundation.UniversalApiContract", 4);
-    return apiPresent;
-}
-
 QByteArray byteArrayFromBuffer(const ComPtr<NativeBuffer> &buffer, bool isWCharString)
 {
     if (!buffer) {
