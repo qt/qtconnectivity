@@ -74,7 +74,8 @@ QT_END_NAMESPACE
 #endif
 
 #ifdef QT_WINRT_BLUETOOTH
-#include <winrt/base.h>
+#include "qbluetoothutils_winrt_p.h"
+#include <winrt/Windows.Devices.Bluetooth.h>
 struct PairingWorker;
 #endif
 
@@ -187,6 +188,7 @@ private:
 #elif defined(QT_WINRT_BLUETOOTH)
 class QBluetoothLocalDevicePrivate : public QObject
 {
+    Q_OBJECT
     Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
 public:
     QBluetoothLocalDevicePrivate(QBluetoothLocalDevice *q,
@@ -195,10 +197,21 @@ public:
 
     bool isValid() const;
 
-private:
-    QBluetoothLocalDevice *q_ptr;
+    void updateAdapterState(QBluetoothLocalDevice::HostMode mode);
+    Q_SLOT void onAdapterRemoved(winrt::hstring id);
+    Q_SLOT void onAdapterAdded(winrt::hstring id);
+    Q_SLOT void radioModeChanged(winrt::hstring id, QBluetoothLocalDevice::HostMode mode);
 
+    QBluetoothLocalDevice *q_ptr;
     winrt::com_ptr<PairingWorker> mPairingWorker;
+    winrt::Windows::Devices::Bluetooth::BluetoothAdapter mAdapter;
+    winrt::hstring mDeviceId;
+    QString mAdapterName;
+    QBluetoothLocalDevice::HostMode mMode;
+    winrt::event_token mModeChangeToken;
+
+signals:
+    void updateMode(winrt::hstring id, QBluetoothLocalDevice::HostMode mode);
 };
 #elif !defined(QT_OSX_BLUETOOTH) // dummy backend
 class QBluetoothLocalDevicePrivate : public QObject

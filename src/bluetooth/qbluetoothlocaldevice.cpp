@@ -56,8 +56,13 @@ QT_BEGIN_NAMESPACE
     QBluetoothLocalDevice provides functions for getting and setting the state of local Bluetooth
     devices.
 
-    On iOS and Windows, this class cannot be used because the platform does not expose
+    On iOS, this class cannot be used because the platform does not expose
     any data or API which may provide information on the local Bluetooth device.
+
+    On Windows the class is not fully implemented. It does not support tracking
+    of the connected/disconnected devices. Therefore, the \l connectedDevices()
+    method will always return an empty list, and the \l deviceConnected() and
+    \l deviceDisconnected() signals will never be emitted.
 */
 
 /*!
@@ -102,8 +107,13 @@ QT_BEGIN_NAMESPACE
      only made discoverable for a limited period of time. This can speed up discovery between gaming devices,
      as service discovery can be skipped on devices not in LimitedInquiry mode. In this mode, the device will
      be connectable and powered on, if required. This mode is is not supported on Android.
-     On \macos, it is not possible to set the \l hostMode() to HostConnectable or HostPoweredOff.
 
+    \note On \macos, it is not possible to set the \l hostMode() to
+    HostConnectable or HostPoweredOff.
+
+    \note On Windows, it is not possible to set the \l hostMode() to
+    HostDiscoverable or HostDiscoverableLimitedInquiry. Using these modes is
+    equivalent to HostConnectable.
 */
 
 void registerQBluetoothLocalDeviceMetaType()
@@ -163,6 +173,8 @@ bool QBluetoothLocalDevice::isValid() const
     confirmation before turning Bluetooth on or off and not all host modes may be supported.
     On \macos, it is not possbile to programmatically change the \l hostMode().
     A user can only switch Bluetooth on/off in the System Preferences.
+    On Windows this method \e must be called from the UI thread because it might
+    require user confirmation.
     Please refer to the platform specific Bluetooth documentation for details.
 */
 
