@@ -172,7 +172,6 @@ private:
     };
 
     QMap<quint64, LEAdvertisingInfo> m_foundLEDevicesMap;
-    QMap<quint64, qint16> m_foundLEDevices;
     QMap<quint64, ManufacturerData> m_foundLEManufacturerData;
     int m_pendingPairedDevices;
 
