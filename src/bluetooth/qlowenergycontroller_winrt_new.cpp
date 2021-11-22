@@ -1170,8 +1170,8 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(const QBluetoot
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
     connect(worker, &QWinRTLowEnergyServiceHandlerNew::errorOccured,
             this, &QLowEnergyControllerPrivateWinRTNew::handleServiceHandlerError);
-    connect(worker, &QWinRTLowEnergyServiceHandlerNew::charListObtained,
-            [this, reactOnDiscoveryError, thread](const QBluetoothUuid &service, QHash<QLowEnergyHandle,
+    connect(worker, &QWinRTLowEnergyServiceHandlerNew::charListObtained, this,
+            [this, reactOnDiscoveryError](const QBluetoothUuid &service, QHash<QLowEnergyHandle,
             QLowEnergyServicePrivate::CharData> charList, QVector<QBluetoothUuid> indicateChars,
             QLowEnergyHandle startHandle, QLowEnergyHandle endHandle) {
         if (!serviceList.contains(service)) {
@@ -1194,12 +1194,10 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(const QBluetoot
         if (FAILED(hr)) {
             reactOnDiscoveryError(pointer,
                              QStringLiteral("Could not register for value changes in Xaml thread: %1").arg(hr));
-            thread->exit(0);
             return;
         }
 
         pointer->setState(QLowEnergyService::ServiceDiscovered);
-        thread->exit(0);
     });
     thread->start();
 }
