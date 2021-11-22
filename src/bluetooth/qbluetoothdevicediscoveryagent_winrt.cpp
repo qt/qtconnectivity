@@ -168,11 +168,11 @@ private:
     QMutex m_foundDevicesMutex;
     struct LEAdvertisingInfo {
         QList<QBluetoothUuid> services;
+        ManufacturerData manufacturerData;
         qint16 rssi = 0;
     };
 
     QMap<quint64, LEAdvertisingInfo> m_foundLEDevicesMap;
-    QMap<quint64, ManufacturerData> m_foundLEManufacturerData;
     int m_pendingPairedDevices;
 
     ComPtr<IBluetoothDeviceStatics> m_deviceStatics;
@@ -337,13 +337,6 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEAdvertisementReceived
                                    return S_OK);
     const ManufacturerData manufacturerData = extractManufacturerData(ad);
     QBluetoothDeviceInfo::Fields changedFields = QBluetoothDeviceInfo::Field::None;
-    if (!m_foundLEManufacturerData.contains(address)) {
-        m_foundLEManufacturerData.insert(address, manufacturerData);
-        changedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
-    } else if (m_foundLEManufacturerData.value(address) != manufacturerData) {
-        m_foundLEManufacturerData[address] = manufacturerData;
-        changedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
-    }
     ComPtr<IVector<GUID>> guids;
     hr = ad->get_ServiceUuids(&guids);
     EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain service uuid list",
@@ -377,6 +370,10 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEAdvertisementReceived
                 m_foundLEDevicesMap[address].rssi = rssi;
                 changedFields.setFlag(QBluetoothDeviceInfo::Field::RSSI);
             }
+            if (adInfo.manufacturerData != manufacturerData) {
+                m_foundLEDevicesMap[address].manufacturerData = std::move(manufacturerData);
+                changedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
+            }
             bool newServiceAdded = false;
             for (const QBluetoothUuid &uuid : qAsConst(serviceUuids)) {
                 if (!foundServices.contains(uuid)) {
@@ -398,6 +395,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEAdvertisementReceived
         } else {
             LEAdvertisingInfo info;
             info.services = std::move(serviceUuids);
+            info.manufacturerData = std::move(manufacturerData);
             info.rssi = rssi;
             m_foundLEDevicesMap.insert(address, info);
         }
@@ -702,6 +700,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
     QList<QBluetoothUuid> uuids;
 
     const LEAdvertisingInfo adInfo = m_foundLEDevicesMap.value(address);
+    const ManufacturerData manufacturerData = adInfo.manufacturerData;
     const qint16 rssi = adInfo.rssi;
     // Use the services obtained from the advertisement data if the device is not paired
     if (!isPaired) {
@@ -731,7 +730,6 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
             uuids.append(QBluetoothUuid(uuid));
         }
     }
-    const ManufacturerData manufacturerData = m_foundLEManufacturerData.value(address);
 
     qCDebug(QT_BT_WINDOWS) << "Discovered BTLE device: " << QString::number(address) << btName
         << "Num UUIDs" << uuids.count() << "RSSI:" << rssi
