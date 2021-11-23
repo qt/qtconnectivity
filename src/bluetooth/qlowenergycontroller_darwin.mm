@@ -169,7 +169,7 @@ void QLowEnergyControllerPrivateDarwin::init()
 
     if (qt_appNeedsBluetoothUsageDescription() && !qt_appPlistContainsDescription(bluetoothUsageKey)) {
         qCWarning(QT_BT_DARWIN)
-                << "The Info.plist file is required to contain"
+                << "The Info.plist file is required to contain "
                    "'NSBluetoothAlwaysUsageDescription' entry";
         return;
     }
