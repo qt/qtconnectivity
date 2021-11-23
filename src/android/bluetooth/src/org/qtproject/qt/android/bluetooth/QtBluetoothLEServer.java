@@ -84,16 +84,20 @@ public class QtBluetoothLEServer {
     private BluetoothGattServer mGattServer = null;
     private BluetoothLeAdvertiser mLeAdvertiser = null;
 
-    // Note: service additions -list is accessed from different threads as it is manipulated
-    // from Qt/JNI as well as from Android callbacks => synchronize the access
     private ArrayList<BluetoothGattService> mPendingServiceAdditions =
                       new ArrayList<BluetoothGattService>();
 
     private String mRemoteName = "";
-    public String remoteName() { return mRemoteName; }
+    // This function is called from Qt thread
+    public synchronized String remoteName() {
+        return mRemoteName;
+    }
 
     private String mRemoteAddress = "";
-    public String remoteAddress() { return mRemoteAddress; }
+    // This function is called from Qt thread
+    public synchronized String remoteAddress() {
+        return mRemoteAddress;
+    }
 
     // BT Core v5.3, 5.2.1, Vol 3, Part G
     private static final int DEFAULT_LE_ATT_MTU = 23;
@@ -302,6 +306,366 @@ public class QtBluetoothLEServer {
             Log.w(TAG, "Let's do BTLE Peripheral.");
     }
 
+    // The following functions are synchronized callback handlers. The callbacks
+    // from Android are forwarded to these methods to synchronize member variable
+    // access with other threads (the Qt thread's JNI calls in particular).
+    //
+    // We use a single lock object (this server) for simplicity because:
+    // - Some variables may change and would thus not be suitable as locking objects but
+    //   would require their own additional objects => overhead
+    // - Many accesses to shared variables are infrequent and the code paths are fast and
+    //   deterministic meaning that long "wait times" on a lock should not happen
+    // - Typically several shared variables are accessed in a single code block.
+    //   If each variable would be protected individually, the amount of (nested) locking
+    //   would become quite unreasonable
+
+    public synchronized void handleOnConnectionStateChange(BluetoothDevice device,
+                                                           int status, int newState)
+    {
+        if (mGattServer == null) {
+            Log.w(TAG, "Ignoring connection state event, server is disconnected");
+            return;
+        }
+        // Multiple GATT devices may be connected. Check if we still have connected
+        // devices or not, and set the server state accordingly. Note: it seems we get
+        // notifications from all GATT clients, not just from the ones interested in
+        // the services provided by this BT LE Server. Furthermore the list of
+        // currently connected devices does not appear to be in any particular order.
+        List<BluetoothDevice> connectedDevices =
+            mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT_SERVER);
+        Log.w(TAG, "Device " + device + " connection state: " + newState + ", status: "
+              + status + ", connected devices: " + connectedDevices);
+        // 0 == QLowEnergyController::UnconnectedState
+        // 2 == QLowEnergyController::ConnectedState
+        int qtControllerState = connectedDevices.size() > 0 ? 2 : 0;
+
+        switch (newState) {
+            case BluetoothProfile.STATE_CONNECTED:
+                clientCharacteristicManager.markDeviceConnectivity(device, true);
+                mRemoteName = device.getName();
+                mRemoteAddress = device.getAddress();
+                break;
+            case BluetoothProfile.STATE_DISCONNECTED:
+                clientCharacteristicManager.markDeviceConnectivity(device, false);
+                clearPendingPreparedWrites(device);
+                // Update the remoteAddress and remoteName if needed
+                if (device.getAddress().equals(mRemoteAddress)
+                        && !connectedDevices.isEmpty()) {
+                    mRemoteName = connectedDevices.get(0).getName();
+                    mRemoteAddress = connectedDevices.get(0).getAddress();
+                }
+                break;
+            default:
+                // According to the API doc of this callback this should not happen
+                Log.w(TAG, "Unhandled connection state change: " + newState);
+                return;
+        }
+
+        // If last client disconnected, close down the server
+        if (qtControllerState == 0) { // QLowEnergyController::UnconnectedState
+            mPendingServiceAdditions.clear();
+            mGattServer.close();
+            mGattServer = null;
+            mRemoteName = "";
+            mRemoteAddress = "";
+        }
+
+        int qtErrorCode;
+        switch (status) {
+            case BluetoothGatt.GATT_SUCCESS:
+                qtErrorCode = 0;
+                break;
+            default:
+                Log.w(TAG, "Unhandled error code on peripheral connectionStateChanged: "
+                            + status + " " + newState);
+                qtErrorCode = status;
+                break;
+        }
+
+        leServerConnectionStateChange(qtObject, qtErrorCode, qtControllerState);
+    }
+
+    public synchronized void handleOnServiceAdded(int status, BluetoothGattService service)
+    {
+        if (mGattServer == null) {
+            Log.w(TAG, "Ignoring service addition event, server is disconnected");
+            return;
+        }
+
+        Log.d(TAG, "Service " + service.getUuid().toString() + " addition result: " + status);
+
+        // Remove the indicated service from the pending queue
+        ListIterator<BluetoothGattService> iterator = mPendingServiceAdditions.listIterator();
+        while (iterator.hasNext()) {
+            if (iterator.next().getUuid().equals(service.getUuid())) {
+                iterator.remove();
+                break;
+            }
+        }
+
+        // If there are more services in the queue, add the next whose add initiation succeeds
+        iterator = mPendingServiceAdditions.listIterator();
+        while (iterator.hasNext()) {
+            BluetoothGattService nextService = iterator.next();
+            if (mGattServer.addService(nextService)) {
+                break;
+            } else {
+                Log.w(TAG, "Adding service " + nextService.getUuid().toString() + " failed");
+                iterator.remove();
+            }
+        }
+    }
+
+    public synchronized void handleOnCharacteristicReadRequest(BluetoothDevice device,
+                                                   int requestId, int offset,
+                                                   BluetoothGattCharacteristic characteristic)
+    {
+        if (mGattServer == null) {
+            Log.w(TAG, "Ignoring characteristic read, server is disconnected");
+            return;
+        }
+        byte[] dataArray;
+        try {
+            dataArray = Arrays.copyOfRange(characteristic.getValue(),
+                                           offset, characteristic.getValue().length);
+            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS,
+                                     offset, dataArray);
+        } catch (Exception ex) {
+            Log.w(TAG, "onCharacteristicReadRequest: " + requestId + " "
+                        + offset + " " + characteristic.getValue().length);
+            ex.printStackTrace();
+            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_FAILURE,
+                                     offset, null);
+        }
+    }
+
+    public synchronized void handleOnCharacteristicWriteRequest(BluetoothDevice device,
+                                                   int requestId,
+                                                   BluetoothGattCharacteristic characteristic,
+                                                   boolean preparedWrite, boolean responseNeeded,
+                                                   int offset, byte[] value)
+    {
+        if (mGattServer == null) {
+            Log.w(TAG, "Ignoring characteristic write, server is disconnected");
+            return;
+        }
+        Log.w(TAG, "onCharacteristicWriteRequest " + preparedWrite + " " + offset + " "
+                    + value.length);
+        final int minValueLen = ((QtBluetoothGattCharacteristic)characteristic).minValueLength;
+        final int maxValueLen = ((QtBluetoothGattCharacteristic)characteristic).maxValueLength;
+
+        int resultStatus = BluetoothGatt.GATT_SUCCESS;
+        boolean sendNotificationOrIndication = false;
+
+        if (!preparedWrite) { // regular write
+            // User may have defined minimum and maximum size for the value, which
+            // we enforce here. If the user has not defined these limits, the default
+            // values 0..INT_MAX do not limit anything.
+            if (value.length < minValueLen || value.length > maxValueLen) {
+                // BT Core v 5.3, 4.9.3, Vol 3, Part G
+                Log.w(TAG, "onCharacteristicWriteRequest invalid char value length: "
+                      + value.length + ", min: " + minValueLen + ", max: " + maxValueLen);
+                resultStatus = BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH;
+            } else if (offset == 0) {
+                characteristic.setValue(value);
+                leServerCharacteristicChanged(qtObject, characteristic, value);
+                sendNotificationOrIndication = true;
+            } else {
+                // This should not really happen as per Bluetooth spec
+                Log.w(TAG, "onCharacteristicWriteRequest: !preparedWrite, offset "
+                            + offset + ", Not supported");
+                resultStatus = BluetoothGatt.GATT_INVALID_OFFSET;
+            }
+        } else {
+            // BT Core v5.3, 3.4.6, Vol 3, Part F
+            // This is a prepared write which is used to write characteristics larger than
+            // MTU. We need to record all requests and execute them in one go once
+            // onExecuteWrite() is received. We use a queue to remember the pending
+            // requests.
+            resultStatus = addPendingPreparedWrite(device, characteristic, offset, value);
+        }
+
+        if (responseNeeded)
+            mGattServer.sendResponse(device, requestId, resultStatus, offset, value);
+        if (sendNotificationOrIndication)
+            sendNotificationsOrIndications(characteristic);
+    }
+
+    public synchronized void handleOnDescriptorReadRequest(BluetoothDevice device, int requestId,
+                                              int offset, BluetoothGattDescriptor descriptor)
+    {
+        if (mGattServer == null) {
+            Log.w(TAG, "Ignoring descriptor read, server is disconnected");
+            return;
+        }
+
+        byte[] dataArray = descriptor.getValue();
+        try {
+            if (descriptor.getUuid().equals(CLIENT_CHARACTERISTIC_CONFIGURATION_UUID)) {
+                dataArray = clientCharacteristicManager.valueFor(
+                            descriptor.getCharacteristic(), device);
+                if (dataArray == null)
+                    dataArray = descriptor.getValue();
+            }
+
+            dataArray = Arrays.copyOfRange(dataArray, offset, dataArray.length);
+            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS,
+                                     offset, dataArray);
+        } catch (Exception ex) {
+            Log.w(TAG, "onDescriptorReadRequest: " + requestId + " "
+                                                   + offset + " " + dataArray.length);
+            ex.printStackTrace();
+            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_FAILURE,
+                                     offset, null);
+        }
+    }
+
+    public synchronized void handleOnDescriptorWriteRequest(BluetoothDevice device, int requestId,
+                                     BluetoothGattDescriptor descriptor, boolean preparedWrite,
+                                     boolean responseNeeded, int offset, byte[] value)
+    {
+        if (mGattServer == null) {
+            Log.w(TAG, "Ignoring descriptor write, server is disconnected");
+            return;
+        }
+
+        Log.w(TAG, "onDescriptorWriteRequest " + preparedWrite + " " + offset + " " + value.length);
+        int resultStatus = BluetoothGatt.GATT_SUCCESS;
+
+        if (!preparedWrite) { // regular write
+            if (offset == 0) {
+                if (descriptor.getUuid().equals(CLIENT_CHARACTERISTIC_CONFIGURATION_UUID)) {
+                    // If both IND and NTF are requested, resort to NTF only. BT
+                    // specification does not prohibit nor mention using both, but it is
+                    // unlikely what the client intended. Stack behaviours vary;
+                    // Apple client-side stack does not allow this, while Bluez client-side
+                    // stack erroneously sends this even if the developer only asked for
+                    // the other. The 0x03 value is a bitwise combination of 0x01 and 0x02
+                    // as per specification: BT Core v5.3, 3.3.3.3, Vol 3, Part G
+                    if (value[0] == 0x03) {
+                        Log.w(TAG, "Warning: In CCC of characteristic: "
+                              + descriptor.getCharacteristic().getUuid()
+                              + " enabling both NTF & IND requested, enabling NTF only.");
+                        value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE;
+                    }
+                    clientCharacteristicManager.insertOrUpdate(
+                                                descriptor.getCharacteristic(),
+                                                device, value);
+                }
+
+                descriptor.setValue(value);
+                leServerDescriptorWritten(qtObject, descriptor, value);
+            } else {
+                // This should not really happen as per Bluetooth spec
+                Log.w(TAG, "onDescriptorWriteRequest: !preparedWrite, offset "
+                           + offset + ", Not supported");
+                resultStatus = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED;
+            }
+        } else {
+            // BT Core v5.3, 3.4.6, Vol 3, Part F
+            // This is a prepared write which is used to write descriptors larger than MTU.
+            // We need to record all requests and execute them in one go once
+            // onExecuteWrite() is received. We use a queue to remember the pending
+            // requests.
+            resultStatus = addPendingPreparedWrite(device, descriptor, offset, value);
+        }
+
+        if (responseNeeded)
+            mGattServer.sendResponse(device, requestId, resultStatus, offset, value);
+    }
+
+    public synchronized void handleOnExecuteWrite(BluetoothDevice device,
+                                            int requestId, boolean execute)
+    {
+        if (mGattServer == null) {
+            Log.w(TAG, "Ignoring execute write, server is disconnected");
+            return;
+        }
+
+        Log.w(TAG, "onExecuteWrite " + device + " " + requestId + " " + execute);
+
+        if (execute) {
+            // BT Core v5.3, 3.4.6.3, Vol 3, Part F
+            // Execute all pending prepared writes for the provided 'device'
+            for (WriteEntry entry : mPendingPreparedWrites) {
+                if (!entry.remoteDevice.equals(device))
+                    continue;
+
+                byte[] newValue = null;
+                // The target can be a descriptor or a characteristic
+                byte[] currentValue = (entry.target instanceof BluetoothGattCharacteristic)
+                                ? ((BluetoothGattCharacteristic)entry.target).getValue()
+                                : ((BluetoothGattDescriptor)entry.target).getValue();
+
+                // Iterate writes and apply them to the currentValue in received order
+                for (Pair<byte[], Integer> write : entry.writes) {
+                    // write.first is data, write.second.intValue() is offset. Check
+                    // that the offset is not beyond the length of the current value
+                    if (write.second.intValue() > currentValue.length) {
+                        clearPendingPreparedWrites(device);
+                        // BT Core v5.3, 3.4.6.3, Vol 3, Part F
+                        mGattServer.sendResponse(device, requestId,
+                                                 BluetoothGatt.GATT_INVALID_OFFSET,
+                                                 0, null);
+                        return;
+                    }
+
+                    // User may have defined value minimum and maximum sizes for
+                    // characteristics, which we enforce here. If the user has not defined
+                    // these limits, the default values 0..INT_MAX do not limit anything.
+                    // The value size cannot decrease in prepared write (small write is a
+                    // partial update) => no check for the minimum size limit here.
+                    if (entry.target instanceof QtBluetoothGattCharacteristic &&
+                            (write.second.intValue() + write.first.length >
+                            ((QtBluetoothGattCharacteristic)entry.target).maxValueLength)) {
+                        clearPendingPreparedWrites(device);
+                        // BT Core v5.3, 3.4.6.3, Vol 3, Part F
+                        mGattServer.sendResponse(device, requestId,
+                                    BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH,
+                                    0, null);
+                        return;
+                    }
+
+                    // Determine the size of the new value as we may be extending the
+                    // current value size
+                    newValue = new byte[Math.max(write.second.intValue() +
+                                                 write.first.length, currentValue.length)];
+                    // Copy the current value to the newValue. We can't use the currentValue
+                    // directly because the length of value might increase by this write
+                    System.arraycopy(currentValue, 0, newValue, 0, currentValue.length);
+                    // Apply this iteration's write to the newValue
+                    System.arraycopy(write.first, 0, newValue, write.second.intValue(),
+                                     write.first.length);
+                    // Update the currentValue as there may be more writes to apply
+                    currentValue = newValue;
+                }
+
+                // Update value and inform the Qt/C++ side on the update
+                if (entry.target instanceof BluetoothGattCharacteristic) {
+                    ((BluetoothGattCharacteristic)entry.target).setValue(newValue);
+                    leServerCharacteristicChanged(
+                        qtObject, (BluetoothGattCharacteristic)entry.target, newValue);
+                } else {
+                    ((BluetoothGattDescriptor)entry.target).setValue(newValue);
+                    leServerDescriptorWritten(
+                        qtObject, (BluetoothGattDescriptor)entry.target, newValue);
+                }
+            }
+        }
+        // Either we executed all writes or were asked to cancel.
+        // In any case clear writes and respond.
+        clearPendingPreparedWrites(device);
+        mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null);
+    }
+
+    public synchronized void handleOnMtuChanged(BluetoothDevice device, int mtu)
+    {
+        if (mSupportedMtu == mtu)
+            return;
+        mSupportedMtu = mtu;
+        leMtuChanged(qtObject, mSupportedMtu);
+    }
+
     /*
      * Call back handler for the Gatt Server.
      */
@@ -310,304 +674,54 @@ public class QtBluetoothLEServer {
         @Override
         public void onConnectionStateChange(BluetoothDevice device, int status, int newState) {
             super.onConnectionStateChange(device, status, newState);
-
-            // Multiple GATT devices may be connected. Check if we still have connected
-            // devices or not, and set the server state accordingly. Note: it seems we get
-            // notifications from all GATT clients, not just from the ones interested in
-            // the services provided by this BT LE Server. Furthermore the list of
-            // currently connected devices does not appear to be in any particular order.
-            List<BluetoothDevice> connectedDevices =
-                mBluetoothManager.getConnectedDevices(BluetoothProfile.GATT_SERVER);
-            Log.w(TAG, "Device " + device + " connection state: " + newState + ", status: "
-                  + status + ", connected devices: " + connectedDevices);
-            // 0 == QLowEnergyController::UnconnectedState
-            // 2 == QLowEnergyController::ConnectedState
-            int qtControllerState = connectedDevices.size() > 0 ? 2 : 0;
-
-            switch (newState) {
-                case BluetoothProfile.STATE_CONNECTED:
-                    clientCharacteristicManager.markDeviceConnectivity(device, true);
-                    mRemoteName = device.getName();
-                    mRemoteAddress = device.getAddress();
-                    break;
-                case BluetoothProfile.STATE_DISCONNECTED:
-                    clientCharacteristicManager.markDeviceConnectivity(device, false);
-                    clearPendingPreparedWrites(device);
-                    // Update the remoteAddress and remoteName if needed
-                    if (device.getAddress().equals(mRemoteAddress) && !connectedDevices.isEmpty()) {
-                        mRemoteName = connectedDevices.get(0).getName();
-                        mRemoteAddress = connectedDevices.get(0).getAddress();
-                    }
-                    break;
-                default:
-                    // According to the API doc of this callback this should not happen
-                    Log.w(TAG, "Unhandled connection state change: " + newState);
-                    return;
-            }
-
-            // If last client disconnected, close down the server
-            if (qtControllerState == 0) { // QLowEnergyController::UnconnectedState
-                mGattServer.close();
-                synchronized (mPendingServiceAdditions)
-                {
-                    mPendingServiceAdditions.clear();
-                }
-                mGattServer = null;
-                mRemoteName = "";
-                mRemoteAddress = "";
-            }
-
-            int qtErrorCode;
-            switch (status) {
-                case BluetoothGatt.GATT_SUCCESS:
-                    qtErrorCode = 0; break;
-                default:
-                    Log.w(TAG, "Unhandled error code on peripheral connectionStateChanged: " + status + " " + newState);
-                    qtErrorCode = status;
-                    break;
-            }
-
-            leServerConnectionStateChange(qtObject, qtErrorCode, qtControllerState);
+            handleOnConnectionStateChange(device, status, newState);
         }
 
         @Override
         public void onServiceAdded(int status, BluetoothGattService service) {
             super.onServiceAdded(status, service);
-            Log.d(TAG, "Service " + service.getUuid().toString() + " addition result: " + status);
-
-            // Remove the indicated service from the pending queue
-            synchronized (mPendingServiceAdditions)
-            {
-                ListIterator<BluetoothGattService> iterator = mPendingServiceAdditions.listIterator();
-                while (iterator.hasNext()) {
-                    if (iterator.next().getUuid().equals(service.getUuid())) {
-                            iterator.remove();
-                            break;
-                    }
-                }
-
-                // If there are more services in the queue, add the next whose add initiation succeeds
-                iterator = mPendingServiceAdditions.listIterator();
-                while (iterator.hasNext()) {
-                    BluetoothGattService nextService = iterator.next();
-                    if (mGattServer.addService(nextService)) {
-                        break;
-                    } else {
-                        Log.w(TAG, "Adding service " + nextService.getUuid().toString() + " failed");
-                        iterator.remove();
-                    }
-                }
-            }
+            handleOnServiceAdded(status, service);
         }
 
         @Override
         public void onCharacteristicReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattCharacteristic characteristic)
         {
-            byte[] dataArray;
-            try {
-                dataArray = Arrays.copyOfRange(characteristic.getValue(), offset, characteristic.getValue().length);
-                mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, dataArray);
-            } catch (Exception ex) {
-                Log.w(TAG, "onCharacteristicReadRequest: " + requestId + " " + offset + " " + characteristic.getValue().length);
-                ex.printStackTrace();
-                mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_FAILURE, offset, null);
-            }
-
             super.onCharacteristicReadRequest(device, requestId, offset, characteristic);
+            handleOnCharacteristicReadRequest(device, requestId, offset, characteristic);
         }
 
         @Override
         public void onCharacteristicWriteRequest(BluetoothDevice device, int requestId, BluetoothGattCharacteristic characteristic,
                                                  boolean preparedWrite, boolean responseNeeded, int offset, byte[] value)
         {
-            Log.w(TAG, "onCharacteristicWriteRequest " + preparedWrite + " " + offset + " " + value.length);
-            final int minValueLen = ((QtBluetoothGattCharacteristic)characteristic).minValueLength;
-            final int maxValueLen = ((QtBluetoothGattCharacteristic)characteristic).maxValueLength;
-
-            int resultStatus = BluetoothGatt.GATT_SUCCESS;
-            boolean sendNotificationOrIndication = false;
-            if (!preparedWrite) { // regular write
-                // User may have defined minimum and maximum size for the value, which
-                // we enforce here. If the user has not defined these limits, the default
-                // values 0..INT_MAX do not limit anything.
-                if (value.length < minValueLen || value.length > maxValueLen) {
-                    // BT Core v 5.3, 4.9.3, Vol 3, Part G
-                    Log.w(TAG, "onCharacteristicWriteRequest invalid characteristic value length: "
-                          + value.length + ", min: " + minValueLen + ", max: " + maxValueLen);
-                    resultStatus = BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH;
-                } else if (offset == 0) {
-                    characteristic.setValue(value);
-                    leServerCharacteristicChanged(qtObject, characteristic, value);
-                    sendNotificationOrIndication = true;
-                } else {
-                    // This should not really happen as per Bluetooth spec
-                    Log.w(TAG, "onCharacteristicWriteRequest: !preparedWrite, offset " + offset + ", Not supported");
-                    resultStatus = BluetoothGatt.GATT_INVALID_OFFSET;
-                }
-
-
-            } else {
-                // BT Core v5.3, 3.4.6, Vol 3, Part F
-                // This is a prepared write which is used to write characteristics larger than MTU.
-                // We need to record all requests and execute them in one go once onExecuteWrite()
-                // is received. We use a queue to remember the pending requests.
-                resultStatus = addPendingPreparedWrite(device, characteristic, offset, value);
-            }
-
-            if (responseNeeded)
-                mGattServer.sendResponse(device, requestId, resultStatus, offset, value);
-            if (sendNotificationOrIndication)
-                sendNotificationsOrIndications(characteristic);
-
-            super.onCharacteristicWriteRequest(device, requestId, characteristic, preparedWrite, responseNeeded, offset, value);
+            super.onCharacteristicWriteRequest(device, requestId, characteristic,
+                                               preparedWrite, responseNeeded, offset, value);
+            handleOnCharacteristicWriteRequest(device, requestId, characteristic,
+                                               preparedWrite, responseNeeded, offset, value);
         }
 
         @Override
         public void onDescriptorReadRequest(BluetoothDevice device, int requestId, int offset, BluetoothGattDescriptor descriptor)
         {
-            byte[] dataArray = descriptor.getValue();
-            try {
-                if (descriptor.getUuid().equals(CLIENT_CHARACTERISTIC_CONFIGURATION_UUID)) {
-                    dataArray = clientCharacteristicManager.valueFor(descriptor.getCharacteristic(), device);
-                    if (dataArray == null)
-                        dataArray = descriptor.getValue();
-                }
-
-                dataArray = Arrays.copyOfRange(dataArray, offset, dataArray.length);
-                mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, offset, dataArray);
-            } catch (Exception ex) {
-                Log.w(TAG, "onDescriptorReadRequest: " + requestId + " " + offset + " " + dataArray.length);
-                ex.printStackTrace();
-                mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_FAILURE, offset, null);
-            }
-
             super.onDescriptorReadRequest(device, requestId, offset, descriptor);
+            handleOnDescriptorReadRequest(device, requestId, offset, descriptor);
         }
 
         @Override
         public void onDescriptorWriteRequest(BluetoothDevice device, int requestId, BluetoothGattDescriptor descriptor,
                                              boolean preparedWrite, boolean responseNeeded, int offset, byte[] value)
         {
-            Log.w(TAG, "onDescriptorWriteRequest " + preparedWrite + " " + offset + " " + value.length);
-            int resultStatus = BluetoothGatt.GATT_SUCCESS;
-            if (!preparedWrite) { // regular write
-                if (offset == 0) {
-                    if (descriptor.getUuid().equals(CLIENT_CHARACTERISTIC_CONFIGURATION_UUID)) {
-                        // If both IND and NTF are requested, resort to NTF only. BT specification
-                        // does not prohibit nor mention using both, but it is unlikely what the
-                        // client intended. Stack behaviours vary;
-                        // Apple client-side stack does not allow this, while Bluez client-side stack
-                        // erroneously sends this even if the developer only asked for the other.
-                        // The 0x03 value is a bitwise combination of 0x01 and 0x02 as per specification
-                        // BT Core v5.3, 3.3.3.3, Vol 3, Part G
-                        if (value[0] == 0x03) {
-                            Log.w(TAG, "Warning: In CCC of characteristic: "
-                                  + descriptor.getCharacteristic().getUuid()
-                                  + " enabling both NTF & IND requested, enabling NTF only.");
-                            value = BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE;
-                        }
-                        clientCharacteristicManager.insertOrUpdate(descriptor.getCharacteristic(),
-                                                                   device, value);
-                    }
-
-                    descriptor.setValue(value);
-                    leServerDescriptorWritten(qtObject, descriptor, value);
-                } else {
-                    // This should not really happen as per Bluetooth spec
-                    Log.w(TAG, "onDescriptorWriteRequest: !preparedWrite, offset " + offset + ", Not supported");
-                    resultStatus = BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED;
-                }
-
-            } else {
-                // BT Core v5.3, 3.4.6, Vol 3, Part F
-                // This is a prepared write which is used to write descriptors larger than MTU.
-                // We need to record all requests and execute them in one go once onExecuteWrite()
-                // is received. We use a queue to remember the pending requests.
-                resultStatus = addPendingPreparedWrite(device, descriptor, offset, value);
-            }
-
-            if (responseNeeded)
-                mGattServer.sendResponse(device, requestId, resultStatus, offset, value);
-
-            super.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite, responseNeeded, offset, value);
+            super.onDescriptorWriteRequest(device, requestId, descriptor, preparedWrite,
+                                           responseNeeded, offset, value);
+            handleOnDescriptorWriteRequest(device, requestId, descriptor, preparedWrite,
+                                           responseNeeded, offset, value);
         }
 
         @Override
         public void onExecuteWrite(BluetoothDevice device, int requestId, boolean execute)
         {
-            Log.w(TAG, "onExecuteWrite " + device + " " + requestId + " " + execute);
-
-            if (execute) {
-                // BT Core v5.3, 3.4.6.3, Vol 3, Part F
-                // Execute all pending prepared writes for the provided 'device'
-                for (WriteEntry entry : mPendingPreparedWrites) {
-                    if (!entry.remoteDevice.equals(device))
-                        continue;
-
-                    byte[] newValue = null;
-                    // The target can be a descriptor or a characteristic
-                    byte[] currentValue = (entry.target instanceof BluetoothGattCharacteristic)
-                                    ? ((BluetoothGattCharacteristic)entry.target).getValue()
-                                    : ((BluetoothGattDescriptor)entry.target).getValue();
-
-                    // Iterate writes and apply them to the currentValue in received order
-                    for (Pair<byte[], Integer> write : entry.writes) {
-                        // write.first is data, write.second.intValue() is offset. Check
-                        // that the offset is not beyond the length of the current value
-                        if (write.second.intValue() > currentValue.length) {
-                            clearPendingPreparedWrites(device);
-                            // BT Core v5.3, 3.4.6.3, Vol 3, Part F
-                            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_INVALID_OFFSET , 0, null);
-                            return;
-                        }
-
-                        // User may have defined value minimum and maximum sizes for
-                        // characteristics, which we enforce here. If the user has not defined
-                        // these limits, the default values 0..INT_MAX do not limit anything.
-                        // The value size cannot decrease in prepared write (small write is a
-                        // partial update) => no check for the minimum size limit here.
-                        if (entry.target instanceof QtBluetoothGattCharacteristic &&
-                                (write.second.intValue() + write.first.length >
-                                ((QtBluetoothGattCharacteristic)entry.target).maxValueLength)) {
-                            clearPendingPreparedWrites(device);
-                            // BT Core v5.3, 3.4.6.3, Vol 3, Part F
-                            mGattServer.sendResponse(device, requestId,
-                                        BluetoothGatt.GATT_INVALID_ATTRIBUTE_LENGTH,
-                                        0, null);
-                            return;
-                        }
-
-                        // Determine the size of the new value as we may be extending the current
-                        // value size
-                        newValue = new byte[Math.max(write.second.intValue() + write.first.length,
-                                                     currentValue.length)];
-                        // Copy the current value to the newValue. We can't use the currentValue
-                        // directly because the length of value might increase by this write
-                        System.arraycopy(currentValue, 0, newValue, 0, currentValue.length);
-                        // Apply this iteration's write to the newValue
-                        System.arraycopy(write.first, 0, newValue, write.second.intValue(), write.first.length);
-                        // Update the currentValue as there may be more writes to apply
-                        currentValue = newValue;
-                    }
-
-                    // Update value and inform the Qt/C++ side on the update
-                    if (entry.target instanceof BluetoothGattCharacteristic) {
-                        ((BluetoothGattCharacteristic)entry.target).setValue(newValue);
-                        leServerCharacteristicChanged(
-                            qtObject, (BluetoothGattCharacteristic)entry.target, newValue);
-                    } else {
-                        ((BluetoothGattDescriptor)entry.target).setValue(newValue);
-                        leServerDescriptorWritten(
-                            qtObject, (BluetoothGattDescriptor)entry.target, newValue);
-                    }
-                }
-            }
-            // Either we executed all writes or were asked to cancel.
-            // In any case clear writes and respond.
-            clearPendingPreparedWrites(device);
-            mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null);
-
             super.onExecuteWrite(device, requestId, execute);
+            handleOnExecuteWrite(device, requestId, execute);
         }
 
         @Override
@@ -618,18 +732,17 @@ public class QtBluetoothLEServer {
 
         @Override
         public void onMtuChanged(BluetoothDevice device, int mtu) {
-            if (mSupportedMtu == mtu)
-                return;
-            mSupportedMtu = mtu;
-            leMtuChanged(qtObject, mSupportedMtu);
+            handleOnMtuChanged(device, mtu);
         }
     };
 
-    public int mtu() {
+    // This function is called from Qt thread
+    public synchronized int mtu() {
         return mSupportedMtu;
     }
 
-    public boolean connectServer()
+    // This function is called from Qt thread
+    public synchronized boolean connectServer()
     {
         if (mGattServer != null)
             return true;
@@ -645,16 +758,14 @@ public class QtBluetoothLEServer {
         return (mGattServer != null);
     }
 
-    public void disconnectServer()
+    // This function is called from Qt thread
+    public synchronized void disconnectServer()
     {
         if (mGattServer == null)
             return;
 
         clearPendingPreparedWrites(null);
-        synchronized (mPendingServiceAdditions)
-        {
-            mPendingServiceAdditions.clear();
-        }
+        mPendingServiceAdditions.clear();
         mGattServer.close();
         mGattServer = null;
 
@@ -662,6 +773,7 @@ public class QtBluetoothLEServer {
         leServerConnectionStateChange(qtObject, 0 /*NoError*/, 0 /*QLowEnergyController::UnconnectedState*/);
     }
 
+    // This function is called from Qt thread
     public boolean startAdvertising(AdvertiseData advertiseData,
                                     AdvertiseData scanResponse,
                                     AdvertiseSettings settings)
@@ -680,6 +792,7 @@ public class QtBluetoothLEServer {
         return true;
     }
 
+    // This function is called from Qt thread
     public void stopAdvertising()
     {
         if (mLeAdvertiser == null)
@@ -689,7 +802,8 @@ public class QtBluetoothLEServer {
         Log.w(TAG, "Advertisement stopped.");
     }
 
-    public void addService(BluetoothGattService service)
+    // This function is called from Qt thread
+    public synchronized void addService(BluetoothGattService service)
     {
         if (!connectServer()) {
             Log.w(TAG, "Server::addService: Cannot open GATT server");
@@ -700,21 +814,21 @@ public class QtBluetoothLEServer {
         // next one. If the pending service queue is empty it means that there are no ongoing
         // service additions => add the service to the server. If there are services in the
         // queue it means there is an initiated addition ongoing, and we only add to the queue.
-        synchronized (mPendingServiceAdditions) {
-            if (mPendingServiceAdditions.isEmpty()) {
-                if (mGattServer.addService(service))
-                    mPendingServiceAdditions.add(service);
-                else
-                    Log.w(TAG, "Adding service " + service.getUuid().toString() + " failed.");
-            } else {
+        if (mPendingServiceAdditions.isEmpty()) {
+            if (mGattServer.addService(service))
                 mPendingServiceAdditions.add(service);
-            }
+            else
+                Log.w(TAG, "Adding service " + service.getUuid().toString() + " failed.");
+        } else {
+            mPendingServiceAdditions.add(service);
         }
     }
 
     /*
         Check the client characteristics configuration for the given characteristic
         and sends notifications or indications as per required.
+
+        This function is called from Qt and Java threads and calls must be protected
      */
     private void sendNotificationsOrIndications(BluetoothGattCharacteristic characteristic)
     {
@@ -775,8 +889,13 @@ public class QtBluetoothLEServer {
             return false;
         }
 
-        foundChar.setValue(newValue);
-        sendNotificationsOrIndications(foundChar);
+        synchronized (this) // a value update might be in progress
+        {
+            foundChar.setValue(newValue);
+            // Value is updated even if server is not connected, but notifying is not possible
+            if (mGattServer != null)
+                sendNotificationsOrIndications(foundChar);
+        }
 
         return true;
     }
@@ -814,7 +933,10 @@ public class QtBluetoothLEServer {
 
         // we even write CLIENT_CHARACTERISTIC_CONFIGURATION_UUID this way as we choose
         // to interpret the server's call as a change of the default value.
-        foundDesc.setValue(newValue);
+        synchronized (this) // a value update might be in progress
+        {
+            foundDesc.setValue(newValue);
+        }
 
         return true;
     }
