@@ -172,7 +172,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         // This would result in Bluetooth framework throwing an exception
         // the moment we try to start device discovery.
         qCWarning(QT_BT_DARWIN)
-                << "A proper Info.plist with NSBluetoothAlwaysUsageDescription"
+                << "A proper Info.plist with NSBluetoothAlwaysUsageDescription "
                    "entry is required, cannot start device discovery";
         setError(QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod);
         emit q_ptr->errorOccurred(lastError);
