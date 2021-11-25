@@ -182,8 +182,7 @@ QBluetoothUuid qt_uuid(CBUUID *uuid)
 {
     // Apples' docs say "128 bit" and "16-bit UUIDs are implicitly
     // pre-filled with the Bluetooth Base UUID."
-    // But Core Bluetooth can return CBUUID objects of length 2
-    // (16-bit, so they are not pre-filled?).
+    // But Core Bluetooth can return CBUUID objects of length 2, 4, and 16.
 
     if (!uuid)
         return QBluetoothUuid();
@@ -195,6 +194,9 @@ QBluetoothUuid qt_uuid(CBUUID *uuid)
         // Seems to be in big-endian.
         const uchar *const src = static_cast<const uchar *>(uuid.data.bytes);
         return QBluetoothUuid(qFromBigEndian<quint16>(src));
+    } else if (uuid.data.length == 4) {
+        const uchar *const src = static_cast<const uchar *>(uuid.data.bytes);
+        return QBluetoothUuid(qFromBigEndian<quint32>(src));
     } else if (uuid.data.length == 16) {
         quint128 qtUuidData = {};
         const quint8 *const source = static_cast<const quint8 *>(uuid.data.bytes);
@@ -203,7 +205,7 @@ QBluetoothUuid qt_uuid(CBUUID *uuid)
         return QBluetoothUuid(qtUuidData);
     }
 
-    qCDebug(QT_BT_DARWIN) << "qt_uuid, invalid CBUUID, 2 or 16 bytes expected, but got "
+    qCDebug(QT_BT_DARWIN) << "qt_uuid, invalid CBUUID, 2, 4, or 16 bytes expected, but got "
                           << uuid.data.length << " bytes length";
     return QBluetoothUuid();
 }

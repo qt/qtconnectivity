@@ -78,6 +78,7 @@ public:
 
     QList<QBluetoothUuid> serviceUuids;
     QMultiHash<quint16, QByteArray> manufacturerData;
+    QMultiHash<QBluetoothUuid, QByteArray> serviceData;
     QBluetoothDeviceInfo::CoreConfigurations deviceCoreConfiguration = QBluetoothDeviceInfo::UnknownCoreConfiguration;
 
     QBluetoothUuid deviceUuid;

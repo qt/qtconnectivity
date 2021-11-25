@@ -522,6 +522,14 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(const QBluetoothDeviceIn
                     updatedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
                 }
 
+                if (discoveredDevices[i].serviceData() != newDeviceInfo.serviceData()) {
+                    qCDebug(QT_BT_DARWIN) << "Updating service data for" << newDeviceInfo.address();
+                    const QList<QBluetoothUuid> keys = newDeviceInfo.serviceIds();
+                    for (auto key : keys)
+                        discoveredDevices[i].setServiceData(key, newDeviceInfo.serviceData(key));
+                    updatedFields.setFlag(QBluetoothDeviceInfo::Field::ServiceData);
+                }
+
                 if (lowEnergySearchTimeout > 0) {
                     if (discoveredDevices[i] != newDeviceInfo) {
                         discoveredDevices.replace(i, newDeviceInfo);

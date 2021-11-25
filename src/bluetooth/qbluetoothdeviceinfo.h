@@ -41,6 +41,7 @@
 #define QBLUETOOTHDEVICEINFO_H
 
 #include <QtBluetooth/qtbluetoothglobal.h>
+#include <QtBluetooth/QBluetoothUuid>
 
 #include <QtCore/qbytearray.h>
 #include <QtCore/qlist.h>
@@ -195,6 +196,7 @@ public:
         None = 0x0000,
         RSSI = 0x0001,
         ManufacturerData = 0x0002,
+        ServiceData = 0x0004,
         All = 0x7fff
     };
     Q_DECLARE_FLAGS(Fields, Field)
@@ -248,6 +250,11 @@ public:
     QByteArray manufacturerData(quint16 manufacturerId) const;
     bool setManufacturerData(quint16 manufacturerId, const QByteArray &data);
     QMultiHash<quint16, QByteArray> manufacturerData() const;
+
+    QList<QBluetoothUuid> serviceIds() const;
+    QByteArray serviceData(const QBluetoothUuid &serviceId) const;
+    bool setServiceData(const QBluetoothUuid &serviceId, const QByteArray &data);
+    QMultiHash<QBluetoothUuid, QByteArray> serviceData() const;
 
     void setCoreConfigurations(QBluetoothDeviceInfo::CoreConfigurations coreConfigs);
     QBluetoothDeviceInfo::CoreConfigurations coreConfigurations() const;

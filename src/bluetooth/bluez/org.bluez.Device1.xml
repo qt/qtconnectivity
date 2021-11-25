@@ -29,10 +29,10 @@
     <property name="Adapter" type="o" access="read"></property>
     <!-- ManufacturerData & ServiceData introduced by Bluez 5.31 -->
     <property name="ManufacturerData" type="a{qv}" access="read">
-        <annotation name="org.qtproject.QtDBus.QtTypeName" value="ManufacturerDataList"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName" value="ManufacturerDataList"/>
     </property>
     <property name="ServiceData" type="a{sv}" access="read">
-            <annotation name="org.qtproject.QtDBus.QtTypeName" value="QVariantMap"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName" value="ServiceDataList"/>
     </property>
     <!-- TxPower and ServicesResolved introduced by Bluez 5.42 -->
     <property name="TxPower" type="n" access="read"></property>

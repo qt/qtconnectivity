@@ -250,6 +250,9 @@ enum ADType {
     ADType128BitUuidComplete = 0x07,
     ADTypeShortenedLocalName = 0x08,
     ADTypeCompleteLocalName = 0x09,
+    ADTypeServiceData16Bit = 0x16,
+    ADTypeServiceData32Bit = 0x20,
+    ADTypeServiceData128Bit = 0x21,
     ADTypeManufacturerSpecificData = 0xff,
     // .. more will be added when required
 };
@@ -542,6 +545,25 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(const 
                 foundService =
                     QBluetoothUuid(qToBigEndian<quint128>(qFromLittleEndian<quint128>(dataPtr)));
                 break;
+            case ADTypeServiceData16Bit:
+                if (nBytes >= 3) {
+                    info.setServiceData(QBluetoothUuid(qFromLittleEndian<quint16>(dataPtr)),
+                                        QByteArray(dataPtr + 2, nBytes - 3));
+                }
+                break;
+            case ADTypeServiceData32Bit:
+                if (nBytes >= 5) {
+                    info.setServiceData(QBluetoothUuid(qFromLittleEndian<quint32>(dataPtr)),
+                                        QByteArray(dataPtr + 4, nBytes - 5));
+                }
+                break;
+            case ADTypeServiceData128Bit:
+                if (nBytes >= 17) {
+                    info.setServiceData(QBluetoothUuid(qToBigEndian<quint128>(
+                                                qFromLittleEndian<quint128>(dataPtr))),
+                                        QByteArray(dataPtr + 16, nBytes - 17));
+                }
+                break;
             case ADTypeManufacturerSpecificData:
                 if (nBytes >= 3) {
                     info.setManufacturerData(qFromLittleEndian<quint16>(dataPtr),
@@ -592,4 +614,3 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(const 
 }
 
 QT_END_NAMESPACE
-

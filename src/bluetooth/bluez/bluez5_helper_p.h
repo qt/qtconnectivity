@@ -53,15 +53,18 @@
 
 #include <QtCore/QObject>
 #include <QtDBus/QtDBus>
+#include <QtBluetooth/QBluetoothUuid>
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/private/qtbluetoothglobal_p.h>
 
 typedef QMap<QString, QVariantMap> InterfaceList;
 typedef QMap<QDBusObjectPath, InterfaceList> ManagedObjectList;
 typedef QMap<quint16, QDBusVariant> ManufacturerDataList;
+typedef QMap<QString, QDBusVariant> ServiceDataList;
 
 Q_DECLARE_METATYPE(InterfaceList)
 Q_DECLARE_METATYPE(ManufacturerDataList)
+Q_DECLARE_METATYPE(ServiceDataList)
 Q_DECLARE_METATYPE(ManagedObjectList)
 
 QT_BEGIN_NAMESPACE

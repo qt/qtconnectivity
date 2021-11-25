@@ -96,9 +96,9 @@ public:
     inline short rSSI() const
     { return qvariant_cast< short >(property("RSSI")); }
 
-    Q_PROPERTY(QVariantMap ServiceData READ serviceData)
-    inline QVariantMap serviceData() const
-    { return qvariant_cast< QVariantMap >(property("ServiceData")); }
+    Q_PROPERTY(ServiceDataList ServiceData READ serviceData)
+    inline ServiceDataList serviceData() const
+    { return qvariant_cast< ServiceDataList >(property("ServiceData")); }
 
     Q_PROPERTY(bool ServicesResolved READ servicesResolved)
     inline bool servicesResolved() const

@@ -89,7 +89,9 @@ QT_END_NAMESPACE
 #include <QtCore/QTimer>
 
 using ManufacturerData = QHash<quint16, QByteArray>;
+using ServiceData = QHash<QBluetoothUuid, QByteArray>;
 Q_DECLARE_METATYPE(ManufacturerData)
+Q_DECLARE_METATYPE(ServiceData)
 #endif
 
 QT_BEGIN_NAMESPACE
@@ -175,7 +177,7 @@ private:
 private slots:
     void registerDevice(const QBluetoothDeviceInfo &info);
     void updateDeviceData(const QBluetoothAddress &address, QBluetoothDeviceInfo::Fields fields,
-                          qint16 rssi, ManufacturerData manufacturerData);
+                          qint16 rssi, ManufacturerData manufacturerData, ServiceData serviceData);
     void onErrorOccured(QBluetoothDeviceDiscoveryAgent::Error e);
     void onScanFinished();
 
