@@ -362,8 +362,6 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEAdvertisementReceived
         QMutexLocker locker(&m_foundDevicesMutex);
         // Merge newly found services with list of currently found ones
         if (m_foundLEDevicesMap.contains(address)) {
-            if (size == 0)
-                return S_OK;
             const LEAdvertisingInfo adInfo = m_foundLEDevicesMap.value(address);
             QList<QBluetoothUuid> foundServices = adInfo.services;
             if (adInfo.rssi != rssi) {
@@ -371,8 +369,9 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEAdvertisementReceived
                 changedFields.setFlag(QBluetoothDeviceInfo::Field::RSSI);
             }
             if (adInfo.manufacturerData != manufacturerData) {
-                m_foundLEDevicesMap[address].manufacturerData = std::move(manufacturerData);
-                changedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
+                m_foundLEDevicesMap[address].manufacturerData.insert(manufacturerData);
+                if (adInfo.manufacturerData != m_foundLEDevicesMap[address].manufacturerData)
+                    changedFields.setFlag(QBluetoothDeviceInfo::Field::ManufacturerData);
             }
             bool newServiceAdded = false;
             for (const QBluetoothUuid &uuid : qAsConst(serviceUuids)) {
