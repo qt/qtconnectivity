@@ -642,8 +642,8 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(const QBluetoothUu
     QThread *thread = new QThread;
     worker->moveToThread(thread);
     connect(thread, &QThread::started, worker, &QWinRTLowEnergyServiceHandler::obtainCharList);
-    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
+    connect(worker, &QObject::destroyed, thread, &QObject::deleteLater);
     connect(worker, &QWinRTLowEnergyServiceHandler::charListObtained, this,
             [this](const QBluetoothUuid &service, QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData> charList
             , QVector<QBluetoothUuid> indicateChars
