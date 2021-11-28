@@ -179,6 +179,7 @@ void tst_QBluetoothServiceDiscoveryAgent::serviceDiscoveryDebug(const QBluetooth
     qDebug() << "\tRFCOMM server channel:" << info.serverChannel();
 }
 
+#if 0
 static void dumpAttributeVariant(const QVariant &var, const QString indent)
 {
     if (!var.isValid()) {
@@ -245,6 +246,7 @@ static inline void dumpServiceInfoAttributes(const QBluetoothServiceInfo &info)
         dumpAttributeVariant(info.attribute(id), QString("\t"));
     }
 }
+#endif
 
 
 void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery_data()
