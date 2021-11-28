@@ -55,11 +55,6 @@ TagBase::~TagBase()
 {
 }
 
-static inline quint8 blockByteToAddress(quint8 block, quint8 byte)
-{
-    return ((block & 0x0f) << 3) | (byte & 0x07);
-}
-
 NfcTagType1::NfcTagType1()
 :   hr0(0x11), hr1(0x00), memory(120, '\0')
 {
@@ -118,9 +113,6 @@ void NfcTagType1::load(QSettings *settings)
         // tag with unknown write attributes
         ;
     }
-
-    //quint16 lock = (quint8(memory[blockByteToAddress(0x0e, 1)]) << 8) |
-    //               quint8(memory[blockByteToAddress(0x0e, 0)]);
 
     settings->endGroup();
 }
