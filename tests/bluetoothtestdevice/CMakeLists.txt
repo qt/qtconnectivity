@@ -29,9 +29,21 @@ else()
 endif()
 
 set_target_properties(bluetoothtestdevice PROPERTIES
-        WIN32_EXECUTABLE TRUE
-        MACOSX_BUNDLE TRUE
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
 )
+
+if(APPLE)
+    if(IOS)
+        set_target_properties(bluetoothtestdevice PROPERTIES
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.ios.plist"
+        )
+    else()
+        set_target_properties(bluetoothtestdevice PROPERTIES
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.macos.plist"
+        )
+    endif()
+endif()
 
 target_link_libraries(
         bluetoothtestdevice
