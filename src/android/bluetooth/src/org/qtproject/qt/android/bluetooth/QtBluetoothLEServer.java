@@ -368,6 +368,7 @@ public class QtBluetoothLEServer {
             mGattServer = null;
             mRemoteName = "";
             mRemoteAddress = "";
+            mSupportedMtu = DEFAULT_LE_ATT_MTU;
         }
 
         int qtErrorCode;
