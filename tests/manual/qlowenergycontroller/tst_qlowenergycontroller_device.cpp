@@ -40,6 +40,9 @@
 static const QLatin1String largeCharacteristicServiceUuid("1f85e37c-ac16-11eb-ae5c-93d3a763feed");
 static const QLatin1String largeCharacteristicCharUuid("40e4f68e-ac16-11eb-9956-cfe55a8c370c");
 
+static const QLatin1String platformIdentifierServiceUuid("4a92cb7f-5031-4a09-8304-3e89413f458d");
+static const QLatin1String platformIdentifierCharUuid("6b0ecf7c-5f09-4c87-aaab-bb49d5d383aa");
+
 static const QLatin1String
         notificationIndicationTestServiceUuid("bb137ac5-5716-4b80-873b-e2d11d29efe2");
 static const QLatin1String
@@ -66,7 +69,16 @@ static const QLatin1String mtuCharUuid("960d7e2a-a850-4a70-8064-cd74e9ccb6ff");
 
 /*
  * This class contains all unit tests for QLowEnergyController
- * which require a remote device and can thus not run completely automated
+ * which require a remote device and can thus not run completely automated.
+ *
+ * This testcase acts as a bluetooth LE *client*.
+ * The counterpart *server* device is the "bluetoothtestdevice" in the same
+ * repository and it needs to be ran when this testcase is ran.
+ *
+ * The name of the server device needs to be adjusted in this code so that
+ * this LE client can find it. For example on macOS and Linux it is a generic
+ * "BluetoothTestDevice" where as on Android it is the device's bluetooth name
+ * set by the user. Please see the BTLE_SERVER_DEVICE_NAME below.
  */
 class tst_qlowenergycontroller_device : public QObject
 {
@@ -80,6 +92,10 @@ private slots:
     void init();
     void cleanup();
     void cleanupTestCase();
+
+    // Keep readServerPlatform as the first test, later tests
+    // may depend on its results.
+    void readServerPlatform();
 
 #if defined(QT_BLUETOOTH_MTU_SUPPORTED)
     void checkMtuNegotiation();
@@ -100,6 +116,7 @@ private:
     std::unique_ptr<QLowEnergyController> mController;
     QBluetoothDeviceInfo mRemoteDeviceInfo;
     QString mServerDeviceName;
+    QByteArray mServerPlatform;
 };
 
 // connectionCounter is used to check that the server-side connect events
@@ -122,7 +139,7 @@ void tst_qlowenergycontroller_device::initTestCase()
     mDevAgent->setLowEnergyDiscoveryTimeout(75000);
     mServerDeviceName = qEnvironmentVariable("BTLE_SERVER_DEVICE_NAME");
     if (mServerDeviceName.isEmpty())
-        mServerDeviceName = QStringLiteral("Pixel 4a");
+        mServerDeviceName = QStringLiteral("BluetoothTestDevice");
     qDebug() << "Using server device name for testing: " << mServerDeviceName;
     qDebug() << "To change this set BTLE_SERVER_DEVICE_NAME environment variable";
 }
@@ -190,7 +207,14 @@ void tst_qlowenergycontroller_device::init()
 void tst_qlowenergycontroller_device::cleanup()
 {
     mController->disconnectFromDevice();
-    QTRY_VERIFY_WITH_TIMEOUT(mController->state() == QLowEnergyController::UnconnectedState, 30000);
+
+    // Attempt a graceful close. If the test has already failed, the QTRY would exit immediately
+    if (!QTest::currentTestFailed())
+        QTRY_VERIFY_WITH_TIMEOUT(mController->state() ==
+                                 QLowEnergyController::UnconnectedState, 30000);
+    else
+        QTest::qWait(2000);
+
     QCOMPARE(mController->state(), QLowEnergyController::UnconnectedState);
     qDebug() << "Disconnected from remote device, waiting 5s before deleting controller.";
     QTest::qWait(5000);
@@ -199,13 +223,37 @@ void tst_qlowenergycontroller_device::cleanup()
 
 void tst_qlowenergycontroller_device::cleanupTestCase() { }
 
+// The readServerPlatform should always be the first actual test function to execute.
+// It reads a characteristic where the server reports on which platform it runs on.
+// This information can then be used to adjust the test case's behavior accordingly;
+// different platforms support slightly different things.
+void tst_qlowenergycontroller_device::readServerPlatform()
+{
+    QVERIFY(mController->services().isEmpty());
+    mController->discoverServices();
+    QTRY_COMPARE(mController->state(), QLowEnergyController::DiscoveredState);
+    QCOMPARE(mController->error(), QLowEnergyController::NoError);
+
+    QLowEnergyService *service =
+            mController->createServiceObject(QBluetoothUuid(platformIdentifierServiceUuid));
+    QVERIFY(service != nullptr);
+    service->discoverDetails(QLowEnergyService::FullDiscovery);
+    QTRY_COMPARE(service->state(), QLowEnergyService::ServiceState::RemoteServiceDiscovered);
+
+    auto characteristic = service->characteristic(QBluetoothUuid(platformIdentifierCharUuid));
+    mServerPlatform = characteristic.value();
+    qDebug() << "Server reported its running on: " << mServerPlatform;
+    QVERIFY(!mServerPlatform.isEmpty());
+}
+
+
 #if defined(QT_BLUETOOTH_MTU_SUPPORTED)
 // Don't use QSKIP here as that
 // would still cause lengthy init() and clean() executions.
 void tst_qlowenergycontroller_device::checkMtuNegotiation()
 {
     // service discovery, including MTU negotiation
-    qDebug() << "MTU after connect" << mController->mtu();
+    qDebug() << "Client-side MTU after connect" << mController->mtu();
     QCOMPARE(mController->mtu(), 23);
 
     QVERIFY(mController->services().isEmpty());
@@ -229,7 +277,10 @@ void tst_qlowenergycontroller_device::checkMtuNegotiation()
     auto characteristic = service->characteristic(QBluetoothUuid(mtuCharUuid));
     int mtu;
     memcpy(&mtu, characteristic.value().constData(), sizeof(int));
-    QCOMPARE(mtu, mController->mtu());
+    qDebug() << "MTU reported by server-side:" << mtu;
+    // Server-side mtu is not supported on all platforms
+    if (mServerPlatform != "linux" && mServerPlatform != "darwin")
+        QCOMPARE(mtu, mController->mtu());
 }
 #endif
 

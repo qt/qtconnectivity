@@ -71,6 +71,9 @@
 static const QLatin1String largeCharacteristicServiceUuid("1f85e37c-ac16-11eb-ae5c-93d3a763feed");
 static const QLatin1String largeCharacteristicCharUuid("40e4f68e-ac16-11eb-9956-cfe55a8c370c");
 
+static const QLatin1String platformIdentifierServiceUuid("4a92cb7f-5031-4a09-8304-3e89413f458d");
+static const QLatin1String platformIdentifierCharUuid("6b0ecf7c-5f09-4c87-aaab-bb49d5d383aa");
+
 static const QLatin1String
         notificationIndicationTestServiceUuid("bb137ac5-5716-4b80-873b-e2d11d29efe2");
 static const QLatin1String
@@ -243,6 +246,34 @@ int main(int argc, char *argv[])
 
             serviceData.addCharacteristic(charData);
         }
+
+        serviceDefinitions << serviceData;
+    }
+
+    {
+        // server's platform identifier service
+        QLowEnergyServiceData serviceData;
+        serviceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
+        serviceData.setUuid(QBluetoothUuid(platformIdentifierServiceUuid));
+
+        QLowEnergyCharacteristicData charData;
+        charData.setUuid(QBluetoothUuid(platformIdentifierCharUuid));
+#if defined(Q_OS_ANDROID)
+        QByteArray platformIdentifier("android");
+#elif defined(QT_OS_WIN)
+        QByteArray platformIdentifier("windows");
+#elif defined(Q_OS_DARWIN)
+        QByteArray platformIdentifier("darwin");
+#elif defined(Q_OS_LINUX)
+        QByteArray platformIdentifier("linux");
+#else
+        QByteArray platformIdentifier("unspecified");
+#endif
+        qDebug() << "Server will report it is running on: " << platformIdentifier;
+        charData.setValue(platformIdentifier);
+        charData.setProperties(QLowEnergyCharacteristic::PropertyType::Read);
+
+        serviceData.addCharacteristic(charData);
 
         serviceDefinitions << serviceData;
     }
