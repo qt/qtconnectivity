@@ -580,10 +580,13 @@ QBluetoothAddress QBluetoothSocketPrivateWinRT::localAddress() const
     ComPtr<IHostName> localHost;
     hr = info->get_LocalAddress(&localHost);
     Q_ASSERT_SUCCEEDED(hr);
-    HString localAddress;
-    hr = localHost->get_CanonicalName(localAddress.GetAddressOf());
-    Q_ASSERT_SUCCEEDED(hr);
-    return QBluetoothAddress(fromWinApiAddress(std::move(localAddress)));
+    if (localHost) {
+        HString localAddress;
+        hr = localHost->get_CanonicalName(localAddress.GetAddressOf());
+        Q_ASSERT_SUCCEEDED(hr);
+        return QBluetoothAddress(fromWinApiAddress(std::move(localAddress)));
+    }
+    return QBluetoothAddress();
 }
 
 quint16 QBluetoothSocketPrivateWinRT::localPort() const
@@ -619,10 +622,13 @@ QString QBluetoothSocketPrivateWinRT::peerName() const
     ComPtr<IHostName> remoteHost;
     hr = info->get_RemoteHostName(&remoteHost);
     Q_ASSERT_SUCCEEDED(hr);
-    HString remoteHostName;
-    hr = remoteHost->get_DisplayName(remoteHostName.GetAddressOf());
-    Q_ASSERT_SUCCEEDED(hr);
-    return qt_QStringFromHString(remoteHostName);
+    if (remoteHost) {
+        HString remoteHostName;
+        hr = remoteHost->get_DisplayName(remoteHostName.GetAddressOf());
+        Q_ASSERT_SUCCEEDED(hr);
+        return qt_QStringFromHString(remoteHostName);
+    }
+    return {};
 }
 
 QBluetoothAddress QBluetoothSocketPrivateWinRT::peerAddress() const
@@ -637,10 +643,13 @@ QBluetoothAddress QBluetoothSocketPrivateWinRT::peerAddress() const
     ComPtr<IHostName> remoteHost;
     hr = info->get_RemoteAddress(&remoteHost);
     Q_ASSERT_SUCCEEDED(hr);
-    HString remoteAddress;
-    hr = remoteHost->get_CanonicalName(remoteAddress.GetAddressOf());
-    Q_ASSERT_SUCCEEDED(hr);
-    return QBluetoothAddress(fromWinApiAddress(std::move(remoteAddress)));
+    if (remoteHost) {
+        HString remoteAddress;
+        hr = remoteHost->get_CanonicalName(remoteAddress.GetAddressOf());
+        Q_ASSERT_SUCCEEDED(hr);
+        return QBluetoothAddress(fromWinApiAddress(std::move(remoteAddress)));
+    }
+    return QBluetoothAddress();
 }
 
 quint16 QBluetoothSocketPrivateWinRT::peerPort() const
