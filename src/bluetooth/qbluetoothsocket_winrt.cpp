@@ -50,6 +50,7 @@
 #include <QtBluetooth/qbluetoothdeviceinfo.h>
 #include <QtBluetooth/qbluetoothserviceinfo.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/QPointer>
 
 #include <robuffer.h>
 #include <windows.devices.bluetooth.h>
@@ -183,7 +184,14 @@ public:
             Q_ASSERT_SUCCEEDED(hr);
             hr = stream->ReadAsync(buffer.Get(), READ_BUFFER_SIZE, InputStreamOptions_Partial, m_readOp.GetAddressOf());
             Q_ASSERT_SUCCEEDED(hr);
-            hr = m_readOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
+            QPointer<SocketWorker> thisPtr(this);
+            hr = m_readOp->put_Completed(
+                    Callback<SocketReadCompletedHandler>([thisPtr](IAsyncBufferOperation *asyncInfo,
+                                                                AsyncStatus status) {
+                        if (thisPtr)
+                            return thisPtr->onReadyRead(asyncInfo, status);
+                        return S_OK;
+                    }).Get());
             Q_ASSERT_SUCCEEDED(hr);
             return S_OK;
         });
@@ -284,7 +292,14 @@ public:
                 emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
                 return S_OK;
             }
-            hr = m_readOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
+            QPointer<SocketWorker> thisPtr(this);
+            hr = m_readOp->put_Completed(
+                    Callback<SocketReadCompletedHandler>([thisPtr](IAsyncBufferOperation *asyncInfo,
+                                                                AsyncStatus status) {
+                        if (thisPtr)
+                            return thisPtr->onReadyRead(asyncInfo, status);
+                        return S_OK;
+                    }).Get());
             if (FAILED(hr)) {
                 qErrnoWarning(hr, "onReadyRead(): Failed to set socket read callback.");
                 emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
