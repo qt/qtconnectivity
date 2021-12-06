@@ -653,7 +653,7 @@ quint16 QBluetoothSocketPrivateWinRT::peerPort() const
     hr = m_socketObject->get_Information(&info);
     Q_ASSERT_SUCCEEDED(hr);
     HString remotePortString;
-    hr = info->get_LocalPort(remotePortString.GetAddressOf());
+    hr = info->get_RemotePort(remotePortString.GetAddressOf());
     Q_ASSERT_SUCCEEDED(hr);
     bool ok = true;
     const uint port = qt_QStringFromHString(remotePortString).toUInt(&ok);
