@@ -557,6 +557,17 @@ QString QBluetoothSocketPrivateWinRT::localName() const
     return device.name();
 }
 
+static QString fromWinApiAddress(HString address)
+{
+    // WinAPI returns address with parentheses around it. We need to remove
+    // them to convert to QBluetoothAddress.
+    QString addressStr(qt_QStringFromHString(address));
+    if (addressStr.startsWith(QLatin1Char('(')) && addressStr.endsWith(QLatin1Char(')'))) {
+        addressStr = addressStr.sliced(1, addressStr.size() - 2);
+    }
+    return addressStr;
+}
+
 QBluetoothAddress QBluetoothSocketPrivateWinRT::localAddress() const
 {
     if (!m_socketObject)
@@ -572,7 +583,7 @@ QBluetoothAddress QBluetoothSocketPrivateWinRT::localAddress() const
     HString localAddress;
     hr = localHost->get_CanonicalName(localAddress.GetAddressOf());
     Q_ASSERT_SUCCEEDED(hr);
-    return QBluetoothAddress(qt_QStringFromHString(localAddress));
+    return QBluetoothAddress(fromWinApiAddress(std::move(localAddress)));
 }
 
 quint16 QBluetoothSocketPrivateWinRT::localPort() const
@@ -629,7 +640,7 @@ QBluetoothAddress QBluetoothSocketPrivateWinRT::peerAddress() const
     HString remoteAddress;
     hr = remoteHost->get_CanonicalName(remoteAddress.GetAddressOf());
     Q_ASSERT_SUCCEEDED(hr);
-    return QBluetoothAddress(qt_QStringFromHString(remoteAddress));
+    return QBluetoothAddress(fromWinApiAddress(std::move(remoteAddress)));
 }
 
 quint16 QBluetoothSocketPrivateWinRT::peerPort() const
