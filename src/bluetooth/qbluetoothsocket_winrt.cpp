@@ -159,7 +159,6 @@ signals:
 public slots:
     Q_INVOKABLE void notifyAboutNewData()
     {
-        QMutexLocker locker(&m_mutex);
         const QList<QByteArray> newData = std::move(m_pendingData);
         m_pendingData.clear();
         emit newDataReceived(newData);
@@ -245,11 +244,9 @@ public:
         }
 
         QByteArray newData(reinterpret_cast<const char*>(data), int(bufferLength));
-        QMutexLocker readLocker(&m_mutex);
         if (m_pendingData.isEmpty())
             QMetaObject::invokeMethod(this, "notifyAboutNewData", Qt::QueuedConnection);
         m_pendingData << newData;
-        readLocker.unlock();
 
         UINT32 readBufferLength;
         ComPtr<IInputStream> stream;
@@ -302,9 +299,6 @@ private:
     ComPtr<IStreamSocket> m_socket;
     QList<QByteArray> m_pendingData;
     bool m_shuttingDown = false;
-
-    // Protects pendingData/pendingDatagrams which are accessed from native callbacks
-    QMutex m_mutex;
 
     ComPtr<IAsyncOperationWithProgress<IBuffer *, UINT32>> m_readOp;
 };
