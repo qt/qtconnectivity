@@ -695,7 +695,6 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     if (state == PeripheralState::advertising) {
         state = PeripheralState::connected;
-        [manager stopAdvertising];
         emit notifier->connected();
     }
 }

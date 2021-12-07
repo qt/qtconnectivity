@@ -748,7 +748,6 @@ QLowEnergyService *QLowEnergyController::createServiceObject(
    of uuids. In such cases \a scanResponseData may be used for additional information.
 
    If this object is currently not in the \l UnconnectedState, nothing happens.
-   \note Advertising will stop automatically once a client connects to the local device.
 
    \since 5.7
    \sa stopAdvertising()
