@@ -193,7 +193,7 @@ void tst_qlowenergycontroller_device::init()
         QVERIFY(mRemoteDeviceInfo.isValid());
         mController.reset(QLowEnergyController::createCentral(mRemoteDeviceInfo));
         mController->connectToDevice();
-        QTRY_VERIFY_WITH_TIMEOUT(mController->state() != QLowEnergyController::ConnectingState, 30000);
+        QTRY_VERIFY_WITH_TIMEOUT(mController->state() != QLowEnergyController::ConnectingState, 45000);
         if (mController->state() != QLowEnergyController::ConnectedState) {
             mController.reset();
             qDebug() << "Retrying connecting to the server in 5 seconds";
@@ -254,8 +254,11 @@ void tst_qlowenergycontroller_device::checkMtuNegotiation()
 {
     // service discovery, including MTU negotiation
     qDebug() << "Client-side MTU after connect" << mController->mtu();
+#if ! defined(Q_OS_DARWIN)
+    // The check below usually passes, but sometimes the BT stack gives a cached value
+    // from a previous testcase run and the below fails => avoid flakiness
     QCOMPARE(mController->mtu(), 23);
-
+#endif
     QVERIFY(mController->services().isEmpty());
     mController->discoverServices();
     QTRY_COMPARE(mController->state(), QLowEnergyController::DiscoveredState);
@@ -264,8 +267,8 @@ void tst_qlowenergycontroller_device::checkMtuNegotiation()
     checkconnectionCounter(mController);
 
     // now a larger MTU should have been negotiated
+    QTRY_VERIFY(mController->mtu() > 23);
     qDebug() << "MTU after service discovery" << mController->mtu();
-    QVERIFY(mController->mtu() > 23);
 
     // check that central and peripheral agree on negotiated mtu
     QLowEnergyService *service =
@@ -289,6 +292,9 @@ void tst_qlowenergycontroller_device::checkMtuNegotiation()
 void tst_qlowenergycontroller_device::checkconnectionCounter(
         std::unique_ptr<QLowEnergyController> &mController)
 {
+    // on darwin the server-side connect/disconnect events are not reported reliably
+    if (mServerPlatform == "darwin")
+        return;
     QLowEnergyService *service =
             mController->createServiceObject(QBluetoothUuid(connectionCountServiceUuid));
     QVERIFY(service != nullptr);
@@ -328,11 +334,13 @@ void tst_qlowenergycontroller_device::readWriteLargeCharacteristic()
     QCOMPARE(readSpy.count(), 0);
     QCOMPARE(writtenSpy.count(), 0);
 
+    // The service discovery skipped the values => check that the default value is all zeroes
     auto characteristic = service->characteristic(QBluetoothUuid(largeCharacteristicCharUuid));
     QByteArray testArray(0);
     qDebug() << "Initial large characteristic value:" << characteristic.value();
     QCOMPARE(characteristic.value(), testArray);
 
+    // Read the characteristic value and verify it is the one the server-side sets (0x0b 0x00 ..)
     service->readCharacteristic(characteristic);
     QTRY_COMPARE(readSpy.count(), 1);
     qDebug() << "Large characteristic value after read:" << characteristic.value();
@@ -340,10 +348,10 @@ void tst_qlowenergycontroller_device::readWriteLargeCharacteristic()
     testArray[0] = 0x0b;
     QCOMPARE(characteristic.value(), testArray);
 
+    // Write a new value to characteristic and read it back
     for (int i = 0; i < 512; ++i) {
         testArray[i] = i % 5;
     }
-
     service->writeCharacteristic(characteristic, testArray);
     QCOMPARE(service->error(), QLowEnergyService::ServiceError::NoError);
     QTRY_COMPARE(writtenSpy.count(), 1);
@@ -373,23 +381,29 @@ void tst_qlowenergycontroller_device::readDuringServiceDiscovery()
     QCOMPARE(readSpy.count(), 0);
     QCOMPARE(writtenSpy.count(), 0);
 
-    auto characteristic = service->characteristic(QBluetoothUuid(largeCharacteristicCharUuid));
+    // Value that is initially set on the characteristic at the server-side (0x0b 0x00 ..)
     QByteArray testArray(512, 0);
     testArray[0] = 0x0b;
-    qDebug() << "Initial large characteristic value:" << characteristic.value();
-    QCOMPARE(characteristic.value(), testArray);
 
+    // We did a full service discovery and should have an initial value to compare
+    auto characteristic = service->characteristic(QBluetoothUuid(largeCharacteristicCharUuid));
+    QByteArray valueFromServiceDiscovery = characteristic.value();
+    qDebug() << "Large characteristic value from service discovery:" << valueFromServiceDiscovery;
+    // On darwin the server does not restart (disconnect) in-between the case runs
+    // and the initial value may be from a previous test function
+    if (mServerPlatform != "darwin")
+        QCOMPARE(characteristic.value(), testArray);
+
+    // Check that the value from service discovery and explicit characteristic read match
     service->readCharacteristic(characteristic);
     QTRY_COMPARE(readSpy.count(), 1);
     qDebug() << "Large characteristic value after read:" << characteristic.value();
-    testArray = QByteArray(512, 0);
-    testArray[0] = 0x0b;
-    QCOMPARE(characteristic.value(), testArray);
+    QCOMPARE(characteristic.value(), valueFromServiceDiscovery);
 
+    // Write a new value to the characteristic and read it back
     for (int i = 0; i < 512; ++i) {
         testArray[i] = i % 5;
     }
-
     service->writeCharacteristic(characteristic, testArray);
     QCOMPARE(service->error(), QLowEnergyService::ServiceError::NoError);
     QTRY_COMPARE(writtenSpy.count(), 1);
@@ -508,7 +522,9 @@ void tst_qlowenergycontroller_device::testNotificationAndIndication()
         service->writeDescriptor(cccd, QLowEnergyCharacteristic::CCCDDisable);
         QTRY_VERIFY(cccdWritten);
 
-        // check that there are no notifications:
+        // wait for a moment in case there is a value change just happening,
+        // then check that there are no more notifications:
+        QTest::qWait(200);
         oldvalue = characteristic.value();
         for (int i = 0; i < 3; ++i) {
             QTest::qWait(100);
@@ -561,7 +577,9 @@ void tst_qlowenergycontroller_device::testNotificationAndIndication()
         service->writeDescriptor(cccd, newValue);
         QTRY_VERIFY(cccdWritten);
 
-        // check that there are no notifications:
+        // wait for a moment in case there is a value change just happening,
+        // then check that there are no more notifications:
+        QTest::qWait(200);
         oldvalue = characteristic.value();
         for (int i = 0; i < 3; ++i) {
             QTest::qWait(100);
@@ -570,6 +588,13 @@ void tst_qlowenergycontroller_device::testNotificationAndIndication()
     }
 
     // indication and notification works
+#if defined(Q_OS_LINUX)
+    // If the client (this testcase) is linux and the characteristic has both
+    // NTF & IND supported, the Bluez stack will try to enable both NTF & IND
+    // at the same time regardless of what we write to CCCD. Darwin server will
+    // reject this as an error (ATT error 0xf5, which is a reserved error)
+    if (mServerPlatform != "darwin")
+#endif
     {
         QLowEnergyCharacteristic characteristic =
                 service->characteristic(QBluetoothUuid(notificationIndicationTestChar4Uuid));
