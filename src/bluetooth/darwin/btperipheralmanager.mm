@@ -162,7 +162,6 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 @interface QT_MANGLE_NAMESPACE(DarwinBTPeripheralManager) (PrivateAPI)
 
 - (void)addConnectedCentral:(CBCentral *)central;
-- (void)removeConnectedCentral:(CBCentral *)central;
 - (CBService *)findIncludedService:(const QBluetoothUuid &)qtUUID;
 
 - (void)addIncludedServices:(const QLowEnergyServiceData &)data
@@ -200,8 +199,6 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
 
     std::deque<UpdateRequest> updateQueue;
 
-    ObjCScopedPointer<NSMutableSet> connectedCentrals;
-
     PeripheralState state;
     NSUInteger maxNotificationValueLength;
     decltype(services.size()) nOfFailedAds;
@@ -214,8 +211,6 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         notifier = aNotifier;
         state = PeripheralState::idle;
         nextServiceToAdd = {};
-        connectedCentrals.reset([[NSMutableSet alloc] init],
-                                DarwinBluetooth::RetainPolicy::noInitialRetain);
         maxNotificationValueLength = std::numeric_limits<NSUInteger>::max();
     }
 
@@ -446,7 +441,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     advertising has stopped and that any connected centrals have been disconnected."
     */
 
-    [connectedCentrals removeAllObjects];
+    maxNotificationValueLength = std::numeric_limits<NSUInteger>::max();
 
     if (state == PeripheralState::advertising) {
         state = PeripheralState::waitingForPowerOn;
@@ -529,12 +524,10 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     if (peripheral != manager || !notifier)
         return;
 
-    [self removeConnectedCentral:central];
-
-    if (![connectedCentrals count]) {
-        if (const auto handle = charMap.key(characteristic))
+    const auto handle = charMap.key(characteristic);
+    if (![static_cast<CBMutableCharacteristic*>(characteristic).subscribedCentrals count]
+            && handle)
             emit notifier->notificationEnabled(handle, false);
-    }
 }
 
 - (void)peripheralManager:(CBPeripheralManager *)peripheral
@@ -665,8 +658,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     while (updateQueue.size()) {
         const auto &request = updateQueue.front();
         if (charMap.contains(request.charHandle)) {
-            if ([connectedCentrals count]
-                && maxNotificationValueLength < [request.value length]) {
+            if (maxNotificationValueLength < [request.value length]) {
                 qCWarning(QT_BT_DARWIN) << "value of length" << [request.value length]
                                         << "will possibly be truncated to"
                                         << maxNotificationValueLength;
@@ -706,30 +698,6 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         [manager stopAdvertising];
         emit notifier->connected();
     }
-
-    if (![connectedCentrals containsObject:central.identifier])
-        [connectedCentrals addObject:central.identifier];
-}
-
-- (void)removeConnectedCentral:(CBCentral *)central
-{
-    if (!notifier) {
-        // Detached.
-        return;
-    }
-
-    QT_BT_MAC_AUTORELEASEPOOL
-
-    if ([connectedCentrals containsObject:central.identifier])
-        [connectedCentrals removeObject:central.identifier];
-
-    if (state == PeripheralState::connected && ![connectedCentrals count]) {
-        state = PeripheralState::idle;
-        emit notifier->disconnected();
-    }
-
-    if (![connectedCentrals count])
-        maxNotificationValueLength = std::numeric_limits<NSUInteger>::max();
 }
 
 - (CBService *)findIncludedService:(const QBluetoothUuid &)qtUUID
