@@ -132,7 +132,7 @@ public class QtNfc
                 } catch (MalformedMimeTypeException e) {
                     throw new RuntimeException("Check your mime type.");
                 }
-                // some tags will report as tech, even if they are ndef formated/formatable.
+                // some tags will report as tech, even if they are ndef formatted/formattable.
                 filters[2] = new IntentFilter();
                 filters[2].addAction(NfcAdapter.ACTION_TECH_DISCOVERED);
                 String[][] techList = new String[][]{
