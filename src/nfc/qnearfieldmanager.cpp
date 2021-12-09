@@ -46,6 +46,8 @@
 #include "qnearfieldmanager_android_p.h"
 #elif defined(IOS_NFC)
 #include "qnearfieldmanager_ios_p.h"
+#elif defined(PCSC_NFC)
+#include "qnearfieldmanager_pcsc_p.h"
 #else
 #include "qnearfieldmanager_generic_p.h"
 #endif

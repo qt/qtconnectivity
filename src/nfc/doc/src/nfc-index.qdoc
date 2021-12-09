@@ -35,6 +35,8 @@
 The NFC API provides connectivity between NFC enabled devices.
 
 Currently the API is supported on \l{Qt for Android}{Android} and \l{Qt for iOS}{iOS}.
+This module also provides limited access to readers supporting \l{PC/SC in Qt NFC}{PC/SC}
+specification on Linux, macOS, and Windows.
 
 \section1 Overview
 

@@ -67,6 +67,27 @@ qt_internal_extend_target(Nfc CONDITION IOS
         IOS_NFC
 )
 
+if(QT_FEATURE_pcsclite)
+    set(NFC_BACKEND_AVAILABLE ON)
+endif()
+
+qt_internal_extend_target(Nfc CONDITION QT_FEATURE_pcsclite
+    SOURCES
+        qnearfieldmanager_pcsc.cpp qnearfieldmanager_pcsc_p.h
+        qnearfieldtarget_pcsc.cpp qnearfieldtarget_pcsc_p.h
+        qapduutils.cpp qapduutils_p.h
+        pcsc/qpcsc.cpp pcsc/qpcsc_p.h
+        pcsc/qpcscmanager.cpp pcsc/qpcscmanager_p.h
+        pcsc/qpcscslot.cpp pcsc/qpcscslot_p.h
+        pcsc/qpcsccard.cpp pcsc/qpcsccard_p.h
+        ndef/qndefaccessfsm_p.h
+        ndef/qnfctagtype4ndeffsm.cpp ndef/qnfctagtype4ndeffsm_p.h
+    DEFINES
+        PCSC_NFC
+    LIBRARIES
+        PkgConfig::PCSCLITE
+)
+
 #### Keys ignored in scope 2:.:.:nfc.pro:ANDROID AND NOT ANDROID_EMBEDDED:
 # NFC_BACKEND_AVAILABLE = "yes"
 
