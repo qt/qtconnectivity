@@ -113,7 +113,7 @@ void tst_QLowEnergyCharacteristic::initTestCase()
     QVERIFY(spy.isEmpty());
 
     devAgent->start();
-    QTRY_VERIFY_WITH_TIMEOUT(spy.count() > 0, 50000);
+    QTRY_VERIFY_WITH_TIMEOUT(spy.count() > 0, 100000);
 
     // find first service with descriptor
     QLowEnergyController *controller = 0;

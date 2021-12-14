@@ -315,7 +315,7 @@ void QBluetoothLocalDevicePrivate::deviceDisconnected(const QBluetoothAddress &d
 void QBluetoothLocalDevicePrivate::emitError(QBluetoothLocalDevice::Error error, bool queued)
 {
     if (queued) {
-        QMetaObject::invokeMethod(q_ptr, "error", Qt::QueuedConnection,
+        QMetaObject::invokeMethod(q_ptr, "errorOccurred", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothLocalDevice::Error, error));
     } else {
         emit q_ptr->errorOccurred(QBluetoothLocalDevice::PairingError);

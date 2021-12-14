@@ -34,13 +34,15 @@ set_target_properties(bluetoothtestdevice PROPERTIES
 )
 
 if(APPLE)
+    # Ninja has trouble with relative paths, convert to absolute as a workaround
+    get_filename_component(SHARED_PLIST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../shared ABSOLUTE)
     if(IOS)
         set_target_properties(bluetoothtestdevice PROPERTIES
-            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.ios.plist"
+            MACOSX_BUNDLE_INFO_PLIST "${SHARED_PLIST_DIR}/Info.ios.plist"
         )
     else()
         set_target_properties(bluetoothtestdevice PROPERTIES
-            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.macos.plist"
+            MACOSX_BUNDLE_INFO_PLIST "${SHARED_PLIST_DIR}/Info.macos.plist"
         )
     endif()
 endif()
