@@ -74,9 +74,6 @@ tst_QLowEnergyDescriptor::~tst_QLowEnergyDescriptor()
 
 void tst_QLowEnergyDescriptor::initTestCase()
 {
-#if defined(Q_OS_MACOS)
-    QSKIP("The low energy descriptor tests fail on macOS");
-#endif
     if (QBluetoothLocalDevice::allDevices().isEmpty()) {
         qWarning("No remote device discovered.");
 
@@ -104,7 +101,7 @@ void tst_QLowEnergyDescriptor::initTestCase()
     QVERIFY(spy.isEmpty());
 
     devAgent->start();
-    QTRY_VERIFY_WITH_TIMEOUT(spy.count() > 0, 50000);
+    QTRY_VERIFY_WITH_TIMEOUT(spy.count() > 0, 100000);
 
     // find first service with descriptor
     QLowEnergyController *controller = nullptr;
