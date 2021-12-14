@@ -114,9 +114,6 @@ tst_QLowEnergyController::~tst_QLowEnergyController()
 
 void tst_QLowEnergyController::initTestCase()
 {
-#if defined(Q_OS_MACOS)
-    QSKIP("The low energy controller tests fail on macOS");
-#endif
 #if !defined(Q_OS_MAC)
     if (remoteDevice.isNull()
 #if !QT_CONFIG(winrt_bt)
@@ -163,7 +160,8 @@ void tst_QLowEnergyController::initTestCase()
         }
     }
 
-    QVERIFY2(deviceFound, "Cannot find remote device.");
+    if (!deviceFound || !remoteDeviceInfo.isValid())
+        qWarning() << "The sensor tag device was not found, will skip most of the test";
 
     // These are the services exported by the TI SensorTag
 #ifndef Q_OS_MAC

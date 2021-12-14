@@ -114,9 +114,6 @@ void tst_QBluetoothServiceDiscoveryAgent::serviceError(const QBluetoothServiceDi
 
 void tst_QBluetoothServiceDiscoveryAgent::initTestCase()
 {
-#if defined(Q_OS_MACOS)
-    QSKIP("The service discovery agent tests fail on macOS");
-#endif
     if (localDeviceAvailable) {
         QBluetoothDeviceDiscoveryAgent discoveryAgent;
 
