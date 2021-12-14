@@ -1,4 +1,4 @@
 if(TARGET Qt::Widgets)
-    add_subdirectory(annotatedurl)
-    add_subdirectory(ndefeditor)
+    qt_internal_add_example(annotatedurl)
+    qt_internal_add_example(ndefeditor)
 endif()
