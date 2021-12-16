@@ -819,11 +819,9 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
-                const QBluetoothAddress &deviceAdapter,
-                QBluetoothDeviceDiscoveryAgent *parent)
-    :   q_ptr(parent)
+        const QBluetoothAddress &deviceAdapter, QBluetoothDeviceDiscoveryAgent *parent)
+    : q_ptr(parent), adapterAddress(deviceAdapter)
 {
-    Q_UNUSED(deviceAdapter);
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
@@ -843,6 +841,21 @@ QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent:
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
 {
+    QBluetoothLocalDevice adapter(adapterAddress);
+    if (!adapter.isValid()) {
+        qCWarning(QT_BT_WINDOWS) << "Cannot find Bluetooth adapter for device search";
+        lastError = QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError;
+        errorString = QBluetoothDeviceDiscoveryAgent::tr("Cannot find valid Bluetooth adapter.");
+        emit q_ptr->errorOccurred(lastError);
+        return;
+    } else if (adapter.hostMode() == QBluetoothLocalDevice::HostPoweredOff) {
+        qCWarning(QT_BT_WINDOWS) << "Bluetooth adapter powered off";
+        lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
+        errorString = QBluetoothDeviceDiscoveryAgent::tr("Bluetooth adapter powered off.");
+        emit q_ptr->errorOccurred(lastError);
+        return;
+    }
+
     if (worker)
         return;
 

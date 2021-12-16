@@ -185,6 +185,7 @@ private:
     void disconnectAndClearWorker();
     QPointer<QWinRTBluetoothDeviceDiscoveryWorker> worker;
     QTimer *leScanTimer = nullptr;
+    QBluetoothAddress adapterAddress;
 #endif
 
 #ifdef Q_OS_DARWIN
