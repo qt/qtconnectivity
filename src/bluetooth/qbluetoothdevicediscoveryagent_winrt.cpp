@@ -206,6 +206,9 @@ private:
     HRESULT onBluetoothLEDeviceFound(ComPtr<IBluetoothLEDevice> device, PairingCheck pairingCheck);
     HRESULT onBluetoothLEDeviceFound(ComPtr<IBluetoothLEDevice> device);
     HRESULT onBluetoothLEAdvertisementReceived(IBluetoothLEAdvertisementReceivedEventArgs *args);
+    HRESULT onRfcommServicesReceived(IAsyncOperation<Rfcomm::RfcommDeviceServicesResult *> *op,
+                                     AsyncStatus status, UINT64 address, UINT32 classOfDeviceInt,
+                                     const QString &btName);
 
     void decrementPairedDevicesAndCheckFinished();
 
@@ -604,12 +607,22 @@ void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromAddressAsync(quint
 
 HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedClassicBluetoothDeviceFoundAsync(IAsyncOperation<BluetoothDevice *> *op, AsyncStatus status)
 {
-    --m_pendingPairedDevices;
+    HRESULT hr;
+    // Need to decrement m_pendingPairedDevices and perform the check if some
+    // operation fails. Otherwise it will be done in the callback.
+    auto guard = qScopeGuard([this, &hr]() {
+        if (FAILED(hr)) {
+            qCWarning(QT_BT_WINDOWS) << "Failed to request Rfcomm services";
+            decrementPairedDevicesAndCheckFinished();
+        }
+    });
+    Q_UNUSED(guard); // to suppress warning
+
     if (status != AsyncStatus::Completed)
         return S_OK;
 
     ComPtr<IBluetoothDevice> device;
-    HRESULT hr = op->GetResults(&device);
+    hr = op->GetResults(&device);
     EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain bluetooth device",
                                    QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
                                    return S_OK);
@@ -638,15 +651,71 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedClassicBluetoothDeviceFoun
     EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain raw value of device class",
                                    QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
                                    return S_OK);
-    IVectorView <Rfcomm::RfcommDeviceService *> *deviceServices;
-    hr = device->get_RfcommServices(&deviceServices);
-    if (hr == E_ACCESSDENIED) {
-        qCWarning(QT_BT_WINDOWS) << "Could not obtain device services. Please check you have "
-                                  "permission to access the device.";
+
+    ComPtr<IBluetoothDevice3> device3;
+    hr = device.As(&device3);
+    EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain bluetooth device3 interface",
+                                           QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                           return S_OK);
+
+    ComPtr<IAsyncOperation<Rfcomm::RfcommDeviceServicesResult *>> deviceServicesOperation;
+    hr = device3->GetRfcommServicesAsync(&deviceServicesOperation);
+    EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Async Rfcomm services request failed",
+                                           QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                           return S_OK);
+
+    QPointer<QWinRTBluetoothDeviceDiscoveryWorker> thisPointer(this);
+    hr = deviceServicesOperation->put_Completed(
+            Callback<IAsyncOperationCompletedHandler<Rfcomm::RfcommDeviceServicesResult *>>(
+                    [thisPointer, address, btName, classOfDeviceInt](
+                            IAsyncOperation<Rfcomm::RfcommDeviceServicesResult *> *op,
+                            AsyncStatus status) {
+                        if (thisPointer) {
+                            thisPointer->onRfcommServicesReceived(op, status, address,
+                                                                  classOfDeviceInt, btName);
+                        }
+                        return S_OK;
+                    }).Get());
+    EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not add Rfcomm services discovery callback",
+                                           QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                           return S_OK);
+
+    return S_OK;
+}
+
+HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onRfcommServicesReceived(
+        IAsyncOperation<Rfcomm::RfcommDeviceServicesResult *> *op, AsyncStatus status,
+        UINT64 address, UINT32 classOfDeviceInt, const QString &btName)
+{
+    // need to perform the check even if some of the operations fails
+    auto guard = qScopeGuard([this]() {
+        decrementPairedDevicesAndCheckFinished();
+    });
+    Q_UNUSED(guard); // to suppress warning
+
+    if (status != Completed)
+        return S_OK;
+
+    ComPtr<Rfcomm::IRfcommDeviceServicesResult> servicesResult;
+    HRESULT hr = op->GetResults(&servicesResult);
+    EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain device services",
+                                           QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                           return S_OK);
+
+    BluetoothError error;
+    hr = servicesResult->get_Error(&error);
+    EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain error code",
+                                           QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                           return S_OK);
+    if (error != BluetoothError_Success) {
+        qCWarning(QT_BT_WINDOWS) << "Obtain device services completed with BluetoothErrot"
+                                 << static_cast<int>(error);
     } else {
-        EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain device services",
-                                       QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
-                                       return S_OK);
+        IVectorView<Rfcomm::RfcommDeviceService *> *deviceServices;
+        hr = servicesResult->get_Services(&deviceServices);
+        EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain services list",
+                                               QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                               return S_OK);
         uint serviceCount;
         hr = deviceServices->get_Size(&serviceCount);
         EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain service list size",
@@ -673,7 +742,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedClassicBluetoothDeviceFoun
         }
 
         qCDebug(QT_BT_WINDOWS) << "Discovered BT device: " << QString::number(address) << btName
-            << "Num UUIDs" << uuids.count();
+                               << "Num UUIDs" << uuids.count();
 
         QBluetoothDeviceInfo info(QBluetoothAddress(address), btName, classOfDeviceInt);
         info.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
@@ -683,8 +752,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedClassicBluetoothDeviceFoun
         QMetaObject::invokeMethod(this, "deviceFound", Qt::AutoConnection,
                                   Q_ARG(QBluetoothDeviceInfo, info));
     }
-    if (!m_pendingPairedDevices && !(requestedModes & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod))
-        finishDiscovery();
+
     return S_OK;
 }
 
