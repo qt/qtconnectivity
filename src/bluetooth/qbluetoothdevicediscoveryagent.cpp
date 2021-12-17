@@ -317,7 +317,7 @@ int QBluetoothDeviceDiscoveryAgent::lowEnergyDiscoveryTimeout() const
 void QBluetoothDeviceDiscoveryAgent::start()
 {
     Q_D(QBluetoothDeviceDiscoveryAgent);
-    if (!isActive() && d->lastError != InvalidBluetoothAdapterError)
+    if (!isActive())
         d->start(supportedDiscoveryMethods());
 }
 
@@ -354,7 +354,7 @@ void QBluetoothDeviceDiscoveryAgent::start(DiscoveryMethods methods)
         return;
     }
 
-    if (!isActive() && d->lastError != InvalidBluetoothAdapterError)
+    if (!isActive())
         d->start(methods);
 }
 
