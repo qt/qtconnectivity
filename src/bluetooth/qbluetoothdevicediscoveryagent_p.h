@@ -139,6 +139,7 @@ private:
 
     QBluetoothDeviceDiscoveryAgent::Error lastError = QBluetoothDeviceDiscoveryAgent::NoError;
     QString errorString;
+    QBluetoothAddress adapterAddress;
 
 #ifdef QT_ANDROID_BLUETOOTH
 private slots:
@@ -151,7 +152,6 @@ private:
     void startLowEnergyScan();
 
     DeviceDiscoveryBroadcastReceiver *receiver = nullptr;
-    QBluetoothAddress m_adapterAddress;
     short m_active;
     QJniObject adapter;
     QJniObject leScanner;
@@ -160,7 +160,6 @@ private:
     bool pendingCancel = false;
     bool pendingStart = false;
 #elif QT_CONFIG(bluez)
-    QBluetoothAddress m_adapterAddress;
     bool pendingCancel = false;
     bool pendingStart = false;
     OrgFreedesktopDBusObjectManagerInterface *manager = nullptr;
@@ -185,7 +184,6 @@ private:
     void disconnectAndClearWorker();
     QPointer<QWinRTBluetoothDeviceDiscoveryWorker> worker;
     QTimer *leScanTimer = nullptr;
-    QBluetoothAddress adapterAddress;
 #endif
 
 #ifdef Q_OS_DARWIN
@@ -222,8 +220,6 @@ private:
         ClassicScan, // macOS (IOBluetooth) only
         LEScan
     } agentState;
-
-    QBluetoothAddress adapterAddress;
 
     bool startPending = false;
     bool stopPending = false;

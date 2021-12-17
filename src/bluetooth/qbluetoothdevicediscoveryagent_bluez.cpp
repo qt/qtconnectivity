@@ -56,7 +56,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     const QBluetoothAddress &deviceAdapter, QBluetoothDeviceDiscoveryAgent *parent) :
-    m_adapterAddress(deviceAdapter),
+    adapterAddress(deviceAdapter),
     q_ptr(parent)
 {
     initializeBluez5();
@@ -115,7 +115,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
     bool ok = false;
-    const QString adapterPath = findAdapterForAddress(m_adapterAddress, &ok);
+    const QString adapterPath = findAdapterForAddress(adapterAddress, &ok);
     if (!ok || adapterPath.isEmpty()) {
         qCWarning(QT_BT_BLUEZ) << "Cannot find Bluez 5 adapter for device search" << ok;
         lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
