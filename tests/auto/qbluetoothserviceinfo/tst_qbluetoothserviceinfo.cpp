@@ -38,6 +38,8 @@
 #include <qbluetoothuuid.h>
 #include <QtBluetooth/QBluetoothServer>
 
+#include <QtCore/qoperatingsystemversion.h>
+
 QT_USE_NAMESPACE
 
 Q_DECLARE_METATYPE(QBluetoothUuid::ProtocolUuid)
@@ -187,6 +189,11 @@ void tst_QBluetoothServiceInfo::tst_assignment_data()
 #if defined(QT_ANDROID_BLUETOOTH) || defined(Q_OS_WIN)
     l2cpSupported = false;
 #endif
+
+#if defined(Q_OS_MACOS)
+    l2cpSupported = QOperatingSystemVersion::current() < QOperatingSystemVersion::MacOSMonterey;
+#endif
+
     QTest::newRow("assignment_data_l2cp")
         << QUuid(0x67c8770b, 0x44f1, 0x410a, 0xab, 0x9a, 0xf9, 0xb5, 0x44, 0x6f, 0x13, 0xee)
         << QBluetoothUuid::ProtocolUuid::L2cap << QBluetoothServiceInfo::L2capProtocol << l2cpSupported;
@@ -347,6 +354,19 @@ void tst_QBluetoothServiceInfo::tst_assignment()
 
             serviceInfo.setAttribute(QBluetoothServiceInfo::ProtocolDescriptorList,
                                      protocolDescriptorList);
+
+#if defined(Q_OS_MACOS)
+            // bluetoothd on Monterey does not want to register a record if there is no
+            // ServiceClassIDList provided.
+            if (QOperatingSystemVersion::current() >= QOperatingSystemVersion::MacOSMonterey) {
+                // Nothing seems to help with L2CAP though:
+                if (serviceInfoProtocol == QBluetoothServiceInfo::RfcommProtocol) {
+                    QBluetoothServiceInfo::Sequence classIds;
+                    classIds << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::SerialPort));
+                    copyInfo.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classIds);
+                }
+            }
+#endif // Q_OS_MACOS
 
             QVERIFY(copyInfo.registerService());
             QVERIFY(copyInfo.isRegistered());
