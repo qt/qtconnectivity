@@ -128,7 +128,8 @@ const uint8_t IOBlueoothInquiryLengthS = 15;
         });
 
         watchDog->setSingleShot(true);
-        watchDog->setInterval(IOBlueoothInquiryLengthS * 2 * 1000); // Let's make it twice as long.
+        // +2 to give IOBluetooth a chance to stop it first:
+        watchDog->setInterval((IOBlueoothInquiryLengthS + 2) * 1000);
         watchDog->start();
     }
 
