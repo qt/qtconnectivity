@@ -757,14 +757,49 @@ ComPtr<IGattDeviceService> QLowEnergyControllerPrivateWinRT::getNativeService(
     if (m_openedServices.contains(serviceUuid))
         return m_openedServices.value(serviceUuid);
 
-    ComPtr<IGattDeviceService> deviceService;
-    HRESULT hr;
-    hr = mDevice->GetGattService(serviceUuid, &deviceService);
-    if (FAILED(hr))
-        qCDebug(QT_BT_WINDOWS) << "Could not obtain native service for Uuid" << serviceUuid;
-    if (deviceService)
-        m_openedServices[serviceUuid] = deviceService;
-    return deviceService;
+    ComPtr<IBluetoothLEDevice3> device3;
+    HRESULT hr = mDevice.As(&device3);
+    RETURN_IF_FAILED("Could not convert to IBluetoothDevice3", return nullptr);
+
+    ComPtr<IAsyncOperation<GattDeviceServicesResult *>> servicesResultOperation;
+    hr = device3->GetGattServicesForUuidAsync(serviceUuid, &servicesResultOperation);
+    RETURN_IF_FAILED("Could not start async services request", return nullptr);
+
+    ComPtr<IGattDeviceServicesResult> result;
+    QPointer<QLowEnergyControllerPrivateWinRT> thisPtr(this);
+    hr = QWinRTFunctions::await(servicesResultOperation, result.GetAddressOf(),
+                                QWinRTFunctions::ProcessMainThreadEvents, 5000);
+    // Guard against the object being deleted while we are awaiting.
+    if (!thisPtr) {
+        qCWarning(QT_BT_WINDOWS) << "LE controller was removed while awaiting";
+        return nullptr;
+    }
+    RETURN_IF_FAILED("Failed to get result of async services request", return nullptr);
+
+    ComPtr<IVectorView<GattDeviceService *>> services;
+    hr = result->get_Services(&services);
+    RETURN_IF_FAILED("Failed to extract services from the result", return nullptr);
+
+    uint servicesCount = 0;
+    hr = services->get_Size(&servicesCount);
+    RETURN_IF_FAILED("Failed to extract services count", return nullptr);
+
+    if (servicesCount > 0) {
+        if (servicesCount > 1) {
+            qWarning() << "getNativeService: more than one service detected for UUID" << serviceUuid
+                       << "The first service will be used.";
+        }
+        ComPtr<IGattDeviceService> service;
+        hr = services->GetAt(0, &service);
+        if (FAILED(hr))
+            qCDebug(QT_BT_WINDOWS) << "Could not obtain native service for Uuid" << serviceUuid;
+        if (service)
+            m_openedServices[serviceUuid] = service;
+        return service;
+    } else {
+        qCWarning(QT_BT_WINDOWS) << "No services found for Uuid" << serviceUuid;
+    }
+    return nullptr;
 }
 
 ComPtr<IGattCharacteristic> QLowEnergyControllerPrivateWinRT::getNativeCharacteristic(
