@@ -96,6 +96,15 @@ using namespace QT_NAMESPACE;
     if (!device)
         return;
 
+    if (!monitor) {
+        // Rather surprising: monitor == nullptr means we stopped monitoring.
+        // So apparently this thingie is still alive and keeps receiving
+        // notifications.
+        qCWarning(QT_BT_OSX,
+                  "Connection notification received in a monitor that was cancelled");
+        return;
+    }
+
     QT_BT_MAC_AUTORELEASEPOOL;
 
     // All Obj-C objects are autoreleased.

@@ -160,11 +160,11 @@ const uint8_t IOBlueoothInquiryLengthS = 15;
 
     if (error != kIOReturnSuccess && !aborted) {
         // QtBluetooth has not too many error codes, 'UnknownError' is not really
-        // useful, report the actual error code here:
+        // useful, log the actual error code here:
         qCWarning(QT_BT_OSX) << "IOKit error code: " << error;
-        m_delegate->error(error);
         // Let watchDog to stop it, calling -stop at timeout, otherwise,
-        // it looks like inquiry continues and keeps reporting new devices found.
+        // it looks like inquiry continues even after this error and
+        // keeps reporting new devices found.
     } else {
         // Either a normal completion or from a timer slot.
         watchDog.reset();
