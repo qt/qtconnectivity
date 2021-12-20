@@ -209,6 +209,8 @@ private:
     HRESULT onRfcommServicesReceived(IAsyncOperation<Rfcomm::RfcommDeviceServicesResult *> *op,
                                      AsyncStatus status, UINT64 address, UINT32 classOfDeviceInt,
                                      const QString &btName);
+    HRESULT onLeServicesReceived(IAsyncOperation<GenericAttributeProfile::GattDeviceServicesResult *> *op,
+                                 AsyncStatus status, QBluetoothDeviceInfo &info);
 
     void decrementPairedDevicesAndCheckFinished();
 
@@ -793,6 +795,18 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFoundAsync(IAsy
     return onBluetoothLEDeviceFound(device);
 }
 
+static void invokeDeviceFoundWithDebug(QWinRTBluetoothDeviceDiscoveryWorker *worker,
+                                       const QBluetoothDeviceInfo &info)
+{
+    qCDebug(QT_BT_WINDOWS) << "Discovered BTLE device: " << info.address() << info.name()
+                           << "Num UUIDs" << info.serviceUuids().count() << "RSSI:" << info.rssi()
+                           << "Num manufacturer data" << info.manufacturerData().count()
+                           << "Num service data" << info.serviceData().count();
+
+    QMetaObject::invokeMethod(worker, "deviceFound", Qt::AutoConnection,
+                              Q_ARG(QBluetoothDeviceInfo, info));
+}
+
 HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IBluetoothLEDevice> device)
 {
     if (!device) {
@@ -841,18 +855,81 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
     EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain pairing status",
                                            QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
                                            return S_OK);
-    QList<QBluetoothUuid> uuids;
 
     const LEAdvertisingInfo adInfo = m_foundLEDevicesMap.value(address);
     const ManufacturerData manufacturerData = adInfo.manufacturerData;
     const ServiceData serviceData = adInfo.serviceData;
     const qint16 rssi = adInfo.rssi;
+
+    QBluetoothDeviceInfo info(QBluetoothAddress(address), btName, 0);
+    info.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
+    info.setRssi(rssi);
+    for (quint16 key : manufacturerData.keys())
+        info.setManufacturerData(key, manufacturerData.value(key));
+    for (QBluetoothUuid key : serviceData.keys())
+        info.setServiceData(key, serviceData.value(key));
+    info.setCached(true);
+
     // Use the services obtained from the advertisement data if the device is not paired
     if (!isPaired) {
-        uuids = adInfo.services;
+        info.setServiceUuids(adInfo.services);
+        invokeDeviceFoundWithDebug(this, info);
     } else {
-        IVectorView <GenericAttributeProfile::GattDeviceService *> *deviceServices;
-        hr = device->get_GattServices(&deviceServices);
+        ComPtr<IBluetoothLEDevice3> device3;
+        hr = device.As(&device3);
+        EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Failed to obtain IBluetoothLEDevice3 instance",
+                                               QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                               return S_OK);
+
+        ComPtr<IAsyncOperation<GenericAttributeProfile::GattDeviceServicesResult *>> servicesOp;
+        hr = device3->GetGattServicesAsync(&servicesOp);
+        EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Failed to execute async services request",
+                                               QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                               return S_OK);
+
+        QPointer<QWinRTBluetoothDeviceDiscoveryWorker> thisPtr(this);
+        hr = servicesOp->put_Completed(
+                Callback<IAsyncOperationCompletedHandler<
+                    GenericAttributeProfile::GattDeviceServicesResult *>>([thisPtr, info](
+                        IAsyncOperation<GenericAttributeProfile::GattDeviceServicesResult *> *op,
+                        AsyncStatus status) mutable {
+                            if (thisPtr)
+                                thisPtr->onLeServicesReceived(op, status, info);
+                            return S_OK;
+                        }).Get());
+        EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not add LE services discovery callback",
+                                               QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                               return S_OK);
+    }
+
+    return S_OK;
+}
+
+HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onLeServicesReceived(
+        IAsyncOperation<GenericAttributeProfile::GattDeviceServicesResult *> *op,
+        AsyncStatus status, QBluetoothDeviceInfo &info)
+{
+    if (status != AsyncStatus::Completed) {
+        qCWarning(QT_BT_WINDOWS) << "LE service request finished with status"
+                                 << static_cast<int>(status);
+        return S_OK;
+    }
+
+    ComPtr<GenericAttributeProfile::IGattDeviceServicesResult> servicesResult;
+    HRESULT hr = op->GetResults(&servicesResult);
+    EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not get async operation result for LE services",
+                                           QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                           return S_OK);
+
+    GenericAttributeProfile::GattCommunicationStatus commStatus;
+    hr = servicesResult->get_Status(&commStatus);
+    EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain services status",
+                                           QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
+                                           return S_OK);
+
+    if (commStatus == GenericAttributeProfile::GattCommunicationStatus_Success) {
+        IVectorView<GenericAttributeProfile::GattDeviceService *> *deviceServices;
+        hr = servicesResult->get_Services(&deviceServices);
         EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain gatt service list",
                                                QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
                                                return S_OK);
@@ -861,6 +938,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
         EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain gatt service list size",
                                                QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
                                                return S_OK);
+        QList<QBluetoothUuid> uuids;
         for (uint i = 0; i < serviceCount; ++i) {
             ComPtr<GenericAttributeProfile::IGattDeviceService> service;
             hr = deviceServices->GetAt(i, &service);
@@ -874,25 +952,13 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onBluetoothLEDeviceFound(ComPtr<IB
                                                    return S_OK);
             uuids.append(QBluetoothUuid(uuid));
         }
+        info.setServiceUuids(uuids);
+    } else {
+        qCWarning(QT_BT_WINDOWS) << "Obtaining LE services finished with status"
+                                 << static_cast<int>(commStatus);
     }
+    invokeDeviceFoundWithDebug(this, info);
 
-    qCDebug(QT_BT_WINDOWS) << "Discovered BTLE device: " << QString::number(address) << btName
-        << "Num UUIDs" << uuids.count() << "RSSI:" << rssi
-        << "Num manufacturer data" << manufacturerData.count()
-        << "Num service data" << serviceData.count();
-
-    QBluetoothDeviceInfo info(QBluetoothAddress(address), btName, 0);
-    info.setCoreConfigurations(QBluetoothDeviceInfo::LowEnergyCoreConfiguration);
-    info.setServiceUuids(uuids);
-    info.setRssi(rssi);
-    for (quint16 key : manufacturerData.keys())
-        info.setManufacturerData(key, manufacturerData.value(key));
-    for (QBluetoothUuid key : serviceData.keys())
-        info.setServiceData(key, serviceData.value(key));
-    info.setCached(true);
-
-    QMetaObject::invokeMethod(this, "deviceFound", Qt::AutoConnection,
-                              Q_ARG(QBluetoothDeviceInfo, info));
     return S_OK;
 }
 
