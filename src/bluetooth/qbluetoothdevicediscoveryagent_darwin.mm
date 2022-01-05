@@ -107,15 +107,6 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(con
     registerQDeviceDiscoveryMetaType();
 
     Q_ASSERT_X(q != nullptr, Q_FUNC_INFO, "invalid q_ptr (null)");
-
-#ifdef Q_OS_MACOS
-    IOBluetoothHostController *hostController = [IOBluetoothHostController defaultController];
-    if (!hostController || [hostController powerState] != kBluetoothHCIPowerStateON) {
-        qCCritical(QT_BT_DARWIN) << "no default host controller or adapter is off";
-        return;
-    }
-    controller.reset(hostController, DarwinBluetooth::RetainPolicy::doInitialRetain);
-#endif
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
@@ -153,9 +144,19 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
 
 #ifdef Q_OS_MACOS
     if (!controller) {
-        setError(QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError);
-        emit q_ptr->errorOccurred(lastError);
-        return;
+        IOBluetoothHostController *hostController = [IOBluetoothHostController defaultController];
+        if (!hostController) {
+            qCWarning(QT_BT_DARWIN) << "No default Bluetooth controller found";
+            setError(QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError);
+            emit q_ptr->errorOccurred(lastError);
+            return;
+        } else if ([hostController powerState] != kBluetoothHCIPowerStateON) {
+            qCWarning(QT_BT_DARWIN) << "Default Bluetooth controller is OFF";
+            setError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
+            emit q_ptr->errorOccurred(lastError);
+            return;
+        }
+        controller.reset(hostController, DarwinBluetooth::RetainPolicy::doInitialRetain);
     }
 #endif // Q_OS_MACOS
 
