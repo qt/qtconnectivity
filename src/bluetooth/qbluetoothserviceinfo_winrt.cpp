@@ -321,10 +321,9 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
         qCWarning(QT_BT_WINDOWS) << "Don't know how to register QMetaType::QUrl";
         return nullptr;
         break;
-    case QMetaType::User:
+    default:
         if (attribute.userType() == qMetaTypeId<QBluetoothUuid>()) {
             QBluetoothUuid uuid = attribute.value<QBluetoothUuid>();
-            const int minimumSize = uuid.minimumSize();
             switch (uuid.minimumSize()) {
             case 0:
                 qCWarning(QT_BT_WINDOWS) << "Don't know how to register Uuid of length 0";
@@ -407,11 +406,10 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
         } else if (attribute.userType() == qMetaTypeId<QBluetoothServiceInfo::Alternative>()) {
             qCWarning(QT_BT_WINDOWS) << "Don't know how to register user type Alternative";
             return nullptr;
+        } else {
+            qCWarning(QT_BT_WINDOWS) << "Unknown variant type" << attribute.userType();
+            return nullptr;
         }
-        break;
-    default:
-        qCWarning(QT_BT_WINDOWS) << "Unknown variant type" << attribute.userType();
-        return nullptr;
     }
     ComPtr<IBuffer> buffer;
     hr = writer->DetachBuffer(&buffer);
