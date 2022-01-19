@@ -270,7 +270,7 @@ void PingPong::startServer()
     connect(m_serverInfo, &QBluetoothServer::errorOccurred, this, &PingPong::serverError);
     const QBluetoothUuid uuid(serviceUuid);
 
-    m_serverInfo->listen(uuid, QStringLiteral("PingPong server"));
+    m_serviceInfo = m_serverInfo->listen(uuid, QStringLiteral("PingPong server"));
     //! [Starting the server]
     setMessage(QStringLiteral("Server started, waiting for the client. You are the left player."));
     // m_role is set to 1 if it is a server
