@@ -274,9 +274,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
             Q_Q(QBluetoothServiceDiscoveryAgent);
             QTimer::singleShot(4000, q, [this]() {
                 this->_q_fetchUuidsTimeout();
-            });
+            }); // will also call _q_seriveDiscoveryFinished()
+        } else {
+            _q_serviceDiscoveryFinished();
         }
-        _q_serviceDiscoveryFinished();
         return;
     }
 
