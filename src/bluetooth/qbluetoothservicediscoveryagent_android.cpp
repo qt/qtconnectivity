@@ -361,8 +361,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
             continue;
 
         //check for SPP protocol
-        bool ok = false;
-        haveSppClass |= ok && uuid == QBluetoothUuid::ServiceClassUuid::SerialPort;
+        haveSppClass |= uuid == QBluetoothUuid::ServiceClassUuid::SerialPort;
 
         //check for custom uuid
         if (uuid.minimumSize() == 16)
