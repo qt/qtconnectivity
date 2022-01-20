@@ -64,8 +64,7 @@ PingPong::PingPong():
 
 PingPong::~PingPong()
 {
-    delete m_timer;
-    delete m_serverInfo;
+    m_timer->stop();
     delete socket;
     delete discoveryAgent;
 }
