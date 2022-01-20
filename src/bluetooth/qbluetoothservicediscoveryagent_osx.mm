@@ -47,6 +47,7 @@
 #include "osx/osxbluetooth_p.h"
 #include "osx/uistrings_p.h"
 
+#include <QtCore/qoperatingsystemversion.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qstring.h>
@@ -157,6 +158,23 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryFinished(void *generic)
 
         if (!serviceInfo.isValid())
             continue;
+
+        if (QOperatingSystemVersion::current() > QOperatingSystemVersion::MacOSBigSur
+            && uuidFilter.size()) {
+            const auto &serviceId = serviceInfo.serviceUuid();
+            bool match = !serviceId.isNull() && uuidFilter.contains(serviceId);
+            if (!match) {
+                const auto &classUuids = serviceInfo.serviceClassUuids();
+                for (const auto &uuid : classUuids) {
+                    if (uuidFilter.contains(uuid)) {
+                        match = true;
+                        break;
+                    }
+                }
+                if (!match)
+                    continue;
+            }
+        }
 
         if (!isDuplicatedService(serviceInfo)) {
             discoveredServices.append(serviceInfo);
