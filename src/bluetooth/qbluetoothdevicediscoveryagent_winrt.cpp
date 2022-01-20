@@ -207,6 +207,8 @@ private:
     HRESULT onBluetoothLEDeviceFound(ComPtr<IBluetoothLEDevice> device);
     HRESULT onBluetoothLEAdvertisementReceived(IBluetoothLEAdvertisementReceivedEventArgs *args);
 
+    void decrementPairedDevicesAndCheckFinished();
+
 public slots:
     void finishDiscovery();
 
@@ -513,10 +515,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::classicBluetoothInfoFromDeviceIdAsync
     HRESULT hr = m_deviceStatics->FromIdAsync(deviceId, &deviceFromIdOperation);
     if (FAILED(hr)) {
         emit errorOccured(QBluetoothDeviceDiscoveryAgent::UnknownError);
-        --m_pendingPairedDevices;
-        if (!m_pendingPairedDevices
-                && !(requestedModes & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod))
-            finishDiscovery();
+        decrementPairedDevicesAndCheckFinished();
         qCWarning(QT_BT_WINDOWS) << "Could not obtain bluetooth device from id";
         return;
     }
@@ -527,16 +526,14 @@ void QWinRTBluetoothDeviceDiscoveryWorker::classicBluetoothInfoFromDeviceIdAsync
         if (thisPointer) {
             if (status == Completed)
                 thisPointer->onPairedClassicBluetoothDeviceFoundAsync(op, status);
-            --thisPointer->m_pendingPairedDevices;
+            else
+                thisPointer->decrementPairedDevicesAndCheckFinished();
         }
         return S_OK;
     }).Get());
     if (FAILED(hr)) {
         emit errorOccured(QBluetoothDeviceDiscoveryAgent::UnknownError);
-        --m_pendingPairedDevices;
-        if (!m_pendingPairedDevices
-                && !(requestedModes & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod))
-            finishDiscovery();
+        decrementPairedDevicesAndCheckFinished();
         qCWarning(QT_BT_WINDOWS) << "Could not register device found callback";
         return;
     }
@@ -545,6 +542,10 @@ void QWinRTBluetoothDeviceDiscoveryWorker::classicBluetoothInfoFromDeviceIdAsync
 // "deviceFound" will be emitted at the end of the deviceFromIdOperation callback
 void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromDeviceIdAsync(HSTRING deviceId)
 {
+    // Note: in this method we do not need to call
+    // decrementPairedDevicesAndCheckFinished() because we *do* run LE
+    // scanning, so the condition in the check will always be false.
+    // It's enough to just decrement m_pendingPairedDevices.
     ComPtr<IAsyncOperation<BluetoothLEDevice *>> deviceFromIdOperation;
     // on Windows 10 FromIdAsync might ask for device permission. We cannot wait here but have to handle that asynchronously
     HRESULT hr = m_leDeviceStatics->FromIdAsync(deviceId, &deviceFromIdOperation);
@@ -561,7 +562,8 @@ void QWinRTBluetoothDeviceDiscoveryWorker::leBluetoothInfoFromDeviceIdAsync(HSTR
         if (thisPointer) {
             if (status == Completed)
                 thisPointer->onPairedBluetoothLEDeviceFoundAsync(op, status);
-            --thisPointer->m_pendingPairedDevices;
+            else
+                --thisPointer->m_pendingPairedDevices;
         }
         return S_OK;
     }).Get());
@@ -684,6 +686,14 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedClassicBluetoothDeviceFoun
     if (!m_pendingPairedDevices && !(requestedModes & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod))
         finishDiscovery();
     return S_OK;
+}
+
+void QWinRTBluetoothDeviceDiscoveryWorker::decrementPairedDevicesAndCheckFinished()
+{
+    if ((--m_pendingPairedDevices == 0)
+        && !(requestedModes & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod)) {
+        finishDiscovery();
+    }
 }
 
 HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onPairedBluetoothLEDeviceFoundAsync(IAsyncOperation<BluetoothLEDevice *> *op, AsyncStatus status)
