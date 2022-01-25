@@ -138,6 +138,15 @@ static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattRes
     return byteArrayFromBuffer(buffer, isWCharString);
 }
 
+static void closeDeviceService(ComPtr<IGattDeviceService> service)
+{
+    ComPtr<IClosable> closableService;
+    HRESULT hr = service.As(&closableService);
+    RETURN_IF_FAILED("Could not cast service to closable", return);
+    hr = closableService->Close();
+    RETURN_IF_FAILED("Service Close() failed", return);
+}
+
 class QWinRTLowEnergyServiceHandler : public QObject
 {
     Q_OBJECT
@@ -735,6 +744,7 @@ void QLowEnergyControllerPrivateWinRT::disconnectFromDevice()
     unregisterFromValueChanges();
     unregisterFromStatusChanges();
     unregisterFromMtuChanges();
+    clearAllServices();
     mGattSession = nullptr;
     mDevice = nullptr;
     setState(QLowEnergyController::UnconnectedState);
@@ -744,11 +754,16 @@ void QLowEnergyControllerPrivateWinRT::disconnectFromDevice()
 ComPtr<IGattDeviceService> QLowEnergyControllerPrivateWinRT::getNativeService(
         const QBluetoothUuid &serviceUuid)
 {
+    if (m_openedServices.contains(serviceUuid))
+        return m_openedServices.value(serviceUuid);
+
     ComPtr<IGattDeviceService> deviceService;
     HRESULT hr;
     hr = mDevice->GetGattService(serviceUuid, &deviceService);
     if (FAILED(hr))
         qCDebug(QT_BT_WINDOWS) << "Could not obtain native service for Uuid" << serviceUuid;
+    if (deviceService)
+        m_openedServices[serviceUuid] = deviceService;
     return deviceService;
 }
 
@@ -761,7 +776,7 @@ ComPtr<IGattCharacteristic> QLowEnergyControllerPrivateWinRT::getNativeCharacter
 
     ComPtr<IGattDeviceService3> service3;
     HRESULT hr = service.As(&service3);
-    RETURN_IF_FAILED("Could not cast service", return nullptr);
+    RETURN_IF_FAILED("Could not cast service to service3", return nullptr);
 
     ComPtr<IAsyncOperation<GattCharacteristicsResult *>> op;
     ComPtr<IGattCharacteristicsResult> result;
@@ -1079,10 +1094,26 @@ HRESULT QLowEnergyControllerPrivateWinRT::onServiceDiscoveryFinished(ABI::Window
     return S_OK;
 }
 
+void QLowEnergyControllerPrivateWinRT::clearAllServices()
+{
+    for (auto service : m_openedServices) {
+        closeDeviceService(service);
+    }
+    m_openedServices.clear();
+}
+
+void QLowEnergyControllerPrivateWinRT::closeAndRemoveService(const QBluetoothUuid &uuid)
+{
+    auto service = m_openedServices.take(uuid);
+    if (service)
+        closeDeviceService(service);
+}
+
 void QLowEnergyControllerPrivateWinRT::discoverServices()
 {
     qCDebug(QT_BT_WINDOWS) << "Service discovery initiated";
-
+    // clear the previous services cache, as we request the services again
+    clearAllServices();
     ComPtr<IBluetoothLEDevice3> device3;
     HRESULT hr = mDevice.As(&device3);
     CHECK_FOR_DEVICE_CONNECTION_ERROR(hr, "Could not cast device", return);
@@ -1106,6 +1137,9 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(
         return;
     }
 
+    // clear the cache to rediscover service details
+    closeAndRemoveService(service);
+
     ComPtr<IGattDeviceService> deviceService = getNativeService(service);
     if (!deviceService) {
         qCDebug(QT_BT_WINDOWS) << "Could not obtain native service for uuid " << service;
@@ -1113,7 +1147,7 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetails(
     }
 
     auto reactOnDiscoveryError = [](QSharedPointer<QLowEnergyServicePrivate> service,
-            const QString &msg)
+                                    const QString &msg)
     {
         qCDebug(QT_BT_WINDOWS) << msg;
         service->setError(QLowEnergyService::UnknownError);
