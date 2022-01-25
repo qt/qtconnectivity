@@ -159,6 +159,7 @@ private:
         EventRegistrationToken token;
     };
     QList<ValueChangedEntry> mValueChangedTokens;
+    QMap<QBluetoothUuid, Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService>> m_openedServices;
 
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> getNativeService(const QBluetoothUuid &serviceUuid);
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> getNativeCharacteristic(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
@@ -180,6 +181,9 @@ private:
         Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);
     HRESULT onServiceDiscoveryFinished(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult *> *op,
                                        ABI::Windows::Foundation::AsyncStatus status);
+
+    void clearAllServices();
+    void closeAndRemoveService(const QBluetoothUuid &uuid);
 };
 
 QT_END_NAMESPACE
