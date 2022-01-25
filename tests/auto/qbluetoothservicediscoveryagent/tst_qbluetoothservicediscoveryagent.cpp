@@ -64,6 +64,7 @@ private slots:
     void tst_invalidBtAddress();
     void tst_serviceDiscovery_data();
     void tst_serviceDiscovery();
+    void tst_serviceDiscoveryStop();
     void tst_serviceDiscoveryAdapters();
 
 private:
@@ -138,6 +139,28 @@ void tst_QBluetoothServiceDiscoveryAgent::initTestCase()
         devices = discoveryAgent.discoveredDevices();
     }
 }
+
+void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryStop()
+{
+    if (!localDeviceAvailable)
+        QSKIP("This test requires Bluetooth adapter in powered ON state");
+
+    QBluetoothServiceDiscoveryAgent discoveryAgent;
+    QSignalSpy finishedSpy(&discoveryAgent, SIGNAL(finished()));
+    QSignalSpy canceledSpy(&discoveryAgent, SIGNAL(canceled()));
+
+    // Verify we get the correct signals on start-stop
+    discoveryAgent.start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
+    QVERIFY(discoveryAgent.isActive());
+    discoveryAgent.stop();
+    QTRY_COMPARE(canceledSpy.count(), 1);
+    QVERIFY(!discoveryAgent.isActive());
+    // Wait a bit to see that there are no latent signals
+    QTest::qWait(200);
+    QCOMPARE(canceledSpy.count(), 1);
+    QCOMPARE(finishedSpy.count(), 0);
+}
+
 
 void tst_QBluetoothServiceDiscoveryAgent::tst_invalidBtAddress()
 {
