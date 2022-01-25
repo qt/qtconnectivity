@@ -239,10 +239,10 @@ private:
 private slots:
     void processFoundService(quint64 deviceAddress, const QBluetoothServiceInfo &info);
     void onScanFinished(quint64 deviceAddress);
-    void onScanCanceled();
     void onError();
 
 private:
+    void releaseWorker();
     QPointer<QWinRTBluetoothServiceDiscoveryWorker> worker;
 #endif
 

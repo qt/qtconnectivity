@@ -94,7 +94,6 @@ public:
 Q_SIGNALS:
     void serviceFound(quint64 deviceAddress, const QBluetoothServiceInfo &info);
     void scanFinished(quint64 deviceAddress);
-    void scanCanceled();
     void errorOccured();
 
 private:
@@ -494,7 +493,7 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
 
 QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate()
 {
-    stop();
+    releaseWorker();
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &address)
@@ -508,8 +507,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         this, &QBluetoothServiceDiscoveryAgentPrivate::processFoundService, Qt::QueuedConnection);
     connect(worker, &QWinRTBluetoothServiceDiscoveryWorker::scanFinished,
         this, &QBluetoothServiceDiscoveryAgentPrivate::onScanFinished, Qt::QueuedConnection);
-    connect(worker, &QWinRTBluetoothServiceDiscoveryWorker::scanCanceled,
-        this, &QBluetoothServiceDiscoveryAgentPrivate::onScanCanceled, Qt::QueuedConnection);
     connect(worker, &QWinRTBluetoothServiceDiscoveryWorker::errorOccured,
         this, &QBluetoothServiceDiscoveryAgentPrivate::onError, Qt::QueuedConnection);
     worker->start();
@@ -517,20 +514,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 
 void QBluetoothServiceDiscoveryAgentPrivate::stop()
 {
-    if (!worker)
-        return;
-
-    disconnect(worker, &QWinRTBluetoothServiceDiscoveryWorker::serviceFound,
-        this, &QBluetoothServiceDiscoveryAgentPrivate::processFoundService);
-    disconnect(worker, &QWinRTBluetoothServiceDiscoveryWorker::scanFinished,
-        this, &QBluetoothServiceDiscoveryAgentPrivate::onScanFinished);
-    disconnect(worker, &QWinRTBluetoothServiceDiscoveryWorker::scanCanceled,
-        this, &QBluetoothServiceDiscoveryAgentPrivate::onScanCanceled);
-    disconnect(worker, &QWinRTBluetoothServiceDiscoveryWorker::errorOccured,
-        this, &QBluetoothServiceDiscoveryAgentPrivate::onError);
-    // mWorker will delete itself as soon as it is done with its discovery
-    worker = nullptr;
-    setDiscoveryState(Inactive);
+    releaseWorker();
+    Q_Q(QBluetoothServiceDiscoveryAgent);
+    emit q->canceled();
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::processFoundService(quint64 deviceAddress, const QBluetoothServiceInfo &info)
@@ -579,26 +565,12 @@ void QBluetoothServiceDiscoveryAgentPrivate::processFoundService(quint64 deviceA
 
 void QBluetoothServiceDiscoveryAgentPrivate::onScanFinished(quint64 deviceAddress)
 {
-    Q_Q(QBluetoothServiceDiscoveryAgent);
-    bool deviceFound;
-    for (const QBluetoothDeviceInfo &deviceInfo : qAsConst(discoveredDevices)) {
-        if (deviceInfo.address().toUInt64() == deviceAddress) {
-            deviceFound = true;
-            discoveredDevices.removeOne(deviceInfo);
-            if (discoveredDevices.isEmpty())
-                setDiscoveryState(Inactive);
-            break;
-        }
-    }
-    Q_ASSERT(deviceFound);
-    stop();
-    emit q->finished();
-}
-
-void QBluetoothServiceDiscoveryAgentPrivate::onScanCanceled()
-{
-    Q_Q(QBluetoothServiceDiscoveryAgent);
-    emit q->canceled();
+    // The scan for a device's services has finished. Disconnect the
+    // worker and call the baseclass function which starts the scan for
+    // the next device if there are any unscanned devices left (or finishes
+    // the scan if none left)
+    releaseWorker();
+    _q_serviceDiscoveryFinished();
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::onError()
@@ -608,6 +580,21 @@ void QBluetoothServiceDiscoveryAgentPrivate::onError()
     error = QBluetoothServiceDiscoveryAgent::InputOutputError;
     errorString = "errorDescription";
     emit q->error(error);
+}
+
+void QBluetoothServiceDiscoveryAgentPrivate::releaseWorker()
+{
+    if (!worker)
+        return;
+
+    disconnect(worker, &QWinRTBluetoothServiceDiscoveryWorker::serviceFound,
+        this, &QBluetoothServiceDiscoveryAgentPrivate::processFoundService);
+    disconnect(worker, &QWinRTBluetoothServiceDiscoveryWorker::scanFinished,
+        this, &QBluetoothServiceDiscoveryAgentPrivate::onScanFinished);
+    disconnect(worker, &QWinRTBluetoothServiceDiscoveryWorker::errorOccured,
+        this, &QBluetoothServiceDiscoveryAgentPrivate::onError);
+    // mWorker will delete itself as soon as it is done with its discovery
+    worker = nullptr;
 }
 
 QT_END_NAMESPACE
