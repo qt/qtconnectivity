@@ -72,6 +72,7 @@ DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent) :
     ui(new Ui_DeviceDiscovery)
 {
     ui->setupUi(this);
+    ui->stopScan->setVisible(false);
 
     // In case of multiple Bluetooth adapters it is possible to set the adapter
     // to be used. Example code:
@@ -82,6 +83,7 @@ DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent) :
     discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
 
     connect(ui->scan, &QAbstractButton::clicked, this, &DeviceDiscoveryDialog::startScan);
+    connect(ui->stopScan, &QAbstractButton::clicked, this, &DeviceDiscoveryDialog::stopScan);
 
     connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
             this, &DeviceDiscoveryDialog::addDevice);
@@ -123,12 +125,20 @@ void DeviceDiscoveryDialog::addDevice(const QBluetoothDeviceInfo &info)
 void DeviceDiscoveryDialog::startScan()
 {
     discoveryAgent->start();
-    ui->scan->setEnabled(false);
+    ui->scan->setVisible(false);
+    ui->stopScan->setVisible(true);
+}
+
+void DeviceDiscoveryDialog::stopScan()
+{
+    discoveryAgent->stop();
+    scanFinished();
 }
 
 void DeviceDiscoveryDialog::scanFinished()
 {
-    ui->scan->setEnabled(true);
+    ui->scan->setVisible(true);
+    ui->stopScan->setVisible(false);
 }
 
 void DeviceDiscoveryDialog::itemActivated(QListWidgetItem *item)

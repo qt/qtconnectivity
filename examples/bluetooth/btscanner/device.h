@@ -79,6 +79,7 @@ public slots:
     void pairingDone(const QBluetoothAddress&, QBluetoothLocalDevice::Pairing);
 private slots:
     void startScan();
+    void stopScan();
     void scanFinished();
     void itemActivated(QListWidgetItem *item);
     void hostModeStateChanged(QBluetoothLocalDevice::HostMode);
