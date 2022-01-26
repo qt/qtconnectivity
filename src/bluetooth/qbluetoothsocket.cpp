@@ -93,6 +93,11 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 
     On iOS, this class cannot be used because the platform does not expose
     an API which may permit access to QBluetoothSocket related features.
+
+    \note On macOS Monterey (12) the socket data flow is paused when a
+    modal dialogue is executing, or an event tracking mode is entered (for
+    example by long-pressing a Window close button). This may change in the
+    future releases of macOS.
 */
 
 /*!
