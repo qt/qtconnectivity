@@ -79,6 +79,13 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 #define TYPE_STRING 37
 #define TYPE_SEQUENCE 53
 
+// Helper to reverse given uchar array
+static void reverseArray(uchar data[], size_t length)
+{
+    for (size_t i = length; i > length/2; i--)
+        std::swap(data[length - i], data[i - 1]);
+}
+
 class QWinRTBluetoothServiceDiscoveryWorker : public QObject
 {
     Q_OBJECT
@@ -288,6 +295,8 @@ void QWinRTBluetoothServiceDiscoveryWorker::processServiceSearchResult(quint64 a
                 GUID value;
                 hr = dataReader->ReadGuid(&value);
                 Q_ASSERT_SUCCEEDED(hr);
+                // The latter 8 bytes are in reverse order
+                reverseArray(value.Data4, sizeof(value.Data4)/sizeof(value.Data4[0]));
                 const QBluetoothUuid uuid(value);
                 info.setAttribute(key, uuid);
                 qCDebug(QT_BT_WINDOWS) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "UUID" << Qt::hex << uuid;
@@ -401,7 +410,8 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
             GUID b;
             hr = dataReader->ReadGuid(&b);
             Q_ASSERT_SUCCEEDED(hr);
-
+            // The latter 8 bytes are in reverse order
+            reverseArray(b.Data4, sizeof(b.Data4)/sizeof(b.Data4[0]));
             const QBluetoothUuid uuid(b);
             result.append(QVariant::fromValue(uuid));
             remainingLength -= sizeof(GUID);
