@@ -678,10 +678,23 @@ void QWinRTLowEnergyConnectionHandler::emitConnectedAndQuitThread()
     QThread::currentThread()->quit();
 }
 
+static void registerServiceHandlerMetaTypes()
+{
+    static bool registered = false;
+    if (!registered) {
+        qRegisterMetaType<QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData>>(
+        "QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData>");
+        qRegisterMetaType<QVector<QBluetoothUuid>>("QVector<QBluetoothUuid>");
+        qRegisterMetaType<QLowEnergyHandle>("QLowEnergyHandle");
+        registered = true;
+    }
+}
+
 QLowEnergyControllerPrivateWinRTNew::QLowEnergyControllerPrivateWinRTNew()
     : QLowEnergyControllerPrivate()
 {
     registerQLowEnergyControllerMetaType();
+    registerServiceHandlerMetaTypes();
     connect(this, &QLowEnergyControllerPrivateWinRTNew::characteristicChanged,
             this, &QLowEnergyControllerPrivateWinRTNew::handleCharacteristicChanged,
             Qt::QueuedConnection);

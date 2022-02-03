@@ -146,5 +146,6 @@ typedef QHash<QLowEnergyHandle, QLowEnergyServicePrivate::DescData> DescriptorDa
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QSharedPointer<QLowEnergyServicePrivate>)
+Q_DECLARE_METATYPE(QLowEnergyServicePrivate::CharData)
 
 #endif // QLOWENERGYSERVICEPRIVATE_P_H
