@@ -146,7 +146,7 @@ void add_attribute(const QVariant &var, AttributeId key, Dictionary dict)
         return;
 
     const Number num(variant_to_nsnumber<ValueType>(var));
-    [dict setObject:num forKey:[NSString stringWithFormat:@"%d", int(key)]];
+    [dict setObject:num forKey:[NSString stringWithFormat:@"%x", int(key)]];
 }
 
 template<>
@@ -160,7 +160,7 @@ void add_attribute<QString>(const QVariant &var, AttributeId key, Dictionary dic
     const QString string(var.value<QString>());
     if (string.length()) {
         if (NSString *const nsString = string.toNSString())
-            [dict setObject:nsString forKey:[NSString stringWithFormat:@"%d", int(key)]];
+            [dict setObject:nsString forKey:[NSString stringWithFormat:@"%x", int(key)]];
     }
 }
 
@@ -173,7 +173,7 @@ void add_attribute<QBluetoothUuid>(const QVariant &var, AttributeId key, Diction
         return;
 
     SDPUUid ioUUID(iobluetooth_uuid(var.value<QBluetoothUuid>()));
-    [dict setObject:ioUUID forKey:[NSString stringWithFormat:@"%d", int(key)]];
+    [dict setObject:ioUUID forKey:[NSString stringWithFormat:@"%x", int(key)]];
 }
 
 template<>
@@ -204,6 +204,25 @@ void add_attribute(const QVariant &var, NSMutableArray *list)
 
     const Number num(variant_to_nsnumber<ValueType>(var));
     [list addObject:num];
+}
+
+template<>
+void add_attribute<unsigned short>(const QVariant &var, NSMutableArray *list)
+{
+    Q_ASSERT_X(list, Q_FUNC_INFO, "invalid list (nil)");
+
+    if (!var.canConvert<unsigned short>())
+        return;
+
+    const Number num(variant_to_nsnumber<unsigned short>(var));
+
+    NSDictionary* dict = @{
+        @"DataElementType"  : [NSNumber numberWithInt:1],
+        @"DataElementSize"  : [NSNumber numberWithInt:2],
+        @"DataElementValue" : num
+    };
+
+    [list addObject: dict];
 }
 
 template<>
@@ -273,7 +292,7 @@ void add_rfcomm_protocol_descriptor_list(uint16 channelID, Dictionary dict)
     [rfcommList addObject:rfcommDict];
 
     [descriptorList addObject:rfcommList];
-    [dict setObject:descriptorList forKey:[NSString stringWithFormat:@"%d",
+    [dict setObject:descriptorList forKey:[NSString stringWithFormat:@"%x",
         kBluetoothSDPAttributeIdentifierProtocolDescriptorList]];
 }
 
@@ -299,7 +318,7 @@ void add_l2cap_protocol_descriptor_list(uint16 psm, Dictionary dict)
     [l2capList addObject:l2capDict];
 
     [descriptorList addObject:l2capList];
-    [dict setObject:descriptorList forKey:[NSString stringWithFormat:@"%d",
+    [dict setObject:descriptorList forKey:[NSString stringWithFormat:@"%x",
         kBluetoothSDPAttributeIdentifierProtocolDescriptorList]];
 }
 
@@ -310,10 +329,10 @@ bool add_attribute(const QVariant &var, AttributeId key, NSMutableArray *list)
     if (var.canConvert<Sequence>())
         return false;
 
-    if (var.canConvert<QString>()) {
+    if (var.type() == QVariant::String) {
         //ServiceName, ServiceDescription, ServiceProvider.
         add_attribute<QString>(var, list);
-    } else if (var.canConvert<QBluetoothUuid>()) {
+    } else if (var.userType() == qMetaTypeId<QBluetoothUuid>()) {
         add_attribute<QBluetoothUuid>(var, list);
     } else {
         // Here we need 'key' to understand the type.
@@ -324,6 +343,9 @@ bool add_attribute(const QVariant &var, AttributeId key, NSMutableArray *list)
         case QSInfo::ServiceRecordState:
         case QSInfo::ServiceInfoTimeToLive:
             add_attribute<unsigned>(var, list);
+            break;
+        case QSInfo::BluetoothProfileDescriptorList:
+            add_attribute<unsigned short>(var, list);
             break;
         case QSInfo::ServiceAvailability:
             add_attribute<unsigned char>(var, list);
@@ -348,10 +370,10 @@ bool add_attribute(const QBluetoothServiceInfo &serviceInfo, AttributeId key, Di
     if (var.canConvert<Sequence>())
         return false;
 
-    if (var.canConvert<QString>()) {
+    if (var.type() == QVariant::String) {
         //ServiceName, ServiceDescription, ServiceProvider.
         add_attribute<QString>(var, key, dict);
-    } else if (var.canConvert<QBluetoothUuid>()) {
+    } else if (var.userType() == qMetaTypeId<QBluetoothUuid>()) {
         add_attribute<QBluetoothUuid>(serviceInfo.attribute(key), key, dict);
     } else {
         // We can have different integer types actually, so I have to check
@@ -385,14 +407,15 @@ bool add_sequence_attribute(const QVariant &var, AttributeId key, NSMutableArray
     if (var.isNull() || !var.canConvert<Sequence>())
         return false;
 
+    NSMutableArray *const nested = [NSMutableArray array];
+    [list addObject:nested];
+
     const Sequence sequence(var.value<Sequence>());
     for (const QVariant &var : sequence) {
         if (var.canConvert<Sequence>()) {
-            NSMutableArray *const nested = [NSMutableArray array];
             add_sequence_attribute(var, key, nested);
-            [list addObject:nested];
         } else {
-            add_attribute(var, key, list);
+            add_attribute(var, key, nested);
         }
     }
 
@@ -415,8 +438,7 @@ bool add_sequence_attribute(const QBluetoothServiceInfo &serviceInfo, AttributeI
         if (!add_sequence_attribute(element, key, list))
             add_attribute(element, key, list);
     }
-    [dict setObject:list forKey:[NSString stringWithFormat:@"%d", int(key)]];
-
+    [dict setObject:list forKey:[NSString stringWithFormat:@"%x", int(key)]];
     return true;
 }
 
