@@ -1,4 +1,4 @@
-qt_examples_build_begin()
+qt_examples_build_begin(EXTERNAL_BUILD)
 
 if(TARGET Qt::Bluetooth)
     add_subdirectory(bluetooth)
