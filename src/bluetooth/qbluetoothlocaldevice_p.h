@@ -76,7 +76,9 @@ QT_END_NAMESPACE
 #ifdef QT_WINRT_BLUETOOTH
 #include "qbluetoothutils_winrt_p.h"
 #include <winrt/Windows.Devices.Bluetooth.h>
+QT_BEGIN_NAMESPACE
 struct PairingWorker;
+QT_END_NAMESPACE
 #endif
 
 #ifdef QT_ANDROID_BLUETOOTH
