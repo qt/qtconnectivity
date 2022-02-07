@@ -256,7 +256,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
             for (const QBluetoothUuid &id : serviceClassUuids) {
                 if (id.minimumSize() == 16) {
                     serviceInfo.setServiceUuid(id);
-                    serviceInfo.setServiceName(QBluetoothServiceDiscoveryAgent::tr("Custom Service"));
+                    if (serviceInfo.serviceName().isEmpty()) {
+                        serviceInfo.setServiceName(
+                                    QBluetoothServiceDiscoveryAgent::tr("Custom Service"));
+                    }
                     QBluetoothServiceInfo::Sequence modSeq =
                             serviceInfo.attribute(QBluetoothServiceInfo::ServiceClassIds).value<QBluetoothServiceInfo::Sequence>();
                     modSeq.removeOne(QVariant::fromValue(id));
