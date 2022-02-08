@@ -343,7 +343,12 @@ void PingPong::done()
 
 void PingPong::addService(const QBluetoothServiceInfo &service)
 {
-    setMessage("Service found. Setting parameters...");
+    if (m_serviceFound)
+        return;
+    m_serviceFound = true;
+
+    setMessage("Service found. Stopping discovery and creating connection...");
+    discoveryAgent->stop();
     //! [Connecting the socket]
     socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
     socket->connectToService(service);
@@ -352,7 +357,6 @@ void PingPong::addService(const QBluetoothServiceInfo &service)
     connect(socket, &QBluetoothSocket::connected, this, &PingPong::serverConnected);
     connect(socket, &QBluetoothSocket::disconnected, this, &PingPong::serverDisconnected);
     //! [Connecting the socket]
-    m_serviceFound = true;
 }
 
 void PingPong::serviceScanError(QBluetoothServiceDiscoveryAgent::Error error)
