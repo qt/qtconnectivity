@@ -149,15 +149,20 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryFinished(void *generic)
     QT_BT_MAC_AUTORELEASEPOOL;
 
     NSArray *const records = device.services;
+    qCDebug(QT_BT_OSX) << "SDP finished for device" << [device nameOrAddress]
+                          << ", services found:" << [records count];
     for (IOBluetoothSDPServiceRecord *record in records) {
         QBluetoothServiceInfo serviceInfo;
         Q_ASSERT_X(discoveredDevices.size() >= 1, Q_FUNC_INFO, "invalid number of devices");
 
+        qCDebug(QT_BT_OSX) << "Processing service" << [record getServiceName];
         serviceInfo.setDevice(discoveredDevices.at(0));
         OSXBluetooth::extract_service_record(record, serviceInfo);
 
-        if (!serviceInfo.isValid())
+        if (!serviceInfo.isValid()) {
+            qCDebug(QT_BT_OSX) << "Discarding invalid service";
             continue;
+        }
 
         if (QOperatingSystemVersion::current() > QOperatingSystemVersion::MacOSBigSur
             && uuidFilter.size()) {

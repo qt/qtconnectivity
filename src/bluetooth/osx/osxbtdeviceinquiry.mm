@@ -112,11 +112,14 @@ const uint8_t IOBlueoothInquiryLengthS = 15;
 
     m_active = true;
     [m_inquiry clearFoundDevices];
+
+    qCDebug(QT_BT_OSX) << "Starting device inquiry with"
+                          << IOBlueoothInquiryLengthS << "second timeout limit.";
     const IOReturn result = [m_inquiry start];
     if (result != kIOReturnSuccess) {
         // QtBluetooth will probably convert an error into UnknownError,
         // losing the actual information.
-        qCWarning(QT_BT_OSX) << "failed with IOKit error code:" << result;
+        qCWarning(QT_BT_OSX) << "device inquiry start failed with IOKit error code:" << result;
         m_active = false;
     } else {
         // Docs say it's 10 s. by default, we set it to 15 s. (see -initWithDelegate:),
@@ -124,6 +127,7 @@ const uint8_t IOBlueoothInquiryLengthS = 15;
         watchDog.reset(new QTimer);
         watchDog->connect(watchDog.get(), &QTimer::timeout, watchDog.get(), [self]{
             qCWarning(QT_BT_OSX, "Manually interrupting IOBluetoothDeviceInquiry");
+            qCDebug(QT_BT_OSX) << "Found devices:" << [m_inquiry foundDevices];
             [self stop];
         });
 
@@ -150,6 +154,8 @@ const uint8_t IOBlueoothInquiryLengthS = 15;
 - (void)deviceInquiryComplete:(IOBluetoothDeviceInquiry *)sender
         error:(IOReturn)error aborted:(BOOL)aborted
 {
+    qCDebug(QT_BT_OSX) << "deviceInquiryComplete, error:" << error
+                          << "user-stopped:" << aborted;
     if (!m_active)
         return;
 
@@ -176,6 +182,7 @@ const uint8_t IOBlueoothInquiryLengthS = 15;
 - (void)deviceInquiryDeviceFound:(IOBluetoothDeviceInquiry *)sender
         device:(IOBluetoothDevice *)device
 {
+    qCDebug(QT_BT_OSX) << "deviceInquiryDeviceFound:" << [device nameOrAddress];
     if (sender != m_inquiry) // Can never happen in the current version.
         return;
 
