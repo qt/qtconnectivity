@@ -54,6 +54,7 @@
 #include <QtCore/QMap>
 #include <QtCore/QString>
 #include <QtDBus/QDBusArgument>
+#include <QtCore/private/qglobal_p.h>
 
 typedef QMap<quint32, QString> ServiceMap;
 

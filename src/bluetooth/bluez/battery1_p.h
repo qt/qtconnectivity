@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <QtCore/private/qglobal_p.h>
 
 /*
  * Proxy class for interface org.bluez.Battery1

@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2020 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -58,6 +58,7 @@
 #include <QObject>
 
 #include <QtBluetooth/qbluetoothaddress.h>
+#include <QtCore/private/qglobal_p.h>
 
 
 QT_BEGIN_NAMESPACE

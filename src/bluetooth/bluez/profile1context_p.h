@@ -55,6 +55,7 @@
 #include <QtDBus/qdbuscontext.h>
 #include <QtDBus/qdbusextratypes.h>
 #include <QtDBus/qdbusunixfiledescriptor.h>
+#include <QtCore/private/qglobal_p.h>
 
 QT_BEGIN_NAMESPACE
 

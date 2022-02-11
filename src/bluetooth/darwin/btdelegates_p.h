@@ -56,7 +56,7 @@
 #include "qbluetooth.h"
 
 #include <QtCore/qsharedpointer.h>
-#include <QtCore/qglobal.h>
+#include <QtCore/private/qglobal_p.h>
 
 #if defined(Q_OS_MACOS)
 

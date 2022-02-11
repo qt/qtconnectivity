@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2018 The Qt Company Ltd.
+** Copyright (C) 2021 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -61,6 +61,7 @@ namespace winrt::impl
 }
 
 #include <QtCore/QtGlobal>
+#include <QtCore/private/qglobal_p.h>
 
 #include <wrl/client.h>
 
