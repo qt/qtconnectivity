@@ -228,7 +228,6 @@ void QLowEnergyControllerPrivateBluez::init()
         setError(QLowEnergyController::InvalidBluetoothAdapterError);
         return;
     }
-        return;
 
     hciManager->monitorEvent(HciManager::HciEvent::EVT_ENCRYPT_CHANGE);
     connect(hciManager, SIGNAL(encryptionChangedEvent(QBluetoothAddress,bool)),
