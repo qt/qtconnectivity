@@ -1,22 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 project(lowenergyscanner LANGUAGES CXX)
 
-set(CMAKE_INCLUDE_CURRENT_DIR ON)
-
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC ON)
 
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
-  set(INSTALL_EXAMPLESDIR "examples")
+    set(INSTALL_EXAMPLESDIR "examples")
 endif()
 
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/bluetooth/lowenergyscanner")
 
-find_package(Qt6 COMPONENTS Core)
-find_package(Qt6 COMPONENTS Gui)
-find_package(Qt6 COMPONENTS Quick)
-find_package(Qt6 COMPONENTS Bluetooth)
+find_package(Qt6 REQUIRED COMPONENTS Bluetooth Core Gui Quick)
 
 qt_add_executable(lowenergyscanner
     characteristicinfo.cpp characteristicinfo.h
@@ -25,10 +18,12 @@ qt_add_executable(lowenergyscanner
     main.cpp
     serviceinfo.cpp serviceinfo.h
 )
+
 set_target_properties(lowenergyscanner PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
+
 target_include_directories(lowenergyscanner PUBLIC
     .
 )
@@ -53,7 +48,6 @@ if (APPLE)
         )
     endif()
 endif()
-
 
 # Resources:
 set(resources_resource_files
