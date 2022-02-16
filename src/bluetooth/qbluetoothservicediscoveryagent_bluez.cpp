@@ -337,8 +337,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
                 qCDebug(QT_BT_BLUEZ) << "Discovered services" << discoveredDevices.at(0).address().toString()
                                      << serviceInfo.serviceName() << serviceInfo.serviceUuid()
                                      << ">>>" << serviceInfo.serviceClassUuids();
-
-                emit q->serviceDiscovered(serviceInfo);
+                // Use queued connection to allow us finish the service looping; the application
+                // might call stop() when it has detected the service-of-interest.
+                QMetaObject::invokeMethod(q, "serviceDiscovered", Qt::QueuedConnection,
+                                          Q_ARG(QBluetoothServiceInfo, serviceInfo));
             }
         }
     }
