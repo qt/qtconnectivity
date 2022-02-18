@@ -103,7 +103,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
 {
     Q_UNUSED(address);
     Q_UNUSED(pairing);
-    QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
+    QMetaObject::invokeMethod(this, "errorOccurred", Qt::QueuedConnection,
                               Q_ARG(QBluetoothLocalDevice::Error,
                                     QBluetoothLocalDevice::PairingError));
 }

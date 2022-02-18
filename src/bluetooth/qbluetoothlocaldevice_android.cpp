@@ -307,7 +307,7 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 {
     if (address.isNull()) {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
+        QMetaObject::invokeMethod(this, "errorOccurred", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothLocalDevice::Error,
                                         QBluetoothLocalDevice::PairingError));
         return;
@@ -328,7 +328,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
     // BluetoothDevice::createBond() requires Android API 15
     if (QNativeInterface::QAndroidApplication::sdkVersion() < 15 || !d_ptr->adapter()) {
         qCWarning(QT_BT_ANDROID) <<  "Unable to pair: requires Android API 15+";
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
+        QMetaObject::invokeMethod(this, "errorOccurred", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothLocalDevice::Error,
                                         QBluetoothLocalDevice::PairingError));
         return;
@@ -343,7 +343,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
         newPairing == Paired ? JNI_TRUE : JNI_FALSE);
 
     if (!success) {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
+        QMetaObject::invokeMethod(this, "errorOccurred", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothLocalDevice::Error,
                                         QBluetoothLocalDevice::PairingError));
     } else {
