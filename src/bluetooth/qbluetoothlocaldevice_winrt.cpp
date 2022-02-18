@@ -617,7 +617,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
 {
     Q_D(QBluetoothLocalDevice);
     if (!isValid() || address.isNull()) {
-        QMetaObject::invokeMethod(this, "error", Qt::QueuedConnection,
+        QMetaObject::invokeMethod(this, "errorOccurred", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothLocalDevice::Error,
                                         QBluetoothLocalDevice::PairingError));
         return;
