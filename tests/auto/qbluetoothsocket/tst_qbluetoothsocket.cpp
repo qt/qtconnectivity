@@ -35,6 +35,9 @@
 #include <qbluetoothserviceinfo.h>
 #include <qbluetoothservicediscoveryagent.h>
 #include <qbluetoothlocaldevice.h>
+#if QT_CONFIG(bluez)
+#include <QtBluetooth/private/bluez5_helper_p.h>
+#endif
 
 QT_USE_NAMESPACE
 
@@ -507,7 +510,12 @@ void tst_QBluetoothSocket::tst_preferredSecurityFlags()
 #if defined(QT_ANDROID_BLUETOOTH) || defined(QT_OSX_BLUETOOTH)
     QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::Secure);
 #elif QT_CONFIG(bluez)
-    QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::Authorization);
+    // The bluezdbus socket uses "NoSecurity" by default, whereas the non-dbus bluez
+    // socket uses "Authorization" by default
+    if (bluetoothdVersion() >= QVersionNumber(5, 42))
+        QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::NoSecurity);
+    else
+        QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::Authorization);
 #else
     QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::NoSecurity);
 #endif
