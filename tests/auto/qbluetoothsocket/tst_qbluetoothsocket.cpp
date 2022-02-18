@@ -142,7 +142,7 @@ void tst_QBluetoothSocket::initTestCase()
     qDebug() << "Starting discovery";
 
     sda->setUuidFilter(QBluetoothUuid(QString(TEST_SERVICE_UUID)));
-    sda->start(QBluetoothServiceDiscoveryAgent::MinimalDiscovery);
+    sda->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
 
     for (int connectTime = MaxConnectTime; !done_discovery && connectTime > 0; connectTime -= 1000)
         QTest::qWait(1000);
