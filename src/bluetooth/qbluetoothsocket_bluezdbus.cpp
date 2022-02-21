@@ -280,7 +280,7 @@ void QBluetoothSocketPrivateBluezDBus::connectToService(
         qCWarning(QT_BT_BLUEZ) << "Cannot find appropriate serviceUuid"
                                << "or SerialPort service class uuid";
         errorString = QBluetoothSocket::tr("Missing serviceUuid or Serial Port service class uuid");
-        q->setSocketError(QBluetoothSocket::SocketError::OperationError);
+        q->setSocketError(QBluetoothSocket::SocketError::UnsupportedProtocolError);
         return;
     }
 
@@ -299,7 +299,7 @@ void QBluetoothSocketPrivateBluezDBus::connectToService(
     if (address.isNull()) {
         qCWarning(QT_BT_BLUEZ) << "Invalid address to remote address passed.";
         errorString = QBluetoothSocket::tr("Invalid Bluetooth address passed to connectToService()");
-        q->setSocketError(QBluetoothSocket::SocketError::OperationError);
+        q->setSocketError(QBluetoothSocket::SocketError::UnsupportedProtocolError);
         return;
     }
 
@@ -307,7 +307,7 @@ void QBluetoothSocketPrivateBluezDBus::connectToService(
         qCWarning(QT_BT_BLUEZ) << "Cannot find appropriate serviceUuid"
                                << "or SerialPort service class uuid";
         errorString = QBluetoothSocket::tr("Missing serviceUuid or Serial Port service class uuid");
-        q->setSocketError(QBluetoothSocket::SocketError::OperationError);
+        q->setSocketError(QBluetoothSocket::SocketError::UnsupportedProtocolError);
         return;
     }
 
