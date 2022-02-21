@@ -561,7 +561,18 @@ void tst_QBluetoothSocket::tst_unsupportedProtocolError()
     socket.connectToService(QBluetoothAddress(), 1, QIODevice::ReadWrite);
     QTRY_COMPARE_WITH_TIMEOUT(errorSpy.size(), 1, 1000);
     QCOMPARE(errorSpy.size(), 1);
+#if QT_CONFIG(bluez)
+    // Bluez dbus socket does not support connecting to port and gives different error code
+    if (bluetoothdVersion() >= QVersionNumber(5, 42)) {
+        QCOMPARE(errorSpy.takeFirst().at(0).toInt(),
+                 int(QBluetoothSocket::SocketError::ServiceNotFoundError));
+    } else {
+        QCOMPARE(errorSpy.takeFirst().at(0).toInt(),
+                 int(QBluetoothSocket::SocketError::UnsupportedProtocolError));
+    }
+#else
     QCOMPARE(errorSpy.takeFirst().at(0).toInt(), int(QBluetoothSocket::SocketError::UnsupportedProtocolError));
+#endif
     QVERIFY(socket.errorString().size() != 0);
     QCOMPARE(socket.state(), QBluetoothSocket::SocketState::UnconnectedState);
 
