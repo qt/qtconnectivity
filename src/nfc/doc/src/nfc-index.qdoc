@@ -34,32 +34,48 @@
 
 The NFC API provides connectivity between NFC enabled devices.
 
-Currently the API is supported on \l{Qt for Android}{Android} and \l{Qt for iOS}{iOS}.
+Currently, the API is supported on \l{Qt for Android}{Android} and
+\l{Qt for iOS}{iOS}.
 
-\section1 Overview
+NFC is a short-range (less than 20 centimeters) wireless technology
+with a maximum transfer rate of 424 Kbps. NFC is ideal for transferring
+small packets of data when two devices are placed together.
 
-NFC is an extremely short-range (less than 20 centimeters) wireless technology and has a
-maximum transfer rate of 424 kbit/s. NFC is ideal for transferring small packets of data when two
-devices are touched together.
+The NFC module provides APIs for interacting with NFC Forum Tags and NFC Forum
+Devices. It can detect targets and losses, register NDEF message handlers, read
+and write NDEF messages on NFC Forum Tags, and send tag-specific commands.
 
-The NFC API provides APIs for interacting with NFC Forum Tags and NFC Forum Devices, including
-target detection and loss, registering NDEF message handlers, reading and writing NDEF messages
-on NFC Forum Tags and sending tag specific commands.
+\section1 Using the Module
 
-\include module-use.qdocinc using qt module
+\include {module-use.qdocinc} {using the c++ api} {NFC}
 
-\badcode
-find_package(Qt6 COMPONENTS Nfc REQUIRED)
-target_link_libraries(mytarget PRIVATE Qt::Nfc)
-\endcode
+\section2 Building with CMake
 
-See also the \l {Build with CMake} overview.
+\include {module-use.qdocinc} {building with cmake} {Nfc}
 
-\include module-use.qdocinc building with qmake
+\section2 Building with qmake
 
-\badcode
-QT += nfc
-\endcode
+\include {module-use.qdocinc} {building_with_qmake} {nfc}
+
+\section1 Articles and Guides
+
+\list
+    \li \l {Qt NFC Overview}
+    \li \l {Qt NFC on Android}
+\endlist
+
+\section1 Examples
+
+\list
+    \li \l {annotatedurl}{Annotated URL}
+    \li \l {ndefeditor}{NDEF Editor}
+\endlist
+
+\section1 Reference
+
+\list
+    \li \l {Qt NFC C++ Classes}{C++ Classes}
+\endlist
 
 \section1 Module Evolution
 
@@ -74,26 +90,4 @@ these free software licenses are
 \l{GNU Lesser General Public License, version 3}, or
 the \l{GNU General Public License, version 2}.
 See \l{Qt Licensing} for further details.
-
-\section1 Related Information
-
-\section2 Guides
-\list
-    \li \l {Qt NFC Overview}
-    \li \l {Qt NFC on Android}
-\endlist
-
-\section2 Reference
-\list
-    \li \l {Qt NFC C++ Classes}{C++ Classes}
-\endlist
-
-\section2 Examples
-\list
-    \li C++
-    \list
-        \li \l {annotatedurl}{Annotated URL}
-        \li \l {ndefeditor}{NDEF Editor}
-    \endlist
-\endlist
 */
