@@ -6,7 +6,8 @@ HEADERS +=  \
         android/localdevicebroadcastreceiver_p.h \
         android/serveracceptancethread_p.h \
         android/jni_android_p.h \
-        android/lowenergynotificationhub_p.h
+        android/lowenergynotificationhub_p.h \
+        android/androidutils_p.h
 
 
 SOURCES += \
@@ -17,4 +18,5 @@ SOURCES += \
         android/androidbroadcastreceiver.cpp \
         android/localdevicebroadcastreceiver.cpp \
         android/serveracceptancethread.cpp \
-        android/lowenergynotificationhub.cpp
+        android/lowenergynotificationhub.cpp \
+        android/androidutils.cpp

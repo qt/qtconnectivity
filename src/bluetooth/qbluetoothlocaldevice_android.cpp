@@ -38,15 +38,15 @@
 **
 ****************************************************************************/
 
+#include "android/androidutils_p.h"
+#include "android/localdevicebroadcastreceiver_p.h"
+#include "qbluetoothlocaldevice_p.h"
 #include <QtCore/QLoggingCategory>
 #include <QtCore/private/qjnihelpers_p.h>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
 #include <QtAndroidExtras/QAndroidJniObject>
 #include <QtBluetooth/QBluetoothLocalDevice>
 #include <QtBluetooth/QBluetoothAddress>
-
-#include "qbluetoothlocaldevice_p.h"
-#include "android/localdevicebroadcastreceiver_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -107,6 +107,12 @@ void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
     QAndroidJniObject adapter = getDefaultAdapter();
     if (!adapter.isValid()) {
         qCWarning(QT_BT_ANDROID) <<  "Device does not support Bluetooth";
+        return;
+    }
+
+    if (!(ensureAndroidPermission(BluetoothPermission::Scan) &&
+          ensureAndroidPermission(BluetoothPermission::Connect))) {
+        qCWarning(QT_BT_ANDROID) <<  "Local device unable to get permissions.";
         return;
     }
 
@@ -308,6 +314,11 @@ QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
 
 QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 {
+    // As a static class function we need to ensure permissions here (in addition to initialize())
+    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+        qCWarning(QT_BT_ANDROID) <<  "allDevices() unable to get permission.";
+        return {};
+    }
     // Android only supports max of one device (so far)
     QList<QBluetoothHostInfo> localDevices;
 

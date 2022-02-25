@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 
+#include "android/androidutils_p.h"
 #include "qlowenergycontroller_android_p.h"
 #include <QtCore/QLoggingCategory>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
@@ -91,6 +92,11 @@ void QLowEnergyControllerPrivateAndroid::init()
     // Peripheral/Server support requires Android API v21
     const bool isPeripheral = (role == QLowEnergyController::PeripheralRole);
     const jint version = QtAndroidPrivate::androidSdkVersion();
+
+    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+        qCWarning(QT_BT_ANDROID) << "Unable to get needed permissions";
+        return;
+    }
 
     if (isPeripheral) {
         if (version < 21) {
@@ -1015,6 +1021,12 @@ void QLowEnergyControllerPrivateAndroid::startAdvertising(const QLowEnergyAdvert
 
     if (!hub->javaObject().isValid()) {
         qCWarning(QT_BT_ANDROID) << "Cannot initiate QtBluetoothLEServer";
+        setError(QLowEnergyController::AdvertisingError);
+        setState(QLowEnergyController::UnconnectedState);
+        return;
+    }
+
+    if (!ensureAndroidPermission(BluetoothPermission::Advertise)) {
         setError(QLowEnergyController::AdvertisingError);
         setState(QLowEnergyController::UnconnectedState);
         return;
