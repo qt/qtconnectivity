@@ -114,7 +114,13 @@ elseif(ANDROID AND NOT ANDROID_EMBEDDED)
         jar/Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth.jar:org.qtproject.qt.android.bluetooth.QtBluetoothBroadcastReceiver
     )
     set_property(TARGET Bluetooth APPEND PROPERTY QT_ANDROID_PERMISSIONS
-        android.permission.ACCESS_FINE_LOCATION android.permission.BLUETOOTH android.permission.BLUETOOTH_ADMIN
+        android.permission.ACCESS_FINE_LOCATION
+        android.permission.BLUETOOTH
+        android.permission.BLUETOOTH_ADMIN
+        # Android 12 / SDK 31+
+        android.permission.BLUETOOTH_SCAN
+        android.permission.BLUETOOTH_ADVERTISE
+        android.permission.BLUETOOTH_CONNECT
     )
 
     qt_internal_extend_target(Bluetooth
@@ -127,6 +133,7 @@ elseif(ANDROID AND NOT ANDROID_EMBEDDED)
             android/lowenergynotificationhub.cpp android/lowenergynotificationhub_p.h
             android/serveracceptancethread.cpp android/serveracceptancethread_p.h
             android/servicediscoverybroadcastreceiver.cpp android/servicediscoverybroadcastreceiver_p.h
+            android/androidutils.cpp android/androidutils_p.h
             qbluetoothdevicediscoveryagent_android.cpp
             qbluetoothlocaldevice_android.cpp
             qbluetoothserver_android.cpp

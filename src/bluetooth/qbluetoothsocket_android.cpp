@@ -43,6 +43,7 @@
 #include "qbluetoothaddress.h"
 #include "qbluetoothdeviceinfo.h"
 #include "qbluetoothserviceinfo.h"
+#include "android/androidutils_p.h"
 #include <QCoreApplication>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QThread>
@@ -182,6 +183,10 @@ QBluetoothSocketPrivateAndroid::QBluetoothSocketPrivateAndroid()
                                                         "()Landroid/bluetooth/BluetoothAdapter;");
     qRegisterMetaType<QBluetoothSocket::SocketError>();
     qRegisterMetaType<QBluetoothSocket::SocketState>();
+
+    // Many functions of this class need connect permission; request already in ctor
+    if (!ensureAndroidPermission(BluetoothPermission::Connect))
+        qCWarning(QT_BT_ANDROID) << "Bluetooth socket unable to get permission.";
 }
 
 QBluetoothSocketPrivateAndroid::~QBluetoothSocketPrivateAndroid()
