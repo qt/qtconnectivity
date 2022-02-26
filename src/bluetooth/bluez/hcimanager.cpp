@@ -561,9 +561,11 @@ void HciManager::handleHciAclPacket(const quint8 *data, int size)
 
 void HciManager::handleLeMetaEvent(const quint8 *data)
 {
-    // Spec v4.2, Vol 2, part E, 7.7.65ff
+    // Spec v5.3, Vol 4, part E, 7.7.65.*
     switch (*data) {
-    case 0x1: {
+    case 0x1: // HCI_LE_Connection_Complete
+    case 0xA: // HCI_LE_Enhanced_Connection_Complete
+    {
         const quint16 handle = bt_get_le16(data + 2);
         emit connectionComplete(handle);
         break;
