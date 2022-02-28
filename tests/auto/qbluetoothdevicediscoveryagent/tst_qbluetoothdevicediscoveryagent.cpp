@@ -490,7 +490,9 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryMethods()
             const QBluetoothDeviceInfo info =
                 qvariant_cast<QBluetoothDeviceInfo>(discoveredSpy.takeFirst().at(0));
             QVERIFY(info.isValid());
-            QVERIFY(info.coreConfigurations() & expectedConfiguration);
+            // on Android we do find devices with unknown configuration
+            if (info.coreConfigurations() != QBluetoothDeviceInfo::UnknownCoreConfiguration)
+                QVERIFY(info.coreConfigurations() & expectedConfiguration);
         }
     }
 
