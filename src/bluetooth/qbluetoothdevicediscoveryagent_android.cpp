@@ -208,15 +208,20 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 {
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
+    pendingStart = false;
+
     if (m_active == NoScanActive)
         return;
 
     if (m_active == SDPScanActive) {
-        if (pendingCancel)
+        if (pendingCancel) {
+            // If we had both a pending cancel and a pending start,
+            // we now have only a pending cancel.
+            // The pending start was canceled above.
             return;
+        }
 
         pendingCancel = true;
-        pendingStart = false;
         bool success = adapter.callMethod<jboolean>("cancelDiscovery");
         if (!success) {
             lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
