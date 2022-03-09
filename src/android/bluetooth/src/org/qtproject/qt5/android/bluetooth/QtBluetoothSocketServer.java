@@ -106,6 +106,9 @@ public class QtBluetoothSocketServer extends Thread
             return;
         }
 
+        if (isInterrupted()) // close() may have been called
+            return;
+
         BluetoothSocket s;
         if (m_serverSocket != null) {
             try {
@@ -131,6 +134,24 @@ public class QtBluetoothSocketServer extends Thread
         Log.d(TAG, "Leaving server socket thread.");
     }
 
+    // This function closes the socket server
+    //
+    // A note on threading behavior
+    // 1. This function is called from Qt thread which is different from the Java thread (run())
+    // 2. The caller of this function expects the Java thread to be finished upon return
+    //
+    // First we mark the Java thread as interrupted, then call close() on the
+    // listening socket if it had been created, and lastly wait for the thread to finish.
+    // The close() method of the socket is intended to be used to abort the accept() from
+    // another thread, as per the accept() documentation.
+    //
+    // If the Java thread was in the middle of creating a socket with the non-blocking
+    // listen* call, the run() will notice after the returning from the listen* that it has
+    // been interrupted and returns early from the run().
+    //
+    // If the Java thread was in the middle of the blocking accept() call, it will get
+    // interrupated by the close() call on the socket. After returning the run() will
+    // notice it has been interrupted and return from the run()
     public void close()
     {
         if (!isAlive())
@@ -143,7 +164,9 @@ public class QtBluetoothSocketServer extends Thread
             //interrupts accept() call above
             if (m_serverSocket != null)
                 m_serverSocket.close();
-        } catch (IOException ex) {
+            // Wait for the thread to finish
+            join(20); // Maximum wait in ms, typically takes < 1ms
+        } catch (Exception ex) {
             Log.d(TAG, "Closing server socket close() failed:" + ex.toString());
             ex.printStackTrace();
         }
