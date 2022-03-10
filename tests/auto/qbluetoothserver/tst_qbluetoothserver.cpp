@@ -37,9 +37,6 @@
 
 QT_USE_NAMESPACE
 
-//same uuid as tests/bttestui
-#define TEST_SERVICE_UUID "e8e10f95-1a70-4b27-9ccf-02010264e9c8"
-
 Q_DECLARE_METATYPE(QBluetooth::SecurityFlags)
 
 class tst_QBluetoothServer : public QObject
@@ -200,7 +197,12 @@ void tst_QBluetoothServer::tst_receive()
     QTest::qWait(1000);
 
     if (!result) {
+#ifdef Q_OS_ANDROID
+        // Android seems to always report adapter address
+        QVERIFY(server.serverAddress() != QBluetoothAddress());
+#else
         QCOMPARE(server.serverAddress(), QBluetoothAddress());
+#endif
         QCOMPARE(server.serverPort(), quint16(0));
         QVERIFY(errorSpy.count() > 0);
         QVERIFY(!server.isListening());
