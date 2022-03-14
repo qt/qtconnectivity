@@ -596,7 +596,7 @@ void QBluetoothSocket::setSocketState(QBluetoothSocket::SocketState state)
 bool QBluetoothSocket::canReadLine() const
 {
     Q_D(const QBluetoothSocketBase);
-    return d->canReadLine();
+    return d->canReadLine() || QIODevice::canReadLine();
 }
 
 /*!
