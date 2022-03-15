@@ -80,10 +80,6 @@ void tst_QBluetoothServiceInfo::initTestCase()
     qRegisterMetaType<QBluetoothUuid::ProtocolUuid>();
     qRegisterMetaType<QUuid>();
     qRegisterMetaType<QBluetoothServiceInfo::Protocol>();
-    // start Bluetooth if not started
-    QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
-    device->powerOn();
-    delete device;
 }
 
 void tst_QBluetoothServiceInfo::tst_construction()
@@ -329,8 +325,24 @@ void tst_QBluetoothServiceInfo::tst_assignment()
         copyInfo.setServiceUuid(QBluetoothUuid::ServiceClassUuid::SerialPort);
         QVERIFY(!copyInfo.isRegistered());
 
-        if (!QBluetoothLocalDevice::allDevices().count()) {
-            QSKIP("Skipping test due to missing Bluetooth device");
+#ifdef Q_OS_WIN
+        // QBluetoothLocalDevice is not supported on 6.2 on Windows so we can't
+        // know if we are able to run rest of the test function
+        QSKIP("Skipping test due to missing QBluetoothLocalDevice support");
+#endif
+        // start Bluetooth if not started
+        QBluetoothLocalDevice device;
+        if (device.isValid()) {
+            device.powerOn();
+            int waitPowerOnMs = 1000;
+            while (device.hostMode() == QBluetoothLocalDevice::HostPoweredOff && waitPowerOnMs) {
+                QTest::qWait(100);
+                waitPowerOnMs -= 100;
+            }
+        }
+
+        if (device.hostMode() == QBluetoothLocalDevice::HostPoweredOff) {
+            QSKIP("Skipping test due to missing or powered OFF Bluetooth device");
         } else if (protocolSupported) {
             QBluetoothServer server(serviceInfoProtocol);
             QVERIFY(server.listen());
