@@ -392,7 +392,6 @@ void QBluetoothSocketPrivate::connectToService(const QBluetoothAddress &address,
             // Connected, setOpenMode on a QBluetoothSocket.
             q_ptr->setOpenMode(openMode);
             q_ptr->setSocketState(QBluetoothSocket::SocketState::ConnectedState);
-            emit q_ptr->connected();
             if (rxBuffer.size()) // We also have some data already ...
                 emit q_ptr->readyRead();
         } else if (state == QBluetoothSocket::SocketState::UnconnectedState) {
@@ -520,7 +519,6 @@ void QBluetoothSocketPrivate::channelOpenComplete()
     if (!isConnecting) {
         q_ptr->setOpenMode(openMode);
         q_ptr->setSocketState(QBluetoothSocket::SocketState::ConnectedState);
-        emit q_ptr->connected();
     } else {
         state = QBluetoothSocket::SocketState::ConnectedState;
         // We are still in connectToService, it'll care
