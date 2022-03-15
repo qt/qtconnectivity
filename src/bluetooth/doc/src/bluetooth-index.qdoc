@@ -73,13 +73,6 @@ Currently, the API is supported on the following platforms:
     \li
 \endtable
 
-Qt 5.14 adds a native Win32 port supporting Classic Bluetooth on Windows 7 or newer,
-and Bluetooth LE on Windows 8 or newer. It must be enabled at build time by configuration
-option -native-win32-bluetooth. The UWP backend is used by default if this option is not
-set and the Win32 target platform supports the required UWP APIs (minimal requirement is
-Windows 10 version 1507, with slightly improved service discovery since Windows 10 version
-1607).
-
 \section1 Overview
 
 Bluetooth is a short-range (less than 100 meters) wireless technology. It
