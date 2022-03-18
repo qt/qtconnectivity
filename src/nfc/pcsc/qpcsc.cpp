@@ -41,12 +41,14 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 namespace QPcsc {
 
 QString errorMessage(LONG error)
 {
 #ifdef Q_OS_WIN
-    return (u"0x%1"_qs).arg(error, 8, 16, QLatin1Char('0'));
+    return (u"0x%1"_s).arg(error, 8, 16, QLatin1Char('0'));
 #else
     return QString::fromUtf8(pcsc_stringify_error(error));
 #endif

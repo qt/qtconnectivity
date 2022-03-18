@@ -46,6 +46,8 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 Q_DECLARE_LOGGING_CATEGORY(QT_NFC_PCSC)
 
 /*
@@ -61,7 +63,7 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
 
     m_worker = new QPcscManager;
     m_workerThread = new QThread(this);
-    m_workerThread->setObjectName(u"QtNfcThread"_qs);
+    m_workerThread->setObjectName(u"QtNfcThread"_s);
     m_worker->moveToThread(m_workerThread);
 
     connect(m_worker, &QPcscManager::cardInserted, this,
