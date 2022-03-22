@@ -72,7 +72,7 @@ QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol
     : maxPendingConnections(1), serverType(sType), m_lastError(QBluetoothServer::NoError),
       socket(0), q_ptr(parent)
 {
-    CoInitialize(NULL);
+    mainThreadCoInit(this);
     socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
 }
 
@@ -85,7 +85,7 @@ QBluetoothServerPrivate::~QBluetoothServerPrivate()
     // If we do not reset that pointer, socketListener will go out of scope after CoUninitialize was
     // called, which will lead to a crash.
     socketListener = nullptr;
-    CoUninitialize();
+    mainThreadCoUninit(this);
 }
 
 bool QBluetoothServerPrivate::isListening() const
