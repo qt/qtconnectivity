@@ -477,6 +477,7 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
       singleDevice(false),
       q_ptr(qp)
 {
+    mainThreadCoInit(this);
     // TODO: use local adapter for discovery. Possible?
     Q_UNUSED(deviceAdapter);
 }
@@ -484,6 +485,7 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
 QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate()
 {
     releaseWorker();
+    mainThreadCoUninit(this);
 }
 
 void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &address)

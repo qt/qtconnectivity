@@ -80,6 +80,10 @@ using NativeBuffer = ABI::Windows::Storage::Streams::IBuffer;
 QByteArray byteArrayFromBuffer(const Microsoft::WRL::ComPtr<NativeBuffer> &buffer,
                                bool isWCharString = false);
 
+// The calls to Co(Un)init must be balanced
+void mainThreadCoInit(void* caller);
+void mainThreadCoUninit(void* caller);
+
 QT_END_NAMESPACE
 
 #endif // QBLUETOOTHSOCKET_WINRT_P_H

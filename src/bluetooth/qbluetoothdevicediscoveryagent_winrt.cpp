@@ -253,7 +253,6 @@ QWinRTBluetoothDeviceDiscoveryWorker::QWinRTBluetoothDeviceDiscoveryWorker(QBlue
     qRegisterMetaType<QBluetoothDeviceInfo::Fields>();
     qRegisterMetaType<ManufacturerData>();
 
-    CoInitialize(NULL);
     HRESULT hr = GetActivationFactory(HString::MakeReference(RuntimeClass_Windows_Devices_Bluetooth_BluetoothDevice).Get(), &m_deviceStatics);
     EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED("Could not obtain bluetooth device factory",
                                            QBluetoothDeviceDiscoveryAgent::Error::UnknownError,
@@ -267,7 +266,6 @@ QWinRTBluetoothDeviceDiscoveryWorker::QWinRTBluetoothDeviceDiscoveryWorker(QBlue
 QWinRTBluetoothDeviceDiscoveryWorker::~QWinRTBluetoothDeviceDiscoveryWorker()
 {
     stopLEWatcher();
-    CoUninitialize();
 }
 
 void QWinRTBluetoothDeviceDiscoveryWorker::start()
@@ -966,11 +964,13 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
         const QBluetoothAddress &deviceAdapter, QBluetoothDeviceDiscoveryAgent *parent)
     : q_ptr(parent), adapterAddress(deviceAdapter)
 {
+    mainThreadCoInit(this);
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
     disconnectAndClearWorker();
+    mainThreadCoUninit(this);
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
