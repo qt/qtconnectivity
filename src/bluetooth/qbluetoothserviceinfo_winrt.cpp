@@ -420,10 +420,12 @@ static ComPtr<IBuffer> bufferFromAttribute(const QVariant &attribute)
 QBluetoothServiceInfoPrivate::QBluetoothServiceInfoPrivate()
     : registered(false)
 {
+    mainThreadCoInit(this);
 }
 
 QBluetoothServiceInfoPrivate::~QBluetoothServiceInfoPrivate()
 {
+    mainThreadCoUninit(this);
 }
 
 bool QBluetoothServiceInfoPrivate::isRegistered() const
