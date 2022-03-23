@@ -740,7 +740,8 @@ bool QBluetoothSocketPrivateWinRT::setSocketDescriptor(ComPtr<IStreamSocket> soc
     q->setSocketState(socketState);
     if (socketState == QBluetoothSocket::SocketState::ConnectedState)
         m_worker->startReading();
-    q->setOpenMode(openMode);
+    // QBluetoothSockets are unbuffered on Windows
+    q->setOpenMode(openMode | QIODevice::Unbuffered);
     return true;
 }
 
@@ -858,7 +859,8 @@ HRESULT QBluetoothSocketPrivateWinRT::handleConnectOpFinished(ABI::Windows::Foun
         m_connectOp.Reset();
     }
 
-    q->setOpenMode(requestedOpenMode);
+    // QBluetoothSockets are unbuffered on Windows
+    q->setOpenMode(requestedOpenMode | QIODevice::Unbuffered);
     q->setSocketState(QBluetoothSocket::SocketState::ConnectedState);
     m_worker->startReading();
 
