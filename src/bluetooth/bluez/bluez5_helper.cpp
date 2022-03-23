@@ -68,7 +68,7 @@ typedef enum Bluez5TestResultType
 Q_GLOBAL_STATIC_WITH_ARGS(Bluez5TestResult, bluezVersion, (BluezVersionUnknown))
 Q_GLOBAL_STATIC_WITH_ARGS(QVersionNumber, bluezDaemonVersion, (QVersionNumber()))
 
-/*!
+/*
     Ensures that the DBus types are registered
  */
 
@@ -173,7 +173,7 @@ bool mandatoryHciIoctlsAvailable()
     return true;
 }
 
-/*!
+/*
  * This function returns the version of bluetoothd in use on the system.
  * This is required to determine which QLEControllerPrivate implementation
  * is required. The following version tags are of significance:
@@ -483,7 +483,7 @@ void QtBluezDiscoveryManager::removeAdapterFromMonitoring(const QString &dbusPat
     emit discoveryInterrupted(dbusPath);
 }
 
-/*!
+/*
     Finds the path for the local adapter with \a wantedAddress or an empty string
     if no local adapter with the given address can be found.
     If \a wantedAddress is \c null it returns the first/default adapter or an empty
