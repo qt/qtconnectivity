@@ -287,7 +287,13 @@ void tst_QBluetoothSocket::tst_serviceConnection()
     //check the peer & local info
     QCOMPARE(socket.localAddress(), localDevice.address());
     QCOMPARE(socket.localName(), localDevice.name());
+#ifdef Q_OS_WIN
+    // On Windows the socket peer name (aka remotehost display name) seems to be
+    // formed from the BT address and not necessarily the remoteDevice name
+    QVERIFY(!socket.peerName().isEmpty());
+#else
     QCOMPARE(socket.peerName(), remoteDevice.name());
+#endif
     QCOMPARE(socket.peerAddress(), remoteDevice.address());
 
     /* Disconnection */
