@@ -69,19 +69,15 @@ QHash<QBluetoothServerPrivate *, int> __fakeServerPorts;
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType,
                                                  QBluetoothServer *parent)
-    : maxPendingConnections(1), serverType(sType), m_lastError(QBluetoothServer::NoError),
-      socket(0), q_ptr(parent)
+    : serverType(sType), q_ptr(parent)
 {
     mainThreadCoInit(this);
-    socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
 }
 
 QBluetoothServerPrivate::~QBluetoothServerPrivate()
 {
     deactivateActiveListening();
     __fakeServerPorts.remove(this);
-    if (socket)
-        delete socket;
     // If we do not reset that pointer, socketListener will go out of scope after CoUninitialize was
     // called, which will lead to a crash.
     socketListener = nullptr;
