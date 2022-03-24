@@ -68,11 +68,9 @@ QBluetoothSocket *QBluetoothServerPrivate::createSocketForServer(
 
 QBluetoothServerPrivate::QBluetoothServerPrivate(QBluetoothServiceInfo::Protocol sType,
                                                  QBluetoothServer *parent)
-    : maxPendingConnections(1),
-      securityFlags(QBluetooth::Security::Authorization),
+    : securityFlags(QBluetooth::Security::Authorization),
       serverType(sType),
-      q_ptr(parent),
-      m_lastError(QBluetoothServer::NoError)
+      q_ptr(parent)
 {
     if (sType == QBluetoothServiceInfo::RfcommProtocol)
         socket = createSocketForServer(QBluetoothServiceInfo::RfcommProtocol);
