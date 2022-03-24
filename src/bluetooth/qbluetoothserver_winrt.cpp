@@ -40,6 +40,7 @@
 #include "qbluetoothserver.h"
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
+#include "qbluetoothlocaldevice.h"
 #include "qbluetoothsocket_winrt_p.h"
 #include "qbluetoothutils_winrt_p.h"
 
@@ -232,7 +233,12 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
 
 QBluetoothAddress QBluetoothServer::serverAddress() const
 {
-    return QBluetoothAddress();
+    QList<QBluetoothHostInfo> hosts = QBluetoothLocalDevice::allDevices();
+
+    if (hosts.isEmpty())
+        return QBluetoothAddress();
+    else
+        return hosts.at(0).address();
 }
 
 quint16 QBluetoothServer::serverPort() const
