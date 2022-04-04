@@ -210,7 +210,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
    \sa QLowEnergyController::createCentral()
    \sa QLowEnergyController::createPeripheral()
    \since 5.7
-   \note The peripheral role is currently only supported on Linux. In addition, handling the
+   \note The peripheral role is not supported on Windows. In addition on Linux, handling the
          "Signed Write" ATT command on the server side requires BlueZ 5 and kernel version 3.7
          or newer.
  */
