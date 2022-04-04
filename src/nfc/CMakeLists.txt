@@ -55,6 +55,7 @@ if(IOS)
     # special case begin
     set(NFC_BACKEND_AVAILABLE ON)
     qt_disable_apple_app_extension_api_only(Nfc)
+    qt_internal_find_apple_system_framework(FWCoreNFC CoreNFC)
     # special case end
 endif()
 
@@ -65,6 +66,8 @@ qt_internal_extend_target(Nfc CONDITION IOS
         qnearfieldtarget_ios.mm qnearfieldtarget_ios_p.h
     DEFINES
         IOS_NFC
+    LIBRARIES
+        ${FWCoreNFC}
 )
 
 #### Keys ignored in scope 2:.:.:nfc.pro:ANDROID AND NOT ANDROID_EMBEDDED:
