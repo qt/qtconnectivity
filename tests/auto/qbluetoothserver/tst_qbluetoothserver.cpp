@@ -197,10 +197,9 @@ void tst_QBluetoothServer::tst_receive()
     QTest::qWait(1000);
 
     if (!result) {
-#ifdef Q_OS_ANDROID
-        // Android seems to always report adapter address
-        QVERIFY(server.serverAddress() != QBluetoothAddress());
-#else
+#ifndef Q_OS_ANDROID
+        // Disable address check on Android as an actual device always returns
+        // a valid address, while the emulator doesn't
         QCOMPARE(server.serverAddress(), QBluetoothAddress());
 #endif
         QCOMPARE(server.serverPort(), quint16(0));
