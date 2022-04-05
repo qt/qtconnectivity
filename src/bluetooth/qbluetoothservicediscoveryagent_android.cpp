@@ -259,9 +259,11 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
     discoveredDevices.clear();
 
     //kill receiver to limit load of signals
-    receiver->unregisterReceiver();
-    receiver->deleteLater();
-    receiver = nullptr;
+    if (receiver) {
+        receiver->unregisterReceiver();
+        receiver->deleteLater();
+        receiver = nullptr;
+    }
 
     Q_Q(QBluetoothServiceDiscoveryAgent);
     emit q->canceled();
@@ -474,8 +476,11 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
         //don't include the service if we already discovered it before
         if (!isDuplicatedService(serviceInfo)) {
             discoveredServices << serviceInfo;
-            //qCDebug(QT_BT_ANDROID) << serviceInfo;
-            emit q->serviceDiscovered(serviceInfo);
+            // Use queued connection to allow us finish the service discovery reporting;
+            // the application might call stop() when it has detected the service-of-interest,
+            // which in turn can cause the use of already released resources
+            QMetaObject::invokeMethod(q, "serviceDiscovered", Qt::QueuedConnection,
+                                      Q_ARG(QBluetoothServiceInfo, serviceInfo));
         }
     }
 }
@@ -495,9 +500,11 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_fetchUuidsTimeout()
     Q_ASSERT(sdpCache.isEmpty());
 
     //kill receiver to limit load of signals
-    receiver->unregisterReceiver();
-    receiver->deleteLater();
-    receiver = nullptr;
+    if (receiver) {
+        receiver->unregisterReceiver();
+        receiver->deleteLater();
+        receiver = nullptr;
+    }
     _q_serviceDiscoveryFinished();
 }
 
@@ -512,9 +519,11 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_hostModeStateChanged(QBluetoothL
         errorString = QBluetoothServiceDiscoveryAgent::tr("Device is powered off");
 
         //kill receiver to limit load of signals
-        receiver->unregisterReceiver();
-        receiver->deleteLater();
-        receiver = nullptr;
+        if (receiver) {
+            receiver->unregisterReceiver();
+            receiver->deleteLater();
+            receiver = nullptr;
+        }
 
         Q_Q(QBluetoothServiceDiscoveryAgent);
         emit q->errorOccurred(error);
