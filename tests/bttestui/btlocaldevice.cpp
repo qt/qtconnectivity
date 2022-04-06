@@ -94,11 +94,6 @@ BtLocalDevice::BtLocalDevice(QObject *parent)
         server = new QBluetoothServer(SOCKET_PROTOCOL, this);
         connect(server, &QBluetoothServer::newConnection, this, &BtLocalDevice::serverNewConnection);
         connect(server, &QBluetoothServer::errorOccurred, this, &BtLocalDevice::serverError);
-    } else {
-        deviceAgent = nullptr;
-        serviceAgent = nullptr;
-        socket = nullptr;
-        server = nullptr;
     }
 }
 

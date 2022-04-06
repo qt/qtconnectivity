@@ -113,11 +113,11 @@ public slots:
 private:
     void dumpLocalDevice(QBluetoothLocalDevice *dev);
 
-    QBluetoothLocalDevice *localDevice;
-    QBluetoothDeviceDiscoveryAgent *deviceAgent;
-    QBluetoothServiceDiscoveryAgent *serviceAgent;
-    QBluetoothSocket *socket;
-    QBluetoothServer *server;
+    QBluetoothLocalDevice *localDevice = nullptr;
+    QBluetoothDeviceDiscoveryAgent *deviceAgent = nullptr;
+    QBluetoothServiceDiscoveryAgent *serviceAgent = nullptr;
+    QBluetoothSocket *socket = nullptr;
+    QBluetoothServer *server = nullptr;
     QList<QBluetoothSocket *> serverSockets;
     QBluetoothServiceInfo serviceInfo;
 
