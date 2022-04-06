@@ -166,9 +166,13 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QLowEnergyService::ServiceTypes)
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QLowEnergyService::ServiceError)
-Q_DECLARE_METATYPE(QLowEnergyService::ServiceState)
-Q_DECLARE_METATYPE(QLowEnergyService::ServiceType)
-Q_DECLARE_METATYPE(QLowEnergyService::WriteMode)
+QT_DECL_METATYPE_EXTERN_TAGGED(QLowEnergyService::ServiceError, QLowEnergyService__ServiceError,
+                               Q_BLUETOOTH_EXPORT)
+QT_DECL_METATYPE_EXTERN_TAGGED(QLowEnergyService::ServiceState, QLowEnergyService__ServiceState,
+                               Q_BLUETOOTH_EXPORT)
+QT_DECL_METATYPE_EXTERN_TAGGED(QLowEnergyService::ServiceType, QLowEnergyService__ServiceType,
+                               Q_BLUETOOTH_EXPORT)
+QT_DECL_METATYPE_EXTERN_TAGGED(QLowEnergyService::WriteMode, QLowEnergyService__WriteMode,
+                               Q_BLUETOOTH_EXPORT)
 
 #endif // QLOWENERGYSERVICE_H

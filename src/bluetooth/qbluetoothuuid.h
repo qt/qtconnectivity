@@ -430,6 +430,6 @@ inline QDataStream &operator>>(QDataStream &s, QBluetoothUuid &uuid)
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetoothUuid)
+QT_DECL_METATYPE_EXTERN(QBluetoothUuid, Q_BLUETOOTH_EXPORT)
 
 #endif

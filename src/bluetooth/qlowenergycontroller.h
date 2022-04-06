@@ -166,9 +166,15 @@ private:
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QLowEnergyController::Error)
-Q_DECLARE_METATYPE(QLowEnergyController::ControllerState)
-Q_DECLARE_METATYPE(QLowEnergyController::RemoteAddressType)
-Q_DECLARE_METATYPE(QLowEnergyController::Role)
+QT_DECL_METATYPE_EXTERN_TAGGED(QLowEnergyController::Error, QLowEnergyController__Error,
+                               Q_BLUETOOTH_EXPORT)
+QT_DECL_METATYPE_EXTERN_TAGGED(QLowEnergyController::ControllerState,
+                               QLowEnergyController__ControllerState,
+                               Q_BLUETOOTH_EXPORT)
+QT_DECL_METATYPE_EXTERN_TAGGED(QLowEnergyController::RemoteAddressType,
+                               QLowEnergyController__RemoteAddressType,
+                               Q_BLUETOOTH_EXPORT)
+QT_DECL_METATYPE_EXTERN_TAGGED(QLowEnergyController::Role, QLowEnergyController__Role,
+                               Q_BLUETOOTH_EXPORT)
 
 #endif // QLOWENERGYCONTROLLER_H

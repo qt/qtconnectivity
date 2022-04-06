@@ -42,6 +42,8 @@
 
 QT_BEGIN_NAMESPACE
 
+QT_IMPL_METATYPE_EXTERN(QNdefMessage)
+
 /*!
     \class QNdefMessage
     \brief The QNdefMessage class provides an NFC NDEF message.

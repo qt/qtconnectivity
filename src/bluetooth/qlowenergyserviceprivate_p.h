@@ -138,6 +138,8 @@ typedef QHash<QLowEnergyHandle, QLowEnergyServicePrivate::DescData> DescriptorDa
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QSharedPointer<QLowEnergyServicePrivate>)
+QT_DECL_METATYPE_EXTERN_TAGGED(QSharedPointer<QLowEnergyServicePrivate>,
+                               QSharedPointer_QLowEnergyServicePrivate,
+                               /* not exported */)
 
 #endif // QLOWENERGYSERVICEPRIVATE_P_H

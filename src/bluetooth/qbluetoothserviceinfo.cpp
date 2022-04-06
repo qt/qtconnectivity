@@ -44,6 +44,11 @@
 
 QT_BEGIN_NAMESPACE
 
+QT_IMPL_METATYPE_EXTERN(QBluetoothServiceInfo)
+QT_IMPL_METATYPE_EXTERN_TAGGED(QBluetoothServiceInfo::Sequence, QBluetoothServiceInfo__Sequence)
+QT_IMPL_METATYPE_EXTERN_TAGGED(QBluetoothServiceInfo::Alternative,
+                               QBluetoothServiceInfo__Alternative)
+
 /*!
     \class QBluetoothServiceInfo::Sequence
     \inmodule QtBluetooth

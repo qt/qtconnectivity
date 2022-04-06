@@ -45,6 +45,10 @@
 
 QT_BEGIN_NAMESPACE
 
+QT_IMPL_METATYPE_EXTERN_TAGGED(QBluetoothLocalDevice::Pairing, QBluetoothLocalDevice__Pairing)
+QT_IMPL_METATYPE_EXTERN_TAGGED(QBluetoothLocalDevice::HostMode, QBluetoothLocalDevice__HostMode)
+QT_IMPL_METATYPE_EXTERN_TAGGED(QBluetoothLocalDevice::Error, QBluetoothLocalDevice__Error)
+
 /*!
     \class QBluetoothLocalDevice
     \inmodule QtBluetooth

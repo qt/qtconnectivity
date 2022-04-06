@@ -53,6 +53,11 @@
 
 QT_BEGIN_NAMESPACE
 
+QT_IMPL_METATYPE_EXTERN_TAGGED(QLowEnergyService::ServiceError, QLowEnergyService__ServiceError)
+QT_IMPL_METATYPE_EXTERN_TAGGED(QLowEnergyService::ServiceState, QLowEnergyService__ServiceState)
+QT_IMPL_METATYPE_EXTERN_TAGGED(QLowEnergyService::ServiceType, QLowEnergyService__ServiceType)
+QT_IMPL_METATYPE_EXTERN_TAGGED(QLowEnergyService::WriteMode, QLowEnergyService__WriteMode)
+
 /*!
     \class QLowEnergyService
     \inmodule QtBluetooth

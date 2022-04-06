@@ -57,6 +57,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 #define FALLBACK_CHANNEL 1
 #define USE_FALLBACK true
 
+// ### Needs to be moved to qjniobject.h in qtbase
 Q_DECLARE_METATYPE(QJniObject)
 
 Q_BLUETOOTH_EXPORT bool useReverseUuidWorkAroundConnect = true;

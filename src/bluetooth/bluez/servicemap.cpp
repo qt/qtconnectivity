@@ -39,6 +39,10 @@
 
 #include "servicemap_p.h"
 
+QT_BEGIN_NAMESPACE
+
+QT_IMPL_METATYPE_EXTERN(ServiceMap)
+
 const QDBusArgument &operator>>(const QDBusArgument &argument, ServiceMap &serviceMap)
 {
     argument.beginMap();
@@ -59,3 +63,5 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, ServiceMap &servi
 
     return argument;
 }
+
+QT_END_NAMESPACE

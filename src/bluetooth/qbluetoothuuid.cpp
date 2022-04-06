@@ -47,6 +47,8 @@
 
 QT_BEGIN_NAMESPACE
 
+QT_IMPL_METATYPE_EXTERN(QBluetoothUuid)
+
 // Bluetooth base UUID 00000000-0000-1000-8000-00805F9B34FB
 // these defines represent the above UUID
 // static inline constexpr const uint data1Reference   = 0x00000000;

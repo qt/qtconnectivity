@@ -275,9 +275,10 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QBluetoothDeviceInfo::ServiceClasses)
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetoothDeviceInfo)
+QT_DECL_METATYPE_EXTERN(QBluetoothDeviceInfo, Q_BLUETOOTH_EXPORT)
 #ifdef QT_WINRT_BLUETOOTH
-Q_DECLARE_METATYPE(QBluetoothDeviceInfo::Fields)
+QT_DECL_METATYPE_EXTERN_TAGGED(QBluetoothDeviceInfo::Fields, QBluetoothDeviceInfo__Fields,
+                               Q_BLUETOOTH_EXPORT)
 #endif
 
 #endif

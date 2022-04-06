@@ -77,6 +77,6 @@ private:
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetoothHostInfo)
+QT_DECL_METATYPE_EXTERN(QBluetoothHostInfo, Q_BLUETOOTH_EXPORT)
 
 #endif

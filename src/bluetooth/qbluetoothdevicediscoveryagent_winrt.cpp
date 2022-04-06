@@ -70,6 +70,9 @@ using namespace ABI::Windows::Storage::Streams;
 
 QT_BEGIN_NAMESPACE
 
+QT_IMPL_METATYPE_EXTERN(ManufacturerData)
+QT_IMPL_METATYPE_EXTERN(ServiceData)
+
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
 #define EMIT_WORKER_ERROR_AND_RETURN_IF_FAILED(msg, error, ret) \

@@ -161,9 +161,12 @@ protected:
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetoothServiceInfo)
-Q_DECLARE_METATYPE(QBluetoothServiceInfo::Sequence)
-Q_DECLARE_METATYPE(QBluetoothServiceInfo::Alternative)
+QT_DECL_METATYPE_EXTERN(QBluetoothServiceInfo, Q_BLUETOOTH_EXPORT)
+QT_DECL_METATYPE_EXTERN_TAGGED(QBluetoothServiceInfo::Sequence, QBluetoothServiceInfo__Sequence,
+                               Q_BLUETOOTH_EXPORT)
+QT_DECL_METATYPE_EXTERN_TAGGED(QBluetoothServiceInfo::Alternative,
+                               QBluetoothServiceInfo__Alternative,
+                               Q_BLUETOOTH_EXPORT)
 
 QT_BEGIN_NAMESPACE
 

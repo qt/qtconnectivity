@@ -93,6 +93,6 @@ private:
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetoothAddress)
+QT_DECL_METATYPE_EXTERN(QBluetoothAddress, Q_BLUETOOTH_EXPORT)
 
 #endif

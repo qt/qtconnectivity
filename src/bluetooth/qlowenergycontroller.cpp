@@ -68,6 +68,13 @@
 
 QT_BEGIN_NAMESPACE
 
+QT_IMPL_METATYPE_EXTERN_TAGGED(QLowEnergyController::Error, QLowEnergyController__Error)
+QT_IMPL_METATYPE_EXTERN_TAGGED(QLowEnergyController::ControllerState,
+                               QLowEnergyController__ControllerState)
+QT_IMPL_METATYPE_EXTERN_TAGGED(QLowEnergyController::RemoteAddressType,
+                               QLowEnergyController__RemoteAddressType)
+QT_IMPL_METATYPE_EXTERN_TAGGED(QLowEnergyController::Role, QLowEnergyController__Role)
+
 Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 #if defined(QT_ANDROID_BLUETOOTH)
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)

@@ -43,6 +43,9 @@
 
 QT_BEGIN_NAMESPACE
 
+QT_IMPL_METATYPE_EXTERN_TAGGED(QSharedPointer<QLowEnergyServicePrivate>,
+                               QSharedPointer_QLowEnergyServicePrivate)
+
 QLowEnergyServicePrivate::QLowEnergyServicePrivate(QObject *parent) : QObject(parent) { }
 
 QLowEnergyServicePrivate::~QLowEnergyServicePrivate()

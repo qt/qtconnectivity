@@ -114,8 +114,11 @@ private:
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QBluetoothLocalDevice::Pairing)
-Q_DECLARE_METATYPE(QBluetoothLocalDevice::HostMode)
-Q_DECLARE_METATYPE(QBluetoothLocalDevice::Error)
+QT_DECL_METATYPE_EXTERN_TAGGED(QBluetoothLocalDevice::Pairing, QBluetoothLocalDevice__Pairing,
+                               Q_BLUETOOTH_EXPORT)
+QT_DECL_METATYPE_EXTERN_TAGGED(QBluetoothLocalDevice::HostMode, QBluetoothLocalDevice__HostMode,
+                               Q_BLUETOOTH_EXPORT)
+QT_DECL_METATYPE_EXTERN_TAGGED(QBluetoothLocalDevice::Error, QBluetoothLocalDevice__Error,
+                               Q_BLUETOOTH_EXPORT)
 
 #endif // QBLUETOOTHLOCALDEVICE_H

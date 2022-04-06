@@ -55,6 +55,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
+// ### Needs to be moved to qjniobject.h in qtbase
 Q_DECLARE_METATYPE(QJniObject)
 
 // BT Core v5.3, 3.2.9, Vol 3, Part F

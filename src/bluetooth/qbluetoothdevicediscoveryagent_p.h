@@ -90,8 +90,8 @@ QT_END_NAMESPACE
 
 using ManufacturerData = QHash<quint16, QByteArray>;
 using ServiceData = QHash<QBluetoothUuid, QByteArray>;
-Q_DECLARE_METATYPE(ManufacturerData)
-Q_DECLARE_METATYPE(ServiceData)
+QT_DECL_METATYPE_EXTERN(ManufacturerData, Q_BLUETOOTH_EXPORT)
+QT_DECL_METATYPE_EXTERN(ServiceData, Q_BLUETOOTH_EXPORT)
 #endif
 
 QT_BEGIN_NAMESPACE

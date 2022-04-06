@@ -51,15 +51,21 @@
 // We mean it.
 //
 
+#include <QtBluetooth/qtbluetoothglobal.h>
+
 #include <QtCore/QMap>
 #include <QtCore/QString>
 #include <QtDBus/QDBusArgument>
 #include <QtCore/private/qglobal_p.h>
 
+QT_BEGIN_NAMESPACE
+
 typedef QMap<quint32, QString> ServiceMap;
 
 const QDBusArgument &operator>>(const QDBusArgument &argument, ServiceMap &serviceMap);
 
-Q_DECLARE_METATYPE(ServiceMap)
+QT_END_NAMESPACE
+
+QT_DECL_METATYPE_EXTERN(ServiceMap, Q_BLUETOOTH_EXPORT)
 
 #endif // SERVICEMAP_P_H

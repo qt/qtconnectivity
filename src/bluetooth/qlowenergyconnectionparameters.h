@@ -89,6 +89,6 @@ Q_DECLARE_SHARED(QLowEnergyConnectionParameters)
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QLowEnergyConnectionParameters)
+QT_DECL_METATYPE_EXTERN(QLowEnergyConnectionParameters, Q_BLUETOOTH_EXPORT)
 
 #endif // Include guard

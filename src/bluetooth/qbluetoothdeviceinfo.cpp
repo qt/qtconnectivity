@@ -42,6 +42,11 @@
 
 QT_BEGIN_NAMESPACE
 
+QT_IMPL_METATYPE_EXTERN(QBluetoothDeviceInfo)
+#ifdef QT_WINRT_BLUETOOTH
+QT_IMPL_METATYPE_EXTERN_TAGGED(QBluetoothDeviceInfo::Fields, QBluetoothDeviceInfo__Fields)
+#endif
+
 /*!
     \class QBluetoothDeviceInfo
     \inmodule QtBluetooth

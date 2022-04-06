@@ -159,6 +159,7 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(QNearFieldTarget::AccessMethods)
 
 QT_END_NAMESPACE
 
-Q_DECLARE_METATYPE(QNearFieldTarget::RequestId)
+QT_DECL_METATYPE_EXTERN_TAGGED(QNearFieldTarget::RequestId, QNearFieldTarget__RequestId,
+                               Q_NFC_EXPORT)
 
 #endif // QNEARFIELDTARGET_H

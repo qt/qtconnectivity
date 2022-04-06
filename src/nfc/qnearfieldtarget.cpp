@@ -50,6 +50,8 @@
 
 QT_BEGIN_NAMESPACE
 
+QT_IMPL_METATYPE_EXTERN_TAGGED(QNearFieldTarget::RequestId, QNearFieldTarget__RequestId)
+
 /*!
     \class QNearFieldTarget
     \brief The QNearFieldTarget class provides an interface for communicating with a target
