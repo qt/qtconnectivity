@@ -54,6 +54,7 @@
 #include "qlowenergycontroller_bluez_p.h"
 #elif defined(QT_ANDROID_BLUETOOTH)
 #include "qlowenergycontroller_android_p.h"
+#include "android/androidutils_p.h"
 #elif defined(QT_WINRT_BLUETOOTH)
 #include "qtbluetoothglobal_p.h"
 #include "qlowenergycontroller_winrt_p.h"
@@ -68,7 +69,9 @@
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT)
-Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
+#if defined(QT_ANDROID_BLUETOOTH)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
+#endif
 
 /*!
     \class QLowEnergyController
@@ -612,6 +615,7 @@ void QLowEnergyController::connectToDevice()
     }
 
     if (!d->isValidLocalAdapter()) {
+        qCWarning(QT_BT) << "connectToDevice() LE controller has invalid adapter";
         d->setError(QLowEnergyController::InvalidBluetoothAdapterError);
         return;
     }
@@ -818,6 +822,13 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
         qCWarning(QT_BT) << "Not adding invalid service";
         return nullptr;
     }
+
+#if defined(QT_ANDROID_BLUETOOTH)
+    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+        qCWarning(QT_BT_ANDROID) << "addService() failed due to missing permissions";
+        return nullptr;
+    }
+#endif
 
     Q_D(QLowEnergyController);
     QLowEnergyService *newService = d->addServiceHelper(service);
