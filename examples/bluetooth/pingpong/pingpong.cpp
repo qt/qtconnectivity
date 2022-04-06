@@ -271,7 +271,10 @@ void PingPong::startServer()
 
     m_serviceInfo = m_serverInfo->listen(uuid, QStringLiteral("PingPong server"));
     //! [Starting the server]
-    setMessage(QStringLiteral("Server started, waiting for the client. You are the left player."));
+    if (m_serviceInfo.isValid()) {
+        setMessage(QStringLiteral("Server started, waiting for the client."
+                                  "You are the left player."));
+    }
     // m_role is set to 1 if it is a server
     m_role = 1;
     emit roleChanged();
@@ -299,7 +302,8 @@ void PingPong::startClient()
     discoveryAgent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
 
     //! [Searching for the service]
-    setMessage(QStringLiteral("Starting server discovery. You are the right player"));
+    if (discoveryAgent->error() == QBluetoothServiceDiscoveryAgent::NoError)
+        setMessage(QStringLiteral("Starting server discovery. You are the right player"));
     // m_role is set to 2 if it is a client
     m_role = 2;
     emit roleChanged();
@@ -341,14 +345,14 @@ void PingPong::socketError(QBluetoothSocket::SocketError error)
 
 void PingPong::serverError(QBluetoothServer::Error error)
 {
-    Q_UNUSED(error);
+    setMessage(QStringLiteral("Server error occurred: ") + QVariant::fromValue(error).toString());
     m_timer->stop();
 }
 
 void PingPong::done()
 {
     qDebug() << "Service scan done";
-    if (!m_serviceFound)
+    if (!m_serviceFound && discoveryAgent->error() == QBluetoothServiceDiscoveryAgent::NoError)
         setMessage("PingPong service not found");
 }
 
@@ -372,7 +376,8 @@ void PingPong::addService(const QBluetoothServiceInfo &service)
 
 void PingPong::serviceScanError(QBluetoothServiceDiscoveryAgent::Error error)
 {
-    setMessage(QStringLiteral("Scanning error") + QVariant::fromValue(error).toString());
+    Q_UNUSED(error);
+    setMessage(QStringLiteral("Scanning error: ") + discoveryAgent->errorString());
 }
 
 bool PingPong::showDialog() const
