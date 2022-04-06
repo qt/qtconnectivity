@@ -137,6 +137,13 @@ QBluetoothLocalDevice::~QBluetoothLocalDevice()
     remains invalid even if the same Bluetooth adapter is returned to
     the system.
 
+//! [android-permissions-valid]
+    \note Starting from Android 12 (API level 31), the construction of this class requires
+    \l {https://developer.android.com/guide/topics/connectivity/bluetooth/permissions}
+    {bluetooth runtime permissions} (\e BLUETOOTH_SCAN and \e BLUETOOTH_CONNECT). If the
+    permissions are not granted, the device will not be valid.
+//! [android-permissions-valid]
+
     \sa allDevices()
 */
 bool QBluetoothLocalDevice::isValid() const
@@ -206,6 +213,9 @@ bool QBluetoothLocalDevice::isValid() const
 /*!
   \fn QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent)
     Constructs a QBluetoothLocalDevice with \a parent.
+
+  \include qbluetoothlocaldevice.cpp android-permissions-valid
+  \sa isValid()
 */
 
 /*!
@@ -324,6 +334,9 @@ bool QBluetoothLocalDevice::isValid() const
 
   Construct new QBluetoothLocalDevice for \a address. If \a address is default constructed
   the resulting local device selects the local default device.
+
+  \include qbluetoothlocaldevice.cpp android-permissions-valid
+  \sa isValid()
 */
 
 QT_END_NAMESPACE

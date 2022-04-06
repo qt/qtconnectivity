@@ -112,7 +112,7 @@ void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
 
     if (!(ensureAndroidPermission(BluetoothPermission::Scan) &&
           ensureAndroidPermission(BluetoothPermission::Connect))) {
-        qCWarning(QT_BT_ANDROID) <<  "Local device unable to get permissions.";
+        qCWarning(QT_BT_ANDROID) <<  "Local device initialize() failed due to missing permissions";
         return;
     }
 
@@ -287,6 +287,11 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode requeste
         }
     } else if (mode == QBluetoothLocalDevice::HostDiscoverable
                || mode == QBluetoothLocalDevice::HostDiscoverableLimitedInquiry) {
+        if (!ensureAndroidPermission(BluetoothPermission::Advertise)) {
+            qCWarning(QT_BT_ANDROID) << "Local device setHostMode() failed due to"
+                                        "missing permissions";
+            return;
+        }
         QAndroidJniObject::callStaticMethod<void>(
             "org/qtproject/qt5/android/bluetooth/QtBluetoothBroadcastReceiver", "setDiscoverable");
     }
@@ -316,7 +321,8 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 {
     // As a static class function we need to ensure permissions here (in addition to initialize())
     if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
-        qCWarning(QT_BT_ANDROID) <<  "allDevices() unable to get permission.";
+        qCWarning(QT_BT_ANDROID) <<  "Local device allDevices() failed due to"
+                                     "missing permissions";
         return {};
     }
     // Android only supports max of one device (so far)

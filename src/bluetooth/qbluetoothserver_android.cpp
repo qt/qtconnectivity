@@ -37,15 +37,16 @@
 **
 ****************************************************************************/
 
-#include <QtCore/QLoggingCategory>
+#include "android/serveracceptancethread_p.h"
+#include "android/androidutils_p.h"
 #include "qbluetoothserver.h"
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
 #include "qbluetoothsocket_android_p.h"
 #include "qbluetoothlocaldevice.h"
-#include "android/serveracceptancethread_p.h"
 
 #include <QCoreApplication>
+#include <QtCore/QLoggingCategory>
 
 QT_BEGIN_NAMESPACE
 
@@ -129,6 +130,13 @@ bool QBluetoothServer::listen(const QBluetoothAddress &localAdapter, quint16 por
     Q_D(QBluetoothServer);
     if (serverType() != QBluetoothServiceInfo::RfcommProtocol) {
         d->m_lastError = UnsupportedProtocolError;
+        emit error(d->m_lastError);
+        return false;
+    }
+
+    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+        qCWarning(QT_BT_ANDROID) << "Bluetooth server listen() failed due to missing permissions";
+        d->m_lastError = QBluetoothServer::UnknownError;
         emit error(d->m_lastError);
         return false;
     }
