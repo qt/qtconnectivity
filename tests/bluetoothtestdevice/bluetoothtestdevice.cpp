@@ -280,6 +280,10 @@ int main(int argc, char *argv[])
 
 #ifndef Q_OS_IOS
     auto localAdapters = QBluetoothLocalDevice::allDevices();
+    if (localAdapters.isEmpty()) {
+        qWarning() << "Bluetoothtestdevice did not find a local adapter";
+        return EXIT_FAILURE;
+    }
     QBluetoothLocalDevice adapter(localAdapters.back().address());
     adapter.setHostMode(QBluetoothLocalDevice::HostDiscoverable);
 #endif // Q_OS_IOS
