@@ -192,8 +192,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
 
     if (!(ensureAndroidPermission(BluetoothPermission::Scan) &&
           ensureAndroidPermission(BluetoothPermission::Connect))) {
-        errorString = QBluetoothDeviceDiscoveryAgent::tr(
-                    "Search is not possible because of missing permissions.");
+        qCWarning(QT_BT_ANDROID) << "Device discovery start() failed due to missing permissions";
+        errorString = QBluetoothDeviceDiscoveryAgent::tr("Bluetooth adapter error");
         lastError = QBluetoothDeviceDiscoveryAgent::UnknownError;
         emit q->errorOccurred(lastError);
         return;

@@ -37,6 +37,12 @@
 **
 ****************************************************************************/
 
+#include "qbluetoothservicediscoveryagent_p.h"
+#include "qbluetoothsocket_android_p.h"
+#include "android/servicediscoverybroadcastreceiver_p.h"
+#include "android/localdevicebroadcastreceiver_p.h"
+#include "android/androidutils_p.h"
+
 #include <QCoreApplication>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/QLoggingCategory>
@@ -45,11 +51,6 @@
 #include <QtBluetooth/QBluetoothHostInfo>
 #include <QtBluetooth/QBluetoothLocalDevice>
 #include <QtBluetooth/QBluetoothServiceDiscoveryAgent>
-
-#include "qbluetoothservicediscoveryagent_p.h"
-#include "qbluetoothsocket_android_p.h"
-#include "android/servicediscoverybroadcastreceiver_p.h"
-#include "android/localdevicebroadcastreceiver_p.h"
 
 QT_BEGIN_NAMESPACE
 
@@ -122,6 +123,15 @@ QBluetoothServiceDiscoveryAgentPrivate::~QBluetoothServiceDiscoveryAgentPrivate(
 void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &address)
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
+
+    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+        qCWarning(QT_BT_ANDROID) << "Service discovery start() failed due to missing permissions";
+        error = QBluetoothServiceDiscoveryAgent::UnknownError;
+        errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to perform SDP scan");
+        emit q->errorOccurred(error);
+        _q_serviceDiscoveryFinished();
+        return;
+    }
 
     if (!btAdapter.isValid()) {
         if (m_deviceAdapterAddress.isNull()) {
