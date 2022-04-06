@@ -183,10 +183,6 @@ QBluetoothSocketPrivateAndroid::QBluetoothSocketPrivateAndroid()
                                                         "()Landroid/bluetooth/BluetoothAdapter;");
     qRegisterMetaType<QBluetoothSocket::SocketError>();
     qRegisterMetaType<QBluetoothSocket::SocketState>();
-
-    // Many functions of this class need connect permission; request already in ctor
-    if (!ensureAndroidPermission(BluetoothPermission::Connect))
-        qCWarning(QT_BT_ANDROID) << "Bluetooth socket unable to get permission.";
 }
 
 QBluetoothSocketPrivateAndroid::~QBluetoothSocketPrivateAndroid()
@@ -376,6 +372,14 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
 
     qCDebug(QT_BT_ANDROID) << "connectToServiceHelper()" << address.toString() << uuid.toString();
 
+    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+        qCWarning(QT_BT_ANDROID) << "Bluetooth socket connect failed due to missing permissions";
+        errorString = QBluetoothSocket::tr("Unknown socket error");
+        q->setSocketError(QBluetoothSocket::SocketError::UnknownSocketError);
+        q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
+        return;
+    }
+
     q->setSocketState(QBluetoothSocket::SocketState::ConnectingState);
 
     if (!adapter.isValid()) {
@@ -388,7 +392,7 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
 
     const int state = adapter.callMethod<jint>("getState");
     if (state != 12 ) { //BluetoothAdapter.STATE_ON
-        qCWarning(QT_BT_ANDROID) << "Bt device offline";
+        qCWarning(QT_BT_ANDROID) << "Bluetooth device offline";
         errorString = QBluetoothSocket::tr("Device is powered off");
         q->setSocketError(QBluetoothSocket::SocketError::NetworkError);
         q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
@@ -418,12 +422,12 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
                                                                        inputString.object<jstring>());
 
     if (secFlags == QBluetooth::SecurityFlags(QBluetooth::Security::NoSecurity)) {
-        qCDebug(QT_BT_ANDROID) << "Connnecting via insecure rfcomm";
+        qCDebug(QT_BT_ANDROID) << "Connecting via insecure rfcomm";
         socketObject = remoteDevice.callObjectMethod("createInsecureRfcommSocketToServiceRecord",
                                                     "(Ljava/util/UUID;)Landroid/bluetooth/BluetoothSocket;",
                                                     uuidObject.object<jobject>());
     } else {
-        qCDebug(QT_BT_ANDROID) << "Connnecting via secure rfcomm";
+        qCDebug(QT_BT_ANDROID) << "Connecting via secure rfcomm";
         socketObject = remoteDevice.callObjectMethod("createRfcommSocketToServiceRecord",
                                                      "(Ljava/util/UUID;)Landroid/bluetooth/BluetoothSocket;",
                                                      uuidObject.object<jobject>());
@@ -682,8 +686,12 @@ void QBluetoothSocketPrivateAndroid::abort()
 
 QString QBluetoothSocketPrivateAndroid::localName() const
 {
-    if (adapter.isValid())
+    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+        qCWarning(QT_BT_ANDROID) << "Bluetooth socket localName() failed due to"
+                                    "missing permissions";
+    } else if (adapter.isValid()) {
         return adapter.callObjectMethod<jstring>("getName").toString();
+    }
 
     return QString();
 }
@@ -691,8 +699,13 @@ QString QBluetoothSocketPrivateAndroid::localName() const
 QBluetoothAddress QBluetoothSocketPrivateAndroid::localAddress() const
 {
     QString result;
-    if (adapter.isValid())
+
+    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+        qCWarning(QT_BT_ANDROID) << "Bluetooth socket localAddress() failed due to"
+                                    "missing permissions";
+    } else if (adapter.isValid()) {
         result = adapter.callObjectMethod("getAddress", "()Ljava/lang/String;").toString();
+    }
 
     return QBluetoothAddress(result);
 }

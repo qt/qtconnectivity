@@ -37,14 +37,16 @@
 **
 ****************************************************************************/
 
-#include <QtCore/QLoggingCategory>
 
+#include "android/androidutils_p.h"
 #include "qbluetoothhostinfo.h"
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothserviceinfo.h"
 #include "qbluetoothserviceinfo_p.h"
 #include "qbluetoothserver_p.h"
 #include "qbluetoothserver.h"
+
+#include <QtCore/QLoggingCategory>
 
 QT_BEGIN_NAMESPACE
 
@@ -89,6 +91,12 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
 
 bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress& localAdapter)
 {
+    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+        qCWarning(QT_BT_ANDROID) << "Serviceinfo registerService() failed due to"
+                                    "missing permissions";
+        return false;
+    }
+
     const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
     if (localDevices.isEmpty())
         return false; //no Bluetooth device
