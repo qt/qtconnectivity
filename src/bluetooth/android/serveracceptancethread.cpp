@@ -70,7 +70,7 @@ void ServerAcceptanceThread::setServiceDetails(const QBluetoothUuid &uuid,
 bool ServerAcceptanceThread::hasPendingConnections() const
 {
     QMutexLocker lock(&m_mutex);
-    return (pendingSockets.count() > 0);
+    return !pendingSockets.isEmpty();
 }
 
 /*

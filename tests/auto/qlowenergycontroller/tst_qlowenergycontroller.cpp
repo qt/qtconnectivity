@@ -144,7 +144,7 @@ void tst_QLowEnergyController::initTestCase()
 
     bool deviceFound = false;
     devAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
-    QTRY_VERIFY_WITH_TIMEOUT(finishedSpy.count() > 0, 30000);
+    QTRY_VERIFY_WITH_TIMEOUT(!finishedSpy.isEmpty(), 30000);
     const QList<QBluetoothDeviceInfo> infos = devAgent->discoveredDevices();
     for (const QBluetoothDeviceInfo &info : infos) {
 #ifndef Q_OS_MAC

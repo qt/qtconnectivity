@@ -164,7 +164,7 @@ void tst_qlowenergycontroller_device::discoverTestServer()
 
     // Start device discovery
     mDevAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
-    QTRY_VERIFY_WITH_TIMEOUT(finishedSpy.count() > 0 || canceledSpy.count() > 0, 80000);
+    QTRY_VERIFY_WITH_TIMEOUT(!finishedSpy.isEmpty() || !canceledSpy.isEmpty(), 80000);
 
     // Verify that we have found a matching server device
     bool deviceFound = false;

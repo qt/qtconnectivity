@@ -99,7 +99,7 @@ void tst_QBluetoothServer::setHostMode(const QBluetoothAddress &localAdapter,
     }
 
     int connectTime = 5000;  // ms
-    while (hostModeSpy.count() < 1 && connectTime > 0) {
+    while (hostModeSpy.isEmpty() && connectTime > 0) {
         QTest::qWait(500);
         connectTime -= 500;
     }
@@ -204,7 +204,7 @@ void tst_QBluetoothServer::tst_receive()
         QCOMPARE(server.serverAddress(), QBluetoothAddress());
 #endif
         QCOMPARE(server.serverPort(), quint16(0));
-        QVERIFY(errorSpy.count() > 0);
+        QVERIFY(!errorSpy.isEmpty());
         QVERIFY(!server.isListening());
         if (!localDeviceAvailable) {
             QVERIFY(server.error() != QBluetoothServer::NoError);
@@ -218,7 +218,7 @@ void tst_QBluetoothServer::tst_receive()
     QVERIFY(result);
 
 #if !QT_CONFIG(winrt_bt)
-    QVERIFY(QBluetoothLocalDevice::allDevices().count());
+    QVERIFY(!QBluetoothLocalDevice::allDevices().isEmpty());
 #endif
     QCOMPARE(server.error(), QBluetoothServer::NoError);
     QCOMPARE(server.serverAddress(), address);

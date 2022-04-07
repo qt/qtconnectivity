@@ -307,7 +307,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
          forKey:CBAdvertisementDataLocalNameKey];
     }
 
-    if (!data.services().count() && !scanResponse.services().count())
+    if (data.services().isEmpty() && scanResponse.services().isEmpty())
         return;
 
     const ObjCScopedPointer<NSMutableArray> uuids([[NSMutableArray alloc] init],

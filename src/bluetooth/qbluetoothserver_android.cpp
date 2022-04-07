@@ -133,7 +133,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &localAdapter, quint16 por
     }
 
     const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
-    if (!localDevices.count()) {
+    if (localDevices.isEmpty()) {
         qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
         d->m_lastError = QBluetoothServer::UnknownError;
         emit errorOccurred(d->m_lastError);

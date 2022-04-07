@@ -113,7 +113,7 @@ void tst_QLowEnergyCharacteristic::initTestCase()
     QVERIFY(spy.isEmpty());
 
     devAgent->start();
-    QTRY_VERIFY_WITH_TIMEOUT(spy.count() > 0, 100000);
+    QTRY_VERIFY_WITH_TIMEOUT(!spy.isEmpty(), 100000);
 
     // find first service with descriptor
     QLowEnergyController *controller = 0;
@@ -263,7 +263,7 @@ void tst_QLowEnergyCharacteristic::tst_assignCompare()
                 globalService->characteristic(chars[i].uuid());
         QVERIFY(specific.isValid());
         QCOMPARE(specific, chars[i]);
-        if (chars[i].descriptors().count() > 0) {
+        if (!chars[i].descriptors().isEmpty()) {
             indexWithDescriptor = i;
             break;
         }
@@ -285,7 +285,7 @@ void tst_QLowEnergyCharacteristic::tst_assignCompare()
     if (target.properties() & QLowEnergyCharacteristic::Read)
         QVERIFY(!target.value().isEmpty());
     if (!noDescriptors)
-        QVERIFY(target.descriptors().count() > 0);
+        QVERIFY(!target.descriptors().isEmpty());
 
     QVERIFY(target == chars[indexWithDescriptor]);
     QVERIFY(chars[indexWithDescriptor] == target);

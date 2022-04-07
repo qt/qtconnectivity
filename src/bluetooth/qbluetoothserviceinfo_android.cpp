@@ -90,7 +90,7 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
 bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress& localAdapter)
 {
     const QList<QBluetoothHostInfo> localDevices = QBluetoothLocalDevice::allDevices();
-    if (!localDevices.count())
+    if (localDevices.isEmpty())
         return false; //no Bluetooth device
 
     if (!localAdapter.isNull()) {
