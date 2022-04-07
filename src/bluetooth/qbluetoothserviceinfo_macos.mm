@@ -82,7 +82,7 @@ int channel_or_psm(const QBluetoothServiceInfoPrivate &privateInfo, QBluetoothUu
     const auto parameters = privateInfo.protocolDescriptor(uuid);
     if (parameters.isEmpty())
         return -1;
-    else if (parameters.count() == 1)
+    else if (parameters.size() == 1)
         return 0;
 
     return parameters.at(1).toInt();

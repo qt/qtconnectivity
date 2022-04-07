@@ -133,7 +133,7 @@ void tst_QBluetoothServiceDiscoveryAgent::initTestCase()
         }
 
         // Expect finished signal with no error
-        QVERIFY(finishedSpy.count() == 1);
+        QVERIFY(finishedSpy.size() == 1);
         QVERIFY(errorSpy.isEmpty());
 
         devices = discoveryAgent.discoveredDevices();
@@ -153,12 +153,12 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryStop()
     discoveryAgent.start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
     QVERIFY(discoveryAgent.isActive());
     discoveryAgent.stop();
-    QTRY_COMPARE(canceledSpy.count(), 1);
+    QTRY_COMPARE(canceledSpy.size(), 1);
     QVERIFY(!discoveryAgent.isActive());
     // Wait a bit to see that there are no latent signals
     QTest::qWait(200);
-    QCOMPARE(canceledSpy.count(), 1);
-    QCOMPARE(finishedSpy.count(), 0);
+    QCOMPARE(canceledSpy.size(), 1);
+    QCOMPARE(finishedSpy.size(), 0);
 }
 
 
@@ -431,13 +431,13 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
 
     // Expect finished signal with no error
     if (scanTime)
-        QVERIFY(finishedSpy.count() == 1);
+        QVERIFY(finishedSpy.size() == 1);
 
     QVERIFY(errorSpy.isEmpty());
 
     //if (!discoveryAgent.discoveredServices().isEmpty() && expected_failures++ <2){
     if (discoveredSpy.isEmpty()) {
-        qDebug() << "Device failed to return any results, skipping device" << discoveryAgent.discoveredServices().count();
+        qDebug() << "Device failed to return any results, skipping device" << discoveryAgent.discoveredServices().size();
         return;
     }
 

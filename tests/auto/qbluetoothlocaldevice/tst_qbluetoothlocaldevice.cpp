@@ -75,7 +75,8 @@ private:
 };
 
 tst_QBluetoothLocalDevice::tst_QBluetoothLocalDevice()
-    : numDevices(QBluetoothLocalDevice::allDevices().count()), expectRemoteDevice(false)
+    : numDevices(QBluetoothLocalDevice::allDevices().size()),
+      expectRemoteDevice(false)
 {
     const QString remote = qgetenv("BT_TEST_DEVICE");
     if (!remote.isEmpty()) {

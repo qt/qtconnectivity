@@ -134,14 +134,14 @@ quint32 qt_countGATTEntries(const QLowEnergyServiceData &data)
 {
     const auto maxu32 = std::numeric_limits<quint32>::max();
     // + 1 for a service itself.
-    quint32 nEntries = 1 + quint32(data.includedServices().count());
+    quint32 nEntries = 1 + quint32(data.includedServices().size());
     for (const auto &ch : data.characteristics()) {
         if (maxu32 - 2 < nEntries)
             return {};
         nEntries += 2;
-        if (maxu32 - ch.descriptors().count() < nEntries)
+        if (maxu32 - ch.descriptors().size() < nEntries)
             return {};
-        nEntries += ch.descriptors().count();
+        nEntries += ch.descriptors().size();
     }
 
     return nEntries;

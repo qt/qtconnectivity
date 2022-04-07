@@ -742,7 +742,7 @@ HRESULT QWinRTBluetoothDeviceDiscoveryWorker::onRfcommServicesReceived(
         }
 
         qCDebug(QT_BT_WINDOWS) << "Discovered BT device: " << QString::number(address) << btName
-                               << "Num UUIDs" << uuids.count();
+                               << "Num UUIDs" << uuids.size();
 
         QBluetoothDeviceInfo info(QBluetoothAddress(address), btName, classOfDeviceInt);
         info.setCoreConfigurations(QBluetoothDeviceInfo::BaseRateCoreConfiguration);
@@ -797,9 +797,9 @@ static void invokeDeviceFoundWithDebug(QWinRTBluetoothDeviceDiscoveryWorker *wor
                                        const QBluetoothDeviceInfo &info)
 {
     qCDebug(QT_BT_WINDOWS) << "Discovered BTLE device: " << info.address() << info.name()
-                           << "Num UUIDs" << info.serviceUuids().count() << "RSSI:" << info.rssi()
-                           << "Num manufacturer data" << info.manufacturerData().count()
-                           << "Num service data" << info.serviceData().count();
+                           << "Num UUIDs" << info.serviceUuids().size() << "RSSI:" << info.rssi()
+                           << "Num manufacturer data" << info.manufacturerData().size()
+                           << "Num service data" << info.serviceData().size();
 
     QMetaObject::invokeMethod(worker, "deviceFound", Qt::AutoConnection,
                               Q_ARG(QBluetoothDeviceInfo, info));
@@ -1051,7 +1051,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::registerDevice(const QBluetoothDevic
             QList<QBluetoothUuid> uuids = iter->serviceUuids();
             uuids.append(info.serviceUuids());
             const QSet<QBluetoothUuid> uuidSet(uuids.begin(), uuids.end());
-            if (iter->serviceUuids().count() != uuidSet.count())
+            if (iter->serviceUuids().size() != uuidSet.size())
                 iter->setServiceUuids(uuidSet.values().toVector());
             if (iter->coreConfigurations() != info.coreConfigurations())
                 iter->setCoreConfigurations(QBluetoothDeviceInfo::BaseRateAndLowEnergyCoreConfiguration);

@@ -219,7 +219,7 @@ QBluetoothAddress QBluetoothServer::serverAddress() const
 {
     //Android only supports one local adapter
     QList<QBluetoothHostInfo> hosts = QBluetoothLocalDevice::allDevices();
-    Q_ASSERT(hosts.count() <= 1);
+    Q_ASSERT(hosts.size() <= 1);
 
     if (hosts.isEmpty())
         return QBluetoothAddress();

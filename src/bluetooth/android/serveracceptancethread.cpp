@@ -159,7 +159,7 @@ void ServerAcceptanceThread::javaNewSocket(jobject s)
     if (!socket.isValid())
        return;
 
-    if (pendingSockets.count() < maxPendingConnections) {
+    if (pendingSockets.size() < maxPendingConnections) {
         qCDebug(QT_BT_ANDROID) << "New incoming java socket detected";
         pendingSockets.append(socket);
         emit newConnection();

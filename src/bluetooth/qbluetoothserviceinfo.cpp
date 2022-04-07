@@ -494,7 +494,7 @@ int QBluetoothServiceInfo::protocolServiceMultiplexer() const
 
     if (parameters.isEmpty())
         return -1;
-    else if (parameters.count() == 1)
+    else if (parameters.size() == 1)
         return 0;
     else
         return parameters.at(1).toUInt();
@@ -675,7 +675,7 @@ int QBluetoothServiceInfoPrivate::serverChannel() const
 
     if (parameters.isEmpty())
         return -1;
-    else if (parameters.count() == 1)
+    else if (parameters.size() == 1)
         return 0;
     else
         return parameters.at(1).toUInt();

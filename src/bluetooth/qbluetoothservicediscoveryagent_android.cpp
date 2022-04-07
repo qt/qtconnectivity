@@ -267,7 +267,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
 
     //could not find any service for the current address/device -> go to next one
     if (address.isNull() || uuids.isEmpty()) {
-        if (discoveredDevices.count() == 1) {
+        if (discoveredDevices.size() == 1) {
             Q_Q(QBluetoothServiceDiscoveryAgent);
             QTimer::singleShot(4000, q, [this]() {
                 this->_q_fetchUuidsTimeout();
@@ -280,7 +280,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
 
     if (QT_BT_ANDROID().isDebugEnabled()) {
         qCDebug(QT_BT_ANDROID) << "Found UUID for" << address.toString()
-                               << "\ncount: " << uuids.count();
+                               << "\ncount: " << uuids.size();
 
         QString result;
         for (int i = 0; i<uuids.count(); i++)
@@ -303,7 +303,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
         //prefer second uuid set over first
         populateDiscoveredServices(pair.first, uuids);
 
-        if (discoveredDevices.count() == 1 && sdpCache.isEmpty()) {
+        if (discoveredDevices.size() == 1 && sdpCache.isEmpty()) {
             //last regular uuid data set from OS -> we finish here
             _q_serviceDiscoveryFinished();
         }
@@ -320,7 +320,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
 
         //the discovery on the last device cannot immediately finish
         //we have to grant the 2 seconds timeout delay
-        if (discoveredDevices.count() == 1) {
+        if (discoveredDevices.size() == 1) {
             Q_Q(QBluetoothServiceDiscoveryAgent);
             QTimer::singleShot(4000, q, [this]() {
                 this->_q_fetchUuidsTimeout();

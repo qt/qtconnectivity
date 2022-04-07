@@ -873,7 +873,7 @@ void QLowEnergyControllerPrivateWinRT::registerForValueChanges(const QBluetoothU
 
 void QLowEnergyControllerPrivateWinRT::unregisterFromValueChanges()
 {
-    qCDebug(QT_BT_WINDOWS) << "Unregistering " << mValueChangedTokens.count() << " value change tokens";
+    qCDebug(QT_BT_WINDOWS) << "Unregistering " << mValueChangedTokens.size() << " value change tokens";
     HRESULT hr;
     for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens)) {
         if (!entry.characteristic) {

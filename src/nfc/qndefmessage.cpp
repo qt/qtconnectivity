@@ -279,12 +279,12 @@ bool QNdefMessage::operator==(const QNdefMessage &other) const
         return true;
 
     // compare empty to really empty
-    if (isEmpty() && other.count() == 1 && other.first().typeNameFormat() == QNdefRecord::Empty)
+    if (isEmpty() && other.size() == 1 && other.first().typeNameFormat() == QNdefRecord::Empty)
         return true;
-    if (other.isEmpty() && count() == 1 && first().typeNameFormat() == QNdefRecord::Empty)
+    if (other.isEmpty() && size() == 1 && first().typeNameFormat() == QNdefRecord::Empty)
         return true;
 
-    if (count() != other.count())
+    if (size() != other.size())
         return false;
 
     for (int i = 0; i < count(); ++i) {
@@ -316,7 +316,7 @@ QByteArray QNdefMessage::toByteArray() const
 
         if (i == 0)
             flags |= 0x80;
-        if (i == count() - 1)
+        if (i == size() - 1)
             flags |= 0x40;
 
         // cf (chunked records) not supported yet

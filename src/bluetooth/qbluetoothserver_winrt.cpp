@@ -128,7 +128,7 @@ HRESULT QBluetoothServerPrivate::handleClientConnection(IStreamSocketListener *l
     hr = args->get_Socket(&socket);
     Q_ASSERT_SUCCEEDED(hr);
     QMutexLocker locker(&pendingConnectionsMutex);
-    if (pendingConnections.count() < maxPendingConnections) {
+    if (pendingConnections.size() < maxPendingConnections) {
         qCDebug(QT_BT_WINDOWS) << "Accepting connection";
         pendingConnections.append(socket);
         locker.unlock();
@@ -197,7 +197,7 @@ void QBluetoothServer::setMaxPendingConnections(int numConnections)
 {
     Q_D(QBluetoothServer);
     QMutexLocker locker(&d->pendingConnectionsMutex);
-    if (d->pendingConnections.count() > numConnections) {
+    if (d->pendingConnections.size() > numConnections) {
         qCWarning(QT_BT_WINDOWS) << "There are currently more than" << numConnections << "connections"
                                << "pending. Number of maximum pending connections was not changed.";
         return;

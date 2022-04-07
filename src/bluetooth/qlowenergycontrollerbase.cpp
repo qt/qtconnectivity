@@ -292,7 +292,7 @@ QLowEnergyService *QLowEnergyControllerPrivate::addServiceHelper(
     // Spec v4.2, Vol 3, Part G, Section 3.
     const QLowEnergyHandle oldLastHandle = this->lastLocalHandle;
     servicePrivate->startHandle = ++this->lastLocalHandle; // Service declaration.
-    this->lastLocalHandle += servicePrivate->includedServices.count(); // Include declarations.
+    this->lastLocalHandle += servicePrivate->includedServices.size(); // Include declarations.
     const QList<QLowEnergyCharacteristicData> characteristics = service.characteristics();
     for (const QLowEnergyCharacteristicData &cd : characteristics) {
         const QLowEnergyHandle declHandle = ++this->lastLocalHandle;
