@@ -115,19 +115,20 @@ void tst_QBluetoothLocalDevice::tst_powerOn()
 #ifdef Q_OS_OSX
     QSKIP("Not possible on OS X");
 #endif
-#ifdef Q_OS_WIN
-    QSKIP("Not possible on Windows");
-#endif
+    if (numDevices == 0)
+        QSKIP("Skipping test due to missing Bluetooth device");
 
     QBluetoothLocalDevice localDevice;
+    if (localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff) {
+        // Ensure device is OFF so we can test switching it ON
+        localDevice.setHostMode(QBluetoothLocalDevice::HostPoweredOff);
+        QTRY_VERIFY(localDevice.hostMode() == QBluetoothLocalDevice::HostPoweredOff);
+    }
 
     QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
     // there should be no changes yet
     QVERIFY(hostModeSpy.isValid());
     QVERIFY(hostModeSpy.isEmpty());
-
-    if (numDevices == 0)
-        QSKIP("Skipping test due to missing Bluetooth device");
 
     localDevice.powerOn();
     // async, wait for it
@@ -143,21 +144,16 @@ void tst_QBluetoothLocalDevice::tst_powerOff()
 #ifdef Q_OS_OSX
     QSKIP("Not possible on OS X");
 #endif
-#ifdef Q_OS_WIN
-    QSKIP("Not possible on Windows");
-#endif
-
     if (numDevices == 0)
         QSKIP("Skipping test due to missing Bluetooth device");
 
-    {
-        QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
-        device->powerOn();
-        delete device;
-        // wait for the device to switch bluetooth mode.
-        QTest::qWait(1000);
-    }
     QBluetoothLocalDevice localDevice;
+    if (localDevice.hostMode() == QBluetoothLocalDevice::HostPoweredOff) {
+        // Ensure device is ON so we can test switching it OFF
+        localDevice.powerOn();
+        QTRY_VERIFY(localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff);
+    }
+
     QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
     // there should be no changes yet
     QVERIFY(hostModeSpy.isValid());
