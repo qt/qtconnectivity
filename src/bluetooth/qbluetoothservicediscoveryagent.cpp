@@ -516,10 +516,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscoveryFinished()
 void QBluetoothServiceDiscoveryAgentPrivate::_q_deviceDiscovered(const QBluetoothDeviceInfo &info)
 {
     // look for duplicates, and cached entries
-    for (int i = 0; i < discoveredDevices.count(); i++) {
-        if (discoveredDevices.at(i).address() == info.address())
-            discoveredDevices.removeAt(i);
-    }
+    const auto addressEquals = [](const auto &a) {
+        return [a](const auto &info) { return info.address() == a; };
+    };
+    erase_if(discoveredDevices, addressEquals(info.address()));
     discoveredDevices.prepend(info);
 }
 
