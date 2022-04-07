@@ -114,7 +114,7 @@ void tst_QNearFieldManager::userInformation()
     const QString errorString("Failed to detect NFC targets");
     manager.stopTargetDetection(errorString);
 
-    QCOMPARE(spy.count(), 2);
+    QCOMPARE(spy.size(), 2);
     QCOMPARE(spy.at(0).at(0).toString(), progressString);
     QCOMPARE(spy.at(1).at(0).toString(), errorString);
 }
@@ -175,7 +175,7 @@ void tst_QNearFieldManager::targetDetected()
 
     manager.stopTargetDetection();
 
-    QCOMPARE(detectionStoppedSpy.count(), 1);
+    QCOMPARE(detectionStoppedSpy.size(), 1);
 }
 
 QTEST_MAIN(tst_QNearFieldManager)

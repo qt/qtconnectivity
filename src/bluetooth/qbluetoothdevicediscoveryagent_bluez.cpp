@@ -309,8 +309,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(const QString &devicePat
         return;
 
     qCDebug(QT_BT_BLUEZ) << "Discovered: " << deviceInfo.name() << deviceInfo.address()
-                         << "Num UUIDs" << deviceInfo.serviceUuids().count()
-                         << "total device" << discoveredDevices.count() << "cached"
+                         << "Num UUIDs" << deviceInfo.serviceUuids().size()
+                         << "total device" << discoveredDevices.size() << "cached"
                          << "RSSI" << deviceInfo.rssi()
                          << "Num ManufacturerData" << deviceInfo.manufacturerData().size()
                          << "Num ServiceData" << deviceInfo.serviceData().size();

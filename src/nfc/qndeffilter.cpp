@@ -406,7 +406,7 @@ bool QNdefFilter::match(const QNdefMessage &message) const
 
         if (matched) {
             // Check that the occurrences match [min; max] range.
-            for (qsizetype i = 0; i < mergedRecords.count(); ++i) {
+            for (qsizetype i = 0; i < mergedRecords.size(); ++i) {
                 const auto &rec = mergedRecords.at(i);
                 totalCount += counts[i];
                 if (counts[i] < rec.minimum || counts[i] > rec.maximum) {
@@ -517,7 +517,7 @@ QNdefFilter::Record QNdefFilter::recordAt(qsizetype i) const
 */
 qsizetype QNdefFilter::recordCount() const
 {
-    return d->filterRecords.count();
+    return d->filterRecords.size();
 }
 
 QT_END_NAMESPACE

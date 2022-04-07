@@ -257,9 +257,9 @@ static void addServicesData(AdvData &data, const QList<T> &services)
         qCWarning(QT_BT_BLUEZ) << "services data does not fit into advertising data packet";
         return;
     }
-    const bool dataComplete = maxServices == services.count();
+    const bool dataComplete = maxServices == services.size();
     if (!dataComplete) {
-        qCWarning(QT_BT_BLUEZ) << "only" << maxServices << "out of" << services.count()
+        qCWarning(QT_BT_BLUEZ) << "only" << maxServices << "out of" << services.size()
                                << "services fit into the advertising data";
     }
     data.data[data.length++] = 1 + maxServices * sizeof(T);
@@ -305,7 +305,7 @@ void QLeAdvertiserBluez::setManufacturerData(const QLowEnergyAdvertisingData &sr
 {
     if (src.manufacturerId() == QLowEnergyAdvertisingData::invalidManufacturerId())
         return;
-    if (dest.length >= sizeof dest.data - 1 - 1 - 2 - src.manufacturerData().count()) {
+    if (dest.length >= sizeof dest.data - 1 - 1 - 2 - src.manufacturerData().size()) {
         qCWarning(QT_BT_BLUEZ) << "manufacturer data does not fit into advertising data packet";
         return;
     }

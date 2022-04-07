@@ -368,7 +368,7 @@ void BtLocalDevice::dumpServiceDiscovery()
         qDebug() << "Device Discovery active:" << deviceAgent->isActive();
         qDebug() << "Error:" << deviceAgent->error() << deviceAgent->errorString();
         const QList<QBluetoothDeviceInfo> list = deviceAgent->discoveredDevices();
-        qDebug() << "Discovered Devices:" << list.count();
+        qDebug() << "Discovered Devices:" << list.size();
 
         for (const QBluetoothDeviceInfo &info : list)
             qDebug() << info.name() << info.address().toString() << info.rssi();
@@ -377,7 +377,7 @@ void BtLocalDevice::dumpServiceDiscovery()
         qDebug() << "Service Discovery active:" << serviceAgent->isActive();
         qDebug() << "Error:" << serviceAgent->error() << serviceAgent->errorString();
         const QList<QBluetoothServiceInfo> list = serviceAgent->discoveredServices();
-        qDebug() << "Discovered Services:" << list.count();
+        qDebug() << "Discovered Services:" << list.size();
 
         for (const QBluetoothServiceInfo &i : list) {
             qDebug() << i.device().address().toString() << i.device().name() << i.serviceName();
@@ -748,7 +748,7 @@ void BtLocalDevice::dumpInformation()
     qDebug() << "###### default local device";
     dumpLocalDevice(localDevice);
     const QList<QBluetoothHostInfo> list = QBluetoothLocalDevice::allDevices();
-    qDebug() << "Found local devices: "  << list.count();
+    qDebug() << "Found local devices: "  << list.size();
     for (const QBluetoothHostInfo &info : list) {
         qDebug() << "    " << info.address().toString() << " " <<info.name();
     }

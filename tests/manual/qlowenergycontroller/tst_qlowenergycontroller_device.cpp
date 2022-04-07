@@ -331,8 +331,8 @@ void tst_qlowenergycontroller_device::readWriteLargeCharacteristic()
 
     QSignalSpy readSpy(service.get(), &QLowEnergyService::characteristicRead);
     QSignalSpy writtenSpy(service.get(), &QLowEnergyService::characteristicWritten);
-    QCOMPARE(readSpy.count(), 0);
-    QCOMPARE(writtenSpy.count(), 0);
+    QCOMPARE(readSpy.size(), 0);
+    QCOMPARE(writtenSpy.size(), 0);
 
     // The service discovery skipped the values => check that the default value is all zeroes
     auto characteristic = service->characteristic(QBluetoothUuid(largeCharacteristicCharUuid));
@@ -342,7 +342,7 @@ void tst_qlowenergycontroller_device::readWriteLargeCharacteristic()
 
     // Read the characteristic value and verify it is the one the server-side sets (0x0b 0x00 ..)
     service->readCharacteristic(characteristic);
-    QTRY_COMPARE(readSpy.count(), 1);
+    QTRY_COMPARE(readSpy.size(), 1);
     qDebug() << "Large characteristic value after read:" << characteristic.value();
     testArray = QByteArray(512, 0);
     testArray[0] = 0x0b;
@@ -354,10 +354,10 @@ void tst_qlowenergycontroller_device::readWriteLargeCharacteristic()
     }
     service->writeCharacteristic(characteristic, testArray);
     QCOMPARE(service->error(), QLowEnergyService::ServiceError::NoError);
-    QTRY_COMPARE(writtenSpy.count(), 1);
+    QTRY_COMPARE(writtenSpy.size(), 1);
 
     service->readCharacteristic(characteristic);
-    QTRY_COMPARE(readSpy.count(), 2);
+    QTRY_COMPARE(readSpy.size(), 2);
     qDebug() << "Large characteristic value after write/read:" << characteristic.value();
     QCOMPARE(characteristic.value(), testArray);
 }
@@ -378,8 +378,8 @@ void tst_qlowenergycontroller_device::readDuringServiceDiscovery()
 
     QSignalSpy readSpy(service.get(), &QLowEnergyService::characteristicRead);
     QSignalSpy writtenSpy(service.get(), &QLowEnergyService::characteristicWritten);
-    QCOMPARE(readSpy.count(), 0);
-    QCOMPARE(writtenSpy.count(), 0);
+    QCOMPARE(readSpy.size(), 0);
+    QCOMPARE(writtenSpy.size(), 0);
 
     // Value that is initially set on the characteristic at the server-side (0x0b 0x00 ..)
     QByteArray testArray(512, 0);
@@ -396,7 +396,7 @@ void tst_qlowenergycontroller_device::readDuringServiceDiscovery()
 
     // Check that the value from service discovery and explicit characteristic read match
     service->readCharacteristic(characteristic);
-    QTRY_COMPARE(readSpy.count(), 1);
+    QTRY_COMPARE(readSpy.size(), 1);
     qDebug() << "Large characteristic value after read:" << characteristic.value();
     QCOMPARE(characteristic.value(), valueFromServiceDiscovery);
 
@@ -406,10 +406,10 @@ void tst_qlowenergycontroller_device::readDuringServiceDiscovery()
     }
     service->writeCharacteristic(characteristic, testArray);
     QCOMPARE(service->error(), QLowEnergyService::ServiceError::NoError);
-    QTRY_COMPARE(writtenSpy.count(), 1);
+    QTRY_COMPARE(writtenSpy.size(), 1);
 
     service->readCharacteristic(characteristic);
-    QTRY_COMPARE(readSpy.count(), 2);
+    QTRY_COMPARE(readSpy.size(), 2);
     qDebug() << "Large characteristic value after write/read:" << characteristic.value();
     QCOMPARE(characteristic.value(), testArray);
 }

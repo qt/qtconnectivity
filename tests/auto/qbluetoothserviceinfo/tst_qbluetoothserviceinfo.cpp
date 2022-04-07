@@ -127,13 +127,13 @@ void tst_QBluetoothServiceInfo::tst_construction()
         QCOMPARE(serviceInfo.serviceDescription(), QString());
         QCOMPARE(serviceInfo.serviceProvider(), QString());
         QCOMPARE(serviceInfo.serviceUuid(), QBluetoothUuid());
-        QCOMPARE(serviceInfo.serviceClassUuids().count(), 0);
-        QCOMPARE(serviceInfo.attributes().count(), 0);
+        QCOMPARE(serviceInfo.serviceClassUuids().size(), 0);
+        QCOMPARE(serviceInfo.attributes().size(), 0);
         QCOMPARE(serviceInfo.serverChannel(), -1);
         QCOMPARE(serviceInfo.protocolServiceMultiplexer(), -1);
 
         for (QBluetoothUuid::ProtocolUuid u : qAsConst(protUuids))
-            QCOMPARE(serviceInfo.protocolDescriptor(u).count(), 0);
+            QCOMPARE(serviceInfo.protocolDescriptor(u).size(), 0);
     }
 
     {
@@ -167,9 +167,9 @@ void tst_QBluetoothServiceInfo::tst_construction()
         QCOMPARE(serviceInfo.device().address(), alternatedeviceInfo.address());
 
         for (QBluetoothUuid::ProtocolUuid u : qAsConst(protUuids))
-            QCOMPARE(serviceInfo.protocolDescriptor(u).count(), 0);
+            QCOMPARE(serviceInfo.protocolDescriptor(u).size(), 0);
         for (QBluetoothUuid::ProtocolUuid u : qAsConst(protUuids))
-            QCOMPARE(copyInfo.protocolDescriptor(u).count(), 0);
+            QCOMPARE(copyInfo.protocolDescriptor(u).size(), 0);
     }
 }
 
@@ -396,20 +396,20 @@ void tst_QBluetoothServiceInfo::tst_assignment()
 void tst_QBluetoothServiceInfo::tst_serviceClassUuids()
 {
     QBluetoothServiceInfo info;
-    QCOMPARE(info.serviceClassUuids().count(), 0);
+    QCOMPARE(info.serviceClassUuids().size(), 0);
 
     QBluetoothServiceInfo::Sequence classIds;
     classIds << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::SerialPort));
-    QCOMPARE(classIds.count(), 1);
+    QCOMPARE(classIds.size(), 1);
 
     QBluetoothUuid uuid(QString("e8e10f95-1a70-4b27-9ccf-02010264e9c8"));
     classIds.prepend(QVariant::fromValue(uuid));
-    QCOMPARE(classIds.count(), 2);
+    QCOMPARE(classIds.size(), 2);
     QCOMPARE(classIds.at(0).value<QBluetoothUuid>(), uuid);
 
     info.setAttribute(QBluetoothServiceInfo::ServiceClassIds, classIds);
     QList<QBluetoothUuid> svclids = info.serviceClassUuids();
-    QCOMPARE(svclids.count(), 2);
+    QCOMPARE(svclids.size(), 2);
     QCOMPARE(svclids.at(0), uuid);
     QCOMPARE(svclids.at(1), QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::SerialPort));
 }

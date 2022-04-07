@@ -208,7 +208,7 @@ bool HciManager::sendCommand(QBluezConst::OpCodeGroupField ogf, QBluezConst::OpC
     quint8 packetType = HCI_COMMAND_PKT;
     hci_command_hdr command = {
         opCodePack(ogf, ocf),
-        static_cast<uint8_t>(parameters.count())
+        static_cast<uint8_t>(parameters.size())
     };
     static_assert(sizeof command == 3, "unexpected struct size");
     struct iovec iv[3];
@@ -219,7 +219,7 @@ bool HciManager::sendCommand(QBluezConst::OpCodeGroupField ogf, QBluezConst::OpC
     int ivn = 2;
     if (!parameters.isEmpty()) {
         iv[2].iov_base = const_cast<char *>(parameters.constData()); // const_cast is safe, since iov_base will not get modified.
-        iv[2].iov_len  = parameters.count();
+        iv[2].iov_len  = parameters.size();
         ++ivn;
     }
     while (writev(hciSocket, iv, ivn) < 0) {

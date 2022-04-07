@@ -775,7 +775,7 @@ void QLowEnergyControllerPrivateAndroid::characteristicChanged(
         return;
 
     qCDebug(QT_BT_ANDROID) << "Characteristic change notification" << service->uuid
-                           << charHandle << data.toHex() << "length:" << data.count();
+                           << charHandle << data.toHex() << "length:" << data.size();
 
     QLowEnergyCharacteristic characteristic = characteristicForHandle(charHandle);
     if (!characteristic.isValid()) {
@@ -795,7 +795,7 @@ void QLowEnergyControllerPrivateAndroid::serverCharacteristicChanged(
         const QJniObject &characteristic, const QByteArray &newValue)
 {
     qCDebug(QT_BT_ANDROID) << "Server characteristic change notification"
-        << newValue.toHex() << "length:" << newValue.count();
+        << newValue.toHex() << "length:" << newValue.size();
 
     // match characteristic to servicePrivate
     QJniObject service = characteristic.callObjectMethod(

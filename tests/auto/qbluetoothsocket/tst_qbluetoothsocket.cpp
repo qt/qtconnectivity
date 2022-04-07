@@ -257,7 +257,7 @@ void tst_QBluetoothSocket::tst_serviceConnection()
 
     socket.connectToService(remoteServiceInfo);
 
-    QCOMPARE(stateSpy.count(), 1);
+    QCOMPARE(stateSpy.size(), 1);
     QCOMPARE(stateSpy.takeFirst().at(0).value<QBluetoothSocket::SocketState>(), QBluetoothSocket::SocketState::ConnectingState);
     QCOMPARE(socket.state(), QBluetoothSocket::SocketState::ConnectingState);
 
@@ -273,8 +273,8 @@ void tst_QBluetoothSocket::tst_serviceConnection()
         qDebug() << errorSpy.takeFirst().at(0).toInt();
         QSKIP("Connection error");
     }
-    QCOMPARE(connectedSpy.count(), 1);
-    QCOMPARE(stateSpy.count(), 1);
+    QCOMPARE(connectedSpy.size(), 1);
+    QCOMPARE(stateSpy.size(), 1);
     QCOMPARE(stateSpy.takeFirst().at(0).value<QBluetoothSocket::SocketState>(), QBluetoothSocket::SocketState::ConnectedState);
     QCOMPARE(socket.state(), QBluetoothSocket::SocketState::ConnectedState);
 
@@ -314,8 +314,8 @@ void tst_QBluetoothSocket::tst_serviceConnection()
         disconnectTime -= 1000;
     }
 
-    QCOMPARE(disconnectedSpy.count(), 1);
-    QCOMPARE(stateSpy.count(), 1);
+    QCOMPARE(disconnectedSpy.size(), 1);
+    QCOMPARE(stateSpy.size(), 1);
     QCOMPARE(stateSpy.takeFirst().at(0).value<QBluetoothSocket::SocketState>(), QBluetoothSocket::SocketState::UnconnectedState);
 
     // The remote service needs time to close the connection and resume listening
@@ -358,7 +358,7 @@ void tst_QBluetoothSocket::tst_clientCommunication()
     QCOMPARE(socket.openMode(), QIODevice::NotOpen);
     socket.connectToService(remoteServiceInfo);
 
-    QCOMPARE(stateSpy.count(), 1);
+    QCOMPARE(stateSpy.size(), 1);
     QCOMPARE(qvariant_cast<QBluetoothSocket::SocketState>(stateSpy.takeFirst().at(0)), QBluetoothSocket::SocketState::ConnectingState);
     QCOMPARE(socket.state(), QBluetoothSocket::SocketState::ConnectingState);
 
@@ -374,8 +374,8 @@ void tst_QBluetoothSocket::tst_clientCommunication()
     QCOMPARE(socket.isReadable(), true);
     QCOMPARE(socket.isOpen(), true);
 
-    QCOMPARE(connectedSpy.count(), 1);
-    QCOMPARE(stateSpy.count(), 1);
+    QCOMPARE(connectedSpy.size(), 1);
+    QCOMPARE(stateSpy.size(), 1);
     QCOMPARE(qvariant_cast<QBluetoothSocket::SocketState>(stateSpy.takeFirst().at(0)), QBluetoothSocket::SocketState::ConnectedState);
     QCOMPARE(socket.state(), QBluetoothSocket::SocketState::ConnectedState);
 
@@ -406,7 +406,7 @@ void tst_QBluetoothSocket::tst_clientCommunication()
                 readWriteTime -= 1000;
             }
 
-            QCOMPARE(bytesWrittenSpy.count(), 1);
+            QCOMPARE(bytesWrittenSpy.size(), 1);
             QCOMPARE(bytesWrittenSpy.at(0).at(0).toLongLong(), qint64(line.length()));
 
             readWriteTime = MaxReadWriteTime;
@@ -415,7 +415,7 @@ void tst_QBluetoothSocket::tst_clientCommunication()
                 readWriteTime -= 1000;
             }
 
-            QCOMPARE(readyReadSpy.count(), 1);
+            QCOMPARE(readyReadSpy.size(), 1);
 
             if (socket.openMode() & QIODevice::Unbuffered)
                 QVERIFY(socket.bytesAvailable() <= qint64(line.length()));
@@ -455,7 +455,7 @@ void tst_QBluetoothSocket::tst_clientCommunication()
             readWriteTime -= 1000;
         }
 
-        QCOMPARE(bytesWrittenSpy.count(), 1);
+        QCOMPARE(bytesWrittenSpy.size(), 1);
         QCOMPARE(bytesWrittenSpy.at(0).at(0).toLongLong(), qint64(joined.length()));
         QVERIFY(!readyReadSpy.isEmpty());
 
@@ -487,8 +487,8 @@ void tst_QBluetoothSocket::tst_clientCommunication()
         disconnectTime -= 1000;
     }
 
-    QCOMPARE(disconnectedSpy.count(), 1);
-    QCOMPARE(stateSpy.count(), 2);
+    QCOMPARE(disconnectedSpy.size(), 1);
+    QCOMPARE(stateSpy.size(), 2);
     QCOMPARE(qvariant_cast<QBluetoothSocket::SocketState>(stateSpy.takeFirst().at(0)), QBluetoothSocket::SocketState::ClosingState);
     QCOMPARE(qvariant_cast<QBluetoothSocket::SocketState>(stateSpy.takeFirst().at(0)), QBluetoothSocket::SocketState::UnconnectedState);
 
@@ -500,7 +500,7 @@ void tst_QBluetoothSocket::tst_error()
 {
     QBluetoothSocket socket;
     QSignalSpy errorSpy(&socket, SIGNAL(errorOccurred(QBluetoothSocket::SocketError)));
-    QCOMPARE(errorSpy.count(), 0);
+    QCOMPARE(errorSpy.size(), 0);
     const QBluetoothSocket::SocketError e = socket.error();
 
     QVERIFY(e == QBluetoothSocket::SocketError::NoSocketError);

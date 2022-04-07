@@ -437,7 +437,7 @@ bool QBluetoothDeviceInfo::equals(const QBluetoothDeviceInfo &a, const QBluetoot
         return false;
     if (a.d_func()->address != b.d_func()->address)
         return false;
-    if (a.d_func()->serviceUuids.count() != b.d_func()->serviceUuids.count())
+    if (a.d_func()->serviceUuids.size() != b.d_func()->serviceUuids.size())
         return false;
     if (a.d_func()->serviceUuids != b.d_func()->serviceUuids)
         return false;

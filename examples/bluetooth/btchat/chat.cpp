@@ -77,7 +77,7 @@ Chat::Chat(QWidget *parent)
     //! [Construct UI]
 
     localAdapters = QBluetoothLocalDevice::allDevices();
-    if (localAdapters.count() < 2) {
+    if (localAdapters.size() < 2) {
         ui->localAdapterBox->setVisible(false);
     } else {
         //we ignore more than two adapters

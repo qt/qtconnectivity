@@ -91,8 +91,8 @@ QByteArray LeCmacCalculator::createFullMessage(const QByteArray &message, quint3
 {
     // Spec v4.2, Vol 3, Part H, 2.4.5
     QByteArray fullMessage = message;
-    fullMessage.resize(fullMessage.count() + sizeof signCounter);
-    putBtData(signCounter, fullMessage.data() + message.count());
+    fullMessage.resize(fullMessage.size() + sizeof signCounter);
+    putBtData(signCounter, fullMessage.data() + message.size());
     return fullMessage;
 }
 
@@ -129,19 +129,19 @@ quint64 LeCmacCalculator::calculateMac(const QByteArray &message, const quint128
         return 0;
     }
 
-    QByteArray messageSwapped(message.count(), Qt::Uninitialized);
+    QByteArray messageSwapped(message.size(), Qt::Uninitialized);
     std::reverse_copy(message.begin(), message.end(), messageSwapped.begin());
     qint64 totalBytesWritten = 0;
     do {
         const qint64 bytesWritten = qt_safe_write(cryptoSocket.value(),
                                                   messageSwapped.constData() + totalBytesWritten,
-                                                  messageSwapped.count() - totalBytesWritten);
+                                                  messageSwapped.size() - totalBytesWritten);
         if (bytesWritten == -1) {
             qCWarning(QT_BT_BLUEZ) << "writing to crypto socket failed:" << strerror(errno);
             return 0;
         }
         totalBytesWritten += bytesWritten;
-    } while (totalBytesWritten < messageSwapped.count());
+    } while (totalBytesWritten < messageSwapped.size());
     quint64 mac;
     quint8 * const macPtr = reinterpret_cast<quint8 *>(&mac);
     qint64 totalBytesRead = 0;

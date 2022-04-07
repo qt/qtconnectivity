@@ -457,7 +457,7 @@ void tst_QBluetoothDeviceInfo::tst_serviceUuids()
     deviceInfo.setServiceUuids(servicesList);
     QVERIFY(!deviceInfo.serviceUuids().isEmpty());
     deviceInfo.setServiceUuids(QList<QBluetoothUuid>());
-    QCOMPARE(deviceInfo.serviceUuids().count(), 0);
+    QCOMPARE(deviceInfo.serviceUuids().size(), 0);
 }
 
 void tst_QBluetoothDeviceInfo::tst_cached()
@@ -528,8 +528,8 @@ void tst_QBluetoothDeviceInfo::tst_manufacturerData()
     QVERIFY(!info.setManufacturerData(manufacturerAVM, QByteArray::fromHex("ABCD")));
     QCOMPARE(info.manufacturerData(manufacturerAVM), QByteArray::fromHex("ABCD"));
     auto temp = info.manufacturerData();
-    QCOMPARE(temp.keys().count(), 1);
-    QCOMPARE(temp.values().count(), 1);
+    QCOMPARE(temp.keys().size(), 1);
+    QCOMPARE(temp.values().size(), 1);
     QCOMPARE(temp.values(), QList<QByteArray>() << QByteArray::fromHex("ABCD"));
 
     QVERIFY(info.setManufacturerData(manufacturerAVM, QByteArray::fromHex("CDEF")));
@@ -537,8 +537,8 @@ void tst_QBluetoothDeviceInfo::tst_manufacturerData()
     QVERIFY(!info.setManufacturerData(manufacturerAVM, QByteArray::fromHex("CDEF")));
 
     temp = info.manufacturerData();
-    QCOMPARE(temp.keys().count(), 2);
-    QCOMPARE(temp.values().count(), 2);
+    QCOMPARE(temp.keys().size(), 2);
+    QCOMPARE(temp.values().size(), 2);
     auto list = temp.values();
 
     QCOMPARE(QSet<QByteArray> (list.begin(), list.end()),

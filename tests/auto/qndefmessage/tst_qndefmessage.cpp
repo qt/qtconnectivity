@@ -533,7 +533,7 @@ void tst_QNdefMessage::parseSingleRecordMessage()
             QCOMPARE(textRecord.text(), parsedTextRecord.text());
             QCOMPARE(textRecord.locale(), parsedTextRecord.locale());
 
-            if (expectedData.count() == 2) {
+            if (expectedData.size() == 2) {
                 QCOMPARE(parsedTextRecord.text(), expectedData.at(0).toString());
                 QCOMPARE(parsedTextRecord.locale(), expectedData.at(1).toString());
             }
@@ -543,7 +543,7 @@ void tst_QNdefMessage::parseSingleRecordMessage()
 
             QCOMPARE(uriRecord.uri(), parsedUriRecord.uri());
 
-            if (expectedData.count() == 1)
+            if (expectedData.size() == 1)
                 QCOMPARE(parsedUriRecord.uri(), expectedData.at(0).toUrl());
         } else if (record.isRecordType<QNdefRecord>()) {
             QVERIFY(record.isEmpty());
