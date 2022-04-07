@@ -171,7 +171,14 @@ void tst_QBluetoothLocalDevice::tst_hostModes_data()
 {
     QTest::addColumn<QBluetoothLocalDevice::HostMode>("hostModeExpected");
     QTest::addColumn<bool>("expectSignal");
-
+#ifdef Q_OS_WIN
+    // On Windows local device does not support HostDiscoverable as a separate mode
+    QTest::newRow("HostPoweredOff1") << QBluetoothLocalDevice::HostPoweredOff << false;
+    QTest::newRow("HostConnectable1") << QBluetoothLocalDevice::HostConnectable << true;
+    QTest::newRow("HostConnectable2") << QBluetoothLocalDevice::HostConnectable << false;
+    QTest::newRow("HostPoweredOff3") << QBluetoothLocalDevice::HostPoweredOff << true;
+    QTest::newRow("HostPoweredOff3") << QBluetoothLocalDevice::HostPoweredOff << false;
+#else
     QTest::newRow("HostDiscoverable1") << QBluetoothLocalDevice::HostDiscoverable << true;
     QTest::newRow("HostPoweredOff1") << QBluetoothLocalDevice::HostPoweredOff << true;
     QTest::newRow("HostPoweredOff2") << QBluetoothLocalDevice::HostPoweredOff << false;
@@ -183,6 +190,7 @@ void tst_QBluetoothLocalDevice::tst_hostModes_data()
     QTest::newRow("HostDiscoverable3") << QBluetoothLocalDevice::HostDiscoverable << true;
     QTest::newRow("HostDiscoverable4") << QBluetoothLocalDevice::HostDiscoverable << false;
     QTest::newRow("HostConnectable4") << QBluetoothLocalDevice::HostConnectable << true;
+#endif
 }
 
 void tst_QBluetoothLocalDevice::tst_hostModes()
@@ -190,10 +198,6 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
 #ifdef Q_OS_OSX
     QSKIP("Not possible on OS X");
 #endif
-#ifdef Q_OS_WIN
-    QSKIP("Not possible on Windows");
-#endif
-
     QFETCH(QBluetoothLocalDevice::HostMode, hostModeExpected);
     QFETCH(bool, expectSignal);
 
@@ -201,31 +205,42 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
         QSKIP("Skipping test due to missing Bluetooth device");
 
     QBluetoothLocalDevice localDevice;
-    QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
+
+    static bool firstIteration = true;
+    if (firstIteration) {
+        // On the first iteration establish a known hostmode so that the test
+        // function can reliably test changes to it
+        firstIteration = false;
+        if (localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff) {
+            localDevice.setHostMode(QBluetoothLocalDevice::HostPoweredOff);
+            QTRY_VERIFY(localDevice.hostMode() == QBluetoothLocalDevice::HostPoweredOff);
+        }
+    }
+
+    QSignalSpy hostModeSpy(&localDevice,
+                           SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
     // there should be no changes yet
     QVERIFY(hostModeSpy.isValid());
     QVERIFY(hostModeSpy.isEmpty());
 
-    QTest::qWait(1000);
+    // Switch the bluetooth mode and verify it changes
     localDevice.setHostMode(hostModeExpected);
-    // wait for the device to switch bluetooth mode.
+    // Manual interaction may be needed (for example on Android you may
+    // need to authorize a permission) => hence a longer timeout
+    QTRY_COMPARE_WITH_TIMEOUT(localDevice.hostMode(), hostModeExpected, 15000);
+    // Allow possible mode-change signal(s) to arrive (QTRY_COMPARE may return immediately)
     QTest::qWait(1000);
-    if (hostModeExpected != localDevice.hostMode()) {
-        QTRY_VERIFY(!hostModeSpy.isEmpty());
-    }
-    // test the actual signal values.
-    if (expectSignal)
-        QVERIFY(!hostModeSpy.isEmpty());
-    else
-        QVERIFY(hostModeSpy.isEmpty());
 
+    // Verify that signals are as expected
     if (expectSignal) {
-        QList<QVariant> arguments = hostModeSpy.takeLast();
-        QBluetoothLocalDevice::HostMode hostMode = qvariant_cast<QBluetoothLocalDevice::HostMode>(arguments.at(0));
-        QCOMPARE(hostModeExpected, hostMode);
+        QVERIFY(hostModeSpy.size() > 0);
+        // Verify that the last signal contained the right mode
+        auto arguments = hostModeSpy.takeLast();
+        auto hostMode = qvariant_cast<QBluetoothLocalDevice::HostMode>(arguments.at(0));
+        QCOMPARE(hostMode, hostModeExpected);
+    } else {
+        QCOMPARE(hostModeSpy.size(), 0);
     }
-    // test actual
-    QCOMPARE(hostModeExpected, localDevice.hostMode());
 }
 
 void tst_QBluetoothLocalDevice::tst_address()
