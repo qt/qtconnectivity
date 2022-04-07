@@ -477,22 +477,20 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(const 
     // minor device class is 6 bits from index 2 - 7
     classType |= ((quint32(minorDeviceType) & 0x3f) << 2);
 
-    static QList<quint32> services;
-    if (services.count() == 0)
-        services << QBluetoothDeviceInfo::PositioningService
-                 << QBluetoothDeviceInfo::NetworkingService
-                 << QBluetoothDeviceInfo::RenderingService
-                 << QBluetoothDeviceInfo::CapturingService
-                 << QBluetoothDeviceInfo::ObjectTransferService
-                 << QBluetoothDeviceInfo::AudioService
-                 << QBluetoothDeviceInfo::TelephonyService
-                 << QBluetoothDeviceInfo::InformationService;
+    static constexpr quint32 services[] = {
+        QBluetoothDeviceInfo::PositioningService,
+        QBluetoothDeviceInfo::NetworkingService,
+        QBluetoothDeviceInfo::RenderingService,
+        QBluetoothDeviceInfo::CapturingService,
+        QBluetoothDeviceInfo::ObjectTransferService,
+        QBluetoothDeviceInfo::AudioService,
+        QBluetoothDeviceInfo::TelephonyService,
+        QBluetoothDeviceInfo::InformationService,
+    };
 
     // Matching BluetoothClass.Service values
     quint32 serviceResult = 0;
-    quint32 current = 0;
-    for (int i = 0; i < services.count(); i++) {
-        current = services.at(i);
+    for (quint32 current : services) {
         int androidId = (current << 16); // Android values shift by 2 bytes compared to Qt enums
         if (bluetoothClass.callMethod<jboolean>("hasService", "(I)Z", androidId))
             serviceResult |= current;
