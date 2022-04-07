@@ -176,16 +176,8 @@ void QBluetoothLocalDevicePrivate::processPairingStateChanged(
 void QBluetoothLocalDevicePrivate::processConnectDeviceChanges(const QBluetoothAddress &address,
                                                                bool isConnectEvent)
 {
-    int index = -1;
-    for (int i = 0; i < connectedDevices.count(); i++) {
-        if (connectedDevices.at(i) == address) {
-            index = i;
-            break;
-        }
-    }
-
     if (isConnectEvent) { // connect event
-        if (index >= 0)
+        if (connectedDevices.contains(address))
             return;
         connectedDevices.append(address);
         emit q_ptr->deviceConnected(address);
