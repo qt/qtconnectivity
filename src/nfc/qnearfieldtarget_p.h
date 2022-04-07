@@ -58,6 +58,7 @@
 #include <QtCore/QObject>
 #include <QtCore/QSharedData>
 #include <QtCore/QVariant>
+#include <QtCore/QMap>
 
 QT_BEGIN_NAMESPACE
 
