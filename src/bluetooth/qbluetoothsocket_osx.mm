@@ -519,8 +519,8 @@ void QBluetoothSocketPrivate::channelOpenComplete()
     Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     if (!isConnecting) {
-        q_ptr->setSocketState(QBluetoothSocket::ConnectedState);
         q_ptr->setOpenMode(openMode);
+        q_ptr->setSocketState(QBluetoothSocket::ConnectedState);
         emit q_ptr->connected();
     } else {
         state = QBluetoothSocket::ConnectedState;
@@ -537,10 +537,9 @@ void QBluetoothSocketPrivate::channelClosed()
     // (thus close/abort probably will not work).
 
     if (!isConnecting) {
-        q_ptr->setSocketState(QBluetoothSocket::UnconnectedState);
         q_ptr->setOpenMode(QIODevice::NotOpen);
+        q_ptr->setSocketState(QBluetoothSocket::UnconnectedState);
         emit q_ptr->readChannelFinished();
-        emit q_ptr->disconnected();
     } else {
         state = QBluetoothSocket::UnconnectedState;
         // We are still in connectToService and do not want

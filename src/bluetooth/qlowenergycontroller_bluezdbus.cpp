@@ -60,6 +60,9 @@ QLowEnergyControllerPrivateBluezDBus::QLowEnergyControllerPrivateBluezDBus()
 
 QLowEnergyControllerPrivateBluezDBus::~QLowEnergyControllerPrivateBluezDBus()
 {
+    if (state != QLowEnergyController::UnconnectedState) {
+        qCWarning(QT_BT_BLUEZ) << "Low Energy Controller deleted while connected.";
+    }
 }
 
 void QLowEnergyControllerPrivateBluezDBus::init()
@@ -208,12 +211,17 @@ void QLowEnergyControllerPrivateBluezDBus::characteristicPropertiesChanged(
         emit service->characteristicChanged(changedChar, newValue);
 }
 
-void QLowEnergyControllerPrivateBluezDBus::interfacesRemoved(
-        const QDBusObjectPath &objectPath, const QStringList &/*interfaces*/)
+void QLowEnergyControllerPrivateBluezDBus::interfacesRemoved(const QDBusObjectPath &objectPath,
+                                                             const QStringList &interfaces)
 {
     if (objectPath.path() == device->path()) {
-        qCWarning(QT_BT_BLUEZ) << "DBus Device1 was removed";
-        executeClose(QLowEnergyController::UnknownRemoteDeviceError);
+        if (interfaces.contains(QStringLiteral("org.bluez.Device1"))) {
+            qCWarning(QT_BT_BLUEZ) << "DBus Device1 was removed";
+            executeClose(QLowEnergyController::UnknownRemoteDeviceError);
+        } else {
+            qCDebug(QT_BT_BLUEZ) << "DBus interfaces" << interfaces << "were removed from"
+                                 << objectPath.path();
+        }
     } else if (objectPath.path() == adapter->path()) {
         qCWarning(QT_BT_BLUEZ) << "DBus Adapter was removed";
         executeClose(QLowEnergyController::InvalidBluetoothAdapterError);
@@ -385,6 +393,8 @@ void QLowEnergyControllerPrivateBluezDBus::disconnectFromDevice()
             qCDebug(QT_BT_BLUEZ) << "BTLE_DBUS::disconnect() failed"
                                  << reply.reply().errorName()
                                  << reply.reply().errorMessage();
+            executeClose(QLowEnergyController::UnknownError);
+        } else {
             executeClose(QLowEnergyController::NoError);
         }
         call->deleteLater();
