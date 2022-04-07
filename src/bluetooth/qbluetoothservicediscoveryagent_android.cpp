@@ -262,7 +262,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
     const QBluetoothAddress &address, const QList<QBluetoothUuid> &uuids)
 {
     //don't leave more data through if we are not interested anymore
-    if (discoveredDevices.count() == 0)
+    if (discoveredDevices.isEmpty())
         return;
 
     //could not find any service for the current address/device -> go to next one

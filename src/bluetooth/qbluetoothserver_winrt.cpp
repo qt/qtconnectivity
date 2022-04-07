@@ -216,7 +216,7 @@ bool QBluetoothServer::hasPendingConnections() const
 QBluetoothSocket *QBluetoothServer::nextPendingConnection()
 {
     Q_D(QBluetoothServer);
-    if (d->pendingConnections.count() == 0)
+    if (d->pendingConnections.isEmpty())
         return nullptr;
 
     ComPtr<IStreamSocket> socket = d->pendingConnections.takeFirst();

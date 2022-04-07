@@ -448,7 +448,7 @@ void TestQLowEnergyControllerGattServer::serverCommunication()
     customService->writeCharacteristic(customChar5, "1", QLowEnergyService::WriteSigned);
 
     // error might happen immediately or once event loop comes back
-    bool wasError = ((spy->count() > 0) || spy->wait(3000)); //
+    bool wasError = (!spy->isEmpty() || spy->wait(3000)); //
 
     if (!wasError) {
         // Signed write is done twice to test the sign counter stuff.

@@ -127,7 +127,7 @@ void tst_QBluetoothServiceDiscoveryAgent::initTestCase()
 
         // Wait for up to MaxScanTime for the scan to finish
         int scanTime = MaxScanTime;
-        while (finishedSpy.count() == 0 && scanTime > 0) {
+        while (finishedSpy.isEmpty() && scanTime > 0) {
             QTest::qWait(1000);
             scanTime -= 1000;
         }
@@ -177,7 +177,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_invalidBtAddress()
 
     discoveryAgent = new QBluetoothServiceDiscoveryAgent(QBluetoothAddress());
     QCOMPARE(discoveryAgent->error(), QBluetoothServiceDiscoveryAgent::NoError);
-    if (QBluetoothLocalDevice::allDevices().count() > 0) {
+    if (!QBluetoothLocalDevice::allDevices().isEmpty()) {
         discoveryAgent->start();
         QCOMPARE(discoveryAgent->isActive(), true);
     }
@@ -352,7 +352,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryAdapters()
 
         discoveryAgent.start();
         int scanTime = MaxScanTime;
-        while (finishedSpy.count() == 0 && scanTime > 0) {
+        while (finishedSpy.isEmpty() && scanTime > 0) {
             QTest::qWait(1000);
             scanTime -= 1000;
         }
@@ -416,7 +416,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
 
     // Wait for up to MaxScanTime for the scan to finish
     int scanTime = 20000;
-    while (finishedSpy.count() == 0 && scanTime > 0) {
+    while (finishedSpy.isEmpty() && scanTime > 0) {
         QTest::qWait(1000);
         scanTime -= 1000;
     }
@@ -435,7 +435,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
 
     QVERIFY(errorSpy.isEmpty());
 
-    //if (discoveryAgent.discoveredServices().count() && expected_failures++ <2){
+    //if (!discoveryAgent.discoveredServices().isEmpty() && expected_failures++ <2){
     if (discoveredSpy.isEmpty()) {
         qDebug() << "Device failed to return any results, skipping device" << discoveryAgent.discoveredServices().count();
         return;
@@ -472,9 +472,9 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
     }
 
     if (servicesFound)
-        QVERIFY(discoveryAgent.discoveredServices().count() != 0);
+        QVERIFY(!discoveryAgent.discoveredServices().isEmpty());
     discoveryAgent.clear();
-    QVERIFY(discoveryAgent.discoveredServices().count() == 0);
+    QVERIFY(discoveryAgent.discoveredServices().isEmpty());
 
     discoveryAgent.stop();
     QVERIFY(!discoveryAgent.isActive());

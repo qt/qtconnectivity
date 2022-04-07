@@ -118,7 +118,7 @@ void tst_QBluetoothSocket::initTestCase()
 {
     // setup Bluetooth env
     const QList<QBluetoothHostInfo> foundDevices = QBluetoothLocalDevice::allDevices();
-    if (!foundDevices.count()) {
+    if (foundDevices.isEmpty()) {
         qWarning() << "Missing local device";
         return;
     } else {
@@ -264,12 +264,12 @@ void tst_QBluetoothSocket::tst_serviceConnection()
     stateSpy.clear();
 
     int connectTime = MaxConnectTime;
-    while (connectedSpy.count() == 0 && errorSpy.count() == 0 && connectTime > 0) {
+    while (connectedSpy.isEmpty()  && errorSpy.isEmpty() && connectTime > 0) {
         QTest::qWait(1000);
         connectTime -= 1000;
     }
 
-    if (errorSpy.count() != 0) {
+    if (!errorSpy.isEmpty()) {
         qDebug() << errorSpy.takeFirst().at(0).toInt();
         QSKIP("Connection error");
     }
@@ -305,11 +305,11 @@ void tst_QBluetoothSocket::tst_serviceConnection()
     QCOMPARE(socket.isOpen(), false);
     QCOMPARE(socket.openMode(), QIODevice::NotOpen);
 
-    QVERIFY(stateSpy.count() >= 1);
+    QVERIFY(!stateSpy.isEmpty());
     QCOMPARE(stateSpy.takeFirst().at(0).value<QBluetoothSocket::SocketState>(), QBluetoothSocket::SocketState::ClosingState);
 
     int disconnectTime = MaxConnectTime;
-    while (disconnectedSpy.count() == 0 && disconnectTime > 0) {
+    while (disconnectedSpy.isEmpty() && disconnectTime > 0) {
         QTest::qWait(1000);
         disconnectTime -= 1000;
     }
@@ -365,7 +365,7 @@ void tst_QBluetoothSocket::tst_clientCommunication()
     stateSpy.clear();
 
     int connectTime = MaxConnectTime;
-    while (connectedSpy.count() == 0 && connectTime > 0) {
+    while (connectedSpy.isEmpty() && connectTime > 0) {
         QTest::qWait(1000);
         connectTime -= 1000;
     }
@@ -401,7 +401,7 @@ void tst_QBluetoothSocket::tst_clientCommunication()
             QCOMPARE(dataWritten, qint64(line.length()));
 
             int readWriteTime = MaxReadWriteTime;
-            while ((bytesWrittenSpy.count() == 0 || readyReadSpy.count() == 0) && readWriteTime > 0) {
+            while ((bytesWrittenSpy.isEmpty() || readyReadSpy.isEmpty()) && readWriteTime > 0) {
                 QTest::qWait(1000);
                 readWriteTime -= 1000;
             }
@@ -410,7 +410,7 @@ void tst_QBluetoothSocket::tst_clientCommunication()
             QCOMPARE(bytesWrittenSpy.at(0).at(0).toLongLong(), qint64(line.length()));
 
             readWriteTime = MaxReadWriteTime;
-            while ((readyReadSpy.count() == 0) && readWriteTime > 0) {
+            while (readyReadSpy.isEmpty() && readWriteTime > 0) {
                 QTest::qWait(1000);
                 readWriteTime -= 1000;
             }
@@ -450,14 +450,14 @@ void tst_QBluetoothSocket::tst_clientCommunication()
         QCOMPARE(dataWritten, qint64(joined.length()));
 
         int readWriteTime = MaxReadWriteTime;
-        while ((bytesWrittenSpy.count() == 0 || readyReadSpy.count() == 0) && readWriteTime > 0) {
+        while ((bytesWrittenSpy.isEmpty() || readyReadSpy.isEmpty()) && readWriteTime > 0) {
             QTest::qWait(1000);
             readWriteTime -= 1000;
         }
 
         QCOMPARE(bytesWrittenSpy.count(), 1);
         QCOMPARE(bytesWrittenSpy.at(0).at(0).toLongLong(), qint64(joined.length()));
-        QVERIFY(readyReadSpy.count() > 0);
+        QVERIFY(!readyReadSpy.isEmpty());
 
         if (socket.openMode() & QIODevice::Unbuffered)
             QVERIFY(socket.bytesAvailable() <= qint64(joined.length()));
@@ -482,7 +482,7 @@ void tst_QBluetoothSocket::tst_clientCommunication()
     QCOMPARE(socket.openMode(), QIODevice::NotOpen);
 
     int disconnectTime = MaxConnectTime;
-    while (disconnectedSpy.count() == 0 && disconnectTime > 0) {
+    while (disconnectedSpy.isEmpty() && disconnectTime > 0) {
         QTest::qWait(1000);
         disconnectTime -= 1000;
     }

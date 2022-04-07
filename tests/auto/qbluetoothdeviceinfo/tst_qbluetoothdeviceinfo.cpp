@@ -452,10 +452,10 @@ void tst_QBluetoothDeviceInfo::tst_serviceUuids()
     QList<QBluetoothUuid> servicesList;
     servicesList.append(QBluetoothUuid::ProtocolUuid::L2cap);
     servicesList.append(QBluetoothUuid::ProtocolUuid::Rfcomm);
-    QVERIFY(servicesList.count() > 0);
+    QVERIFY(!servicesList.isEmpty());
 
     deviceInfo.setServiceUuids(servicesList);
-    QVERIFY(deviceInfo.serviceUuids().count() > 0);
+    QVERIFY(!deviceInfo.serviceUuids().isEmpty());
     deviceInfo.setServiceUuids(QList<QBluetoothUuid>());
     QCOMPARE(deviceInfo.serviceUuids().count(), 0);
 }

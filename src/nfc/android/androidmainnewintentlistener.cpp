@@ -127,11 +127,11 @@ void MainNfcNewIntentListener::updateReceiveState()
     // We reach here, so we are not paused.
     listenersLock.lockForRead();
     // We have nfc listeners and do not receive. Switch on.
-    if (listeners.count() && !receiving)
+    if (!listeners.isEmpty() && !receiving)
         receiving = AndroidNfc::startDiscovery();
 
     // we have no nfc listeners and do receive. Switch off.
-    if (!listeners.count() && receiving) {
+    if (listeners.isEmpty() && receiving) {
         AndroidNfc::stopDiscovery();
         receiving = false;
     }

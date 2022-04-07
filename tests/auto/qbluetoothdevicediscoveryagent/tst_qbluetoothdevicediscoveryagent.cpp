@@ -109,11 +109,11 @@ void tst_QBluetoothDeviceDiscoveryAgent::initTestCase()
         QVERIFY(hostModeSpy.isEmpty());
         device->powerOn();
         int connectTime = 5000;  // ms
-        while (hostModeSpy.count() < 1 && connectTime > 0) {
+        while (hostModeSpy.isEmpty() && connectTime > 0) {
             QTest::qWait(500);
             connectTime -= 500;
         }
-        QVERIFY(hostModeSpy.count() > 0);
+        QVERIFY(!hostModeSpy.isEmpty());
     }
     QBluetoothLocalDevice::HostMode hostMode= device->hostMode();
     QVERIFY(hostMode == QBluetoothLocalDevice::HostConnectable
@@ -134,7 +134,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_invalidBtAddress()
 
     discoveryAgent = new QBluetoothDeviceDiscoveryAgent(QBluetoothAddress());
     QCOMPARE(discoveryAgent->error(), QBluetoothDeviceDiscoveryAgent::NoError);
-    if (QBluetoothLocalDevice::allDevices().count() > 0) {
+    if (!QBluetoothLocalDevice::allDevices().isEmpty()) {
         discoveryAgent->start();
         QCOMPARE(discoveryAgent->isActive(), true);
     }
@@ -182,7 +182,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
 
     // Wait for up to MaxWaitForCancelTime for the cancel to finish
     int waitTime = MaxWaitForCancelTime;
-    while (cancelSpy.count() == 0 && waitTime > 0) {
+    while (cancelSpy.isEmpty() && waitTime > 0) {
         QTest::qWait(100);
         waitTime-=100;
     }
@@ -206,7 +206,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
 
     // Wait for up to MaxWaitForCancelTime for the cancel to finish
     waitTime = MaxWaitForCancelTime;
-    while (cancelSpy.count() == 0 && waitTime > 0) {
+    while (cancelSpy.isEmpty() && waitTime > 0) {
         QTest::qWait(100);
         waitTime-=100;
     }
@@ -223,7 +223,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
     QVERIFY(errorSpy.isEmpty());
 
     // Don't expect finished signal and no error
-    QVERIFY(finishedSpy.count() == 0);
+    QVERIFY(finishedSpy.isEmpty());
     QVERIFY(discoveryAgent.error() == discoveryAgent.NoError);
     QVERIFY(discoveryAgent.errorString().isEmpty());
 
@@ -260,7 +260,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
 
     // Wait for up to MaxWaitForCancelTime for the cancel to finish
     waitTime = MaxWaitForCancelTime;
-    while (cancelSpy.count() == 0 && waitTime > 0) {
+    while (cancelSpy.isEmpty() && waitTime > 0) {
         QTest::qWait(100);
         waitTime-=100;
     }
@@ -289,7 +289,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
 
     // Wait for up to MaxScanTime for the cancel to finish
     waitTime = MaxScanTime;
-    while (finishedSpy.count() == 0 && waitTime > 0) {
+    while (finishedSpy.isEmpty() && waitTime > 0) {
         QTest::qWait(1000);
         waitTime-=1000;
     }
@@ -344,7 +344,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
 
         // Wait for up to MaxScanTime for the scan to finish
         int scanTime = MaxScanTime;
-        while (finishedSpy.count() == 0 && scanTime > 0) {
+        while (finishedSpy.isEmpty() && scanTime > 0) {
             QTest::qWait(15000);
             scanTime -= 15000;
         }
@@ -378,7 +378,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
         }
 
         if (!remoteDevice.isNull())
-            QVERIFY(discoveredSpy.count() > 0);
+            QVERIFY(!discoveredSpy.isEmpty());
         // All returned QBluetoothDeviceInfo should be valid.
         while (!discoveredSpy.isEmpty()) {
             const QBluetoothDeviceInfo info =
