@@ -366,10 +366,6 @@ void tst_QBluetoothLocalDevice::tst_pairDevice()
 #if defined(Q_OS_MACOS)
     QSKIP("The pair device test fails on macOS");
 #endif
-#ifdef Q_OS_WIN
-    QSKIP("Programmatic pairing not supported on Windows");
-#endif
-
     QFETCH(QBluetoothAddress, deviceAddress);
     QFETCH(QBluetoothLocalDevice::Pairing, pairingExpected);
     QFETCH(int, pairingWaitTime);
@@ -380,8 +376,10 @@ void tst_QBluetoothLocalDevice::tst_pairDevice()
 
     QBluetoothLocalDevice localDevice;
     //powerOn if not already
-    localDevice.powerOn();
-    QVERIFY(localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff);
+    if (localDevice.hostMode() == QBluetoothLocalDevice::HostPoweredOff) {
+        localDevice.powerOn();
+        QTRY_VERIFY(localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff);
+    }
 
     QSignalSpy pairingSpy(&localDevice, SIGNAL(pairingFinished(QBluetoothAddress,QBluetoothLocalDevice::Pairing)) );
     QSignalSpy errorSpy(&localDevice, SIGNAL(errorOccurred(QBluetoothLocalDevice::Error)));
@@ -413,11 +411,11 @@ void tst_QBluetoothLocalDevice::tst_pairDevice()
         QBluetoothAddress address = qvariant_cast<QBluetoothAddress>(arguments.at(0));
         QBluetoothLocalDevice::Pairing pairingResult = qvariant_cast<QBluetoothLocalDevice::Pairing>(arguments.at(1));
         QCOMPARE(deviceAddress, address);
-        QCOMPARE(pairingExpected, pairingResult);
+        QCOMPARE(pairingResult, pairingExpected);
     }
 
     if (!expectErrorSignal)
-        QCOMPARE(pairingExpected, localDevice.pairingStatus(deviceAddress));
+        QCOMPARE(localDevice.pairingStatus(deviceAddress), pairingExpected);
 }
 
 void tst_QBluetoothLocalDevice::tst_pairingStatus_data()
