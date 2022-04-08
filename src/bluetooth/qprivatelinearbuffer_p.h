@@ -64,13 +64,15 @@ public:
         first = buf;
         len = 0;
     }
-    int size() const {
+    qsizetype size() const
+    {
         return len;
     }
     bool isEmpty() const {
         return len == 0;
     }
-    void skip(int n) {
+    void skip(qsizetype n)
+    {
         if (n >= len) {
             clear();
         } else {
@@ -86,20 +88,23 @@ public:
         first++;
         return ch;
     }
-    int read(char* target, int size) {
-        int r = qMin(size, len);
+    qsizetype read(char* target, qsizetype size)
+    {
+        qsizetype r = (std::min)(size, len);
         memcpy(target, first, r);
         len -= r;
         first += r;
         return r;
     }
-    char* reserve(int size) {
+    char* reserve(qsizetype size)
+    {
         makeSpace(size + len, freeSpaceAtEnd);
         char* writePtr = first + len;
         len += size;
         return writePtr;
     }
-    void chop(int size) {
+    void chop(qsizetype size)
+    {
         if (size >= len) {
             clear();
         } else {
@@ -108,20 +113,21 @@ public:
     }
     QByteArray readAll() {
         char* f = first;
-        int l = len;
+        qsizetype l = len;
         clear();
         return QByteArray(f, l);
     }
-    int readLine(char* target, int size) {
-        int r = qMin(size, len);
+    qsizetype readLine(char* target, qsizetype size)
+    {
+        qsizetype r = (std::min)(size, len);
         char* eol = static_cast<char*>(memchr(first, '\n', r));
         if (eol)
             r = 1+(eol-first);
         memcpy(target, first, r);
         len -= r;
         first += r;
-        return int(r);
-        }
+        return r;
+    }
     bool canReadLine() const {
         return memchr(first, '\n', len);
     }
@@ -134,7 +140,8 @@ public:
         len++;
         *first = c;
     }
-    void ungetBlock(const char* block, int size) {
+    void ungetBlock(const char* block, qsizetype size)
+    {
         if ((first - buf) < size) {
             // underflow, the existing valid data needs to move to the end of the (potentially bigger) buffer
             makeSpace(len + size, freeSpaceAtStart);
@@ -147,10 +154,10 @@ public:
 private:
     enum FreeSpacePos {freeSpaceAtStart, freeSpaceAtEnd};
     void makeSpace(size_t required, FreeSpacePos where) {
-        size_t newCapacity = qMax(capacity, size_t(QPRIVATELINEARBUFFER_BUFFERSIZE));
+        size_t newCapacity = (std::max)(capacity, size_t(QPRIVATELINEARBUFFER_BUFFERSIZE));
         while (newCapacity < required)
             newCapacity *= 2;
-        const int moveOffset = (where == freeSpaceAtEnd) ? 0 : int(newCapacity) - len;
+        const qsizetype moveOffset = (where == freeSpaceAtEnd) ? 0 : qsizetype(newCapacity) - len;
         if (newCapacity > capacity) {
             // allocate more space
             char* newBuf = new char[newCapacity];
@@ -167,7 +174,7 @@ private:
 
 private:
     // length of the unread data
-    int len;
+    qsizetype len;
     // start of the unread data
     char* first;
     // the allocated buffer
