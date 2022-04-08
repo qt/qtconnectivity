@@ -270,10 +270,8 @@ void QLowEnergyControllerPrivateBluezDBus::connectToDeviceHelper()
         return;
     }
 
-    QScopedPointer<OrgFreedesktopDBusObjectManagerInterface> manager(
-                            new OrgFreedesktopDBusObjectManagerInterface(
-                                QStringLiteral("org.bluez"), QStringLiteral("/"),
-                                QDBusConnection::systemBus()));
+    auto manager = std::make_unique<OrgFreedesktopDBusObjectManagerInterface>(
+            QStringLiteral("org.bluez"), QStringLiteral("/"), QDBusConnection::systemBus());
 
     QDBusPendingReply<ManagedObjectList> reply = manager->GetManagedObjects();
     reply.waitForFinished();
@@ -315,7 +313,7 @@ void QLowEnergyControllerPrivateBluezDBus::connectToDeviceHelper()
         return;
     }
 
-    managerBluez = manager.take();
+    managerBluez = manager.release();
     connect(managerBluez, &OrgFreedesktopDBusObjectManagerInterface::InterfacesRemoved,
             this, &QLowEnergyControllerPrivateBluezDBus::interfacesRemoved);
     adapter = new OrgBluezAdapter1Interface(
