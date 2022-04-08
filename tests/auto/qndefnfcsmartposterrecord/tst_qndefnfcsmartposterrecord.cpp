@@ -428,7 +428,7 @@ void tst_QNdefNfcSmartPosterRecord::tst_size()
 {
     QNdefNfcSmartPosterRecord record;
     QVERIFY(!record.hasSize());
-    QCOMPARE(record.size(), 0);
+    QCOMPARE(record.size(), 0U);
 
     quint32 size = 1024;
     record.setSize(size);

@@ -81,8 +81,8 @@ void tst_QNdefFilter::copyConstruct()
     QNdefFilter::Record rec = filterCopy.recordAt(1);
     QCOMPARE(rec.typeNameFormat, QNdefRecord::Empty);
     QCOMPARE(rec.type, QByteArray());
-    QCOMPARE(rec.minimum, 0);
-    QCOMPARE(rec.maximum, 1);
+    QCOMPARE(rec.minimum, 0U);
+    QCOMPARE(rec.maximum, 1U);
 }
 
 void tst_QNdefFilter::assingmentOperator()
@@ -100,8 +100,8 @@ void tst_QNdefFilter::assingmentOperator()
     QNdefFilter::Record rec = filterCopy.recordAt(1);
     QCOMPARE(rec.typeNameFormat, QNdefRecord::Empty);
     QCOMPARE(rec.type, QByteArray());
-    QCOMPARE(rec.minimum, 0);
-    QCOMPARE(rec.maximum, 1);
+    QCOMPARE(rec.minimum, 0U);
+    QCOMPARE(rec.maximum, 1U);
 }
 
 void tst_QNdefFilter::clearFilter()
