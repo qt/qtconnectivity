@@ -339,7 +339,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processDiscoveredDevices(
     // the advertisement package.
     // If address is same but name different then we keep both entries.
 
-    for (int i = 0; i < discoveredDevices.size(); i++) {
+    for (qsizetype i = 0; i < discoveredDevices.size(); ++i) {
         if (discoveredDevices[i].address() == info.address()) {
             QBluetoothDeviceInfo::Fields updatedFields = QBluetoothDeviceInfo::Field::None;
             if (discoveredDevices[i].rssi() != info.rssi()) {

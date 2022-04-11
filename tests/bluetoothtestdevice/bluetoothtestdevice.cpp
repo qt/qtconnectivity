@@ -322,7 +322,7 @@ int main(int argc, char *argv[])
 
     auto reconnect = [&connectioncount, &leController, advertisingData, &services, serviceDefinitions]() {
         connectioncount++;
-        for (int i = 0; i < services.size(); ++i) {
+        for (qsizetype i = 0; i < services.size(); ++i) {
             services[i].reset(leController->addService(serviceDefinitions[i]));
         }
 

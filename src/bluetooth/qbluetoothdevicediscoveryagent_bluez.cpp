@@ -318,7 +318,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(const QString &devicePat
     // Cache the properties so we do not have to access dbus every time to get a value
     devicesProperties[devicePath] = properties;
 
-    for (int i = 0; i < discoveredDevices.size(); i++) {
+    for (qsizetype i = 0; i < discoveredDevices.size(); ++i) {
         if (discoveredDevices[i].address() == deviceInfo.address()) {
             if (lowEnergySearchTimeout > 0 && discoveredDevices[i] == deviceInfo) {
                 qCDebug(QT_BT_BLUEZ) << "Duplicate: " << deviceInfo.address();
@@ -436,7 +436,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::_q_PropertiesChanged(const QString &
     if (changed_properties.contains(QStringLiteral("RSSI"))
         || changed_properties.contains(QStringLiteral("ManufacturerData"))) {
 
-        for (int i = 0; i < discoveredDevices.size(); i++) {
+        for (qsizetype i = 0; i < discoveredDevices.size(); ++i) {
             if (discoveredDevices[i].address() == info.address()) {
                 QBluetoothDeviceInfo::Fields updatedFields = QBluetoothDeviceInfo::Field::None;
                 if (changed_properties.contains(QStringLiteral("RSSI"))) {

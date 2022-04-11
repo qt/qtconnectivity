@@ -503,7 +503,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::deviceFound(const QBluetoothDeviceIn
 #else
             true;
 #endif // Q_OS_MACOS
-    for (int i = 0, e = discoveredDevices.size(); i < e; ++i) {
+    for (qsizetype i = 0, e = discoveredDevices.size(); i < e; ++i) {
         if (isLE) {
             if (discoveredDevices[i].deviceUuid() == newDeviceInfo.deviceUuid()) {
                 QBluetoothDeviceInfo::Fields updatedFields = QBluetoothDeviceInfo::Field::None;

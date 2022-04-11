@@ -383,7 +383,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
     qCDebug(QT_BT_BLUEZ) << "Minimal uuid list for" << deviceAddress.toString() << uuidStrings;
 
     QBluetoothUuid uuid;
-    for (int i = 0; i < uuidStrings.count(); i++) {
+    for (qsizetype i = 0; i < uuidStrings.size(); ++i) {
         uuid = QBluetoothUuid(uuidStrings.at(i));
         if (uuid.isNull())
             continue;

@@ -516,7 +516,7 @@ void tst_QNdefMessage::parseSingleRecordMessage()
     QVERIFY(message == reparsedMessage);
     QVERIFY(reparsedMessage == message);
 
-    for (int i = 0; i < message.count(); ++i) {
+    for (qsizetype i = 0; i < message.size(); ++i) {
         const QNdefRecord &record = message.at(i);
         const QNdefRecord &parsedRecord = parsedMessage.at(i);
 
