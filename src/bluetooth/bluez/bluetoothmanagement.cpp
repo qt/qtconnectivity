@@ -214,13 +214,13 @@ void BluetoothManagement::_q_readNotifier()
     }
 
     // do we have at least one complete mgmt header?
-    if ((uint)buffer.size() < sizeof(MgmtHdr))
+    if (size_t(buffer.size()) < sizeof(MgmtHdr))
         return;
 
     QByteArray data = buffer.readAll();
 
     while (true) {
-        if ((uint)data.size() < sizeof(MgmtHdr))
+        if (size_t(data.size()) < sizeof(MgmtHdr))
             break;
 
         const MgmtHdr *hdr = reinterpret_cast<const MgmtHdr*>(data.constData());

@@ -384,7 +384,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
     }
 
     const auto & range = valueRanges[charHandle];
-    if (value.size() < int(range.first) || value.size() > int(range.second)
+    if (value.size() < qsizetype(range.first) || value.size() > qsizetype(range.second)
 #ifdef Q_OS_IOS
         || value.size() > DarwinBluetooth::maxValueLength) {
 #else
