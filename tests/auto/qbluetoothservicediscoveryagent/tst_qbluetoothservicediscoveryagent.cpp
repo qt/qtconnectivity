@@ -294,15 +294,15 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery_data()
 void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryAdapters()
 {
     QBluetoothLocalDevice localDevice;
-    int numberOfAdapters = (localDevice.allDevices()).size();
-    if (numberOfAdapters>1) {
+    const QList<QBluetoothHostInfo> adapters = localDevice.allDevices();
+    if (adapters.size() > 1) {
         if (devices.isEmpty())
             QSKIP("This test requires an in-range bluetooth device");
 
-        QList<QBluetoothAddress> addresses;
+        QVarLengthArray<QBluetoothAddress> addresses;
 
-        for (int i=0; i<numberOfAdapters; i++) {
-            addresses.append(((QBluetoothHostInfo)localDevice.allDevices().at(i)).address());
+        for (const auto &adapter : adapters) {
+            addresses.append(adapter.address());
         }
         QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
         QBluetoothUuid uuid(QBluetoothUuid::ProtocolUuid::Ftp);
@@ -357,17 +357,15 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryAdapters()
             scanTime -= 1000;
         }
 
-        QList<QBluetoothServiceInfo> discServices = discoveryAgent.discoveredServices();
+        const QList<QBluetoothServiceInfo> discServices = discoveryAgent.discoveredServices();
         QVERIFY(!discServices.empty());
 
-        int counter = 0;
-        for (int i = 0; i<discServices.size(); i++)
-        {
-            QBluetoothServiceInfo service((QBluetoothServiceInfo)discServices.at(i));
+        qsizetype counter = 0;
+        for (const QBluetoothServiceInfo &service : discServices) {
             if (uuid == service.serviceUuid())
                 counter++;
         }
-        QVERIFY(counter == 1);
+        QCOMPARE(counter, 1);
     }
 
 }
