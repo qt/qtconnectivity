@@ -287,7 +287,7 @@ bool QNdefMessage::operator==(const QNdefMessage &other) const
     if (size() != other.size())
         return false;
 
-    for (int i = 0; i < count(); ++i) {
+    for (qsizetype i = 0; i < size(); ++i) {
         if (at(i) != other.at(i))
             return false;
     }
@@ -309,7 +309,7 @@ QByteArray QNdefMessage::toByteArray() const
 
     QByteArray m;
 
-    for (int i = 0; i < count(); ++i) {
+    for (qsizetype i = 0; i < size(); ++i) {
         const QNdefRecord &record = at(i);
 
         quint8 flags = record.typeNameFormat();

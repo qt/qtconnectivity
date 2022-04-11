@@ -172,7 +172,7 @@ QLowEnergyCharacteristic QLowEnergyControllerPrivate::characteristicForHandle(
     // check whether it is the handle of the characteristic value or its descriptors
     QList<QLowEnergyHandle> charHandles = service->characteristicList.keys();
     std::sort(charHandles.begin(), charHandles.end());
-    for (int i = charHandles.size() - 1; i >= 0; i--) {
+    for (qsizetype i = charHandles.size() - 1; i >= 0; --i) {
         if (charHandles.at(i) > handle)
             continue;
 

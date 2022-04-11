@@ -79,7 +79,7 @@ QBluetoothUuid profile_uuid(const QBluetoothServiceInfo &serviceInfo)
         if (var.isValid()) {
             const Sequence seq(var.value<Sequence>());
 
-            for (int i = 0; i < seq.count(); ++i) {
+            for (qsizetype i = 0; i < seq.size(); ++i) {
                 QBluetoothUuid uuid(seq.at(i).value<QBluetoothUuid>());
                 if (uuid.isNull())
                     continue;

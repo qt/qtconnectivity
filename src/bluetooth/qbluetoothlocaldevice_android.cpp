@@ -148,7 +148,7 @@ void QBluetoothLocalDevicePrivate::processHostModeChange(QBluetoothLocalDevice::
 // Otherwise it returns the index of address in pendingPairings
 int QBluetoothLocalDevicePrivate::pendingPairing(const QBluetoothAddress &address)
 {
-    for (int i = 0; i < pendingPairings.count(); i++) {
+    for (qsizetype i = 0; i < pendingPairings.size(); ++i) {
         if (pendingPairings.at(i).first == address)
             return i;
     }

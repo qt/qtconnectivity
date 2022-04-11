@@ -407,7 +407,7 @@ void tst_QNearFieldTagType1::ndefMessages()
         }
 
         QList<QNdefMessage> ndefMessages;
-        for (int i = 0; i < ndefMessageReadSpy.count(); ++i)
+        for (qsizetype i = 0; i < ndefMessageReadSpy.size(); ++i)
             ndefMessages.append(ndefMessageReadSpy.at(i).first().value<QNdefMessage>());
 
         QList<QNdefMessage> messages;
@@ -463,7 +463,7 @@ void tst_QNearFieldTagType1::ndefMessages()
         }
 
         QList<QNdefMessage> storedMessages;
-        for (int i = 0; i < ndefMessageReadSpy.count(); ++i)
+        for (qsizetype i = 0; i < ndefMessageReadSpy.size(); ++i)
             storedMessages.append(ndefMessageReadSpy.at(i).first().value<QNdefMessage>());
 
         QVERIFY(ndefMessages != storedMessages);

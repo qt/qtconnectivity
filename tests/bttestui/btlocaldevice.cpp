@@ -169,7 +169,7 @@ void BtLocalDevice::requestPairingUpdate(bool isPairing)
         localDevice->requestPairing(baddr, QBluetoothLocalDevice::Unpaired);
     }
 
-    for (int i = 0; i < foundTestServers.count(); i++) {
+    for (qsizetype i = 0; i < foundTestServers.size(); ++i) {
         if (isPairing)
             localDevice->requestPairing(foundTestServers.at(i).device().address(),
                                     QBluetoothLocalDevice::Paired);

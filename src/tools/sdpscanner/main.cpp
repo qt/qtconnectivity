@@ -153,7 +153,7 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
         QByteArray text = QByteArray::fromRawData(data->val.str, data->unitSize);
 
         bool hasNonPrintableChar = false;
-        for (int i = 0; i < text.count(); i++) {
+        for (qsizetype i = 0; i < text.size(); ++i) {
             if (text[i] == '\0') {
                 text.resize(i); // cut trailing content
                 break;

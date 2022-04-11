@@ -325,7 +325,7 @@ void tst_QLowEnergyController::tst_connect()
         QVERIFY(serviceFoundSpy.size() >= foundServices.size());
         QVERIFY(!serviceFoundSpy.isEmpty());
         QList<QBluetoothUuid> listing;
-        for (int i = 0; i < serviceFoundSpy.count(); i++) {
+        for (qsizetype i = 0; i < serviceFoundSpy.size(); ++i) {
             const QVariant v = serviceFoundSpy[i].at(0);
             listing.append(v.value<QBluetoothUuid>());
         }
@@ -393,10 +393,10 @@ void tst_QLowEnergyController::tst_connect()
 
             //after disconnect all related characteristics and descriptors are invalid
             QList<QLowEnergyCharacteristic> chars = entry->characteristics();
-            for (int i = 0; i < chars.count(); i++) {
+            for (qsizetype i = 0; i < chars.size(); ++i) {
                 QCOMPARE(chars.at(i).isValid(), false);
                 QList<QLowEnergyDescriptor> descriptors = chars[i].descriptors();
-                for (int j = 0; j < descriptors.count(); j++)
+                for (qsizetype j = 0; j < descriptors.size(); ++j)
                     QCOMPARE(descriptors[j].isValid(), false);
             }
         }
@@ -588,12 +588,12 @@ void tst_QLowEnergyController::tst_concurrentDiscovery()
         verifyServiceProperties(services_second[i]);
         //after disconnect all related characteristics and descriptors are invalid
         const QList<QLowEnergyCharacteristic> chars = services[i]->characteristics();
-        for (int j = 0; j < chars.count(); j++) {
+        for (qsizetype j = 0; j < chars.size(); ++j) {
             QCOMPARE(chars.at(j).isValid(), false);
             QVERIFY(services[i]->contains(chars[j]));
             QVERIFY(!services_second[i]->contains(chars[j]));
             const QList<QLowEnergyDescriptor> descriptors = chars[j].descriptors();
-            for (int k = 0; k < descriptors.count(); k++) {
+            for (qsizetype k = 0; k < descriptors.size(); ++k) {
                 QCOMPARE(descriptors[k].isValid(), false);
                 services[i]->contains(descriptors[k]);
                 QVERIFY(!services_second[i]->contains(chars[j]));
@@ -1681,7 +1681,7 @@ void tst_QLowEnergyController::tst_writeCharacteristic()
 
     QLowEnergyCharacteristic dataChar;
     QLowEnergyCharacteristic configChar;
-    for (int i = 0; i < chars.count(); i++) {
+    for (qsizetype i = 0; i < chars.size(); ++i) {
         if (chars[i].uuid() == QBluetoothUuid(QString("f000aa61-0451-4000-b000-000000000000")))
             dataChar = chars[i];
         else if (chars[i].uuid() == QBluetoothUuid(QString("f000aa62-0451-4000-b000-000000000000")))
@@ -1933,7 +1933,7 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
         QCOMPARE(writtenValue, QByteArray::fromHex("01"));
 
         QList<QVariant> entry;
-        for (int i = 0; i < charChangedSpy.count(); i++) {
+        for (qsizetype i = 0; i < charChangedSpy.size(); ++i) {
             entry = charChangedSpy[i];
             const QLowEnergyCharacteristic ch = entry[0].value<QLowEnergyCharacteristic>();
 
@@ -2001,7 +2001,7 @@ void tst_QLowEnergyController::tst_readWriteDescriptor()
     QTRY_VERIFY_WITH_TIMEOUT(descWrittenSpy.size() == 4, 10000);
 
     QCOMPARE(notification.value(), QByteArray::fromHex("0000"));
-    for (int i = 0; i < descWrittenSpy.count(); i++) {
+    for (qsizetype i = 0; i < descWrittenSpy.size(); ++i) {
         firstSignalData = descWrittenSpy.at(i);
         signalDesc = firstSignalData[0].value<QLowEnergyDescriptor>();
         signalValue = firstSignalData[1].toByteArray();

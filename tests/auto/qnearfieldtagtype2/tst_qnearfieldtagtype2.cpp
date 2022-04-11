@@ -298,7 +298,7 @@ void tst_QNearFieldTagType2::ndefMessages()
         QTRY_VERIFY(!ndefMessageReadSpy.isEmpty());
 
         QList<QNdefMessage> ndefMessages;
-        for (int i = 0; i < ndefMessageReadSpy.count(); ++i)
+        for (qsizetype i = 0; i < ndefMessageReadSpy.size(); ++i)
             ndefMessages.append(ndefMessageReadSpy.at(i).first().value<QNdefMessage>());
 
         QList<QNdefMessage> messages;
@@ -335,7 +335,7 @@ void tst_QNearFieldTagType2::ndefMessages()
         QTRY_VERIFY(!ndefMessageReadSpy.isEmpty());
 
         QList<QNdefMessage> storedMessages;
-        for (int i = 0; i < ndefMessageReadSpy.count(); ++i)
+        for (qsizetype i = 0; i < ndefMessageReadSpy.size(); ++i)
             storedMessages.append(ndefMessageReadSpy.at(i).first().value<QNdefMessage>());
 
         QVERIFY(ndefMessages != storedMessages);

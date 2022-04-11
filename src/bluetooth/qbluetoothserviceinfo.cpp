@@ -541,7 +541,7 @@ QList<QBluetoothUuid> QBluetoothServiceInfo::serviceClassUuids() const
         return results;
 
     const QBluetoothServiceInfo::Sequence seq = var.value<QBluetoothServiceInfo::Sequence>();
-    for (int i = 0; i < seq.count(); i++)
+    for (qsizetype i = 0; i < seq.size(); ++i)
         results.append(seq.at(i).value<QBluetoothUuid>());
 
     return results;
