@@ -321,7 +321,7 @@ ObjCStrongReference<NSMutableData> next_data_chunk(QIODevice &inputStream, IOBlu
     const OBEXMaxPacketLength maxBodySize = packetSize - headersLength;
 
     QList<char> block(maxBodySize);
-    const int realSize = inputStream.read(block.data(), block.size());
+    const auto realSize = inputStream.read(block.data(), block.size());
     if (realSize <= 0) {
         // Well, either the last or an error.
         isLast = true;
