@@ -136,16 +136,12 @@ QString tst_QNdefNfcSmartPosterRecord::getTitle(const QString& locale)
 
 void tst_QNdefNfcSmartPosterRecord::checkLocale(const QNdefNfcSmartPosterRecord& record, const QStringList& localeList)
 {
-    QList<QString> locales = _textRecords.keys();
-
-    for (int i = 0; i < locales.size(); i++) {
-        if (localeList.contains(locales[i])) {
-            QVERIFY(record.hasTitle(locales[i]));
-        }
-
-        else {
-            QVERIFY(!record.hasTitle(locales[i]));
-        }
+    for (auto it = _textRecords.cbegin(), end = _textRecords.cend(); it != end; ++it) {
+        const QString &locale = it.key();
+        if (localeList.contains(locale))
+            QVERIFY(record.hasTitle(locale));
+        else
+            QVERIFY(!record.hasTitle(locale));
     }
 
     if (localeList.empty()) {
