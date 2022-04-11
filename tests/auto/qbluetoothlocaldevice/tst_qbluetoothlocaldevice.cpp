@@ -70,7 +70,7 @@ private slots:
 
 private:
     QBluetoothAddress remoteDevice;
-    int numDevices = 0;
+    qsizetype numDevices;
     bool expectRemoteDevice;
 };
 
@@ -266,7 +266,7 @@ void tst_QBluetoothLocalDevice::tst_isValid()
     if (!devices.isEmpty()) {
         QVERIFY(localDevice.isValid());
         bool defaultFound = false;
-        for (int i = 0; i<devices.count(); i++) {
+        for (qsizetype i = 0; i < devices.size(); ++i) {
             QVERIFY(devices.at(i).address() != invalidAddress);
             if (devices.at(i).address() == localDevice.address() ) {
                 defaultFound = true;

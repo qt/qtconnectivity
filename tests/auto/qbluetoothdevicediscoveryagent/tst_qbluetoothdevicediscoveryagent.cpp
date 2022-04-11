@@ -80,7 +80,7 @@ private slots:
 
     void tst_discoveryMethods();
 private:
-    int noOfLocalDevices;
+    qsizetype noOfLocalDevices;
 };
 
 tst_QBluetoothDeviceDiscoveryAgent::tst_QBluetoothDeviceDiscoveryAgent()
