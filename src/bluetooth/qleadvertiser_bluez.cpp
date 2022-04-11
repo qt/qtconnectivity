@@ -252,8 +252,9 @@ static void addServicesData(AdvData &data, const QList<T> &services)
 {
     if (services.isEmpty())
         return;
-    const int spaceAvailable = sizeof data.data - data.length;
-    const int maxServices = qMin<int>((spaceAvailable - 2) / sizeof(T), services.count());
+    constexpr auto sizeofT = static_cast<int>(sizeof(T)); // signed is more convenient
+    const qsizetype spaceAvailable = sizeof data.data - data.length;
+    const qsizetype maxServices = (std::max)((spaceAvailable - 2) / sizeofT, services.size());
     if (maxServices <= 0) {
         qCWarning(QT_BT_BLUEZ) << "services data does not fit into advertising data packet";
         return;
@@ -263,11 +264,11 @@ static void addServicesData(AdvData &data, const QList<T> &services)
         qCWarning(QT_BT_BLUEZ) << "only" << maxServices << "out of" << services.size()
                                << "services fit into the advertising data";
     }
-    data.data[data.length++] = 1 + maxServices * sizeof(T);
+    data.data[data.length++] = 1 + maxServices * sizeofT;
     data.data[data.length++] = servicesType<T>(dataComplete);
-    for (int i = 0; i < maxServices; ++i) {
+    for (qsizetype i = 0; i < maxServices; ++i) {
         putBtData(services.at(i), data.data + data.length);
-        data.length += sizeof(T);
+        data.length += sizeofT;
     }
 }
 
@@ -306,17 +307,19 @@ void QLeAdvertiserBluez::setManufacturerData(const QLowEnergyAdvertisingData &sr
 {
     if (src.manufacturerId() == QLowEnergyAdvertisingData::invalidManufacturerId())
         return;
-    if (dest.length >= sizeof dest.data - 1 - 1 - 2 - src.manufacturerData().size()) {
+
+    const QByteArray manufacturerData = src.manufacturerData();
+    if (dest.length >= sizeof dest.data - 1 - 1 - 2 - manufacturerData.size()) {
         qCWarning(QT_BT_BLUEZ) << "manufacturer data does not fit into advertising data packet";
         return;
     }
 
-    dest.data[dest.length++] = src.manufacturerData().count() + 1 + 2;
+    dest.data[dest.length++] = manufacturerData.size() + 1 + 2;
     dest.data[dest.length++] = 0xff;
     putBtData(src.manufacturerId(), dest.data + dest.length);
     dest.length += sizeof(quint16);
-    std::memcpy(dest.data + dest.length, src.manufacturerData(), src.manufacturerData().count());
-    dest.length += src.manufacturerData().count();
+    std::memcpy(dest.data + dest.length, manufacturerData.data(), manufacturerData.size());
+    dest.length += manufacturerData.size();
 }
 
 void QLeAdvertiserBluez::setLocalNameData(const QLowEnergyAdvertisingData &src, AdvData &dest)
@@ -329,8 +332,8 @@ void QLeAdvertiserBluez::setLocalNameData(const QLowEnergyAdvertisingData &src, 
     }
 
     const QByteArray localNameUtf8 = src.localName().toUtf8();
-    const int fullSize = localNameUtf8.count() + 1 + 1;
-    const int size = qMin<int>(fullSize, sizeof dest.data - dest.length);
+    const qsizetype fullSize = localNameUtf8.size() + 1 + 1;
+    const qsizetype size = (std::min)(fullSize, qsizetype(sizeof dest.data - dest.length));
     const bool isComplete = size == fullSize;
     dest.data[dest.length++] = size - 1;
     const int dataType = isComplete ? 0x9 : 0x8;
@@ -349,9 +352,9 @@ void QLeAdvertiserBluez::setData(bool isScanResponseData)
     const QLowEnergyAdvertisingData &sourceData = isScanResponseData
             ? scanResponseData() : advertisingData();
 
-    if (!sourceData.rawData().isEmpty()) {
-        theData.length = qMin<int>(sizeof theData.data, sourceData.rawData().count());
-        std::memcpy(theData.data, sourceData.rawData().constData(), theData.length);
+    if (const QByteArray rawData = sourceData.rawData(); !rawData.isEmpty()) {
+        theData.length = (std::min)(qsizetype(sizeof theData.data), rawData.size());
+        std::memcpy(theData.data, rawData.data(), theData.length);
     } else {
         if (sourceData.includePowerLevel())
             setPowerLevel(theData);
