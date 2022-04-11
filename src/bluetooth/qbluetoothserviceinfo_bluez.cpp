@@ -255,10 +255,8 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress & /*l
         if (var.isValid()) {
             const QBluetoothServiceInfo::Sequence seq =
                     var.value<QBluetoothServiceInfo::Sequence>();
-            QBluetoothUuid tempUuid;
-
-            for (int i = 0; i < seq.count(); i++) {
-                tempUuid = seq.at(i).value<QBluetoothUuid>();
+            for (const auto &e : seq) {
+                auto tempUuid = e.value<QBluetoothUuid>();
                 if (tempUuid.isNull())
                     continue;
 

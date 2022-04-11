@@ -283,8 +283,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
                                << "\ncount: " << uuids.size();
 
         QString result;
-        for (int i = 0; i<uuids.count(); i++)
-            result += uuids.at(i).toString() + QStringLiteral("**");
+        for (const QBluetoothUuid &uuid : uuids)
+            result += uuid.toString() + QLatin1String("**");
         qCDebug(QT_BT_ANDROID) << result;
     }
 

@@ -371,8 +371,8 @@ int main(int argc, char **argv)
     sdp_list_t *totalResults = nullptr;
     sdp_list_t* serviceFilter;
 
-    for (uint i = 0; i < uuids.size(); ++i) {
-        serviceFilter = sdp_list_append(nullptr, &uuids[i]);
+    for (uuid_t &uuid : uuids) { // can't be const, d/t sdp_list_append signature
+        serviceFilter = sdp_list_append(nullptr, &uuid);
         result = sdp_service_search_attr_req(session, serviceFilter,
                                          SDP_ATTR_REQ_RANGE,
                                          attributes, &sdpResults);

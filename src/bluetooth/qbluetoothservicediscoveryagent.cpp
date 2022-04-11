@@ -582,8 +582,7 @@ bool QBluetoothServiceDiscoveryAgentPrivate::isDuplicatedService(
         const QBluetoothServiceInfo &serviceInfo) const
 {
     //check the service is not already part of our known list
-    for (int j = 0; j < discoveredServices.count(); j++) {
-        const QBluetoothServiceInfo &info = discoveredServices.at(j);
+    for (const QBluetoothServiceInfo &info : discoveredServices) {
         if (info.device() == serviceInfo.device()
                 && info.serviceClassUuids() == serviceInfo.serviceClassUuids()
                 && info.serviceUuid() == serviceInfo.serviceUuid()
