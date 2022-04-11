@@ -802,7 +802,6 @@ void QLowEnergyControllerPrivateBluezDBus::onDescReadFinished(QDBusPendingCallWa
     }
 
     bool isServiceDiscovery = nextJob.flags.testFlag(GattJob::ServiceDiscovery);
-    const QBluetoothUuid descUuid = charData.descriptorList[nextJob.handle].uuid;
 
     QDBusPendingReply<QByteArray> reply = *call;
     if (reply.isError()) {
