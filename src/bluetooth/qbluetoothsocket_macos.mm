@@ -427,7 +427,7 @@ void QBluetoothSocketPrivate::_q_writeNotify()
         writeChunk.resize(isL2CAP ? std::numeric_limits<UInt16>::max() :
                           [rfcommChannel.getAs<ObjCRFCOMMChannel>() getMTU]);
 
-        const int size = txBuffer.read(writeChunk.data(), writeChunk.size());
+        const auto size = txBuffer.read(writeChunk.data(), writeChunk.size());
         IOReturn status = kIOReturnError;
         if (!isL2CAP)
             status = [rfcommChannel.getAs<ObjCRFCOMMChannel>() writeAsync:writeChunk.data() length:UInt16(size)];

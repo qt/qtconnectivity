@@ -206,7 +206,7 @@ BluetoothManagement *BluetoothManagement::instance()
 void BluetoothManagement::_q_readNotifier()
 {
     char *dst = buffer.reserve(QPRIVATELINEARBUFFER_BUFFERSIZE);
-    int readCount = ::read(fd, dst, QPRIVATELINEARBUFFER_BUFFERSIZE);
+    const auto readCount = ::read(fd, dst, QPRIVATELINEARBUFFER_BUFFERSIZE);
     buffer.chop(QPRIVATELINEARBUFFER_BUFFERSIZE - (readCount < 0 ? 0 : readCount));
     if (readCount < 0) {
         qCWarning(QT_BT_BLUEZ, "Management Control read error %s", qPrintable(qt_error_string(errno)));
