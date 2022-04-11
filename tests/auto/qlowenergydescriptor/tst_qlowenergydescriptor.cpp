@@ -101,7 +101,7 @@ void tst_QLowEnergyDescriptor::initTestCase()
     QVERIFY(spy.isEmpty());
 
     devAgent->start();
-    QTRY_VERIFY_WITH_TIMEOUT(spy.count() > 0, 100000);
+    QTRY_VERIFY_WITH_TIMEOUT(spy.size() > 0, 100000);
 
     // find first service with descriptor
     QLowEnergyController *controller = nullptr;
@@ -121,8 +121,8 @@ void tst_QLowEnergyDescriptor::initTestCase()
         QSignalSpy discoveryFinishedSpy(controller, SIGNAL(discoveryFinished()));
         QSignalSpy stateSpy(controller, SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
         controller->discoverServices();
-        QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.count() == 1, 10000);
-        QCOMPARE(stateSpy.count(), 2);
+        QTRY_VERIFY_WITH_TIMEOUT(discoveryFinishedSpy.size() == 1, 10000);
+        QCOMPARE(stateSpy.size(), 2);
         QCOMPARE(stateSpy.at(0).at(0).value<QLowEnergyController::ControllerState>(),
                  QLowEnergyController::DiscoveringState);
         QCOMPARE(stateSpy.at(1).at(0).value<QLowEnergyController::ControllerState>(),
