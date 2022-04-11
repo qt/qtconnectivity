@@ -305,7 +305,7 @@ using namespace DarwinBluetooth;
                 [array addObject:uuid];
         }
 
-        if (int([array count]) != qtFilters.size()) {
+        if (qsizetype([array count]) != qtFilters.size()) {
             qCCritical(QT_BT_DARWIN) << "failed to create an uuid filter";
             return kIOReturnError;
         }
