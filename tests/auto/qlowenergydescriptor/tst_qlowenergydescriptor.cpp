@@ -239,14 +239,14 @@ void tst_QLowEnergyDescriptor::tst_assignCompare()
     QCOMPARE(target.uuid(), QBluetoothUuid());
     QCOMPARE(target.value(), QByteArray());
 
-    int index = 0;
+    qsizetype index = 0;
     bool valueFound = false;
     QList<QLowEnergyDescriptor> targets;
     const QList<QLowEnergyCharacteristic> chars = globalService->characteristics();
     for (const QLowEnergyCharacteristic &ch : chars) {
         if (!ch.descriptors().isEmpty()) {
            targets = ch.descriptors();
-           for (int i = 0; i < targets.size(); ++i) {
+           for (qsizetype i = 0; i < targets.size(); ++i) {
                // try to get a descriptor we can read
                if (targets[i].type() == QBluetoothUuid::DescriptorType::CharacteristicUserDescription) {
                    index = i;
@@ -312,7 +312,7 @@ void tst_QLowEnergyDescriptor::tst_assignCompare()
     QVERIFY(targets[index] != target);
     QVERIFY(target != targets[index]);
 
-    if (targets.count() >= 2) {
+    if (targets.size() >= 2) {
         QLowEnergyDescriptor second = targets[(index+1)%2];
         // at least two descriptors
         QVERIFY(!(targets[index] == second));
