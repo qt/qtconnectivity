@@ -1677,7 +1677,7 @@ void QLowEnergyControllerPrivateBluez::readServiceValues(
         return;
     }
 
-    for (int i = 0; i < targetHandles.count(); i++) {
+    for (qsizetype i = 0; i < targetHandles.size(); i++) {
         pair = targetHandles.at(i);
         packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_REQUEST);
         putBtData(pair.first, &packet[1]);
@@ -1960,9 +1960,9 @@ void QLowEnergyControllerPrivateBluez::sendNextPrepareWriteRequest(
                          << Qt::hex << handle;
 
 
-    const int maxAvailablePayload = mtuSize - PREPARE_WRITE_HEADER_SIZE;
-    const int requiredPayload = qMin(newValue.size() - offset, maxAvailablePayload);
-    const int dataSize = PREPARE_WRITE_HEADER_SIZE + requiredPayload;
+    const qsizetype maxAvailablePayload = qsizetype(mtuSize) - PREPARE_WRITE_HEADER_SIZE;
+    const qsizetype requiredPayload = (std::min)(newValue.size() - offset, maxAvailablePayload);
+    const qsizetype dataSize = PREPARE_WRITE_HEADER_SIZE + requiredPayload;
 
     Q_ASSERT((offset + requiredPayload) <= newValue.size());
     Q_ASSERT(dataSize <= mtuSize);
@@ -2354,7 +2354,7 @@ void QLowEnergyControllerPrivateBluez::handleReadByTypeRequest(const QByteArray 
         return;
     }
 
-    const int elementSize = sizeof(QLowEnergyHandle) + results.first().value.count();
+    const qsizetype elementSize = sizeof(QLowEnergyHandle) + results.first().value.size();
     QByteArray responsePrefix(2, Qt::Uninitialized);
     responsePrefix[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_BY_TYPE_RESPONSE);
     responsePrefix[1] = elementSize;
@@ -2384,7 +2384,7 @@ void QLowEnergyControllerPrivateBluez::handleReadRequest(const QByteArray &packe
         return;
     }
 
-    const int sentValueLength = qMin(attribute.value.count(), mtuSize - 1);
+    const qsizetype sentValueLength = (std::min)(attribute.value.size(), qsizetype(mtuSize) - 1);
     QByteArray response(1 + sentValueLength, Qt::Uninitialized);
     response[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_RESPONSE);
     using namespace std;
@@ -2425,7 +2425,8 @@ void QLowEnergyControllerPrivateBluez::handleReadBlobRequest(const QByteArray &p
     }
 
     // Yes, this value can be zero.
-    const int sentValueLength = qMin(attribute.value.count() - valueOffset, mtuSize - 1);
+    const qsizetype sentValueLength = (std::min)(attribute.value.size() - valueOffset,
+                                                 qsizetype(mtuSize) - 1);
 
     QByteArray response(1 + sentValueLength, Qt::Uninitialized);
     response[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_BLOB_RESPONSE);
@@ -2443,7 +2444,7 @@ void QLowEnergyControllerPrivateBluez::handleReadMultipleRequest(const QByteArra
         return;
     QList<QLowEnergyHandle> handles((packet.size() - 1) / sizeof(QLowEnergyHandle));
     auto *packetPtr = reinterpret_cast<const QLowEnergyHandle *>(packet.constData() + 1);
-    for (int i = 0; i < handles.count(); ++i, ++packetPtr)
+    for (qsizetype i = 0; i < handles.size(); ++i, ++packetPtr)
         handles[i] = bt_get_le16(packetPtr);
     qCDebug(QT_BT_BLUEZ) << "client sends read multiple request for handles" << handles;
 
@@ -2527,7 +2528,7 @@ void QLowEnergyControllerPrivateBluez::handleReadByGroupTypeRequest(const QByteA
 
     ensureUniformValueSizes(results);
 
-    const int elementSize = 2 * sizeof(QLowEnergyHandle) + results.first().value.count();
+    const qsizetype elementSize = 2 * sizeof(QLowEnergyHandle) + results.first().value.size();
     QByteArray responsePrefix(2, Qt::Uninitialized);
     responsePrefix[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_READ_BY_GROUP_RESPONSE);
     responsePrefix[1] = elementSize;
@@ -2736,7 +2737,7 @@ void QLowEnergyControllerPrivateBluez::writeDescriptorForCentral(
     packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_WRITE_REQUEST);
     putBtData(descriptorHandle, &packet[1]);
 
-    const int size = WRITE_REQUEST_HEADER_SIZE + newValue.size();
+    const qsizetype size = WRITE_REQUEST_HEADER_SIZE + newValue.size();
     QByteArray data(size, Qt::Uninitialized);
     memcpy(data.data(), packet, WRITE_REQUEST_HEADER_SIZE);
     memcpy(&(data.data()[WRITE_REQUEST_HEADER_SIZE]), newValue.constData(), newValue.size());
@@ -2798,7 +2799,7 @@ void QLowEnergyControllerPrivateBluez::handleWriteRequestOrCommand(const QByteAr
             return;
         }
 
-        const quint32 signCounter = getBtData<quint32>(packet.data() + packet.count() - 12);
+        const quint32 signCounter = getBtData<quint32>(packet.data() + packet.size() - 12);
         if (signCounter < signingDataIt.value().counter + 1) {
             qCWarning(QT_BT_BLUEZ) << "Client's' sign counter" << signCounter
                                    << "not greater than local sign counter"
@@ -2958,13 +2959,14 @@ void QLowEnergyControllerPrivateBluez::sendErrorResponse(QBluezConst::AttCommand
     sendPacket(packet);
 }
 
-void QLowEnergyControllerPrivateBluez::sendListResponse(const QByteArray &packetStart, int elemSize,
+void QLowEnergyControllerPrivateBluez::sendListResponse(const QByteArray &packetStart,
+                                                        qsizetype elemSize,
                                                         const QList<Attribute> &attributes,
                                                         const ElemWriter &elemWriter)
 {
-    const int offset = packetStart.count();
-    const int elemCount = qMin(attributes.count(), (mtuSize - offset) / elemSize);
-    const int totalPacketSize = offset + elemCount * elemSize;
+    const qsizetype offset = packetStart.size();
+    const qsizetype elemCount = (std::min)(attributes.size(), (mtuSize - offset) / elemSize);
+    const qsizetype totalPacketSize = offset + elemCount * elemSize;
     QByteArray response(totalPacketSize, Qt::Uninitialized);
     using namespace std;
     memcpy(response.data(), packetStart.constData(), offset);
@@ -2992,7 +2994,7 @@ void QLowEnergyControllerPrivateBluez::sendNotificationOrIndication(QBluezConst:
 {
     Q_ASSERT(handle <= lastLocalHandle);
     const Attribute &attribute = localAttributes.at(handle);
-    const int maxValueLength = qMin(attribute.value.count(), mtuSize - 3);
+    const qsizetype maxValueLength = (std::min)(attribute.value.size(), qsizetype(mtuSize) - 3);
     QByteArray packet(3 + maxValueLength, Qt::Uninitialized);
     packet[0] = static_cast<quint8>(opCode);
     putBtData(handle, packet.data() + 1);
@@ -3206,7 +3208,7 @@ void QLowEnergyControllerPrivateBluez::loadSigningDataIfNecessary(SigningKeyType
         return;
     }
     const QByteArray keyData = QByteArray::fromHex(keyString);
-    if (keyData.size() != int(sizeof(quint128))) {
+    if (keyData.size() != qsizetype(sizeof(quint128))) {
         qCWarning(QT_BT_BLUEZ) << "Signing key in settings file has invalid size"
                                << keyString.size();
         return;

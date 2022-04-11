@@ -293,7 +293,7 @@ private:
                            QBluezConst::AttError code);
 
     using ElemWriter = std::function<void(const Attribute &, char *&)>;
-    void sendListResponse(const QByteArray &packetStart, int elemSize,
+    void sendListResponse(const QByteArray &packetStart, qsizetype elemSize,
                           const QList<Attribute> &attributes, const ElemWriter &elemWriter);
 
     void sendNotification(QLowEnergyHandle handle);
