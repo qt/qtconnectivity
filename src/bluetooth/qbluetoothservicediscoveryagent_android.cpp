@@ -363,9 +363,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
 
     //find SPP and custom uuid
     bool haveSppClass = false;
-    QList<int> customUuids;
+    QVarLengthArray<qsizetype> customUuids;
 
-    for (int i = 0; i < uuids.count(); i++) {
+    for (qsizetype i = 0; i < uuids.size(); ++i) {
         const QBluetoothUuid uuid = uuids.at(i);
 
         if (uuid.isNull())
@@ -395,7 +395,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
         return profileSequence;
     };
 
-    for (int i = 0; i < uuids.count(); i++) {
+    for (qsizetype i = 0; i < uuids.size(); ++i) {
         const QBluetoothUuid &uuid = uuids.at(i);
         if (uuid.isNull())
             continue;
