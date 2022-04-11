@@ -334,12 +334,11 @@ void QBluetoothSocketPrivateBluez::_q_writeNotify()
 
         char buf[1024];
 
-        int size = txBuffer.read(buf, 1024);
-        int writtenBytes = qt_safe_write(socket, buf, size);
+        const auto size = txBuffer.read(buf, 1024);
+        const auto writtenBytes = qt_safe_write(socket, buf, size);
         if (writtenBytes < 0) {
             switch (errno) {
             case EAGAIN:
-                writtenBytes = 0;
                 txBuffer.ungetBlock(buf, size);
                 break;
             default:
@@ -373,7 +372,7 @@ void QBluetoothSocketPrivateBluez::_q_readNotify()
     Q_Q(QBluetoothSocket);
     char *writePointer = rxBuffer.reserve(QPRIVATELINEARBUFFER_BUFFERSIZE);
 //    qint64 readFromDevice = q->readData(writePointer, QPRIVATELINEARBUFFER_BUFFERSIZE);
-    int readFromDevice = ::read(socket, writePointer, QPRIVATELINEARBUFFER_BUFFERSIZE);
+    const auto readFromDevice = ::read(socket, writePointer, QPRIVATELINEARBUFFER_BUFFERSIZE);
     rxBuffer.chop(QPRIVATELINEARBUFFER_BUFFERSIZE - (readFromDevice < 0 ? 0 : readFromDevice));
     if(readFromDevice <= 0){
         int errsv = errno;
@@ -567,7 +566,7 @@ qint64 QBluetoothSocketPrivateBluez::writeData(const char *data, qint64 maxSize)
     }
 
     if (q->openMode() & QIODevice::Unbuffered) {
-        int sz = ::qt_safe_write(socket, data, maxSize);
+        auto sz = ::qt_safe_write(socket, data, maxSize);
         if (sz < 0) {
             switch (errno) {
             case EAGAIN:
@@ -611,10 +610,8 @@ qint64 QBluetoothSocketPrivateBluez::readData(char *data, qint64 maxSize)
         return -1;
     }
 
-    if (!rxBuffer.isEmpty()) {
-        int i = rxBuffer.read(data, maxSize);
-        return i;
-    }
+    if (!rxBuffer.isEmpty())
+        return rxBuffer.read(data, maxSize);
 
     return 0;
 }

@@ -428,9 +428,8 @@ bool HciManager::sendConnectionParameterUpdateRequest(quint16 handle,
 void HciManager::_q_readNotify()
 {
     unsigned char buffer[qMax<int>(HCI_MAX_EVENT_SIZE, sizeof(AclData))];
-    int size;
 
-    size = ::read(hciSocket, buffer, sizeof(buffer));
+    const auto size = ::read(hciSocket, buffer, sizeof(buffer));
     if (size < 0) {
         if (errno != EAGAIN && errno != EINTR)
             qCWarning(QT_BT_BLUEZ) << "Failed reading HCI events:" << qt_error_string(errno);
