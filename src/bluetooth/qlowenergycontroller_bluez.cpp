@@ -69,8 +69,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#define ATT_DEFAULT_LE_MTU 23
-#define ATT_MAX_LE_MTU 0x200
+constexpr quint16 ATT_DEFAULT_LE_MTU = 23;
+constexpr quint16 ATT_MAX_LE_MTU = 0x200;
 
 #define GATT_PRIMARY_SERVICE    quint16(0x2800)
 #define GATT_SECONDARY_SERVICE  quint16(0x2801)
@@ -1797,7 +1797,7 @@ void QLowEnergyControllerPrivateBluez::exchangeMTU()
 
     quint8 packet[MTU_EXCHANGE_HEADER_SIZE];
     packet[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_REQUEST);
-    putBtData(quint16(ATT_MAX_LE_MTU), &packet[1]);
+    putBtData(ATT_MAX_LE_MTU, &packet[1]);
 
     QByteArray data(MTU_EXCHANGE_HEADER_SIZE, Qt::Uninitialized);
     memcpy(data.data(), packet, MTU_EXCHANGE_HEADER_SIZE);
@@ -2222,12 +2222,12 @@ void QLowEnergyControllerPrivateBluez::handleExchangeMtuRequest(const QByteArray
     // Send reply.
     QByteArray reply(MTU_EXCHANGE_HEADER_SIZE, Qt::Uninitialized);
     reply[0] = static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_EXCHANGE_MTU_RESPONSE);
-    putBtData(static_cast<quint16>(ATT_MAX_LE_MTU), reply.data() + 1);
+    putBtData(ATT_MAX_LE_MTU, reply.data() + 1);
     sendPacket(reply);
 
     // Apply requested MTU.
     const quint16 clientRxMtu = bt_get_le16(packet.constData() + 1);
-    mtuSize = qMax<quint16>(ATT_DEFAULT_LE_MTU, qMin<quint16>(clientRxMtu, ATT_MAX_LE_MTU));
+    mtuSize = std::clamp(clientRxMtu, ATT_DEFAULT_LE_MTU, ATT_MAX_LE_MTU);
     qCDebug(QT_BT_BLUEZ) << "MTU request from client:" << clientRxMtu
                          << "effective client RX MTU:" << mtuSize;
     qCDebug(QT_BT_BLUEZ) << "Sending server RX MTU" << ATT_MAX_LE_MTU;
