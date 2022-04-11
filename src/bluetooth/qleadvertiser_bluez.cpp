@@ -73,9 +73,10 @@ struct WhiteListParams {
 };
 
 
-template<typename T> QByteArray byteArrayFromStruct(const T &data, int maxSize = -1)
+template <typename T>
+static QByteArray byteArrayFromStruct(const T &data)
 {
-    return QByteArray(reinterpret_cast<const char *>(&data), maxSize != -1 ? maxSize : sizeof data);
+    return QByteArray(reinterpret_cast<const char *>(&data), sizeof data);
 }
 
 QLeAdvertiserBluez::QLeAdvertiserBluez(const QLowEnergyAdvertisingParameters &params,
