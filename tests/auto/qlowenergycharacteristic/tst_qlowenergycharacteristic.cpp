@@ -255,10 +255,10 @@ void tst_QLowEnergyCharacteristic::tst_assignCompare()
     QCOMPARE(target.descriptors().size(), 0);
     QCOMPARE(target.properties(), QLowEnergyCharacteristic::Unknown);
 
-    int indexWithDescriptor = -1;
+    qsizetype indexWithDescriptor = -1;
     const QList<QLowEnergyCharacteristic> chars = globalService->characteristics();
     QVERIFY(!chars.isEmpty());
-    for (int i = 0; i < chars.count(); i++) {
+    for (qsizetype i = 0; i < chars.size(); ++i) {
         const QLowEnergyCharacteristic specific =
                 globalService->characteristic(chars[i].uuid());
         QVERIFY(specific.isValid());
@@ -297,18 +297,21 @@ void tst_QLowEnergyCharacteristic::tst_assignCompare()
     QCOMPARE(target.uuid(), chars[indexWithDescriptor].uuid());
     QCOMPARE(target.value(), chars[indexWithDescriptor].value());
     QCOMPARE(target.properties(), chars[indexWithDescriptor].properties());
-    QCOMPARE(target.descriptors().size(),
-             chars[indexWithDescriptor].descriptors().size());
-    for (int i = 0; i < target.descriptors().count(); i++) {
-        const QLowEnergyDescriptor ref = chars[indexWithDescriptor].descriptors()[i];
-        QCOMPARE(target.descriptors()[i].name(), ref.name());
-        QCOMPARE(target.descriptors()[i].isValid(), ref.isValid());
-        QCOMPARE(target.descriptors()[i].type(), ref.type());
-        QCOMPARE(target.descriptors()[i].uuid(), ref.uuid());
-        QCOMPARE(target.descriptors()[i].value(), ref.value());
+    {
+        const auto targetDescriptors = target.descriptors();
+        const auto referenceDescriptors = chars[indexWithDescriptor].descriptors();
+        QCOMPARE(targetDescriptors.size(), referenceDescriptors.size());
+        for (qsizetype i = 0; i < targetDescriptors.size(); ++i) {
+            const QLowEnergyDescriptor ref = referenceDescriptors[i];
+            QCOMPARE(targetDescriptors[i].name(), ref.name());
+            QCOMPARE(targetDescriptors[i].isValid(), ref.isValid());
+            QCOMPARE(targetDescriptors[i].type(), ref.type());
+            QCOMPARE(targetDescriptors[i].uuid(), ref.uuid());
+            QCOMPARE(targetDescriptors[i].value(), ref.value());
 
-        const QLowEnergyDescriptor ref2 = chars[indexWithDescriptor].descriptor(ref.uuid());
-        QCOMPARE(ref, ref2);
+            const QLowEnergyDescriptor ref2 = chars[indexWithDescriptor].descriptor(ref.uuid());
+            QCOMPARE(ref, ref2);
+        }
     }
 
     // test copy constructor
