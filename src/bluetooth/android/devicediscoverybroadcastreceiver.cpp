@@ -125,7 +125,7 @@ static constexpr MajorClassJavaToQtMapping majorMappings[] = {
 
 // QBluetoothDeviceInfo::MajorDeviceClass value plus 1 matches index
 // UncategorizedDevice shifts to index 0
-static const int minorIndexSizes[] = {
+static constexpr quint8 minorIndexSizes[] = {
   64,  // QBluetoothDevice::UncategorizedDevice
   61,  // QBluetoothDevice::MiscellaneousDevice
   18,  // QBluetoothDevice::ComputerDevice
@@ -354,7 +354,7 @@ void triggerCachingOfMinorsForMajor(QBluetoothDeviceInfo::MajorDeviceClass major
 {
     //qCDebug(QT_BT_ANDROID) << "Caching minor values for major" << major;
     int mappingIndex = mappingIndexForMajor(major);
-    int sizeIndex = minorIndexSizes[mappingIndex];
+    quint8 sizeIndex = minorIndexSizes[mappingIndex];
 
     while (minorMappings[sizeIndex].javaFieldName != nullptr) {
         jint fieldValue = QJniObject::getStaticField<jint>(
