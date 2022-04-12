@@ -92,23 +92,24 @@ Q_GLOBAL_STATIC_WITH_ARGS(QBitArray, initializedCacheTracker, (initializeMinorCa
 
 
 // class names
-static const char * const javaBluetoothDeviceClassName = "android/bluetooth/BluetoothDevice";
-static const char * const javaBluetoothClassDeviceMajorClassName = "android/bluetooth/BluetoothClass$Device$Major";
-static const char * const javaBluetoothClassDeviceClassName = "android/bluetooth/BluetoothClass$Device";
+static const char javaBluetoothDeviceClassName[] = "android/bluetooth/BluetoothDevice";
+static const char javaBluetoothClassDeviceMajorClassName[] = "android/bluetooth/BluetoothClass$Device$Major";
+static const char javaBluetoothClassDeviceClassName[] = "android/bluetooth/BluetoothClass$Device";
 
 // field names device type (LE vs classic)
-static const char * const javaDeviceTypeClassic = "DEVICE_TYPE_CLASSIC";
-static const char * const javaDeviceTypeDual = "DEVICE_TYPE_DUAL";
-static const char * const javaDeviceTypeLE = "DEVICE_TYPE_LE";
-static const char * const javaDeviceTypeUnknown = "DEVICE_TYPE_UNKNOWN";
+static const char javaDeviceTypeClassic[] = "DEVICE_TYPE_CLASSIC";
+static const char javaDeviceTypeDual[] = "DEVICE_TYPE_DUAL";
+static const char javaDeviceTypeLE[] = "DEVICE_TYPE_LE";
+static const char javaDeviceTypeUnknown[] = "DEVICE_TYPE_UNKNOWN";
 
 struct MajorClassJavaToQtMapping
 {
-    char const * javaFieldName;
-    QBluetoothDeviceInfo::MajorDeviceClass qtMajor;
+    const char javaFieldName[14];
+    QBluetoothDeviceInfo::MajorDeviceClass qtMajor : 16;
 };
+static_assert(sizeof(MajorClassJavaToQtMapping) == 16);
 
-static const MajorClassJavaToQtMapping majorMappings[] = {
+static constexpr MajorClassJavaToQtMapping majorMappings[] = {
     { "AUDIO_VIDEO", QBluetoothDeviceInfo::AudioVideoDevice },
     { "COMPUTER", QBluetoothDeviceInfo::ComputerDevice },
     { "HEALTH", QBluetoothDeviceInfo::HealthDevice },
@@ -120,7 +121,6 @@ static const MajorClassJavaToQtMapping majorMappings[] = {
     { "TOY", QBluetoothDeviceInfo::ToyDevice },
     { "UNCATEGORIZED", QBluetoothDeviceInfo::UncategorizedDevice },
     { "WEARABLE", QBluetoothDeviceInfo::WearableDevice },
-    { nullptr, QBluetoothDeviceInfo::UncategorizedDevice } //end of list
 };
 
 // QBluetoothDeviceInfo::MajorDeviceClass value plus 1 matches index
@@ -303,12 +303,11 @@ QBluetoothDeviceInfo::MajorDeviceClass resolveAndroidMajorClass(jint javaType)
     if (it == cachedMajorTypes()->end()) {
         QJniEnvironment env;
         // precache all major device class fields
-        int i = 0;
         jint fieldValue;
         QBluetoothDeviceInfo::MajorDeviceClass result = QBluetoothDeviceInfo::UncategorizedDevice;
         auto clazz = env->FindClass(javaBluetoothClassDeviceMajorClassName);
-        while (majorMappings[i].javaFieldName != nullptr) {
-            auto fieldId = env->GetStaticFieldID(clazz, majorMappings[i].javaFieldName, "I");
+        for (const auto &majorMapping : majorMappings) {
+            auto fieldId = env->GetStaticFieldID(clazz, majorMapping.javaFieldName, "I");
             if (!env->ExceptionCheck())
                 fieldValue = env->GetStaticIntField(clazz, fieldId);
             if (env.checkAndClearExceptions()) {
@@ -317,13 +316,11 @@ QBluetoothDeviceInfo::MajorDeviceClass resolveAndroidMajorClass(jint javaType)
                 // add fallback value because field not readable
                 cachedMajorTypes()->insert(javaType, QBluetoothDeviceInfo::UncategorizedDevice);
             } else {
-                cachedMajorTypes()->insert(fieldValue, majorMappings[i].qtMajor);
+                cachedMajorTypes()->insert(fieldValue, majorMapping.qtMajor);
             }
 
             if (fieldValue == javaType)
-                result = majorMappings[i].qtMajor;
-
-            i++;
+                result = majorMapping.qtMajor;
         }
 
         return result;
