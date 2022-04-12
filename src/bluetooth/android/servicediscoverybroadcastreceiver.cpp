@@ -105,7 +105,7 @@ QList<QBluetoothUuid> ServiceDiscoveryBroadcastReceiver::convertParcelableArray(
         return result;
 
     jint size = env->GetArrayLength(parcels);
-    for (int i = 0; i < size; i++) {
+    for (jint i = 0; i < size; ++i) {
         auto p = QJniObject::fromLocalRef(env->GetObjectArrayElement(parcels, i));
 
         QBluetoothUuid uuid(p.callObjectMethod<jstring>("toString").toString());
