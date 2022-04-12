@@ -189,19 +189,20 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_sdpScannerDone(int exitCode, QPr
     }
 
     QStringList xmlRecords;
-    const QByteArray output = sdpScannerProcess->readAllStandardOutput();
-    const QString decodedData = QString::fromUtf8(QByteArray::fromBase64(output));
+    const QByteArray utf8Data = QByteArray::fromBase64(sdpScannerProcess->readAllStandardOutput());
+    const QByteArrayView utf8View = utf8Data;
 
     // split the various xml docs up
-    int next;
-    int start = decodedData.indexOf(QStringLiteral("<?xml"), 0);
+    constexpr auto matcher = qMakeStaticByteArrayMatcher("<?xml");
+    qsizetype next;
+    qsizetype start = matcher.indexIn(utf8View, 0);
     if (start != -1) {
         do {
-            next = decodedData.indexOf(QStringLiteral("<?xml"), start + 1);
+            next = matcher.indexIn(utf8View, start + 1);
             if (next != -1)
-                xmlRecords.append(decodedData.mid(start, next-start));
+                xmlRecords.append(QString::fromUtf8(utf8View.sliced(start, next - start)));
             else
-                xmlRecords.append(decodedData.mid(start, decodedData.size() - start));
+                xmlRecords.append(QString::fromUtf8(utf8View.sliced(start)));
             start = next;
         } while ( start != -1);
     }
