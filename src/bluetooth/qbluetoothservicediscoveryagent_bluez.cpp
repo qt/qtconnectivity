@@ -48,6 +48,8 @@
 #include <QtCore/QLibraryInfo>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QProcess>
+#include <QtCore/QScopeGuard>
+
 #include <QtDBus/QDBusPendingCallWatcher>
 
 QT_BEGIN_NAMESPACE
@@ -436,25 +438,22 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
 
 QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamReader &xml)
 {
+    auto skippingCurrentElementByDefault = qScopeGuard([&] { xml.skipCurrentElement(); });
+
     if (xml.name() == QLatin1String("boolean")) {
         const QString value = xml.attributes().value(QStringLiteral("value")).toString();
-        xml.skipCurrentElement();
         return value == QLatin1String("true");
     } else if (xml.name() == QLatin1String("uint8")) {
         quint8 value = xml.attributes().value(QStringLiteral("value")).toString().toUShort(nullptr, 0);
-        xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("uint16")) {
         quint16 value = xml.attributes().value(QStringLiteral("value")).toString().toUShort(nullptr, 0);
-        xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("uint32")) {
         quint32 value = xml.attributes().value(QStringLiteral("value")).toString().toUInt(nullptr, 0);
-        xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("uint64")) {
         quint64 value = xml.attributes().value(QStringLiteral("value")).toString().toULongLong(nullptr, 0);
-        xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("uuid")) {
         QBluetoothUuid uuid;
@@ -470,16 +469,16 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
         } else {
             uuid = QBluetoothUuid(value);
         }
-        xml.skipCurrentElement();
         return QVariant::fromValue(uuid);
     } else if (xml.name() == QLatin1String("text") || xml.name() == QLatin1String("url")) {
         QString value = xml.attributes().value(QStringLiteral("value")).toString();
         if (xml.attributes().value(QStringLiteral("encoding")) == QLatin1String("hex"))
             value = QString::fromUtf8(QByteArray::fromHex(value.toLatin1()));
-        xml.skipCurrentElement();
         return value;
     } else if (xml.name() == QLatin1String("sequence")) {
         QBluetoothServiceInfo::Sequence sequence;
+
+        skippingCurrentElementByDefault.dismiss(); // we skip several elements here
 
         while (xml.readNextStartElement()) {
             QVariant value = readAttributeValue(xml);
@@ -491,7 +490,6 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
         qCWarning(QT_BT_BLUEZ) << "unknown attribute type"
                                << xml.name().toString()
                                << xml.attributes().value(QStringLiteral("value")).toString();
-        xml.skipCurrentElement();
         return QVariant();
     }
 }
