@@ -75,16 +75,22 @@ tst_QLowEnergyDescriptor::~tst_QLowEnergyDescriptor()
 void tst_QLowEnergyDescriptor::initTestCase()
 {
     if (QBluetoothLocalDevice::allDevices().isEmpty()) {
-        qWarning("No remote device discovered.");
-
+        qWarning("No local adapter, not discovering remote devices");
         return;
     }
 
-    // start Bluetooth if not started
     QBluetoothLocalDevice device;
-    device.powerOn();
+    if (device.hostMode() == QBluetoothLocalDevice::HostPoweredOff) {
+        // Attempt to switch Bluetooth ON
+        device.powerOn();
+        QTest::qWait(1000);
+        if (device.hostMode() == QBluetoothLocalDevice::HostPoweredOff) {
+            qWarning("Bluetooth couldn't be switched ON, not discovering remote devices");
+            return;
+        }
+    }
 
-    // find an arbitrary low energy device in vincinity
+    // find an arbitrary low energy device in vicinity
     // find an arbitrary service with descriptor
 
     QBluetoothDeviceDiscoveryAgent *devAgent = new QBluetoothDeviceDiscoveryAgent(this);
@@ -110,7 +116,7 @@ void tst_QLowEnergyDescriptor::initTestCase()
         qDebug() << "Connecting to" << remoteDeviceInfo.address();
         controller->connectToDevice();
         QTRY_IMPL(controller->state() != QLowEnergyController::ConnectingState,
-                  26500)
+                  50000)
         if (controller->state() != QLowEnergyController::ConnectedState) {
             // any error and we skip
             delete controller;
