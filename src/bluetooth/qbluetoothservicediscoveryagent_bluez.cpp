@@ -321,7 +321,7 @@ QBluetoothServiceInfo QBluetoothServiceDiscoveryAgentPrivate::parseServiceXml(
         if (xml.tokenType() == QXmlStreamReader::StartElement &&
             xml.name() == QLatin1String("attribute")) {
             quint16 attributeId =
-                xml.attributes().value(QLatin1String("id")).toString().toUShort(nullptr, 0);
+                xml.attributes().value(QLatin1String("id")).toUShort(nullptr, 0);
 
             if (xml.readNextStartElement()) {
                 const QVariant value = readAttributeValue(xml);
@@ -441,24 +441,23 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
     auto skippingCurrentElementByDefault = qScopeGuard([&] { xml.skipCurrentElement(); });
 
     if (xml.name() == QLatin1String("boolean")) {
-        const QString value = xml.attributes().value(QStringLiteral("value")).toString();
-        return value == QLatin1String("true");
+        return xml.attributes().value(QLatin1String("value")) == QLatin1String("true");
     } else if (xml.name() == QLatin1String("uint8")) {
-        quint8 value = xml.attributes().value(QStringLiteral("value")).toString().toUShort(nullptr, 0);
+        quint8 value = xml.attributes().value(QLatin1String("value")).toUShort(nullptr, 0);
         return value;
     } else if (xml.name() == QLatin1String("uint16")) {
-        quint16 value = xml.attributes().value(QStringLiteral("value")).toString().toUShort(nullptr, 0);
+        quint16 value = xml.attributes().value(QLatin1String("value")).toUShort(nullptr, 0);
         return value;
     } else if (xml.name() == QLatin1String("uint32")) {
-        quint32 value = xml.attributes().value(QStringLiteral("value")).toString().toUInt(nullptr, 0);
+        quint32 value = xml.attributes().value(QLatin1String("value")).toUInt(nullptr, 0);
         return value;
     } else if (xml.name() == QLatin1String("uint64")) {
-        quint64 value = xml.attributes().value(QStringLiteral("value")).toString().toULongLong(nullptr, 0);
+        quint64 value = xml.attributes().value(QLatin1String("value")).toULongLong(nullptr, 0);
         return value;
     } else if (xml.name() == QLatin1String("uuid")) {
         QBluetoothUuid uuid;
-        const QString value = xml.attributes().value(QStringLiteral("value")).toString();
-        if (value.startsWith(QStringLiteral("0x"))) {
+        const QStringView value = xml.attributes().value(QLatin1String("value"));
+        if (value.startsWith(QLatin1String("0x"))) {
             if (value.length() == 6) {
                 quint16 v = value.toUShort(nullptr, 0);
                 uuid = QBluetoothUuid(v);
@@ -467,14 +466,14 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
                 uuid = QBluetoothUuid(v);
             }
         } else {
-            uuid = QBluetoothUuid(value);
+            uuid = QBluetoothUuid(value.toString());
         }
         return QVariant::fromValue(uuid);
     } else if (xml.name() == QLatin1String("text") || xml.name() == QLatin1String("url")) {
-        QString value = xml.attributes().value(QStringLiteral("value")).toString();
-        if (xml.attributes().value(QStringLiteral("encoding")) == QLatin1String("hex"))
-            value = QString::fromUtf8(QByteArray::fromHex(value.toLatin1()));
-        return value;
+        const QStringView value = xml.attributes().value(QLatin1String("value"));
+        if (xml.attributes().value(QLatin1String("encoding")) == QLatin1String("hex"))
+            return QString::fromUtf8(QByteArray::fromHex(value.toLatin1()));
+        return value.toString();
     } else if (xml.name() == QLatin1String("sequence")) {
         QBluetoothServiceInfo::Sequence sequence;
 
@@ -488,8 +487,8 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
         return QVariant::fromValue<QBluetoothServiceInfo::Sequence>(sequence);
     } else {
         qCWarning(QT_BT_BLUEZ) << "unknown attribute type"
-                               << xml.name().toString()
-                               << xml.attributes().value(QStringLiteral("value")).toString();
+                               << xml.name()
+                               << xml.attributes().value(QLatin1String("value"));
         return QVariant();
     }
 }
