@@ -130,7 +130,7 @@ qint64 getLengthForBaseType(unsigned char type, ComPtr<IDataReader> &reader)
 bool writeStringHelper(const QString &string, ComPtr<IDataWriter> writer)
 {
     HRESULT hr;
-    const int stringLength = string.length();
+    const qsizetype stringLength = string.size();
     unsigned char type = TYPE_STRING_BASE;
     if (stringLength < 0) {
         qCWarning(QT_BT_WINDOWS) << "Can not write invalid string value to buffer";

@@ -64,7 +64,7 @@ Q_GLOBAL_STATIC(JCachedMinorTypes, cachedMinorTypes)
 
 static QBitArray initializeMinorCaches()
 {
-    const int numberOfMajorDeviceClasses = 11; // count QBluetoothDeviceInfo::MajorDeviceClass values
+    const qsizetype numberOfMajorDeviceClasses = 11; // count QBluetoothDeviceInfo::MajorDeviceClass values
 
     // switch below used to ensure that we notice additions to MajorDeviceClass enum
     const QBluetoothDeviceInfo::MajorDeviceClass classes = QBluetoothDeviceInfo::ComputerDevice;

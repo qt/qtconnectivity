@@ -224,10 +224,10 @@ void BluetoothManagement::_q_readNotifier()
             break;
 
         const MgmtHdr *hdr = reinterpret_cast<const MgmtHdr*>(data.constData());
-        const int nextPackageSize = qFromLittleEndian(hdr->length) + sizeof(MgmtHdr);
-        const int remainingPackageSize = data.length() - nextPackageSize;
+        const auto nextPackageSize = qsizetype(qFromLittleEndian(hdr->length) + sizeof(MgmtHdr));
+        const qsizetype remainingPackageSize = data.size() - nextPackageSize;
 
-        if (data.length() < nextPackageSize)
+        if (data.size() < nextPackageSize)
             break; // not a complete event header -> wait for next notifier
 
         switch (static_cast<EventCode>(qFromLittleEndian(hdr->cmdCode))) {
