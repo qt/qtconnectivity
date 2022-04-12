@@ -549,7 +549,7 @@ QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok =
 QString sanitizeNameForDBus(const QString &text)
 {
     QString appName = text;
-    for (int i = 0; i < appName.length(); i++) {
+    for (qsizetype i = 0; i < appName.size(); ++i) {
         ushort us = appName[i].unicode();
         bool valid = (us >= 'a' && us <= 'z')
                       || (us >= 'A' && us <= 'Z')
