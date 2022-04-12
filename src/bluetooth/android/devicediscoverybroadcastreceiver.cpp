@@ -518,7 +518,7 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(const 
             if (nBytes == 0)
                 break;
 
-            if ((i + nBytes) >= scanRecordLength)
+            if (i >= scanRecordLength - nBytes)
                 break;
 
             const int adType = scanRecordBuffer[i+1];
