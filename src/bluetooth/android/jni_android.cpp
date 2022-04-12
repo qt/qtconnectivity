@@ -132,9 +132,9 @@ QJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldName)
         return QJniObject();
     }
 
-    int offset_class = qstrlen(className);
-    int offset_field = qstrlen(fieldName);
-    QByteArray key(offset_class + offset_field, Qt::Uninitialized);
+    const size_t offset_class = qstrlen(className);
+    const size_t offset_field = qstrlen(fieldName);
+    QByteArray key(qsizetype(offset_class + offset_field), Qt::Uninitialized);
     memcpy(key.data(), className, offset_class);
     memcpy(key.data()+offset_class, fieldName, offset_field);
 
