@@ -507,10 +507,10 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(const 
         jboolean isCopy;
         jbyte *elems = env->GetByteArrayElements(scanRecord, &isCopy);
         const char *scanRecordBuffer = reinterpret_cast<const char *>(elems);
-        const int scanRecordLength = env->GetArrayLength(scanRecord);
+        const jsize scanRecordLength = env->GetArrayLength(scanRecord);
 
         QList<QBluetoothUuid> serviceUuids;
-        int i = 0;
+        jsize i = 0;
 
         // Spec 4.2, Vol 3, Part C, Chapter 11
         QString localName;
