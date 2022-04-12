@@ -155,6 +155,16 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
             setError(QBluetoothDeviceDiscoveryAgent::PoweredOffError);
             emit q_ptr->errorOccurred(lastError);
             return;
+        } else if (!adapterAddress.isNull()) {
+            // If user has provided the local address, check that it matches with the actual
+            NSString *const hciAddress = [hostController addressAsString];
+            if (adapterAddress != QBluetoothAddress(QString::fromNSString(hciAddress))) {
+                qCWarning(QT_BT_DARWIN) << "Provided address" << adapterAddress
+                                        << "does not match with adapter:" << hciAddress;
+                setError(QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError);
+                emit q_ptr->errorOccurred(lastError);
+                return;
+            }
         }
         controller.reset(hostController, DarwinBluetooth::RetainPolicy::doInitialRetain);
     }
