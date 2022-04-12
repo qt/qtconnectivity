@@ -158,7 +158,7 @@ bool writeStringHelper(const QString &string, ComPtr<IDataWriter> writer)
     quint32 bytesWritten;
     hr = writer->WriteString(stringRef.Get(), &bytesWritten);
     RETURN_FALSE_IF_FAILED("Could not write string to buffer.");
-    if (bytesWritten != string.length()) {
+    if (bytesWritten != size_t(string.size())) {
         qCWarning(QT_BT_WINDOWS) << "Did not write full value to buffer";
         return false;
     }
