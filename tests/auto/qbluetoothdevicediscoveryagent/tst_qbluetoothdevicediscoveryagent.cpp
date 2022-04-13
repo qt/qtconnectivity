@@ -55,6 +55,11 @@ const int MaxScanTime = 5 * 60 * 1000;  // 5 minutes in ms
 //Bluez needs at least 10s for a device discovery to be cancelled
 const int MaxWaitForCancelTime = 15 * 1000;  // 15 seconds in ms
 
+#ifdef Q_OS_ANDROID
+// Android is sometimes unable to cancel immediately
+const int WaitBeforeStopTime = 200;
+#endif
+
 class tst_QBluetoothDeviceDiscoveryAgent : public QObject
 {
     Q_OBJECT
@@ -178,14 +183,22 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
         QSKIP("No local Bluetooth device available. Skipping remaining part of test.");
     }
     // cancel current request.
+#ifdef Q_OS_ANDROID
+    // Android sometimes can't cancel immediately (~on the same millisecond),
+    // but instead a "pending cancel" happens, which means the discovery will be
+    // canceled at a later point in time. When this happens the Android backend
+    // also emits an immediate errorOccurred(). While this seems to be as intended,
+    // as a result many parts of this test function may fail (not always).
+    //
+    // In this test function we wait some milliseconds between start() and stop() to
+    // bypass this behavior difference. This is to avoid complex iffery (Android itself
+    // can behave differently every time) and ifdeffery (Q_OS_ANDROID) in the test
+    QTest::qWait(WaitBeforeStopTime);
+#endif
     discoveryAgent.stop();
 
     // Wait for up to MaxWaitForCancelTime for the cancel to finish
-    int waitTime = MaxWaitForCancelTime;
-    while (cancelSpy.count() == 0 && waitTime > 0) {
-        QTest::qWait(100);
-        waitTime-=100;
-    }
+    QTRY_VERIFY_WITH_TIMEOUT(!cancelSpy.isEmpty(), MaxWaitForCancelTime);
 
     // we should not be active anymore
     QVERIFY(!discoveryAgent.isActive());
@@ -202,19 +215,19 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
     QVERIFY(discoveryAgent.isActive());
     QVERIFY(errorSpy.isEmpty());
     // stop
+#ifdef Q_OS_ANDROID
+    QTest::qWait(WaitBeforeStopTime);
+#endif
     discoveryAgent.stop();
 
     // Wait for up to MaxWaitForCancelTime for the cancel to finish
-    waitTime = MaxWaitForCancelTime;
-    while (cancelSpy.count() == 0 && waitTime > 0) {
-        QTest::qWait(100);
-        waitTime-=100;
-    }
+    QTRY_VERIFY_WITH_TIMEOUT(!cancelSpy.isEmpty(), MaxWaitForCancelTime);
 
     // we should not be active anymore
     QVERIFY(!discoveryAgent.isActive());
     QVERIFY(errorSpy.isEmpty());
-    QVERIFY(cancelSpy.count() == 1);
+
+    QCOMPARE(cancelSpy.size(), 1);
     cancelSpy.clear();
 
     //  Starting case 3: stop
@@ -244,6 +257,9 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
     QVERIFY(discoveryAgent.isActive());
     QVERIFY(errorSpy.isEmpty());
     // cancel current request.
+#ifdef Q_OS_ANDROID
+    QTest::qWait(WaitBeforeStopTime);
+#endif
     discoveryAgent.stop();
     //should only have triggered cancel() if stop didn't involve the event loop
     if (cancelSpy.count() == 1) immediateSignal = true;
@@ -254,25 +270,25 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
     QVERIFY(discoveryAgent.isActive());
     QVERIFY(errorSpy.isEmpty());
     // stop
+#ifdef Q_OS_ANDROID
+    QTest::qWait(WaitBeforeStopTime);
+#endif
     discoveryAgent.stop();
     if (immediateSignal)
-        QVERIFY(cancelSpy.count() == 2);
+        QCOMPARE(cancelSpy.size(), 2);
 
     // Wait for up to MaxWaitForCancelTime for the cancel to finish
-    waitTime = MaxWaitForCancelTime;
-    while (cancelSpy.count() == 0 && waitTime > 0) {
-        QTest::qWait(100);
-        waitTime-=100;
-    }
+    QTRY_VERIFY_WITH_TIMEOUT(!cancelSpy.isEmpty(), MaxWaitForCancelTime);
+
     // we should not be active anymore
     QVERIFY(!discoveryAgent.isActive());
     QVERIFY(errorSpy.isEmpty());
-    // should only have 1 cancel
 
+    // should only have 1 cancel
     if (immediateSignal)
-        QVERIFY(cancelSpy.count() == 2);
+        QCOMPARE(cancelSpy.size(), 2);
     else
-        QVERIFY(cancelSpy.count() == 1);
+        QCOMPARE(cancelSpy.size(), 1);
     cancelSpy.clear();
 
     // Starting case 5: start-stop-start: expecting finished signal & no cancel
@@ -280,6 +296,9 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
     QVERIFY(discoveryAgent.isActive());
     QVERIFY(errorSpy.isEmpty());
     // cancel current request.
+#ifdef Q_OS_ANDROID
+    QTest::qWait(WaitBeforeStopTime);
+#endif
     discoveryAgent.stop();
     // start a new one
     discoveryAgent.start();
@@ -287,18 +306,14 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
     QVERIFY(discoveryAgent.isActive());
     QVERIFY(errorSpy.isEmpty());
 
-    // Wait for up to MaxScanTime for the cancel to finish
-    waitTime = MaxScanTime;
-    while (finishedSpy.count() == 0 && waitTime > 0) {
-        QTest::qWait(1000);
-        waitTime-=1000;
-    }
+    // Wait for up to MaxScanTime for the scan to finish
+    QTRY_VERIFY_WITH_TIMEOUT(!finishedSpy.isEmpty(), MaxScanTime);
 
     // we should not be active anymore
     QVERIFY(!discoveryAgent.isActive());
     QVERIFY(errorSpy.isEmpty());
     // should only have 1 cancel
-    QVERIFY(finishedSpy.count() == 1);
+    QCOMPARE(finishedSpy.size(), 1);
 
     // On OS X, stop is synchronous (signal will be emitted immediately).
     if (!immediateSignal)
