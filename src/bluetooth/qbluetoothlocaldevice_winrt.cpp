@@ -437,6 +437,11 @@ private:
 
 void PairingWorker::pairAsync(const QBluetoothAddress &addr, QBluetoothLocalDevice::Pairing pairing)
 {
+    // Note: some of the functions called here use await() in their implementation.
+    // Hence we need to verify that the 'q' is still valid after such calls, as
+    // it may have been destroyed. In that scenario the ComPtr pointing to this
+    // object is destroyed, but to protect this function's possible execution at that time,
+    // the get_strong() call below will ensure we can execute until the end.
     auto ref = get_strong();
     DeviceInformationPairing pairingInfo = pairingInfoFromAddress(addr);
     switch (pairing) {
@@ -454,8 +459,14 @@ void PairingWorker::pairAsync(const QBluetoothAddress &addr, QBluetoothLocalDevi
                 emit q->errorOccurred(QBluetoothLocalDevice::PairingError);
             return;
         }
-        if (q)
-            emit q->pairingFinished(addr, pairing);
+
+        // Check the actual protection level used and signal the success
+        if (q) {
+            const auto resultingPairingStatus = q->pairingStatus(addr);
+            // pairingStatus() uses await/spins eventloop => check 'q' validity again
+            if (q)
+                emit q->pairingFinished(addr, resultingPairingStatus);
+        }
         return;
     }
     case QBluetoothLocalDevice::Unpaired:
@@ -467,7 +478,7 @@ void PairingWorker::pairAsync(const QBluetoothAddress &addr, QBluetoothLocalDevi
             return;
         }
         if (q)
-            emit q->pairingFinished(addr, pairing);
+            emit q->pairingFinished(addr, QBluetoothLocalDevice::Unpaired);
         return;
     }
 }
@@ -623,13 +634,19 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
         return;
     }
 
-    if (pairingStatus(address) == pairing) {
-        QMetaObject::invokeMethod(this, "pairingFinished", Qt::QueuedConnection,
+    // Check current pairing status and determine if there is a need to do anything
+    const Pairing currentPairingStatus = pairingStatus(address);
+    if ((currentPairingStatus == Unpaired && pairing == Unpaired)
+            || (currentPairingStatus != Unpaired && pairing != Unpaired)) {
+           qCDebug(QT_BT_WINDOWS) << "requestPairing() no change needed to pairing" << address;
+           QMetaObject::invokeMethod(this, "pairingFinished", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothAddress, address),
-                                  Q_ARG(QBluetoothLocalDevice::Pairing, pairing));
+                                  Q_ARG(QBluetoothLocalDevice::Pairing,
+                                  currentPairingStatus));
         return;
     }
 
+    qCDebug(QT_BT_WINDOWS) << "requestPairing() initiating (un)pairing" << address << pairing;
     d->mPairingWorker->pairAsync(address, pairing);
 }
 

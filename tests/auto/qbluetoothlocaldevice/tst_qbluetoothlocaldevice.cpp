@@ -411,11 +411,14 @@ void tst_QBluetoothLocalDevice::tst_pairDevice()
         QBluetoothAddress address = qvariant_cast<QBluetoothAddress>(arguments.at(0));
         QBluetoothLocalDevice::Pairing pairingResult = qvariant_cast<QBluetoothLocalDevice::Pairing>(arguments.at(1));
         QCOMPARE(deviceAddress, address);
+        // Verify that the local device pairing status and the signal value match
+        QCOMPARE(pairingResult, localDevice.pairingStatus(deviceAddress));
+#ifndef Q_OS_WIN
+        // On Windows the resulting pairing mode may differ from test's "expected"
         QCOMPARE(pairingResult, pairingExpected);
-    }
-
-    if (!expectErrorSignal)
         QCOMPARE(localDevice.pairingStatus(deviceAddress), pairingExpected);
+#endif
+    }
 }
 
 void tst_QBluetoothLocalDevice::tst_pairingStatus_data()

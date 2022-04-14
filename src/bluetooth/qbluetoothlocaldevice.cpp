@@ -290,7 +290,9 @@ bool QBluetoothLocalDevice::isValid() const
   \fn QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 
   Set the \a pairing status with \a address.  The results are returned by the signal, pairingFinished().
+
   On Android and \macos, AuthorizedPaired is not possible and will have the same behavior as Paired.
+  On Windows the exact pairing mode decision is up to the operating system.
 
   On \macos, it is not possible to unpair a device. If Unpaired is requested, \l pairingFinished()
   is immediately emitted although the device remains paired. It is possible to request the pairing
