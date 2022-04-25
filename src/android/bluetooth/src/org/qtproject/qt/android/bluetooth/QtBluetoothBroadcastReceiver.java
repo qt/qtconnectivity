@@ -62,8 +62,15 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
     @SuppressWarnings("WeakerAccess")
     static Context qtContext = null;
 
-    private static final int TURN_BT_ON = 3330;
+    // These are opaque tokens that could be used to match the completed action
+    private static final int TURN_BT_ENABLED = 3330;
     private static final int TURN_BT_DISCOVERABLE = 3331;
+    private static final int TURN_BT_DISABLED = 3332;
+
+    // The 'Disable' action identifier is hidden in the public APIs so we define it here
+    public static final String ACTION_REQUEST_DISABLE =
+        "android.bluetooth.adapter.action.REQUEST_DISABLE";
+
     private static final String TAG = "QtBluetoothBroadcastReceiver";
 
     public void onReceive(Context context, Intent intent)
@@ -91,35 +98,61 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
         qtContext = context;
     }
 
-    static public void setDiscoverable()
+    static public boolean setDisabled()
+    {
+        if (!(qtContext instanceof android.app.Activity)) {
+            Log.w(TAG, "Bluetooth cannot be disabled from a service.");
+            return false;
+        }
+        // The 'disable' is hidden in the public API and as such
+        // there are no availability guarantees; may throw an "ActivityNotFoundException"
+        Intent intent = new Intent(ACTION_REQUEST_DISABLE);
+
+        try {
+            ((Activity)qtContext).startActivityForResult(intent, TURN_BT_DISABLED);
+        } catch (Exception ex) {
+            Log.w(TAG, "setDisabled() failed to initiate Bluetooth disablement");
+            ex.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+
+    static public boolean setDiscoverable()
     {
         if (!(qtContext instanceof android.app.Activity)) {
             Log.w(TAG, "Discovery mode cannot be enabled from a service.");
-            return;
+            return false;
         }
 
         Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_DISCOVERABLE);
         intent.putExtra(BluetoothAdapter.EXTRA_DISCOVERABLE_DURATION, 300);
         try {
-            ((Activity)qtContext).startActivityForResult(intent, TURN_BT_ON);
+            ((Activity)qtContext).startActivityForResult(intent, TURN_BT_DISCOVERABLE);
         } catch (Exception ex) {
+            Log.w(TAG, "setDiscoverable() failed to initiate Bluetooth discoverability change");
             ex.printStackTrace();
+            return false;
         }
+        return true;
     }
 
-    static public void setConnectable()
+    static public boolean setEnabled()
     {
         if (!(qtContext instanceof android.app.Activity)) {
-            Log.w(TAG, "Connectable mode cannot be enabled from a service.");
-            return;
+            Log.w(TAG, "Bluetooth cannot be enabled from a service.");
+            return false;
         }
 
         Intent intent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
         try {
-            ((Activity)qtContext).startActivityForResult(intent, TURN_BT_DISCOVERABLE);
+            ((Activity)qtContext).startActivityForResult(intent, TURN_BT_ENABLED);
         } catch (Exception ex) {
+            Log.w(TAG, "setEnabled() failed to initiate Bluetooth enablement");
             ex.printStackTrace();
+            return false;
         }
+        return true;
     }
 
     static public boolean setPairingMode(String address, boolean isPairing)
