@@ -86,16 +86,6 @@ tst_QBluetoothLocalDevice::tst_QBluetoothLocalDevice()
     } else {
         qWarning() << "Not using any remote device for testing. Set BT_TEST_DEVICE env to run manual tests involving a remote device";
     }
-
-    if (numDevices == 0)
-        return;
-
-    // start with host powered off
-    QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
-    device->setHostMode(QBluetoothLocalDevice::HostPoweredOff);
-    delete device;
-    // wait for the device to switch bluetooth mode.
-    QTest::qWait(1000);
 }
 
 tst_QBluetoothLocalDevice::~tst_QBluetoothLocalDevice()
@@ -122,7 +112,12 @@ void tst_QBluetoothLocalDevice::tst_powerOn()
     if (localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff) {
         // Ensure device is OFF so we can test switching it ON
         localDevice.setHostMode(QBluetoothLocalDevice::HostPoweredOff);
-        QTRY_VERIFY(localDevice.hostMode() == QBluetoothLocalDevice::HostPoweredOff);
+        // On Android user may need to authorize the transition, hence a longer timeout
+        QTRY_VERIFY_WITH_TIMEOUT(localDevice.hostMode()
+                                 == QBluetoothLocalDevice::HostPoweredOff, 15000);
+        // Allow possible mode-change signal(s) to arrive (QTRY_COMPARE polls the
+        // host mode in a loop, and thus may return before the host mode change signal)
+        QTest::qWait(1000);
     }
 
     QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
@@ -131,12 +126,10 @@ void tst_QBluetoothLocalDevice::tst_powerOn()
     QVERIFY(hostModeSpy.isEmpty());
 
     localDevice.powerOn();
-    // async, wait for it
-    QTRY_VERIFY(!hostModeSpy.isEmpty());
-    QBluetoothLocalDevice::HostMode hostMode= localDevice.hostMode();
-    // we should not be powered off
-    QVERIFY(hostMode == QBluetoothLocalDevice::HostConnectable
-         || hostMode == QBluetoothLocalDevice::HostDiscoverable);
+    // On Android user may need to authorize the transition => longer timeout.
+    QTRY_VERIFY_WITH_TIMEOUT(!hostModeSpy.isEmpty(), 15000);
+    QVERIFY(localDevice.hostMode()
+                             != QBluetoothLocalDevice::HostPoweredOff);
 }
 
 void tst_QBluetoothLocalDevice::tst_powerOff()
@@ -151,7 +144,12 @@ void tst_QBluetoothLocalDevice::tst_powerOff()
     if (localDevice.hostMode() == QBluetoothLocalDevice::HostPoweredOff) {
         // Ensure device is ON so we can test switching it OFF
         localDevice.powerOn();
-        QTRY_VERIFY(localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff);
+        // On Android user may need to authorize the transition => longer timeout.
+        QTRY_VERIFY_WITH_TIMEOUT(localDevice.hostMode()
+                                 != QBluetoothLocalDevice::HostPoweredOff, 15000);
+        // Allow possible mode-change signal(s) to arrive (QTRY_COMPARE polls the
+        // host mode in a loop, and thus may return before the host mode change signal)
+        QTest::qWait(1000);
     }
 
     QSignalSpy hostModeSpy(&localDevice, SIGNAL(hostModeStateChanged(QBluetoothLocalDevice::HostMode)));
@@ -160,11 +158,10 @@ void tst_QBluetoothLocalDevice::tst_powerOff()
     QVERIFY(hostModeSpy.isEmpty());
 
     localDevice.setHostMode(QBluetoothLocalDevice::HostPoweredOff);
-    // async, wait for it
-    QTRY_VERIFY(!hostModeSpy.isEmpty());
-    // we should not be powered off
-    QVERIFY(localDevice.hostMode() == QBluetoothLocalDevice::HostPoweredOff);
-
+    // On Android user may need to authorize the transition => longer timeout.
+    QTRY_VERIFY_WITH_TIMEOUT(!hostModeSpy.isEmpty(), 15000);
+    QVERIFY(localDevice.hostMode()
+                             == QBluetoothLocalDevice::HostPoweredOff);
 }
 
 void tst_QBluetoothLocalDevice::tst_hostModes_data()
@@ -213,7 +210,12 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
         firstIteration = false;
         if (localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff) {
             localDevice.setHostMode(QBluetoothLocalDevice::HostPoweredOff);
-            QTRY_VERIFY(localDevice.hostMode() == QBluetoothLocalDevice::HostPoweredOff);
+            // On Android user may need to authorize the transition => longer timeout.
+            QTRY_VERIFY_WITH_TIMEOUT(localDevice.hostMode()
+                                     == QBluetoothLocalDevice::HostPoweredOff, 15000);
+            // Allow possible mode-change signal(s) to arrive (QTRY_COMPARE polls the
+            // host mode in a loop, and thus may return before the host mode change signal).
+            QTest::qWait(1000);
         }
     }
 
@@ -226,9 +228,15 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
     // Switch the bluetooth mode and verify it changes
     localDevice.setHostMode(hostModeExpected);
     // Manual interaction may be needed (for example on Android you may
-    // need to authorize a permission) => hence a longer timeout
+    // need to authorize a permission) => hence a longer timeout.
+    // Note: it seems that on some Android versions the actual resulting host mode
+    // depends on the device's bluetooth settings. This can cause the test to fail here;
+    // for instance if Bluetooth is set as 'visible to other devices', it may be that the
+    // device enters the 'discoverable' mode when attempting to enter 'connectable' (and
+    // vice versa)
     QTRY_COMPARE_WITH_TIMEOUT(localDevice.hostMode(), hostModeExpected, 15000);
-    // Allow possible mode-change signal(s) to arrive (QTRY_COMPARE may return immediately)
+    // Allow possible mode-change signal(s) to arrive (QTRY_COMPARE polls the
+    // host mode in a loop, and thus may return before the host mode change signal).
     QTest::qWait(1000);
 
     // Verify that signals are as expected

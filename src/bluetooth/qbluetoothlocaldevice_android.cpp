@@ -129,19 +129,26 @@ bool QBluetoothLocalDevicePrivate::isValid() const
 
 void QBluetoothLocalDevicePrivate::processHostModeChange(QBluetoothLocalDevice::HostMode newMode)
 {
-    if (!pendingHostModeTransition) {
-        // if not in transition -> pass data on
+    qCDebug(QT_BT_ANDROID) << "Processing host mode change:" << newMode
+                           << ", pending transition:" << pendingConnectableHostModeTransition;
+    if (!pendingConnectableHostModeTransition) {
+        // If host mode is not in transition -> pass data on
         emit q_ptr->hostModeStateChanged(newMode);
         return;
     }
 
+    // Host mode is in transition: check if the new mode is 'off' in which state
+    // we can enter the targeted 'Connectable' state
     if (isValid() && newMode == QBluetoothLocalDevice::HostPoweredOff) {
-        bool success = (bool)obj->callMethod<jboolean>("enable", "()Z");
-        if (!success)
+        const bool success = (bool)QJniObject::callStaticMethod<jboolean>(
+                    "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
+                    "setEnabled");
+        if (!success) {
+            qCWarning(QT_BT_ANDROID) << "Transitioning Bluetooth from OFF to ON failed";
             emit q_ptr->errorOccurred(QBluetoothLocalDevice::UnknownError);
+        }
     }
-
-    pendingHostModeTransition = false;
+    pendingConnectableHostModeTransition = false;
 }
 
 // Return -1 if address is not part of a pending pairing request
@@ -225,48 +232,87 @@ void QBluetoothLocalDevice::powerOn()
         return;
 
     if (d_ptr->adapter()) {
-        bool ret = (bool)d_ptr->adapter()->callMethod<jboolean>("enable", "()Z");
-        if (!ret)
+        bool success(false);
+        if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31) {
+            success = (bool)QJniObject::callStaticMethod<jboolean>(
+                        "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
+                        "setEnabled");
+        } else {
+            success = (bool)d_ptr->adapter()->callMethod<jboolean>("enable", "()Z");
+        }
+        if (!success) {
+            qCWarning(QT_BT_ANDROID) << "Enabling bluetooth failed";
             emit errorOccurred(QBluetoothLocalDevice::UnknownError);
+        }
     }
 }
 
 void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode requestedMode)
 {
-    QBluetoothLocalDevice::HostMode mode = requestedMode;
+    QBluetoothLocalDevice::HostMode nextMode = requestedMode;
     if (requestedMode == HostDiscoverableLimitedInquiry)
-        mode = HostDiscoverable;
+        nextMode = HostDiscoverable;
 
-    if (mode == hostMode())
+    if (nextMode == hostMode())
         return;
 
-    if (mode == QBluetoothLocalDevice::HostPoweredOff) {
+    switch (nextMode) {
+
+    case QBluetoothLocalDevice::HostPoweredOff: {
         bool success = false;
-        if (d_ptr->adapter())
-            success = (bool)d_ptr->adapter()->callMethod<jboolean>("disable", "()Z");
-
-        if (!success)
-            emit errorOccurred(QBluetoothLocalDevice::UnknownError);
-    } else if (mode == QBluetoothLocalDevice::HostConnectable) {
-        if (hostMode() == QBluetoothLocalDevice::HostDiscoverable) {
-            // cannot directly go from Discoverable to Connectable
-            // we need to go to disabled mode and enable once disabling came through
-
-            setHostMode(QBluetoothLocalDevice::HostPoweredOff);
-            d_ptr->pendingHostModeTransition = true;
-        } else {
-            QJniObject::callStaticMethod<void>(
-                "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
-                "setConnectable");
+        if (d_ptr->adapter()) {
+            if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31) {
+                success = (bool)QJniObject::callStaticMethod<jboolean>(
+                            "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
+                            "setDisabled");
+            } else {
+                success = (bool)d_ptr->adapter()->callMethod<jboolean>("disable", "()Z");
+            }
         }
-    } else if (mode == QBluetoothLocalDevice::HostDiscoverable) {
+        if (!success) {
+            qCWarning(QT_BT_ANDROID) << "Unable to power off the adapter";
+            emit errorOccurred(QBluetoothLocalDevice::UnknownError);
+        }
+        break;
+    }
+
+    case QBluetoothLocalDevice::HostConnectable: {
+        if (hostMode() == QBluetoothLocalDevice::HostDiscoverable) {
+            // On Android 'Discoverable' is actually 'CONNECTABLE_DISCOVERABLE', and
+            // it seems we cannot go directly from "Discoverable" to "Connectable". Instead
+            // we need to go to disabled mode first and then to the 'Connectable' mode
+            setHostMode(QBluetoothLocalDevice::HostPoweredOff);
+            d_ptr->pendingConnectableHostModeTransition = true;
+        } else {
+            const bool success = (bool)QJniObject::callStaticMethod<jboolean>(
+                        "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
+                        "setEnabled");
+            if (!success) {
+                qCWarning(QT_BT_ANDROID) << "Unable to enable the Bluetooth";
+                emit errorOccurred(QBluetoothLocalDevice::UnknownError);
+            }
+        }
+        break;
+    }
+
+    case QBluetoothLocalDevice::HostDiscoverable: {
         if (!ensureAndroidPermission(BluetoothPermission::Advertise)) {
             qCWarning(QT_BT_ANDROID) << "Local device setHostMode() failed due to"
                                         "missing permissions";
             return;
         }
-        QJniObject::callStaticMethod<void>(
-            "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver", "setDiscoverable");
+        const bool success = (bool)QJniObject::callStaticMethod<jboolean>(
+                    "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
+                    "setDiscoverable");
+        if (!success) {
+            qCWarning(QT_BT_ANDROID) << "Unable to set Bluetooth as discoverable";
+            emit errorOccurred(QBluetoothLocalDevice::UnknownError);
+        }
+        break;
+    }
+    default:
+        qCWarning(QT_BT_ANDROID) << "setHostMode() unsupported host mode:" << nextMode;
+        break;
     }
 }
 
