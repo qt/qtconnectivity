@@ -138,7 +138,7 @@ private:
 
 public:
     LocalDeviceBroadcastReceiver *receiver;
-    bool pendingHostModeTransition = false;
+    bool pendingConnectableHostModeTransition = false;
     QList<QPair<QBluetoothAddress, bool> > pendingPairings;
 
     QList<QBluetoothAddress> connectedDevices;
