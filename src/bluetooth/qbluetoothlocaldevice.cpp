@@ -114,6 +114,17 @@ QT_BEGIN_NAMESPACE
     \note On Windows, it is not possible to set the \l hostMode() to
     HostDiscoverable or HostDiscoverableLimitedInquiry. Using these modes is
     equivalent to HostConnectable.
+
+    \note Starting from Android 13 (API level 33) the HostPoweredOff state relies on
+    non-public Android API as the public one has been deprecated, see
+    (\l {https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#disable()}
+    {disable()}). This may change in a future version of Android.
+
+    \note At least on Android 12 the device's Bluetooth visibility setting may dictate the result
+    of setting either HostDiscoverable or HostConnectable. For example if the visibility is set
+    \e off, it may not be possible to enter the HostDiscoverable mode, but HostConnectable will be
+    used instead. This may change in future version of Android.
+
 */
 
 void registerQBluetoothLocalDeviceMetaType()
