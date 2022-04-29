@@ -62,11 +62,6 @@ QT_IMPL_METATYPE_EXTERN_TAGGED(QBluetoothLocalDevice::Error, QBluetoothLocalDevi
 
     On iOS, this class cannot be used because the platform does not expose
     any data or API which may provide information on the local Bluetooth device.
-
-    On Windows the class is not fully implemented. It does not support tracking
-    of the connected/disconnected devices. Therefore, the \l connectedDevices()
-    method will always return an empty list, and the \l deviceConnected() and
-    \l deviceDisconnected() signals will never be emitted.
 */
 
 /*!

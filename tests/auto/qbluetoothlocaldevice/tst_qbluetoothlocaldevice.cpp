@@ -67,6 +67,7 @@ private slots:
     void tst_pairingStatus();
     void tst_pairDevice_data();
     void tst_pairDevice();
+    void tst_connectedDevices();
 
 private:
     QBluetoothAddress remoteDevice;
@@ -427,6 +428,61 @@ void tst_QBluetoothLocalDevice::tst_pairDevice()
         QCOMPARE(localDevice.pairingStatus(deviceAddress), pairingExpected);
 #endif
     }
+}
+
+void tst_QBluetoothLocalDevice::tst_connectedDevices()
+{
+#if defined(Q_OS_MACOS)
+    QSKIP("The connectedDevices test fails on macOS");
+#endif
+    if (numDevices == 0)
+        QSKIP("Skipping test due to missing Bluetooth device");
+    if (remoteDevice.isNull())
+        QSKIP("This test only makes sense with remote device");
+
+    QBluetoothLocalDevice localDevice;
+    // powerOn if not already
+    if (localDevice.hostMode() == QBluetoothLocalDevice::HostPoweredOff) {
+        localDevice.powerOn();
+        QTRY_VERIFY(localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff);
+    }
+
+    QSignalSpy pairingSpy(&localDevice, &QBluetoothLocalDevice::pairingFinished);
+
+    // Make sure that the remote device is not paired
+    localDevice.requestPairing(remoteDevice, QBluetoothLocalDevice::Unpaired);
+    QTRY_VERIFY(!pairingSpy.isEmpty());
+
+    QList<QBluetoothAddress> connectedDevices = localDevice.connectedDevices();
+    QVERIFY(!connectedDevices.contains(remoteDevice));
+
+    QSignalSpy deviceConnectedSpy(&localDevice, &QBluetoothLocalDevice::deviceConnected);
+    QSignalSpy deviceDisconnectedSpy(&localDevice, &QBluetoothLocalDevice::deviceDisconnected);
+
+    // Now pair with the device. We should have a deviceConnected signal.
+    pairingSpy.clear();
+    localDevice.requestPairing(remoteDevice, QBluetoothLocalDevice::Paired);
+    // Manual confirmation for pairing might be required
+    QTRY_VERIFY_WITH_TIMEOUT(!pairingSpy.isEmpty(), 30000);
+    QTRY_VERIFY(!deviceConnectedSpy.isEmpty());
+    QList<QVariant> arguments = deviceConnectedSpy.takeFirst();
+    auto address = arguments.at(0).value<QBluetoothAddress>();
+    QCOMPARE(address, remoteDevice);
+
+    connectedDevices = localDevice.connectedDevices();
+    QVERIFY(connectedDevices.contains(remoteDevice));
+
+    // Unpair again. We should have a deviceDisconnected signal.
+    pairingSpy.clear();
+    localDevice.requestPairing(remoteDevice, QBluetoothLocalDevice::Unpaired);
+    QTRY_VERIFY(!pairingSpy.isEmpty());
+    QTRY_VERIFY(!deviceDisconnectedSpy.isEmpty());
+    arguments = deviceDisconnectedSpy.takeFirst();
+    address = arguments.at(0).value<QBluetoothAddress>();
+    QCOMPARE(address, remoteDevice);
+
+    connectedDevices = localDevice.connectedDevices();
+    QVERIFY(!connectedDevices.contains(remoteDevice));
 }
 
 void tst_QBluetoothLocalDevice::tst_pairingStatus_data()

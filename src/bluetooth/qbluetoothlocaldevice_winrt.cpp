@@ -196,6 +196,8 @@ public:
     AdapterManager();
     ~AdapterManager();
 
+    QList<QBluetoothAddress> connectedDevices();
+
 public slots:
     QBluetoothLocalDevice::HostMode addClient(QBluetoothLocalDevicePrivate *client);
     void removeClient(winrt::hstring adapterId);
@@ -205,6 +207,8 @@ signals:
     void adapterAdded(winrt::hstring id);
     void adapterRemoved(winrt::hstring id);
     void modeChanged(winrt::hstring id, QBluetoothLocalDevice::HostMode mode);
+    void deviceAdded(const QBluetoothAddress &address);
+    void deviceRemoved(const QBluetoothAddress &address);
 
 private:
     struct RadioInfo {
@@ -222,22 +226,49 @@ private:
     void onStateChange(Radio radio);
     Q_SLOT void tryResubscribeToStateChanges(winrt::hstring id, int numAttempts);
 
+    Q_SLOT void onDeviceAdded(winrt::hstring id);
+    Q_SLOT void onDeviceRemoved(winrt::hstring id);
+
     std::shared_ptr<WatcherWrapper> mAdapterWatcher = nullptr;
-    QMutex mRadiosMutex;
+    std::shared_ptr<WatcherWrapper> mLeDevicesWatcher = nullptr;
+    std::shared_ptr<WatcherWrapper> mClassicDevicesWatcher = nullptr;
+    QMutex mMutex;
     // Key for this map is BluetoothAdapter Id, *not* Radio Id.
     QMap<winrt::hstring, RadioInfo> mRadios;
+    QList<QBluetoothAddress> mConnectedDevices;
 };
 
 AdapterManager::AdapterManager() : QObject()
 {
     qRegisterMetaType<winrt::hstring>("winrt::hstring");
+
     const auto adapterSelector = BluetoothAdapter::GetDeviceSelector();
     mAdapterWatcher = std::make_shared<WatcherWrapper>(adapterSelector);
     mAdapterWatcher->init(this, &AdapterManager::onAdapterAdded, &AdapterManager::onAdapterRemoved);
+
+    // Once created, device watchers will also populate the initial list of
+    // connected devices.
+
+    const auto leSelector = BluetoothLEDevice::GetDeviceSelectorFromConnectionStatus(
+            BluetoothConnectionStatus::Connected);
+    mLeDevicesWatcher = std::make_shared<WatcherWrapper>(leSelector);
+    mLeDevicesWatcher->init(this, &AdapterManager::onDeviceAdded, &AdapterManager::onDeviceRemoved);
+
+    const auto classicSelector = BluetoothDevice::GetDeviceSelectorFromConnectionStatus(
+            BluetoothConnectionStatus::Connected);
+    mClassicDevicesWatcher = std::make_unique<WatcherWrapper>(classicSelector);
+    mClassicDevicesWatcher->init(this, &AdapterManager::onDeviceAdded,
+                                 &AdapterManager::onDeviceRemoved);
 }
 
 AdapterManager::~AdapterManager()
 {
+}
+
+QList<QBluetoothAddress> AdapterManager::connectedDevices()
+{
+    QMutexLocker locker(&mMutex);
+    return mConnectedDevices;
 }
 
 QBluetoothLocalDevice::HostMode AdapterManager::addClient(QBluetoothLocalDevicePrivate *client)
@@ -250,8 +281,12 @@ QBluetoothLocalDevice::HostMode AdapterManager::addClient(QBluetoothLocalDeviceP
             &QBluetoothLocalDevicePrivate::onAdapterAdded, Qt::QueuedConnection);
     connect(this, &AdapterManager::adapterRemoved, client,
             &QBluetoothLocalDevicePrivate::onAdapterRemoved, Qt::QueuedConnection);
+    connect(this, &AdapterManager::deviceAdded, client,
+            &QBluetoothLocalDevicePrivate::onDeviceAdded, Qt::QueuedConnection);
+    connect(this, &AdapterManager::deviceRemoved, client,
+            &QBluetoothLocalDevicePrivate::onDeviceRemoved, Qt::QueuedConnection);
 
-    QMutexLocker locker(&mRadiosMutex);
+    QMutexLocker locker(&mMutex);
     const auto adapterId = client->mDeviceId;
     if (mRadios.contains(adapterId)) {
         auto &radioInfo = mRadios[adapterId];
@@ -280,7 +315,7 @@ QBluetoothLocalDevice::HostMode AdapterManager::addClient(QBluetoothLocalDeviceP
 
 void AdapterManager::removeClient(winrt::hstring adapterId)
 {
-    QMutexLocker locker(&mRadiosMutex);
+    QMutexLocker locker(&mMutex);
     if (mRadios.contains(adapterId)) {
         auto &radioInfo = mRadios[adapterId];
         if (--radioInfo.numClients == 0) {
@@ -295,7 +330,7 @@ void AdapterManager::removeClient(winrt::hstring adapterId)
 
 void AdapterManager::updateMode(winrt::hstring adapterId, QBluetoothLocalDevice::HostMode mode)
 {
-    QMutexLocker locker(&mRadiosMutex);
+    QMutexLocker locker(&mMutex);
     if (mRadios.contains(adapterId)) {
         RadioAccessStatus status = RadioAccessStatus::Unspecified;
         auto radio = mRadios[adapterId].radio; // can be nullptr
@@ -329,7 +364,7 @@ Radio AdapterManager::getRadioFromAdapterId(winrt::hstring id)
 
 void AdapterManager::onStateChange(Radio radio)
 {
-    QMutexLocker locker(&mRadiosMutex);
+    QMutexLocker locker(&mMutex);
     for (const auto &key : mRadios.keys()) {
         auto &info = mRadios[key];
         if (info.radio == radio) {
@@ -351,7 +386,7 @@ static const int kMaximumAttempts = 5;
 // tries to resubscribe several times with a 100ms interval between retries.
 void AdapterManager::tryResubscribeToStateChanges(winrt::hstring id, int numAttempts)
 {
-    QMutexLocker locker(&mRadiosMutex);
+    QMutexLocker locker(&mMutex);
     if (mRadios.contains(id)) {
         // The Added event can come when we first create and use adapter. Such
         // event should not be handled.
@@ -387,6 +422,66 @@ void AdapterManager::tryResubscribeToStateChanges(winrt::hstring id, int numAtte
     }
 }
 
+struct BluetoothInfo
+{
+    QBluetoothAddress address;
+    bool isConnected;
+};
+
+static BluetoothInfo getBluetoothInfo(winrt::hstring id)
+{
+    // We do not know if it's a BT classic or BTLE device, so we try both.
+    BluetoothDevice device(nullptr);
+    bool res = await(BluetoothDevice::FromIdAsync(id), device, 5000);
+    if (res && device) {
+        return { QBluetoothAddress(device.BluetoothAddress()),
+                 device.ConnectionStatus() == BluetoothConnectionStatus::Connected };
+    }
+
+    BluetoothLEDevice leDevice(nullptr);
+    res = await(BluetoothLEDevice::FromIdAsync(id), leDevice, 5000);
+    if (res && leDevice) {
+        return { QBluetoothAddress(leDevice.BluetoothAddress()),
+                 leDevice.ConnectionStatus() == BluetoothConnectionStatus::Connected };
+    }
+
+    return {};
+}
+
+void AdapterManager::onDeviceAdded(winrt::hstring id)
+{
+    const BluetoothInfo &info = getBluetoothInfo(id);
+    // In practice this callback might come even for disconnected device.
+    // So check status explicitly.
+    if (!info.address.isNull() && info.isConnected) {
+        bool found = false;
+        {
+            // A scope is needed, because we need to emit a signal when mutex is already unlocked
+            QMutexLocker locker(&mMutex);
+            found = mConnectedDevices.contains(info.address);
+            if (!found) {
+                mConnectedDevices.push_back(info.address);
+            }
+        }
+        if (!found)
+            emit deviceAdded(info.address);
+    }
+}
+
+void AdapterManager::onDeviceRemoved(winrt::hstring id)
+{
+    const BluetoothInfo &info = getBluetoothInfo(id);
+    if (!info.address.isNull() && !info.isConnected) {
+        bool found = false;
+        {
+            QMutexLocker locker(&mMutex);
+            found = mConnectedDevices.removeOne(info.address);
+        }
+        if (found)
+            emit deviceRemoved(info.address);
+    }
+}
+
 void AdapterManager::onAdapterAdded(winrt::hstring id)
 {
     emit adapterAdded(id);
@@ -399,7 +494,7 @@ void AdapterManager::onAdapterAdded(winrt::hstring id)
 void AdapterManager::onAdapterRemoved(winrt::hstring id)
 {
     emit adapterRemoved(id);
-    QMutexLocker locker(&mRadiosMutex);
+    QMutexLocker locker(&mMutex);
     if (mRadios.contains(id)) {
         // here we can't simply remove the record from the map, because the
         // same adapter can later be reconnected, and we need to keep track of
@@ -656,6 +751,18 @@ void QBluetoothLocalDevicePrivate::radioModeChanged(winrt::hstring id, QBluetoot
     }
 }
 
+void QBluetoothLocalDevicePrivate::onDeviceAdded(const QBluetoothAddress &address)
+{
+    if (isValid())
+        emit q_ptr->deviceConnected(address);
+}
+
+void QBluetoothLocalDevicePrivate::onDeviceRemoved(const QBluetoothAddress &address)
+{
+    if (isValid())
+        emit q_ptr->deviceDisconnected(address);
+}
+
 void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 {
     Q_D(QBluetoothLocalDevice);
@@ -713,7 +820,11 @@ QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
 
 QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
 {
-    return QList<QBluetoothAddress>();
+    // On windows we have only one Bluetooth adapter, but generally can create multiple
+    // QBluetoothLocalDevice instances (both valid and invalid). Invalid instances shouldn't return
+    // any connected devices, while all valid instances can use information from a global static.
+    Q_D(const QBluetoothLocalDevice);
+    return d->isValid() ? adapterManager->connectedDevices() : QList<QBluetoothAddress>();
 }
 
 void QBluetoothLocalDevice::powerOn()

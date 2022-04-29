@@ -203,6 +203,8 @@ public:
     Q_SLOT void onAdapterRemoved(winrt::hstring id);
     Q_SLOT void onAdapterAdded(winrt::hstring id);
     Q_SLOT void radioModeChanged(winrt::hstring id, QBluetoothLocalDevice::HostMode mode);
+    Q_SLOT void onDeviceAdded(const QBluetoothAddress &address);
+    Q_SLOT void onDeviceRemoved(const QBluetoothAddress &address);
 
     QBluetoothLocalDevice *q_ptr;
     winrt::com_ptr<PairingWorker> mPairingWorker;
