@@ -230,8 +230,8 @@ elseif(QT_FEATURE_winrt_bt)
             Qt::CorePrivate
         PUBLIC_LIBRARIES
             Qt::Core
-            runtimeobject.lib
-            user32.lib
+            runtimeobject
+            user32
         PRIVATE_MODULE_INTERFACE
             Qt::CorePrivate
     )
