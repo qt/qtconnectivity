@@ -109,6 +109,70 @@ static RadioState windowsStateFromMode(QBluetoothLocalDevice::HostMode mode)
     return (mode == QBluetoothLocalDevice::HostPoweredOff) ? RadioState::Off : RadioState::On;
 }
 
+class AdapterManager;
+
+class WatcherWrapper : public QObject, public std::enable_shared_from_this<WatcherWrapper>
+{
+    Q_OBJECT
+public:
+    WatcherWrapper(winrt::hstring selector) : mWatcher(DeviceInformation::CreateWatcher(selector))
+    {
+    }
+    ~WatcherWrapper()
+    {
+        if (mWatcher && mInitialized) {
+            mWatcher.Stop();
+            unsubscribeFromEvents();
+        }
+    }
+
+    template<typename AddedSlot, typename RemovedSlot>
+    bool init(AdapterManager *manager, AddedSlot onAdded, RemovedSlot onRemoved)
+    {
+        if (!mWatcher) {
+            qWarning() << "Windows failed to create an instance of DeviceWatcher. "
+                       << "QBluetoothLocalDevice might fail to provide some information.";
+            return false;
+        }
+
+        subscribeToEvents();
+        connect(this, &WatcherWrapper::deviceAdded, manager, onAdded, Qt::QueuedConnection);
+        connect(this, &WatcherWrapper::deviceRemoved, manager, onRemoved, Qt::QueuedConnection);
+        mInitialized = true;
+        mWatcher.Start();
+        return true;
+    }
+
+signals:
+    void deviceAdded(winrt::hstring id);
+    void deviceRemoved(winrt::hstring id);
+
+private:
+    void subscribeToEvents()
+    {
+        // The callbacks are triggered from separate threads. So we capture
+        // thisPtr to make sure that the object is valid.
+        auto thisPtr = shared_from_this();
+        mAddedToken = mWatcher.Added([thisPtr](DeviceWatcher, const DeviceInformation &info) {
+            emit thisPtr->deviceAdded(info.Id());
+        });
+        mRemovedToken =
+                mWatcher.Removed([thisPtr](DeviceWatcher, const DeviceInformationUpdate &upd) {
+                    emit thisPtr->deviceRemoved(upd.Id());
+                });
+    }
+    void unsubscribeFromEvents()
+    {
+        mWatcher.Added(mAddedToken);
+        mWatcher.Removed(mRemovedToken);
+    }
+
+    bool mInitialized = false;
+    DeviceWatcher mWatcher = nullptr;
+    winrt::event_token mAddedToken;
+    winrt::event_token mRemovedToken;
+};
+
 /*
     This class is supposed to manage winrt::Windows::Devices::Radios::Radio
     instances. It looks like Windows behaves incorrectly when there are multiple
@@ -151,18 +215,14 @@ private:
     };
 
     Radio getRadioFromAdapterId(winrt::hstring id);
-    void subscribeToAdapterEvents();
-    void unsubscribeFromAdapterEvents();
-    void onAdapterAdded(const DeviceInformation &devInfo);
-    void onAdapterRemoved(const DeviceInformationUpdate &devInfoUpdate);
+    Q_SLOT void onAdapterAdded(winrt::hstring id);
+    Q_SLOT void onAdapterRemoved(winrt::hstring id);
     void subscribeToStateChanges(RadioInfo &info);
     void unsubscribeFromStateChanges(RadioInfo &info);
     void onStateChange(Radio radio);
     Q_SLOT void tryResubscribeToStateChanges(winrt::hstring id, int numAttempts);
 
-    DeviceWatcher mWatcher = nullptr;
-    winrt::event_token mAddedToken;
-    winrt::event_token mRemovedToken;
+    std::shared_ptr<WatcherWrapper> mAdapterWatcher = nullptr;
     QMutex mRadiosMutex;
     // Key for this map is BluetoothAdapter Id, *not* Radio Id.
     QMap<winrt::hstring, RadioInfo> mRadios;
@@ -172,19 +232,12 @@ AdapterManager::AdapterManager() : QObject()
 {
     qRegisterMetaType<winrt::hstring>("winrt::hstring");
     const auto adapterSelector = BluetoothAdapter::GetDeviceSelector();
-    mWatcher = DeviceInformation::CreateWatcher(adapterSelector);
-    if (mWatcher) {
-        subscribeToAdapterEvents();
-        mWatcher.Start();
-    }
+    mAdapterWatcher = std::make_shared<WatcherWrapper>(adapterSelector);
+    mAdapterWatcher->init(this, &AdapterManager::onAdapterAdded, &AdapterManager::onAdapterRemoved);
 }
 
 AdapterManager::~AdapterManager()
 {
-    if (mWatcher) {
-        mWatcher.Stop();
-        unsubscribeFromAdapterEvents();
-    }
 }
 
 QBluetoothLocalDevice::HostMode AdapterManager::addClient(QBluetoothLocalDevicePrivate *client)
@@ -289,25 +342,6 @@ void AdapterManager::onStateChange(Radio radio)
     }
 }
 
-void AdapterManager::subscribeToAdapterEvents()
-{
-    QPointer<AdapterManager> thisPtr(this);
-    mAddedToken = mWatcher.Added([thisPtr](DeviceWatcher, const DeviceInformation &info) {
-        if (thisPtr)
-            thisPtr->onAdapterAdded(info);
-    });
-    mRemovedToken = mWatcher.Removed([thisPtr](DeviceWatcher, const DeviceInformationUpdate &upd) {
-        if (thisPtr)
-            thisPtr->onAdapterRemoved(upd);
-    });
-}
-
-void AdapterManager::unsubscribeFromAdapterEvents()
-{
-    mWatcher.Added(mAddedToken);
-    mWatcher.Removed(mRemovedToken);
-}
-
 static const int kMaximumAttempts = 5;
 
 // In practice when the adapter is reconnected, the Radio object can't be
@@ -353,9 +387,8 @@ void AdapterManager::tryResubscribeToStateChanges(winrt::hstring id, int numAtte
     }
 }
 
-void AdapterManager::onAdapterAdded(const DeviceInformation &devInfo)
+void AdapterManager::onAdapterAdded(winrt::hstring id)
 {
-    const auto id = devInfo.Id();
     emit adapterAdded(id);
     // We need to invoke the method from a Qt thread, so that we could start a
     // timer there.
@@ -363,9 +396,8 @@ void AdapterManager::onAdapterAdded(const DeviceInformation &devInfo)
                               Q_ARG(winrt::hstring, id), Q_ARG(int, 0));
 }
 
-void AdapterManager::onAdapterRemoved(const DeviceInformationUpdate &devInfoUpdate)
+void AdapterManager::onAdapterRemoved(winrt::hstring id)
 {
-    const auto id = devInfoUpdate.Id();
     emit adapterRemoved(id);
     QMutexLocker locker(&mRadiosMutex);
     if (mRadios.contains(id)) {
