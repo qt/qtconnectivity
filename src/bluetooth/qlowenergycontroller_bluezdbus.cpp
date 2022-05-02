@@ -413,7 +413,8 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServices()
     Q_Q(QLowEnergyController);
 
     auto setupServicePrivate = [&, q](
-            QLowEnergyService::ServiceType type, const QBluetoothUuid &uuid, const QString &path){
+            QLowEnergyService::ServiceType type, const QBluetoothUuid &uuid,
+            const QString &path, const bool battery1Interface = false){
         QSharedPointer<QLowEnergyServicePrivate> priv = QSharedPointer<QLowEnergyServicePrivate>::create();
         priv->uuid = uuid;
         priv->type = type; // we make a guess we cannot validate
@@ -421,8 +422,11 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServices()
 
         GattService serviceContainer;
         serviceContainer.servicePath = path;
-        if (uuid == QBluetoothUuid::ServiceClassUuid::BatteryService)
+
+        if (battery1Interface) {
+            qCDebug(QT_BT_BLUEZ) << "Using Battery1 interface to emulate generic interface";
             serviceContainer.hasBatteryService = true;
+        }
 
         serviceList.insert(priv->uuid, priv);
         dbusServices.insert(priv->uuid, serviceContainer);
@@ -432,25 +436,50 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServices()
 
     const ManagedObjectList managedObjectList = reply.value();
     const QString servicePathPrefix = device->path().append(QStringLiteral("/service"));
+
+    // The Bluez battery service (0x180f) support has evolved over time and needs additional logic:
+    //
+    // * Until 5.47 Bluez exposes battery services via generic interface (GattService1) only
+    // * Between 5.48..5.54 Bluez exposes battery service as a dedicated 'Battery1' interface only
+    // * From 5.55 Bluez exposes both the generic service as well as the dedicated 'Battery1'
+    //
+    // To hide the difference from users the 'Battery1' interface will be used to emulate the
+    // generic interface. Importantly also the GattService1 interface, if available, is available
+    // early whereas the Battery1 interface may be available only later (generated too late for
+    // this service discovery's purposes)
+    //
+    // The precedence for battery service here is as follows:
+    // * If available via GattService1, use that and ignore possible Battery1 interface
+    // * If Battery1 interface is available or the 'org.bluez.Device1' lists battery service
+    //   amongst list of available services, mark the service such that the code will later
+    //   look up the Battery1 service details
+    bool gattBatteryService{false};
+    QString batteryServicePath;
+
     for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
         const InterfaceList &ifaceList = it.value();
 
         if (!it.key().path().startsWith(device->path()))
             continue;
 
-        // Since Bluez 5.48 battery services (0x180f) are no longer exposed
-        // as generic services under servicePathPrefix.
-        // A dedicated org.bluez.Battery1 interface is exposed. Here we are going to revert
-        // Bettery1 to the generic pattern.
         if (it.key().path() == device->path())  {
-            // find Battery1 service
+            // See if the battery service is available or is assumed to be available later
             for (InterfaceList::const_iterator battIter = ifaceList.constBegin(); battIter != ifaceList.constEnd(); ++battIter) {
                 const QString &iface = battIter.key();
                 if (iface == QStringLiteral("org.bluez.Battery1")) {
-                    qCDebug(QT_BT_BLUEZ) << "Found dedicated Battery service -> emulating generic btle access";
-                    setupServicePrivate(QLowEnergyService::PrimaryService,
-                                        QBluetoothUuid::ServiceClassUuid::BatteryService,
-                                        it.key().path());
+                    qCDebug(QT_BT_BLUEZ) << "Dedicated Battery1 service available";
+                    batteryServicePath = it.key().path();
+                    break;
+                } else if (iface == QStringLiteral("org.bluez.Device1")) {
+                    for (auto const& uuid :
+                         battIter.value()[QStringLiteral("UUIDs")].toStringList()) {
+                        if (QBluetoothUuid(uuid) ==
+                                QBluetoothUuid::ServiceClassUuid::BatteryService) {
+                            qCDebug(QT_BT_BLUEZ) << "Battery service listed as available service";
+                            batteryServicePath = it.key().path();
+                            break;
+                        }
+                    }
                 }
             }
             continue;
@@ -466,12 +495,23 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServices()
                 QScopedPointer<OrgBluezGattService1Interface> service(new OrgBluezGattService1Interface(
                                     QStringLiteral("org.bluez"),it.key().path(),
                                     QDBusConnection::systemBus(), this));
+                if (QBluetoothUuid(service->uUID()) ==
+                        QBluetoothUuid::ServiceClassUuid::BatteryService) {
+                    qCDebug(QT_BT_BLUEZ) << "Using battery service via GattService1 interface";
+                    gattBatteryService = true;
+                }
                 setupServicePrivate(service->primary()
                                     ? QLowEnergyService::PrimaryService
                                     : QLowEnergyService::IncludedService,
                                     QBluetoothUuid(service->uUID()), it.key().path());
             }
         }
+    }
+
+    if (!gattBatteryService && !batteryServicePath.isEmpty()) {
+        setupServicePrivate(QLowEnergyService::PrimaryService,
+                            QBluetoothUuid::ServiceClassUuid::BatteryService,
+                            batteryServicePath, true);
     }
 
     setState(QLowEnergyController::DiscoveredState);
