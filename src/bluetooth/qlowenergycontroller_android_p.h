@@ -73,8 +73,6 @@ class LowEnergyNotificationHub;
 
 extern void registerQLowEnergyControllerMetaType();
 
-class QLeAdvertiser;
-
 class QLowEnergyControllerPrivateAndroid final : public QLowEnergyControllerPrivate
 {
     Q_OBJECT
