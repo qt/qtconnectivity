@@ -51,6 +51,9 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
+QLeAdvertiser::~QLeAdvertiser()
+    = default;
+
 struct AdvParams {
     quint16 minInterval;
     quint16 maxInterval;

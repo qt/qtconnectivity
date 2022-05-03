@@ -78,7 +78,7 @@ public:
                   const QLowEnergyAdvertisingData &advData,
                   const QLowEnergyAdvertisingData &responseData, QObject *parent)
         : QObject(parent), m_params(params), m_advData(advData), m_responseData(responseData) {}
-    virtual ~QLeAdvertiser() { }
+    ~QLeAdvertiser() override;
 
 protected:
     const QLowEnergyAdvertisingParameters &parameters() const { return m_params; }
