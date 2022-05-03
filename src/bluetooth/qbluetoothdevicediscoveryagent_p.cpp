@@ -88,3 +88,5 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
 
 
 QT_END_NAMESPACE
+
+#include "moc_qbluetoothdevicediscoveryagent_p.cpp"

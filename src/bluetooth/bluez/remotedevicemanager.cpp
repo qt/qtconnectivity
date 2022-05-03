@@ -169,3 +169,5 @@ void RemoteDeviceManager::disconnectDevice(const QBluetoothAddress &remote)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_remotedevicemanager_p.cpp"

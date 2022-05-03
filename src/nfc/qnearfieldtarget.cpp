@@ -437,3 +437,5 @@ QNearFieldTarget::QNearFieldTarget(QNearFieldTargetPrivate *backend, QObject *pa
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qnearfieldtarget.cpp"
