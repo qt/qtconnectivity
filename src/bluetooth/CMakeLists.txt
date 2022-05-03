@@ -58,7 +58,7 @@ if(QT_FEATURE_bluez)
             bluez/battery1.cpp bluez/battery1_p.h
             bluez/bluetoothmanagement.cpp bluez/bluetoothmanagement_p.h
             bluez/bluez5_helper.cpp bluez/bluez5_helper_p.h
-            bluez/bluez_data_p.h
+            bluez/bluez_data.cpp bluez/bluez_data_p.h
             bluez/device1_bluez5.cpp bluez/device1_bluez5_p.h
             bluez/gattchar1.cpp bluez/gattchar1_p.h
             bluez/gattdesc1.cpp bluez/gattdesc1_p.h
