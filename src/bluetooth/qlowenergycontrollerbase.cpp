@@ -329,3 +329,5 @@ QLowEnergyService *QLowEnergyControllerPrivate::addServiceHelper(
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qlowenergycontrollerbase_p.cpp"

@@ -1305,3 +1305,5 @@ QLowEnergyService *QLowEnergyControllerPrivateBluezDBus::addServiceHelper(
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qlowenergycontroller_bluezdbus_p.cpp"

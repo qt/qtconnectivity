@@ -928,3 +928,5 @@ QLowEnergyController::Role QLowEnergyController::role() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qlowenergycontroller.cpp"

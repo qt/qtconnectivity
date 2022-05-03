@@ -83,3 +83,5 @@ void QLowEnergyServicePrivate::setState(QLowEnergyService::ServiceState newState
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qlowenergyserviceprivate_p.cpp"

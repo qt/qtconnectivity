@@ -599,3 +599,5 @@ void HciManager::handleLeMetaEvent(const quint8 *data)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_hcimanager_p.cpp"

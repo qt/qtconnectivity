@@ -70,3 +70,5 @@ void OrgBluezProfile1ContextInterface::Release()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_profile1context_p.cpp"

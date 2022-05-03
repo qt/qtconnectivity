@@ -551,3 +551,5 @@ void QNearFieldTarget::reportError(QNearFieldTarget::Error error,
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qnearfieldtarget.cpp"
