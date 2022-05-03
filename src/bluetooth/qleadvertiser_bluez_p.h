@@ -100,6 +100,7 @@ class HciManager;
 
 class QLeAdvertiserBluez : public QLeAdvertiser
 {
+    Q_OBJECT
 public:
     QLeAdvertiserBluez(const QLowEnergyAdvertisingParameters &params,
                        const QLowEnergyAdvertisingData &advertisingData,
