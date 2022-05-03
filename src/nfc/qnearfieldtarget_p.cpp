@@ -163,3 +163,5 @@ void QNearFieldTargetPrivate::reportError(NearFieldTarget::Error error, const Ne
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qnearfieldtarget_p.cpp"

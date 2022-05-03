@@ -106,3 +106,5 @@ Q_LOGGING_CATEGORY(QT_BT_WINDOWS, "qt.bluetooth.windows")
 Q_LOGGING_CATEGORY(QT_BT_WINDOWS_SERVICE_THREAD, "qt.bluetooth.winrt.service.thread")
 
 QT_END_NAMESPACE
+
+#include "moc_qbluetooth.cpp"

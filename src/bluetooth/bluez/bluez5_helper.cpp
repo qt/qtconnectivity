@@ -570,3 +570,5 @@ QString sanitizeNameForDBus(const QString &text)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_bluez5_helper_p.cpp"

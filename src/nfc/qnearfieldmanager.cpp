@@ -293,3 +293,7 @@ void QNearFieldManager::setUserInformation(const QString &message)
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qnearfieldmanager_p.cpp"
+
+#include "moc_qnearfieldmanager.cpp"
