@@ -37,7 +37,7 @@
 **
 ****************************************************************************/
 
-#include "qleadvertiser_p.h"
+#include "qleadvertiser_bluez_p.h"
 
 #include "bluez/bluez_data_p.h"
 #include "bluez/hcimanager_p.h"

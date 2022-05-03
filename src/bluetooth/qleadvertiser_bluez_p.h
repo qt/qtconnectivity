@@ -37,8 +37,8 @@
 **
 ****************************************************************************/
 
-#ifndef QLEADVERTISER_P_H
-#define QLEADVERTISER_P_H
+#ifndef QLEADVERTISER_BLUEZ_P_H
+#define QLEADVERTISER_BLUEZ_P_H
 
 //
 //  W A R N I N G
@@ -54,9 +54,9 @@
 #include "qlowenergyadvertisingdata.h"
 #include "qlowenergyadvertisingparameters.h"
 
-#if QT_CONFIG(bluez)
+QT_REQUIRE_CONFIG(bluez);
+
 #include "bluez/bluez_data_p.h"
-#endif
 
 #include <QtCore/qobject.h>
 #include <QtCore/qvector.h>
@@ -94,8 +94,6 @@ private:
     const QLowEnergyAdvertisingData m_responseData;
 };
 
-
-#if QT_CONFIG(bluez)
 struct AdvData;
 struct AdvParams;
 class HciManager;
@@ -147,7 +145,6 @@ private:
     quint8 m_powerLevel;
     bool m_sendPowerLevel;
 };
-#endif // QT_CONFIG(bluez)
 
 QT_END_NAMESPACE
 

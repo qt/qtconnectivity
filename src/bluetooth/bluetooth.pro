@@ -46,7 +46,6 @@ HEADERS += \
     qbluetoothlocaldevice_p.h \
     qlowenergycontrollerbase_p.h \
     qlowenergyserviceprivate_p.h \
-    qleadvertiser_p.h \
     lecmaccalculator_p.h
 
 SOURCES += \
@@ -116,8 +115,10 @@ qtConfig(bluez) {
             lecmaccalculator.cpp \
             qlowenergycontroller_bluezdbus.cpp
 
-        HEADERS += qlowenergycontroller_bluezdbus_p.h \
-                           qlowenergycontroller_bluez_p.h
+        HEADERS += \
+            qleadvertiser_bluez_p.h \
+            qlowenergycontroller_bluezdbus_p.h \
+            qlowenergycontroller_bluez_p.h
 
         qtConfig(linux_crypto_api): DEFINES += CONFIG_LINUX_CRYPTO_API
     } else {
