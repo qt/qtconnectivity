@@ -882,3 +882,5 @@ void QLowEnergyService::writeDescriptor(const QLowEnergyDescriptor &descriptor,
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qlowenergyservice.cpp"

@@ -677,3 +677,5 @@ bool QBluetoothSocketPrivateBluez::canReadLine() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qbluetoothsocket_bluez_p.cpp"

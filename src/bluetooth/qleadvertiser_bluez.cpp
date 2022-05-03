@@ -463,3 +463,5 @@ void QLeAdvertiserBluez::handleError()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qleadvertiser_bluez_p.cpp"

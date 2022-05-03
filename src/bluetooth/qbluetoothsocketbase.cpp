@@ -52,3 +52,5 @@ QBluetoothSocketBasePrivate::~QBluetoothSocketBasePrivate()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qbluetoothsocketbase_p.cpp"

@@ -3507,3 +3507,5 @@ bool QLowEnergyControllerPrivateBluez::verifyMac(const QByteArray &message, cons
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qlowenergycontroller_bluez_p.cpp"
