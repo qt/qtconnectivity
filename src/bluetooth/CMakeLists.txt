@@ -17,7 +17,6 @@ qt_internal_add_module(Bluetooth
         qbluetoothsocket.cpp qbluetoothsocket.h
         qbluetoothsocketbase.cpp qbluetoothsocketbase_p.h
         qbluetoothuuid.cpp qbluetoothuuid.h
-        qleadvertiser_p.h
         qlowenergyadvertisingdata.cpp qlowenergyadvertisingdata.h
         qlowenergyadvertisingparameters.cpp qlowenergyadvertisingparameters.h
         qlowenergycharacteristic.cpp qlowenergycharacteristic.h
@@ -88,7 +87,7 @@ if(QT_FEATURE_bluez)
         qt_internal_extend_target(Bluetooth
             SOURCES
                 lecmaccalculator.cpp
-                qleadvertiser_bluez.cpp
+                qleadvertiser_bluez.cpp qleadvertiser_bluez_p.h
                 qlowenergycontroller_bluez.cpp qlowenergycontroller_bluez_p.h
                 qlowenergycontroller_bluezdbus.cpp qlowenergycontroller_bluezdbus_p.h
         )
