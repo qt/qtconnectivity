@@ -81,7 +81,6 @@ public:
     void connectToService(const QBluetoothAddress &address, quint16 port,
                           QIODevice::OpenMode openMode) override;
 
-    bool fallBackConnect(QJniObject uuid, int channel);
     bool fallBackReversedConnect(const QBluetoothUuid &uuid);
 
     bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type) override;

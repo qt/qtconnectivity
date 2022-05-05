@@ -235,18 +235,6 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     if (requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod) {
         // LE search only requested or classic discovery failed but lets try LE scan anyway
         Q_ASSERT(requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
-
-        if (QNativeInterface::QAndroidApplication::sdkVersion() < 18) {
-            qCDebug(QT_BT_ANDROID) << "Skipping Bluetooth Low Energy device scan due to "
-                                      "insufficient Android version"
-                                     << QNativeInterface::QAndroidApplication::sdkVersion();
-            m_active = NoScanActive;
-            lastError = QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod;
-            errorString = QBluetoothDeviceDiscoveryAgent::tr("Low Energy Discovery not supported");
-            emit q->errorOccurred(lastError);
-            return;
-        }
-
         startLowEnergyScan();
     }
 }
@@ -311,14 +299,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processSdpDiscoveryFinished()
             return;
         }
 
-        // start LE scan if supported
-        if (QNativeInterface::QAndroidApplication::sdkVersion() < 18) {
-            qCDebug(QT_BT_ANDROID) << "Skipping Bluetooth Low Energy device scan";
-            m_active = NoScanActive;
-            emit q->finished();
-        } else {
-            startLowEnergyScan();
-        }
+        startLowEnergyScan();
     }
 }
 

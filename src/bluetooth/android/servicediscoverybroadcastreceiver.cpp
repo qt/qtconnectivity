@@ -51,8 +51,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 ServiceDiscoveryBroadcastReceiver::ServiceDiscoveryBroadcastReceiver(QObject* parent): AndroidBroadcastReceiver(parent)
 {
-    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 15)
-        addAction(valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ActionUuid)); //API 15+
+    addAction(valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ActionUuid));
 }
 
 void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobject intent)
