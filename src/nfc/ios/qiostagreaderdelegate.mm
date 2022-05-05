@@ -27,13 +27,13 @@ QT_USE_NAMESPACE
 
 - (void)startSession
 {
-    if (self.sessionStoppedByApplication) {
-        Q_EMIT self.listener->didInvalidateWithError(true);
-        return;
+    if (self.session && !self.sessionStoppedByApplication) {
+        [self.session invalidateSession];
+        self.sessionStoppedByApplication = true;
     }
 
-    if (self.session) {
-        [self.session restartPolling];
+    if (self.sessionStoppedByApplication) {
+        Q_EMIT self.listener->didInvalidateWithError(true);
         return;
     }
 
@@ -49,16 +49,12 @@ QT_USE_NAMESPACE
 
 - (void)stopSession:(QString)message
 {
-    if (self.session) {
-        if (self.session.ready) {
-            if (message.isNull())
-                [self.session invalidateSession];
-            else
-               [self.session invalidateSessionWithErrorMessage:message.toNSString()];
-           self.sessionStoppedByApplication = true;
-        } else {
-            self.session = nil;
-        }
+    if (self.session && !self.sessionStoppedByApplication) {
+        if (message.isNull())
+            [self.session invalidateSession];
+        else
+            [self.session invalidateSessionWithErrorMessage:message.toNSString()];
+        self.sessionStoppedByApplication = true;
     }
 }
 
