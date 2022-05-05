@@ -200,10 +200,9 @@ void Chat::connectClicked()
 
     RemoteSelector remoteSelector(adapter);
 #ifdef Q_OS_ANDROID
-    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 23)
-        remoteSelector.startDiscovery(QBluetoothUuid(reverseUuid));
-    else
-        remoteSelector.startDiscovery(QBluetoothUuid(serviceUuid));
+    // QTBUG-61392
+    Q_UNUSED(serviceUuid);
+    remoteSelector.startDiscovery(QBluetoothUuid(reverseUuid));
 #else
     remoteSelector.startDiscovery(QBluetoothUuid(serviceUuid));
 #endif

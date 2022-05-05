@@ -575,14 +575,10 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(const 
         env->ReleaseByteArrayElements(scanRecord, elems, JNI_ABORT);
     }
 
-    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 18) {
-        auto methodId = env.findMethod(bluetoothDevice.objectClass(),
-                                       "getType",
-                                       "()I");
-        jint javaBtType = env->CallIntMethod(bluetoothDevice.object(), methodId);
-        if (!env.checkAndClearExceptions()) {
-            info.setCoreConfigurations(qtBtTypeForJavaBtType(javaBtType));
-        }
+    auto methodId = env.findMethod(bluetoothDevice.objectClass(), "getType", "()I");
+    jint javaBtType = env->CallIntMethod(bluetoothDevice.object(), methodId);
+    if (!env.checkAndClearExceptions()) {
+        info.setCoreConfigurations(qtBtTypeForJavaBtType(javaBtType));
     }
 
     return info;
