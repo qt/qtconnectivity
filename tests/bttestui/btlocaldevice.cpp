@@ -315,8 +315,8 @@ void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
     bool matchingService =
             (info.serviceUuid() == QBluetoothUuid(QString(TEST_SERVICE_UUID)));
 #ifdef Q_OS_ANDROID
-    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 23) //bug introduced by Android 6.0.1
-        matchingService = matchingService
+    // QTBUG-61392
+    matchingService = matchingService
             || (info.serviceUuid() == QBluetoothUuid(QString(TEST_REVERSE_SERVICE_UUID)));
 #endif
 

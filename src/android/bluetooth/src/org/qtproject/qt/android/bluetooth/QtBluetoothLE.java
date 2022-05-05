@@ -102,7 +102,6 @@ public class QtBluetoothLE {
     private final int RUNNABLE_TIMEOUT = 3000; // 3 seconds
     private final Handler timeoutHandler = new Handler(Looper.getMainLooper());
 
-    /* New BTLE scanner setup since Android SDK v21 */
     private BluetoothLeScanner mBluetoothLeScanner = null;
 
     private class TimeoutRunnable implements Runnable {
@@ -223,18 +222,19 @@ public class QtBluetoothLE {
             return true;
 
         if (isEnabled) {
-            Log.d(TAG, "New BTLE scanning API");
+            Log.d(TAG, "Attempting to start BTLE scan");
             ScanSettings.Builder settingsBuilder = new ScanSettings.Builder();
             settingsBuilder = settingsBuilder.setScanMode(ScanSettings.SCAN_MODE_BALANCED);
             ScanSettings settings = settingsBuilder.build();
 
             List<ScanFilter> filterList = new ArrayList<ScanFilter>();
 
-            mBluetoothLeScanner.startScan(filterList, settings, leScanCallback21);
+            mBluetoothLeScanner.startScan(filterList, settings, leScanCallback);
             mLeScanRunning = true;
         } else {
+            Log.d(TAG, "Attempting to stop BTLE scan");
             try {
-                mBluetoothLeScanner.stopScan(leScanCallback21);
+                mBluetoothLeScanner.stopScan(leScanCallback);
             } catch (IllegalStateException isex) {
                 // when trying to stop a scan while bluetooth is offline
                 // java.lang.IllegalStateException: BT Adapter is not turned ON
@@ -246,8 +246,7 @@ public class QtBluetoothLE {
         return (mLeScanRunning == isEnabled);
     }
 
-    // Device scan callback (SDK v21+)
-    private final ScanCallback leScanCallback21 = new ScanCallback() {
+    private final ScanCallback leScanCallback = new ScanCallback() {
         @Override
         public void onScanResult(int callbackType, ScanResult result) {
             super.onScanResult(callbackType, result);
@@ -688,7 +687,7 @@ public class QtBluetoothLE {
             super.onDescriptorWrite(gatt, descriptor, status);
             handleOnDescriptorWrite(gatt, descriptor, status);
         }
-        //TODO Requires Android API 21 which is not available on CI yet.
+        //TODO currently not supported
 //        public void onReliableWriteCompleted(android.bluetooth.BluetoothGatt gatt,
 //                                             int status) {
 //            System.out.println("onReliableWriteCompleted");
@@ -699,7 +698,6 @@ public class QtBluetoothLE {
 //            System.out.println("onReadRemoteRssi");
 //        }
 
-        // requires Android API v21
         public void onMtuChanged(android.bluetooth.BluetoothGatt gatt, int mtu, int status)
         {
             super.onMtuChanged(gatt, mtu, status);
@@ -763,7 +761,7 @@ public class QtBluetoothLE {
 
         if (mBluetoothGatt == null) {
             try {
-                //This API element is currently: greylist-max-o, reflection, allowed
+                //This API element is currently: greylist-max-o (API level 27), reflection, allowed
                 //It may change in the future
                 Class[] constr_args = new Class[5];
                 constr_args[0] = android.bluetooth.BluetoothGattService.class;
@@ -781,34 +779,15 @@ public class QtBluetoothLE {
                     Nevertheless we continue with best effort.
                 */
             }
-
             try {
-                // BluetoothDevice.connectGatt(Context, boolean, BluetoothGattCallback, int) was
-                // officially introduced by Android API v23. Earlier Android versions have a
-                // private
-                // implementation already though. Let's check at runtime and use it if possible.
-                //
-                // In general the new connectGatt() seems to be much more reliable than the
-                // function
-                // that doesn't specify the transport layer.
-
-                Class[] args = new Class[4];
-                args[0] = android.content.Context.class;
-                args[1] = boolean.class;
-                args[2] = android.bluetooth.BluetoothGattCallback.class;
-                args[3] = int.class;
-                Method connectMethod = mRemoteGattDevice.getClass().getDeclaredMethod("connectGatt", args);
-                if (connectMethod != null) {
-                    mBluetoothGatt = (BluetoothGatt) connectMethod.invoke(mRemoteGattDevice, qtContext, false,
-                            gattCallback, 2 /* TRANSPORT_LE */);
-                    Log.w(TAG, "Using Android v23 BluetoothDevice.connectGatt()");
-                }
-            } catch (Exception ex) {
-                // fallback to less reliable API 18 version
-                mBluetoothGatt = mRemoteGattDevice.connectGatt(qtContext, false, gattCallback);
+                mBluetoothGatt =
+                    mRemoteGattDevice.connectGatt(qtContext, false,
+                                                  gattCallback, 2 /* TRANSPORT_LE */);
+            } catch (IllegalArgumentException ex) {
+                Log.w(TAG, "Gatt connection failed");
+                ex.printStackTrace();
             }
         }
-
         return mBluetoothGatt != null;
     }
 
@@ -1136,26 +1115,18 @@ public class QtBluetoothLE {
                 handleDiscoveredService + 1, discoveredService.endHandle + 1);
     }
 
-    // Executes under "this" client mutex
+    // Executes under "this" client mutex. Returns true
+    // if no actual MTU exchange is initiated
     private boolean executeMtuExchange()
     {
-        if (Build.VERSION.SDK_INT >= 21) {
-            try {
-                Method mtuMethod = mBluetoothGatt.getClass().getDeclaredMethod("requestMtu", int.class);
-                if (mtuMethod != null) {
-                    Boolean success = (Boolean) mtuMethod.invoke(mBluetoothGatt, MAX_MTU);
-                    if (success.booleanValue()) {
-                        Log.w(TAG, "MTU change initiated");
-                        return false;
-                    } else {
-                        Log.w(TAG, "MTU change request failed");
-                    }
-                }
-            } catch (Exception ex) {}
+        if (mBluetoothGatt.requestMtu(MAX_MTU)) {
+            Log.w(TAG, "MTU change initiated");
+            return false;
+        } else {
+            Log.w(TAG, "MTU change request failed");
         }
 
-       Log.w(TAG, "Assuming default MTU value of 23 bytes");
-
+        Log.w(TAG, "Assuming default MTU value of 23 bytes");
         mSupportedMtu = DEFAULT_MTU;
         return true;
     }
@@ -1723,22 +1694,16 @@ public class QtBluetoothLE {
         if (mBluetoothGatt == null)
             return false;
 
+        int requestPriority = 0; // BluetoothGatt.CONNECTION_PRIORITY_BALANCED
+        if (minimalInterval < 30)
+            requestPriority = 1; // BluetoothGatt.CONNECTION_PRIORITY_HIGH
+        else if (minimalInterval > 100)
+            requestPriority = 2; //BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER
+
         try {
-            //Android API v21
-            Method connectionUpdateMethod = mBluetoothGatt.getClass().getDeclaredMethod(
-                                                "requestConnectionPriority", int.class);
-            if (connectionUpdateMethod == null)
-                return false;
-
-            int requestPriority = 0; // BluetoothGatt.CONNECTION_PRIORITY_BALANCED
-            if (minimalInterval < 30)
-                requestPriority = 1; // BluetoothGatt.CONNECTION_PRIORITY_HIGH
-            else if (minimalInterval > 100)
-                requestPriority = 2; //BluetoothGatt/CONNECTION_PRIORITY_LOW_POWER
-
-            Object result = connectionUpdateMethod.invoke(mBluetoothGatt, requestPriority);
-            return (Boolean) result;
-        } catch (Exception ex) {
+            return mBluetoothGatt.requestConnectionPriority(requestPriority);
+        } catch (IllegalArgumentException ex) {
+            Log.w(TAG, "Connection update priority out of range: " + requestPriority);
             return false;
         }
     }

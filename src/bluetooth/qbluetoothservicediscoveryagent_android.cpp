@@ -86,13 +86,6 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
         }
     }
 
-    if (QNativeInterface::QAndroidApplication::sdkVersion() < 15)
-        qCWarning(QT_BT_ANDROID)
-            << "SDP not supported by Android API below version 15. Detected version: "
-            << QNativeInterface::QAndroidApplication::sdkVersion()
-            << "Service discovery will return empty list.";
-
-
     /*
       We assume that the current local adapter has been passed.
       The logic below must change once there is more than one adapter.
@@ -145,29 +138,6 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
         }
 
         //abort any outstanding discoveries
-        discoveredDevices.clear();
-        emit q->errorOccurred(error);
-        _q_serviceDiscoveryFinished();
-
-        return;
-    }
-
-    /* SDP discovery was officially added by Android API v15
-     * BluetoothDevice.getUuids() existed in earlier APIs already and in the future we may use
-     * reflection to support earlier Android versions than 15. Unfortunately
-     * BluetoothDevice.fetchUuidsWithSdp() and related APIs had some structure changes
-     * over time. Therefore we won't attempt this with reflection.
-     *
-     * TODO: Use reflection to support getUuuids() where possible.
-     * */
-    if (QNativeInterface::QAndroidApplication::sdkVersion() < 15) {
-        qCWarning(QT_BT_ANDROID) << "Aborting SDP enquiry due to too low Android API version (requires v15+)";
-
-        error = QBluetoothServiceDiscoveryAgent::UnknownError;
-        errorString = QBluetoothServiceDiscoveryAgent::tr("Android API below v15 does not support SDP discovery");
-
-        //abort any outstanding discoveries
-        sdpCache.clear();
         discoveredDevices.clear();
         emit q->errorOccurred(error);
         _q_serviceDiscoveryFinished();

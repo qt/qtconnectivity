@@ -92,20 +92,10 @@ QLowEnergyControllerPrivateAndroid::~QLowEnergyControllerPrivateAndroid()
 
 void QLowEnergyControllerPrivateAndroid::init()
 {
-    // Android Central/Client support starts with v18
-    // Peripheral/Server support requires Android API v21
     const bool isPeripheral = (role == QLowEnergyController::PeripheralRole);
-    const jint version = QNativeInterface::QAndroidApplication::sdkVersion();
 
     if (isPeripheral) {
-        if (version < 21) {
-            qWarning() << "Qt Bluetooth LE Peripheral support not available"
-                          "on Android devices below version 21";
-            return;
-        }
-
         qRegisterMetaType<QJniObject>();
-
         hub = new LowEnergyNotificationHub(remoteDevice, isPeripheral, this);
         // we only connect to the peripheral role specific signals
         // TODO add connections as they get added later on
@@ -120,12 +110,6 @@ void QLowEnergyControllerPrivateAndroid::init()
         connect(hub, &LowEnergyNotificationHub::serverDescriptorWritten,
                 this, &QLowEnergyControllerPrivateAndroid::serverDescriptorWritten);
     } else {
-        if (version < 18) {
-            qWarning() << "Qt Bluetooth LE Central/Client support not available"
-                          "on Android devices below version 18";
-            return;
-        }
-
         hub = new LowEnergyNotificationHub(remoteDevice, isPeripheral, this);
         // we only connect to the central role specific signals
         connect(hub, &LowEnergyNotificationHub::connectionUpdated,
@@ -1053,7 +1037,6 @@ void QLowEnergyControllerPrivateAndroid::stopAdvertising()
 
 void QLowEnergyControllerPrivateAndroid::requestConnectionUpdate(const QLowEnergyConnectionParameters &params)
 {
-    // Possible since Android v21
     // Android does not permit specification of specific latency or min/max
     // connection intervals (see BluetoothGatt.requestConnectionPriority()
     // In fact, each device manufacturer is permitted to change those values via a config

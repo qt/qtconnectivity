@@ -43,13 +43,15 @@ package org.qtproject.qt.android.bluetooth;
 import android.app.Activity;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothProfile;
+import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.List;
 
@@ -157,6 +159,7 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
     static public boolean setPairingMode(String address, boolean isPairing)
     {
         BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        // Uses reflection as the removeBond() is not part of public API
         try {
             BluetoothDevice device = adapter.getRemoteDevice(address);
             String methodName = "createBond";
