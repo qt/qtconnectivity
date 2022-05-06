@@ -139,7 +139,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         return;
     }
 
-    auto precisePermission = QtAndroidPrivate::PreciseLocation;
+    auto precisePermission = QStringLiteral("android.permission.ACCESS_FINE_LOCATION");
     auto preciseCheckRes = QtAndroidPrivate::checkPermission(precisePermission).result();
     if (preciseCheckRes != QtAndroidPrivate::Authorized) {
         auto preciseRequestRes = QtAndroidPrivate::requestPermission(precisePermission).result();
