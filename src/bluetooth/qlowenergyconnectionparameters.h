@@ -77,7 +77,7 @@ public:
     void setSupervisionTimeout(int timeout);
     int supervisionTimeout() const;
 
-    void swap(QLowEnergyConnectionParameters &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
+    void swap(QLowEnergyConnectionParameters &other) noexcept { d.swap(other.d); }
 
 private:
     static bool equals(const QLowEnergyConnectionParameters &a,

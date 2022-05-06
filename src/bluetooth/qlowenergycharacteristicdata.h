@@ -90,7 +90,7 @@ public:
 
     bool isValid() const;
 
-    void swap(QLowEnergyCharacteristicData &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
+    void swap(QLowEnergyCharacteristicData &other) noexcept { d.swap(other.d); }
 
 private:
     static bool equals(const QLowEnergyCharacteristicData &a,

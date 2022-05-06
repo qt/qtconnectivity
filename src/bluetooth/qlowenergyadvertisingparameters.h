@@ -107,7 +107,7 @@ public:
     // TODO: own address type
     // TODO: For ADV_DIRECT_IND: peer address + peer address type
 
-    void swap(QLowEnergyAdvertisingParameters &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
+    void swap(QLowEnergyAdvertisingParameters &other) noexcept { d.swap(other.d); }
 
 private:
     static bool equals(const QLowEnergyAdvertisingParameters &a,
