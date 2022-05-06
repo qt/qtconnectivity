@@ -24,3 +24,5 @@ OrgBluezGattDescriptor1Interface::~OrgBluezGattDescriptor1Interface()
 {
 }
 
+
+#include "moc_gattdesc1_p.cpp"

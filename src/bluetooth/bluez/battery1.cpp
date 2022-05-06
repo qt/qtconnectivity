@@ -24,3 +24,5 @@ OrgBluezBattery1Interface::~OrgBluezBattery1Interface()
 {
 }
 
+
+#include "moc_battery1_p.cpp"

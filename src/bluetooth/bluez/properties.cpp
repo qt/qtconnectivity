@@ -24,3 +24,5 @@ OrgFreedesktopDBusPropertiesInterface::~OrgFreedesktopDBusPropertiesInterface()
 {
 }
 
+
+#include "moc_properties_p.cpp"

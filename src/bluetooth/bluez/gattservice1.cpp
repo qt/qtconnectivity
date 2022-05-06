@@ -24,3 +24,5 @@ OrgBluezGattService1Interface::~OrgBluezGattService1Interface()
 {
 }
 
+
+#include "moc_gattservice1_p.cpp"

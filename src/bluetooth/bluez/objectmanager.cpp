@@ -24,3 +24,5 @@ OrgFreedesktopDBusObjectManagerInterface::~OrgFreedesktopDBusObjectManagerInterf
 {
 }
 
+
+#include "moc_objectmanager_p.cpp"

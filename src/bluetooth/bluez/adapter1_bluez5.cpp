@@ -24,3 +24,5 @@ OrgBluezAdapter1Interface::~OrgBluezAdapter1Interface()
 {
 }
 
+
+#include "moc_adapter1_bluez5_p.cpp"

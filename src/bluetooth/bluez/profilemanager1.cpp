@@ -24,3 +24,5 @@ OrgBluezProfileManager1Interface::~OrgBluezProfileManager1Interface()
 {
 }
 
+
+#include "moc_profilemanager1_p.cpp"

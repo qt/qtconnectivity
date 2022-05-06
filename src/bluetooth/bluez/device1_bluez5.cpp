@@ -24,3 +24,5 @@ OrgBluezDevice1Interface::~OrgBluezDevice1Interface()
 {
 }
 
+
+#include "moc_device1_bluez5_p.cpp"

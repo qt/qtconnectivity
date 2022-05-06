@@ -24,3 +24,5 @@ OrgBluezGattCharacteristic1Interface::~OrgBluezGattCharacteristic1Interface()
 {
 }
 
+
+#include "moc_gattchar1_p.cpp"
