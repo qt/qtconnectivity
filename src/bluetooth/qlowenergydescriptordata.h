@@ -80,7 +80,7 @@ public:
     bool isWritable() const;
     QBluetooth::AttAccessConstraints writeConstraints() const;
 
-    void swap(QLowEnergyDescriptorData &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
+    void swap(QLowEnergyDescriptorData &other) noexcept { d.swap(other.d); }
 
 private:
     QSharedDataPointer<QLowEnergyDescriptorDataPrivate> d;

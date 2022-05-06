@@ -84,7 +84,7 @@ public:
     void setRawData(const QByteArray &data);
     QByteArray rawData() const;
 
-    void swap(QLowEnergyAdvertisingData &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
+    void swap(QLowEnergyAdvertisingData &other) noexcept { d.swap(other.d); }
 
 private:
     QSharedDataPointer<QLowEnergyAdvertisingDataPrivate> d;
