@@ -255,7 +255,7 @@ void BluetoothManagement::_q_readNotifier()
             break;
         }
 
-        if (data.length() > nextPackageSize)
+        if (data.size() > nextPackageSize)
             data = data.right(remainingPackageSize);
         else
             data.clear();

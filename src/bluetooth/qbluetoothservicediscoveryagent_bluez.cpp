@@ -458,10 +458,10 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
         QBluetoothUuid uuid;
         const QStringView value = xml.attributes().value(QLatin1String("value"));
         if (value.startsWith(QLatin1String("0x"))) {
-            if (value.length() == 6) {
+            if (value.size() == 6) {
                 quint16 v = value.toUShort(nullptr, 0);
                 uuid = QBluetoothUuid(v);
-            } else if (value.length() == 10) {
+            } else if (value.size() == 10) {
                 quint32 v = value.toUInt(nullptr, 0);
                 uuid = QBluetoothUuid(v);
             }

@@ -766,7 +766,7 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
         }
 
 #ifdef Q_OS_IOS
-        if (ch.value().length() > DarwinBluetooth::maxValueLength) {
+        if (ch.value().size() > DarwinBluetooth::maxValueLength) {
             qCWarning(QT_BT_DARWIN) << "addCharacteristicsAndDescritptors: "
                                        "value exceeds the maximal permitted "
                                        "value length ("

@@ -85,10 +85,10 @@ QBluetoothAddress::QBluetoothAddress(const QString &address)
 {
     QString a = address;
 
-    if (a.length() == 17)
+    if (a.size() == 17)
         a.remove(QLatin1Char(':'));
 
-    if (a.length() == 12) {
+    if (a.size() == 12) {
         bool ok;
         m_address = a.toULongLong(&ok, 16);
         if (!ok)
