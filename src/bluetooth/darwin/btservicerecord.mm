@@ -159,7 +159,7 @@ void add_attribute<QString>(const QVariant &var, AttributeId key, Dictionary dic
         return;
 
     const QString string(var.value<QString>());
-    if (string.length()) {
+    if (!string.isEmpty()) {
         if (NSString *const nsString = string.toNSString())
             [dict setObject:nsString forKey:[NSString stringWithFormat:@"%x", int(key)]];
     }
@@ -235,7 +235,7 @@ void add_attribute<QString>(const QVariant &var, NSMutableArray *list)
         return;
 
     const QString string(var.value<QString>());
-    if (string.length()) {
+    if (!string.isEmpty()) {
         if (NSString *const nsString = string.toNSString())
             [list addObject:nsString];
     }

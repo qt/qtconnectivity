@@ -420,7 +420,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::setError(QBluetoothDeviceDiscoveryAg
 {
     lastError = error;
 
-    if (text.length() > 0) {
+    if (!text.isEmpty()) {
         errorString = text;
     } else {
         switch (lastError) {

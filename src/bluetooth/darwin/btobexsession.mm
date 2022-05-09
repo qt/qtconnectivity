@@ -164,7 +164,7 @@ QList<OBEXHeader> qt_bluetooth_headers(const uint8_t *data, std::size_t length)
                 header.value.fromValue<QString>(QString());
             } else if (headerLength > 5) {// TODO: We do not check now, that the string actually valid.
                 const QString value(extract_qstring(data + i + 3, headerLength - 5));
-                if (!value.length()) // Some error?
+                if (value.isEmpty()) // Some error?
                     return empty;
                 header.value.setValue(value);
             } else // Still something weird.
@@ -264,7 +264,7 @@ bool append_unicode_header(ObjCStrongReference<NSMutableData> headers, uint8_t h
     const NSUInteger initialLength = [headers length];
     [headers appendBytes:&headerID length:1];
 
-    if (!string.length()) {
+    if (string.isEmpty()) {
         // Empty string. The length is 3
         // (header ID + length value itself).
         return append_uint16(headers, 3);
@@ -673,7 +673,7 @@ QT_USE_NAMESPACE
         }
     }
 
-    if (name.length()) {
+    if (!name.isEmpty()) {
         if (!append_unicode_header(headers, kOBEXHeaderIDName, name)) {
             qCWarning(QT_BT_DARWIN) << "failed to append a unicode string";
             return kOBEXNoResourcesError;
