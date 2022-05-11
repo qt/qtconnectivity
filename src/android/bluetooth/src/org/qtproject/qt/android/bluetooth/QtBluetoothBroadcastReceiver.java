@@ -51,7 +51,6 @@ import android.content.Intent;
 import android.util.Log;
 
 import java.lang.reflect.Method;
-import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.List;
 
@@ -183,47 +182,30 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
      * This list is not complete as it only detects GATT/BtLE related connections.
      * Unfortunately there is no API that provides the complete list.
      *
-     * The function uses Android API v11 & v18. We need to use reflection.
      */
     static public String[] getConnectedDevices()
     {
-        try {
-            //Bluetooth service name
-            Field f = Context.class.getField("BLUETOOTH_SERVICE");
-            String serviceValueString = (String)f.get(qtContext);
+        BluetoothManager bluetoothManager =
+            (BluetoothManager) qtContext.getSystemService(Context.BLUETOOTH_SERVICE);
 
-            Class btProfileClz = Class.forName("android.bluetooth.BluetoothProfile");
-
-            //value of BluetoothProfile.GATT
-            f = btProfileClz.getField("GATT");
-            int gatt = f.getInt(null);
-
-            //value of BluetoothProfile.GATT_SERVER
-            f = btProfileClz.getField("GATT_SERVER");
-            int gattServer = f.getInt(null);
-
-            //get BluetoothManager instance
-            Object bluetoothManager = qtContext.getSystemService(serviceValueString);
-
-            Class[] cArg = new Class[1];
-            cArg[0] = int.class;
-            Method m = bluetoothManager.getClass().getMethod("getConnectedDevices", cArg);
-
-            List gattConnections = (List) m.invoke(bluetoothManager, gatt);
-            List gattServerConnections = (List) m.invoke(bluetoothManager, gattServer);
-
-            //process found remote connections but avoid duplications
-            HashSet<String> set = new HashSet<String>();
-            for (Object gattConnection : gattConnections)
-                set.add(gattConnection.toString());
-
-            for (Object gattServerConnection : gattServerConnections)
-                set.add(gattServerConnection.toString());
-
-            return set.toArray(new String[set.size()]);
-        } catch (Exception ex) {
-            //API is less than 18
+        if (bluetoothManager == null) {
+            Log.w(TAG, "Failed to retrieve connected devices");
             return new String[0];
         }
+
+        List<BluetoothDevice> gattConnections =
+            bluetoothManager.getConnectedDevices(BluetoothProfile.GATT);
+        List<BluetoothDevice> gattServerConnections =
+             bluetoothManager.getConnectedDevices(BluetoothProfile.GATT_SERVER);
+
+        // Process found remote connections but avoid duplications
+        HashSet<String> set = new HashSet<String>();
+        for (Object gattConnection : gattConnections)
+            set.add(gattConnection.toString());
+
+        for (Object gattServerConnection : gattServerConnections)
+            set.add(gattServerConnection.toString());
+
+        return set.toArray(new String[set.size()]);
     }
 }
