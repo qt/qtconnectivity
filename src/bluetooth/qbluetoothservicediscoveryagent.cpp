@@ -102,6 +102,9 @@ QT_BEGIN_NAMESPACE
     \value InvalidBluetoothAdapterError The passed local adapter address does not match the physical
                                         adapter address of any local Bluetooth device. This value
                                         was introduced by Qt 5.3.
+    \value [since 6.4] MissingPermissionsError  The operating system requests
+                                                permissions which were not
+                                                granted by the user.
     \value UnknownError     An unknown error has occurred.
 */
 

@@ -119,8 +119,9 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 
     if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
         qCWarning(QT_BT_ANDROID) << "Service discovery start() failed due to missing permissions";
-        error = QBluetoothServiceDiscoveryAgent::UnknownError;
-        errorString = QBluetoothServiceDiscoveryAgent::tr("Unable to perform SDP scan");
+        error = QBluetoothServiceDiscoveryAgent::MissingPermissionsError;
+        errorString = QBluetoothServiceDiscoveryAgent::tr(
+                "Failed to start service discovery due to missing permissions.");
         emit q->errorOccurred(error);
         _q_serviceDiscoveryFinished();
         return;

@@ -111,6 +111,9 @@ QT_BEGIN_NAMESPACE
     \value ServiceAlreadyRegisteredError  The service or port was already registered
     \value UnsupportedProtocolError The \l {QBluetoothServiceInfo::Protocol}{Protocol} is not
                                     supported on this platform.
+    \value [since 6.4] MissingPermissionsError  The operating system requests
+                                                permissions which were not
+                                                granted by the user.
 */
 
 /*!

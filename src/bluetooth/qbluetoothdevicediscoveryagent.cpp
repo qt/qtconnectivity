@@ -100,6 +100,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     \value LocationServiceTurnedOffError    The location service is turned off. Usage of
                                             Bluetooth APIs is not possible when location service
                                             is turned off. This value was introduced by Qt 6.2.
+    \value [since 6.4] MissingPermissionsError  The operating system requests
+                                                permissions which were not
+                                                granted by the user.
     \value UnknownError     An unknown error has occurred.
 */
 

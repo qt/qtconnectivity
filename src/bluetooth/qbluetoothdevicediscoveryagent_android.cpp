@@ -148,7 +148,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
                 "Search not possible due to missing permission (ACCESS_FINE_LOCATION)";
             errorString = QBluetoothDeviceDiscoveryAgent::tr(
                 "Missing Location permission. Search is not possible.");
-            lastError = QBluetoothDeviceDiscoveryAgent::UnknownError;
+            lastError = QBluetoothDeviceDiscoveryAgent::MissingPermissionsError;
             emit q->errorOccurred(lastError);
             return;
         }
@@ -193,8 +193,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     if (!(ensureAndroidPermission(BluetoothPermission::Scan) &&
           ensureAndroidPermission(BluetoothPermission::Connect))) {
         qCWarning(QT_BT_ANDROID) << "Device discovery start() failed due to missing permissions";
-        errorString = QBluetoothDeviceDiscoveryAgent::tr("Bluetooth adapter error");
-        lastError = QBluetoothDeviceDiscoveryAgent::UnknownError;
+        errorString = QBluetoothDeviceDiscoveryAgent::tr(
+                "Failed to start device discovery due to missing permissions.");
+        lastError = QBluetoothDeviceDiscoveryAgent::MissingPermissionsError;
         emit q->errorOccurred(lastError);
         return;
     }

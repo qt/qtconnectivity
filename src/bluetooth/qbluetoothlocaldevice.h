@@ -75,6 +75,7 @@ public:
     enum Error {
         NoError,
         PairingError,
+        MissingPermissionsError,
         UnknownError = 100
     };
     Q_ENUM(Error)

@@ -91,7 +91,8 @@ public:
         ServiceNotFoundError,
         NetworkError,
         UnsupportedProtocolError,
-        OperationError
+        OperationError,
+        MissingPermissionsError
     };
     Q_ENUM(SocketError)
 

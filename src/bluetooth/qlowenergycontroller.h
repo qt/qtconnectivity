@@ -67,7 +67,8 @@ public:
         ConnectionError,
         AdvertisingError,
         RemoteHostClosedError,
-        AuthorizationError
+        AuthorizationError,
+        MissingPermissionsError
     };
     Q_ENUM(Error)
 

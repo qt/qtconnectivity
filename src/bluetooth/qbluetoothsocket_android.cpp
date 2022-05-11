@@ -278,8 +278,9 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
 
     if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
         qCWarning(QT_BT_ANDROID) << "Bluetooth socket connect failed due to missing permissions";
-        errorString = QBluetoothSocket::tr("Unknown socket error");
-        q->setSocketError(QBluetoothSocket::SocketError::UnknownSocketError);
+        errorString = QBluetoothSocket::tr(
+                "Bluetooth socket connect failed due to missing permissions.");
+        q->setSocketError(QBluetoothSocket::SocketError::MissingPermissionsError);
         q->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
         return;
     }

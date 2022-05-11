@@ -66,7 +66,8 @@ public:
         PoweredOffError,
         InputOutputError,
         ServiceAlreadyRegisteredError,
-        UnsupportedProtocolError
+        UnsupportedProtocolError,
+        MissingPermissionsError
     };
     Q_ENUM(Error)
 

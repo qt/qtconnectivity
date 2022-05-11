@@ -169,6 +169,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
     \value AuthorizationError           The local Bluetooth device closed the connection due to
                                         insufficient authorization.
                                         This value was introduced by Qt 5.14.
+    \value [since 6.4] MissingPermissionsError  The operating system requests
+                                                permissions which were not
+                                                granted by the user.
 */
 
 /*!

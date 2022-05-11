@@ -66,6 +66,7 @@ public:
         UnsupportedPlatformError,
         UnsupportedDiscoveryMethod,
         LocationServiceTurnedOffError,
+        MissingPermissionsError,
         UnknownError = 100 // New errors must be added before Unknown error
     };
     Q_ENUM(Error)

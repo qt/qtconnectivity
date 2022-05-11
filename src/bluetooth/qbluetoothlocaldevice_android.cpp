@@ -299,6 +299,7 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode requeste
         if (!ensureAndroidPermission(BluetoothPermission::Advertise)) {
             qCWarning(QT_BT_ANDROID) << "Local device setHostMode() failed due to"
                                         "missing permissions";
+            emit errorOccurred(QBluetoothLocalDevice::MissingPermissionsError);
             return;
         }
         const bool success = (bool)QJniObject::callStaticMethod<jboolean>(

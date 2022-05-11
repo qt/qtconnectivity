@@ -145,7 +145,7 @@ void QLowEnergyControllerPrivateAndroid::connectToDevice()
 
     if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
         // This is unlikely to happen as a valid local adapter is a precondition
-        setError(QLowEnergyController::AuthorizationError);
+        setError(QLowEnergyController::MissingPermissionsError);
         qCWarning(QT_BT_ANDROID) << "connectToDevice() failed due to missing permissions";
         return;
     }
@@ -1004,7 +1004,7 @@ void QLowEnergyControllerPrivateAndroid::startAdvertising(const QLowEnergyAdvert
     if (!(ensureAndroidPermission(BluetoothPermission::Advertise) &&
           ensureAndroidPermission(BluetoothPermission::Connect))) {
         qCWarning(QT_BT_ANDROID) << "startAdvertising() failed due to missing permissions";
-        setError(QLowEnergyController::AdvertisingError);
+        setError(QLowEnergyController::MissingPermissionsError);
         setState(QLowEnergyController::UnconnectedState);
         return;
     }

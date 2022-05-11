@@ -489,6 +489,7 @@ void BtLocalDevice::dumpSocketInformation()
             case QBluetoothSocket::SocketError::NetworkError: tmp += "NetworkError"; break;
             //case QBluetoothSocket::SocketError::OperationError: tmp+= "OperationError"; break;
             case QBluetoothSocket::SocketError::UnsupportedProtocolError: tmp += "UnsupportedProtocolError"; break;
+            case QBluetoothSocket::SocketError::MissingPermissionsError: tmp += "MissingPermissionsError"; break;
             default: tmp+= "Undefined"; break;
         }
 
@@ -730,6 +731,7 @@ void BtLocalDevice::dumpServerInformation()
             case QBluetoothSocket::SocketError::NetworkError: tmp += "NetworkError"; break;
             case QBluetoothSocket::SocketError::UnsupportedProtocolError: tmp += "UnsupportedProtocolError"; break;
             //case QBluetoothSocket::SocketError::OperationError: tmp+= "OperationError"; break;
+            case QBluetoothSocket::SocketError::MissingPermissionsError: tmp += "MissingPermissionsError"; break;
             default: tmp += QString::number(static_cast<int>(client->error())); break;
             }
 

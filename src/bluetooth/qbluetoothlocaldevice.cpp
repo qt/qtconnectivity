@@ -85,6 +85,9 @@ QT_IMPL_METATYPE_EXTERN_TAGGED(QBluetoothLocalDevice::Error, QBluetoothLocalDevi
 
   \value NoError        No known error
   \value PairingError   Error in pairing
+  \value [since 6.4] MissingPermissionsError  The operating system requests
+                                              permissions which were not
+                                              granted by the user.
   \value UnknownError   Unknown error
 
 */

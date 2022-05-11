@@ -131,6 +131,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
                                     that did not permit it.
     \value RemoteHostClosedError    The remote host closed the connection. This value was
                                     introduced by Qt 5.10.
+    \value [since 6.4] MissingPermissionsError  The operating system requests
+                                                permissions which were not
+                                                granted by the user.
 */
 
 /*!
