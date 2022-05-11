@@ -10,9 +10,9 @@ if(NOT TARGET Qt::Bluetooth)
 
     set(CMAKE_AUTOMOC ON)
 
-    find_package(Qt6 COMPONENTS Bluetooth Core)
+    find_package(Qt6 REQUIRED COMPONENTS Bluetooth Core)
     if(ANDROID OR IOS)
-        find_package(Qt6 COMPONENTS Gui)
+        find_package(Qt6 REQUIRED COMPONENTS Gui)
     endif()
 
     qt_add_executable(

@@ -6,7 +6,7 @@ if(NOT TARGET Qt::Bluetooth)
 
     set(CMAKE_AUTOMOC ON)
 
-    find_package(Qt6 COMPONENTS Bluetooth Core Test Gui)
+    find_package(Qt6 REQUIRED COMPONENTS Bluetooth Core Test Gui)
 
     qt_add_executable(
         tst_qlowenergycontroller_device
