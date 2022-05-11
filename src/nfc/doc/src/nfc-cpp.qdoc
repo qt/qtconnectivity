@@ -40,7 +40,7 @@ The \l{Qt NFC} C++ API enables an application to access NFC Forum Tags.
 \include module-use.qdocinc using qt module
 
 \badcode
-find_package(Qt6 COMPONENTS Nfc REQUIRED)
+find_package(Qt6 REQUIRED COMPONENTS Nfc)
 target_link_libraries(mytarget PRIVATE Qt::Nfc)
 \endcode
 
