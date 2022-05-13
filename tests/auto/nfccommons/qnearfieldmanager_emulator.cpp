@@ -108,7 +108,7 @@ void QNearFieldManagerPrivateImpl::tagActivated(TagBase *tag)
         targets.insert(tag, target);
     }
 
-    Q_EMIT targetDetected(new NearFieldTarget(target, this));
+    Q_EMIT targetDetected(new QNearFieldTarget(target, this));
 }
 
 void QNearFieldManagerPrivateImpl::tagDeactivated(TagBase *tag)

@@ -52,12 +52,14 @@ QT_BEGIN_NAMESPACE
 
 class QNdefMessage;
 class QNearFieldTargetPrivate;
+class QNearFieldManagerPrivateImpl;
 
 class Q_NFC_EXPORT QNearFieldTarget : public QObject
 {
     Q_OBJECT
 
     Q_DECLARE_PRIVATE(QNearFieldTarget)
+    friend class QNearFieldManagerPrivateImpl;
 
 public:
     enum Type {

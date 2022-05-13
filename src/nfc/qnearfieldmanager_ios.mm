@@ -153,7 +153,7 @@ void QNearFieldManagerPrivateImpl::onTagDiscovered(void *tag)
     detectedTargets += target;
     connect(target, &QNearFieldTargetPrivateImpl::targetLost,
             this, &QNearFieldManagerPrivateImpl::onTargetLost);
-    Q_EMIT targetDetected(new NearFieldTarget(target, this));
+    Q_EMIT targetDetected(new QNearFieldTarget(target, this));
 }
 
 void QNearFieldManagerPrivateImpl::onTargetLost(QNearFieldTargetPrivateImpl *target)

@@ -424,6 +424,9 @@ QNearFieldTarget::QNearFieldTarget(QNearFieldTargetPrivate *backend, QObject *pa
 {
     Q_D(QNearFieldTarget);
 
+    d->q_ptr = this;
+    d->setParent(this);
+
     qRegisterMetaType<QNearFieldTarget::RequestId>();
     qRegisterMetaType<QNearFieldTarget::Error>();
     qRegisterMetaType<QNdefMessage>();

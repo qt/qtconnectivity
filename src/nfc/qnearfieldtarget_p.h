@@ -113,17 +113,6 @@ protected:
     void reportError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
 };
 
-class NearFieldTarget : public QNearFieldTarget
-{
-public:
-    NearFieldTarget(QNearFieldTargetPrivate *backend, QObject *parent = nullptr)
-    : QNearFieldTarget(backend, parent)
-    {
-        backend->q_ptr = this;
-        backend->setParent(this);
-    }
-};
-
 QT_END_NAMESPACE
 
 #endif // QNEARFIELDTARGET_P_H

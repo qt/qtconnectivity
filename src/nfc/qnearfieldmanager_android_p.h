@@ -65,7 +65,6 @@ QT_BEGIN_NAMESPACE
 
 typedef QList<QNdefMessage> QNdefMessageList;
 
-class NearFieldTarget;
 class QByteArray;
 class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate, public AndroidNfc::AndroidNfcListenerInterface
 {

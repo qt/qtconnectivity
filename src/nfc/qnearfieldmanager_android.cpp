@@ -99,7 +99,7 @@ void QNearFieldManagerPrivateImpl::onTargetDetected(QNearFieldTargetPrivateImpl 
         return;
     }
 
-    Q_EMIT targetDetected(new NearFieldTarget(target, this));
+    Q_EMIT targetDetected(new QNearFieldTarget(target, this));
 }
 
 void QNearFieldManagerPrivateImpl::onTargetLost(QNearFieldTargetPrivateImpl *target)

@@ -157,7 +157,7 @@ void QNearFieldManagerPrivateImpl::onCardInserted(QPcscCard *card, const QByteAr
     connect(card, &QPcscCard::ndefMessageRead, priv,
             &QNearFieldTargetPrivateImpl::onNdefMessageRead);
 
-    auto target = new NearFieldTarget(priv, this);
+    auto target = new QNearFieldTarget(priv, this);
 
     Q_EMIT targetDetected(target);
 
