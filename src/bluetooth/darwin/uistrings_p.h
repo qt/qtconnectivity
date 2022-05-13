@@ -64,6 +64,7 @@ extern const char DD_INVALID_ADAPTER[];
 extern const char DD_IO[];
 extern const char DD_NOTSUPPORTED[];
 extern const char DD_UNKNOWN_ERROR[];
+extern const char DD_MISSING_PERMISSION[];
 extern const char DD_NOT_STARTED[];
 extern const char DD_NOT_STARTED_LE[];
 extern const char DD_NOT_STOPPED[];
@@ -102,6 +103,7 @@ extern const char LEC_RDEV_NO_FOUND[];
 extern const char LEC_NO_LOCAL_DEV[];
 extern const char LEC_IO_ERROR[];
 extern const char LEC_UNKNOWN_ERROR[];
+extern const char LEC_MISSING_PERMISSION[];
 
 QT_END_NAMESPACE
 

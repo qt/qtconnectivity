@@ -109,6 +109,9 @@ void QLowEnergyControllerPrivate::setError(
     case QLowEnergyController::AuthorizationError:
         errorString = QLowEnergyController::tr("Failed to authorize on the remote device");
         break;
+    case QLowEnergyController::MissingPermissionsError:
+        errorString = QLowEnergyController::tr("Missing permissions error");
+        break;
     case QLowEnergyController::NoError:
         return;
     default:

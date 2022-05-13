@@ -233,7 +233,7 @@ QT_USE_NAMESPACE
                 [manager scanForPeripheralsWithServices:nil options:nil];
             }
         } // Else we ignore.
-    } else if (state == CBManagerStateUnsupported || state == CBManagerStateUnauthorized) {
+    } else if (state == CBManagerStateUnsupported) {
         if (internalState == InquiryActive) {
             [self stopScanSafe];
             // Not sure how this is possible at all,
@@ -244,7 +244,12 @@ QT_USE_NAMESPACE
             internalState = ErrorLENotSupported;
             emit notifier->LEnotSupported();
         }
-
+        [manager setDelegate:nil];
+    } else if (state == CBManagerStateUnauthorized) {
+        if (internalState == InquiryActive)
+            [self stopScanSafe];
+        internalState = ErrorNotAuthorized;
+        emit notifier->CBManagerError(QBluetoothDeviceDiscoveryAgent::MissingPermissionsError);
         [manager setDelegate:nil];
     } else if (state == CBManagerStatePoweredOff) {
 

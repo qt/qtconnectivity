@@ -86,7 +86,8 @@ enum LEInquiryState
     InquiryFinished,
     InquiryCancelled,
     ErrorPoweredOff,
-    ErrorLENotSupported
+    ErrorLENotSupported,
+    ErrorNotAuthorized
 };
 
 @interface QT_MANGLE_NAMESPACE(DarwinBTLEDeviceInquiry) : NSObject<CBCentralManagerDelegate, QT_MANGLE_NAMESPACE(GCDTimerDelegate)>

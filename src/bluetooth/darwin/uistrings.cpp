@@ -50,6 +50,7 @@ const char DD_INVALID_ADAPTER[] = QT_TRANSLATE_NOOP("QBluetoothDeviceDiscoveryAg
 const char DD_IO[] = QT_TRANSLATE_NOOP("QBluetoothDeviceDiscoveryAgent", "Input Output Error");
 const char DD_NOTSUPPORTED[] = QT_TRANSLATE_NOOP("QBluetoothDeviceDiscoveryAgent", "Bluetooth LE is not supported");
 const char DD_UNKNOWN_ERROR[] = QT_TRANSLATE_NOOP("QBluetoothDeviceDiscoveryAgent", "Unknown error");
+const char DD_MISSING_PERMISSION[] = QT_TRANSLATE_NOOP("QBluetoothDeviceDiscoveryAgent", "Missing permission");
 const char DD_NOT_STARTED[] = QT_TRANSLATE_NOOP("QBluetoothDeviceDiscoveryAgent", "Cannot start device inquiry");
 const char DD_NOT_STARTED_LE[] = QT_TRANSLATE_NOOP("QBluetoothDeviceDiscoveryAgent", "Cannot start low energy device inquiry");
 const char DD_NOT_STOPPED[] = QT_TRANSLATE_NOOP("QBluetoothDeviceDiscoveryAgent", "Discovery cannot be stopped");
@@ -84,5 +85,6 @@ const char LEC_RDEV_NO_FOUND[] = QT_TRANSLATE_NOOP("QLowEnergyController", "Remo
 const char LEC_NO_LOCAL_DEV[] = QT_TRANSLATE_NOOP("QLowEnergyController", "Cannot find local adapter");
 const char LEC_IO_ERROR[] = QT_TRANSLATE_NOOP("QLowEnergyController", "Error occurred during connection I/O");
 const char LEC_UNKNOWN_ERROR[] = QT_TRANSLATE_NOOP("QLowEnergyController", "Unknown Error");
+const char LEC_MISSING_PERMISSION[] = QT_TRANSLATE_NOOP("QLowEnergyController", "Missing permission");
 
 QT_END_NAMESPACE

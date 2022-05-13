@@ -456,9 +456,12 @@ bool qt_validate_value_range(const QLowEnergyCharacteristicData &data)
      explicitly added again."
     */
 
-    if (peripheral.state == CBManagerStateUnauthorized || peripheral.state == CBManagerStateUnsupported) {
-        emit notifier->LEnotSupported();
+    if (peripheral.state == CBManagerStateUnsupported) {
         state = PeripheralState::idle;
+        emit notifier->LEnotSupported();
+    } else if (peripheral.state == CBManagerStateUnauthorized) {
+        state = PeripheralState::idle;
+        emit notifier->CBManagerError(QLowEnergyController::MissingPermissionsError);
     }
 
 #pragma clang diagnostic pop

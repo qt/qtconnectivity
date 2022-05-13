@@ -208,6 +208,14 @@ void QLowEnergyControllerPrivateDarwin::connectToDevice()
     Q_ASSERT_X(state == QLowEnergyController::UnconnectedState,
                Q_FUNC_INFO, "invalid state");
 
+    if (qt_appNeedsBluetoothUsageDescription()
+            && !qt_appPlistContainsDescription(bluetoothUsageKey)) {
+        qCWarning(QT_BT_DARWIN)
+                << "The Info.plist file is required to contain "
+                   "'NSBluetoothAlwaysUsageDescription' entry";
+        return _q_CBManagerError(QLowEnergyController::MissingPermissionsError);
+    }
+
     if (!isValid()) {
         // init() had failed or was never called.
         return _q_CBManagerError(QLowEnergyController::UnknownError);
@@ -702,11 +710,13 @@ void QLowEnergyControllerPrivateDarwin::_q_LEnotSupported()
 
 void QLowEnergyControllerPrivateDarwin::_q_CBManagerError(QLowEnergyController::Error errorCode)
 {
+    qCDebug(QT_BT_DARWIN) << "QLowEnergyController error:" << errorCode << "in state:" << state;
     // This function handles errors reported while connecting to a remote device
     // and also other errors in general.
     setError(errorCode);
 
-    if (state == QLowEnergyController::ConnectingState)
+    if (state == QLowEnergyController::ConnectingState
+            || state == QLowEnergyController::AdvertisingState)
         setState(QLowEnergyController::UnconnectedState);
     else if (state == QLowEnergyController::DiscoveringState)
         setState(QLowEnergyController::ConnectedState);
@@ -1012,6 +1022,9 @@ void QLowEnergyControllerPrivateDarwin::setErrorDescription(QLowEnergyController
         break;
     case QLowEnergyController::AdvertisingError:
         errorString = QLowEnergyController::tr("Error occurred trying to start advertising");
+        break;
+    case QLowEnergyController::MissingPermissionsError:
+        errorString = QLowEnergyController::tr("Error missing permission");
         break;
     case QLowEnergyController::UnknownError:
     default:

@@ -184,7 +184,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         qCWarning(QT_BT_DARWIN)
                 << "A proper Info.plist with NSBluetoothAlwaysUsageDescription "
                    "entry is required, cannot start device discovery";
-        setError(QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod);
+        setError(QBluetoothDeviceDiscoveryAgent::MissingPermissionsError);
         emit q_ptr->errorOccurred(lastError);
         return;
     }
@@ -439,6 +439,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::setError(QBluetoothDeviceDiscoveryAg
         case QBluetoothDeviceDiscoveryAgent::UnsupportedPlatformError:
             errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_NOTSUPPORTED);
             break;
+        case QBluetoothDeviceDiscoveryAgent::MissingPermissionsError:
+            errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_MISSING_PERMISSION);
+            break;
         case QBluetoothDeviceDiscoveryAgent::UnknownError:
         default:
             errorString = QCoreApplication::translate(DEV_DISCOVERY, DD_UNKNOWN_ERROR);
@@ -449,7 +452,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::setError(QBluetoothDeviceDiscoveryAg
 void QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryError(QBluetoothDeviceDiscoveryAgent::Error error)
 {
     Q_ASSERT(error == QBluetoothDeviceDiscoveryAgent::PoweredOffError
-             || error == QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod);
+             || error == QBluetoothDeviceDiscoveryAgent::UnsupportedDiscoveryMethod
+             || error == QBluetoothDeviceDiscoveryAgent::MissingPermissionsError);
 
     inquiryLE.reset();
 

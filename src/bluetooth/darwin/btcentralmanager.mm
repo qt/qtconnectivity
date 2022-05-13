@@ -1280,17 +1280,13 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
 
     // Let's check some states we do not like first:
     if (state == CBManagerStateUnsupported || state == CBManagerStateUnauthorized) {
-        if (managerState == CentralManagerUpdating) {
-            // We tried to connect just to realize, LE is not supported. Report this.
-            managerState = CentralManagerIdle;
-            if (notifier)
+        managerState = CentralManagerIdle;
+        // The LE is not supported or its usage was not authorized
+        if (notifier) {
+            if (state == CBManagerStateUnsupported)
                 emit notifier->LEnotSupported();
-        } else {
-            // TODO: if we are here, LE _was_ supported and we first managed to update
-            // and reset managerState from CentralManagerUpdating.
-            managerState = CentralManagerIdle;
-            if (notifier)
-                emit notifier->CBManagerError(QLowEnergyController::InvalidBluetoothAdapterError);
+            else
+                emit notifier->CBManagerError(QLowEnergyController::MissingPermissionsError);
         }
         [self stopWatchers];
         return;

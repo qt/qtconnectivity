@@ -310,6 +310,18 @@ int main(int argc, char *argv[])
     const QScopedPointer<QLowEnergyController> leController(
             QLowEnergyController::createPeripheral());
 #endif // Q_OS_IOS
+
+    QObject::connect(leController.data(), &QLowEnergyController::errorOccurred,
+                     [](QLowEnergyController::Error error) {
+        qDebug() << "Bluetoothtestdevice QLowEnergyController errorOccurred:" << error;
+    });
+
+    QObject::connect(leController.data(), &QLowEnergyController::stateChanged,
+                     [](QLowEnergyController::ControllerState state) {
+        qDebug() << "Bluetoothtestdevice QLowEnergyController stateChanged:" << state;
+    });
+
+
     QList<QSharedPointer<QLowEnergyService>> services;
 
     for (const auto &serviceData : serviceDefinitions) {
