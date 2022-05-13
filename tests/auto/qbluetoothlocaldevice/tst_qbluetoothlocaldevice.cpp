@@ -423,7 +423,13 @@ void tst_QBluetoothLocalDevice::tst_pairDevice()
         // Verify that the local device pairing status and the signal value match
         QCOMPARE(pairingResult, localDevice.pairingStatus(deviceAddress));
 #ifndef Q_OS_WIN
-        // On Windows the resulting pairing mode may differ from test's "expected"
+        // On Windows the resulting pairing mode may differ from test's "expected" as the
+        // decision is up to Windows.
+#ifdef Q_OS_ANDROID
+        // On Android we always use "Paired"
+        if (pairingExpected == QBluetoothLocalDevice::AuthorizedPaired)
+            pairingExpected = QBluetoothLocalDevice::Paired;
+#endif
         QCOMPARE(pairingResult, pairingExpected);
         QCOMPARE(localDevice.pairingStatus(deviceAddress), pairingExpected);
 #endif

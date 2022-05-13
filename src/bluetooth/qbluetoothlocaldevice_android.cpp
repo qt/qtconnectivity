@@ -375,7 +375,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
     if (previousPairing == newPairing) {
         QMetaObject::invokeMethod(this, "pairingFinished", Qt::QueuedConnection,
                                   Q_ARG(QBluetoothAddress, address),
-                                  Q_ARG(QBluetoothLocalDevice::Pairing, pairing));
+                                  Q_ARG(QBluetoothLocalDevice::Pairing, newPairing));
         return;
     }
 
