@@ -169,14 +169,31 @@ void tst_QBluetoothLocalDevice::tst_hostModes_data()
 {
     QTest::addColumn<QBluetoothLocalDevice::HostMode>("hostModeExpected");
     QTest::addColumn<bool>("expectSignal");
-#ifdef Q_OS_WIN
+#if defined(Q_OS_WIN)
     // On Windows local device does not support HostDiscoverable as a separate mode
     QTest::newRow("HostPoweredOff1") << QBluetoothLocalDevice::HostPoweredOff << false;
     QTest::newRow("HostConnectable1") << QBluetoothLocalDevice::HostConnectable << true;
     QTest::newRow("HostConnectable2") << QBluetoothLocalDevice::HostConnectable << false;
     QTest::newRow("HostPoweredOff3") << QBluetoothLocalDevice::HostPoweredOff << true;
     QTest::newRow("HostPoweredOff3") << QBluetoothLocalDevice::HostPoweredOff << false;
-#else
+    return;
+#elif defined(Q_OS_ANDROID)
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31) {
+        // On Android-12 (API Level 31+) it seems the device's bluetooth visibility setting
+        // defines if we enter "HostDiscoverable" (visible true) or "HostConnectable"
+        // (visible false). Here we assume that the visibility setting is true. For lower
+        // Android versions the default testdata rows are fine
+        qDebug() << "On this Android version the bluetooth visibility setting is assumed true";
+        QTest::newRow("HostDiscoverable1") << QBluetoothLocalDevice::HostDiscoverable << true;
+        QTest::newRow("HostPoweredOff1") << QBluetoothLocalDevice::HostPoweredOff << true;
+        QTest::newRow("HostPoweredOff2") << QBluetoothLocalDevice::HostPoweredOff << false;
+        QTest::newRow("HostDiscoverable2") << QBluetoothLocalDevice::HostDiscoverable << true;
+        QTest::newRow("HostPoweredOff3") << QBluetoothLocalDevice::HostPoweredOff << true;
+        QTest::newRow("HostDiscoverable3") << QBluetoothLocalDevice::HostDiscoverable << true;
+        QTest::newRow("HostDiscoverable4") << QBluetoothLocalDevice::HostDiscoverable << false;
+        return;
+    }
+#endif
     QTest::newRow("HostDiscoverable1") << QBluetoothLocalDevice::HostDiscoverable << true;
     QTest::newRow("HostPoweredOff1") << QBluetoothLocalDevice::HostPoweredOff << true;
     QTest::newRow("HostPoweredOff2") << QBluetoothLocalDevice::HostPoweredOff << false;
@@ -188,7 +205,6 @@ void tst_QBluetoothLocalDevice::tst_hostModes_data()
     QTest::newRow("HostDiscoverable3") << QBluetoothLocalDevice::HostDiscoverable << true;
     QTest::newRow("HostDiscoverable4") << QBluetoothLocalDevice::HostDiscoverable << false;
     QTest::newRow("HostConnectable4") << QBluetoothLocalDevice::HostConnectable << true;
-#endif
 }
 
 void tst_QBluetoothLocalDevice::tst_hostModes()
@@ -230,11 +246,7 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
     localDevice.setHostMode(hostModeExpected);
     // Manual interaction may be needed (for example on Android you may
     // need to authorize a permission) => hence a longer timeout.
-    // Note: it seems that on some Android versions the actual resulting host mode
-    // depends on the device's bluetooth settings. This can cause the test to fail here;
-    // for instance if Bluetooth is set as 'visible to other devices', it may be that the
-    // device enters the 'discoverable' mode when attempting to enter 'connectable' (and
-    // vice versa)
+    // If you see a fail on Android here, please see the comment in _data()
     QTRY_COMPARE_WITH_TIMEOUT(localDevice.hostMode(), hostModeExpected, 15000);
     // Allow possible mode-change signal(s) to arrive (QTRY_COMPARE polls the
     // host mode in a loop, and thus may return before the host mode change signal).
