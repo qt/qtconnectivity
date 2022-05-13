@@ -85,7 +85,8 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivate::readNdefMessages()
     return id;
 }
 
-NearFieldTarget::RequestId QNearFieldTargetPrivate::writeNdefMessages(const QList<QNdefMessage> &messages)
+QNearFieldTarget::RequestId
+QNearFieldTargetPrivate::writeNdefMessages(const QList<QNdefMessage> &messages)
 {
     Q_UNUSED(messages);
 
@@ -100,7 +101,7 @@ int QNearFieldTargetPrivate::maxCommandLength() const
     return 0;
 }
 
-NearFieldTarget::RequestId QNearFieldTargetPrivate::sendCommand(const QByteArray &command)
+QNearFieldTarget::RequestId QNearFieldTargetPrivate::sendCommand(const QByteArray &command)
 {
     Q_UNUSED(command);
 
@@ -109,7 +110,8 @@ NearFieldTarget::RequestId QNearFieldTargetPrivate::sendCommand(const QByteArray
     return id;
 }
 
-bool QNearFieldTargetPrivate::waitForRequestCompleted(const NearFieldTarget::RequestId &id, int msecs)
+bool QNearFieldTargetPrivate::waitForRequestCompleted(const QNearFieldTarget::RequestId &id,
+                                                      int msecs)
 {
     QElapsedTimer timer;
     timer.start();
@@ -131,12 +133,12 @@ bool QNearFieldTargetPrivate::waitForRequestCompleted(const NearFieldTarget::Req
     return false;
 }
 
-QVariant QNearFieldTargetPrivate::requestResponse(const NearFieldTarget::RequestId &id) const
+QVariant QNearFieldTargetPrivate::requestResponse(const QNearFieldTarget::RequestId &id) const
 {
     return m_decodedResponses.value(id);
 }
 
-void QNearFieldTargetPrivate::setResponseForRequest(const NearFieldTarget::RequestId &id,
+void QNearFieldTargetPrivate::setResponseForRequest(const QNearFieldTarget::RequestId &id,
                                                     const QVariant &response,
                                                     bool emitRequestCompleted)
 {
@@ -154,7 +156,8 @@ void QNearFieldTargetPrivate::setResponseForRequest(const NearFieldTarget::Reque
         Q_EMIT requestCompleted(id);
 }
 
-void QNearFieldTargetPrivate::reportError(NearFieldTarget::Error error, const NearFieldTarget::RequestId &id)
+void QNearFieldTargetPrivate::reportError(QNearFieldTarget::Error error,
+                                          const QNearFieldTarget::RequestId &id)
 {
     setResponseForRequest(id, QVariant(), false);
     QMetaObject::invokeMethod(this, [this, error, id]() {
