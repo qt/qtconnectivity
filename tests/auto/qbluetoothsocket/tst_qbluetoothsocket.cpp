@@ -518,7 +518,7 @@ void tst_QBluetoothSocket::tst_preferredSecurityFlags()
 #elif QT_CONFIG(bluez)
     // The bluezdbus socket uses "NoSecurity" by default, whereas the non-dbus bluez
     // socket uses "Authorization" by default
-    if (bluetoothdVersion() >= QVersionNumber(5, 42))
+    if (bluetoothdVersion() >= QVersionNumber(5, 46))
         QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::NoSecurity);
     else
         QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::Authorization);
@@ -569,7 +569,7 @@ void tst_QBluetoothSocket::tst_unsupportedProtocolError()
     QCOMPARE(errorSpy.size(), 1);
 #if QT_CONFIG(bluez)
     // Bluez dbus socket does not support connecting to port and gives different error code
-    if (bluetoothdVersion() >= QVersionNumber(5, 42)) {
+    if (bluetoothdVersion() >= QVersionNumber(5, 46)) {
         QCOMPARE(errorSpy.takeFirst().at(0).toInt(),
                  int(QBluetoothSocket::SocketError::ServiceNotFoundError));
     } else {

@@ -72,6 +72,10 @@ QBluetoothSocketPrivateBluez::~QBluetoothSocketPrivateBluez()
     readNotifier = nullptr;
     delete connectWriteNotifier;
     connectWriteNotifier = nullptr;
+
+    // If the socket wasn't closed/aborted make sure we free the socket file descriptor
+    if (socket != -1)
+        QT_CLOSE(socket);
 }
 
 bool QBluetoothSocketPrivateBluez::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)
@@ -618,6 +622,8 @@ qint64 QBluetoothSocketPrivateBluez::readData(char *data, qint64 maxSize)
 
 void QBluetoothSocketPrivateBluez::close()
 {
+    // If we have pending data on the write buffer, wait until it has been written,
+    // after which this close() will be called again
     if (txBuffer.size() > 0)
         connectWriteNotifier->setEnabled(true);
     else
