@@ -204,20 +204,19 @@ QT_IMPL_METATYPE_EXTERN_TAGGED(QLowEnergyService::WriteMode, QLowEnergyService__
                                     the service while it was not yet in the
                                     \l ServiceDiscovered \l state() or the service is invalid
                                     due to a loss of connection to the peripheral device.
-    \value CharacteristicReadError  An attempt to read a characteristic value failed. For example,
-                                    it might be triggered in response to a call to
-                                    \l readCharacteristic(). This value was introduced by Qt 5.5.
+    \value [since 5.5] CharacteristicReadError  An attempt to read a characteristic value failed.
+                                                For example, it might be triggered in response
+                                                to a call to \l readCharacteristic().
     \value CharacteristicWriteError An attempt to write a new value to a characteristic
                                     failed. For example, it might be triggered when attempting
                                     to write to a read-only characteristic.
-    \value DescriptorReadError      An attempt to read a descriptor value failed. For example,
-                                    it might be triggered in response to a call to
-                                    \l readDescriptor(). This value was introduced by Qt 5.5.
+    \value [since 5.5] DescriptorReadError      An attempt to read a descriptor value failed.
+                                                For example, it might be triggered in response
+                                                to a call to \l readDescriptor().
     \value DescriptorWriteError     An attempt to write a new value to a descriptor
                                     failed. For example, it might be triggered when attempting
                                     to write to a read-only descriptor.
-    \value UnknownError             An unknown error occurred when interacting with the service.
-                                    This value was introduced by Qt 5.5.
+    \value [since 5.5] UnknownError An unknown error occurred when interacting with the service.
  */
 
 /*!
@@ -236,10 +235,9 @@ QT_IMPL_METATYPE_EXTERN_TAGGED(QLowEnergyService::WriteMode, QLowEnergyService__
                                       \l serviceUuid() and \l serviceName().
     \value RemoteServiceDiscovering   The service details are being discovered.
     \value RemoteServiceDiscovered    The service details have been discovered.
-    \value LocalService               The service is associated with a controller object in the
+    \value [since 5.7] LocalService   The service is associated with a controller object in the
                                       \l{QLowEnergyController::PeripheralRole}{peripheral role}.
                                       Such service objects do not change their state.
-                                      This value was introduced by Qt 5.7.
     \value DiscoveryRequired          Deprecated. Was renamed to RemoteService.
     \value DiscoveringService         Deprecated. Was renamed to RemoteServiceDiscovering.
     \value ServiceDiscovered          Deprecated. Was renamed to RemoteServiceDiscovered.
@@ -289,17 +287,16 @@ QT_IMPL_METATYPE_EXTERN_TAGGED(QLowEnergyService::WriteMode, QLowEnergyService__
                                 write operation as it may happen in between other
                                 device interactions.
 
-  \value WriteSigned            If a characteristic is written using this mode, the remote peripheral
-                                shall not send a write confirmation. The operation's success
-                                cannot be determined and the payload must not be longer than 8 bytes.
-                                A bond must exist between the two devices and the link must not be
-                                encrypted.
-                                A characteristic must have set the
-                                \l QLowEnergyCharacteristic::WriteSigned property to support this
-                                write mode.
-                                This value was introduced in Qt 5.7 and is currently only
-                                supported on Android and on Linux with BlueZ 5 and a kernel version
-                                3.7 or newer.
+  \value [since 5.7] WriteSigned    If a characteristic is written using this mode, the remote
+                                    peripheral shall not send a write confirmation. The operation's
+                                    success cannot be determined and the payload must not be longer
+                                    than 8 bytes. A bond must exist between the two devices and the
+                                    link must not be encrypted.
+                                    A characteristic must have set the
+                                    \l QLowEnergyCharacteristic::WriteSigned property to support
+                                    this write mode.
+                                    This value is currently only supported on Android and on Linux
+                                    with BlueZ 5 and a kernel version 3.7 or newer.
  */
 
 /*!

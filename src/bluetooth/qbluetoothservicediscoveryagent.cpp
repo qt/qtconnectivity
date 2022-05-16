@@ -99,9 +99,9 @@ QT_BEGIN_NAMESPACE
     \value NoError          No error has occurred.
     \value PoweredOffError  The Bluetooth adaptor is powered off, power it on before doing discovery.
     \value InputOutputError    Writing or reading from the device resulted in an error.
-    \value InvalidBluetoothAdapterError The passed local adapter address does not match the physical
-                                        adapter address of any local Bluetooth device. This value
-                                        was introduced by Qt 5.3.
+    \value [since 5.3] InvalidBluetoothAdapterError The passed local adapter address does not
+                                                    match the physical adapter address of any
+                                                    local Bluetooth device.
     \value [since 6.4] MissingPermissionsError  The operating system requests
                                                 permissions which were not
                                                 granted by the user.

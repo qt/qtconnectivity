@@ -91,15 +91,16 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     \value InputOutputError    Writing or reading from the device resulted in an error.
     \value InvalidBluetoothAdapterError The passed local adapter address does not match the physical
                                         adapter address of any local Bluetooth device.
-    \value UnsupportedPlatformError Device discovery is not possible or implemented on the current
-                                    platform. The error is set in response to a call to \l start().
-                                    An example for such cases are iOS versions below 5.0 which do not support
-                                    Bluetooth device search at all. This value was introduced by Qt 5.5.
-    \value UnsupportedDiscoveryMethod   One of the requested discovery methods is not supported by
-                                        the current platform. This value was introduced by Qt 5.8.
-    \value LocationServiceTurnedOffError    The location service is turned off. Usage of
-                                            Bluetooth APIs is not possible when location service
-                                            is turned off. This value was introduced by Qt 6.2.
+    \value [since 5.5] UnsupportedPlatformError Device discovery is not possible or implemented
+                                                on the current platform. The error is set in
+                                                response to a call to \l start(). An example for
+                                                such cases are iOS versions below 5.0 which do
+                                                not support Bluetooth device search at all.
+    \value [since 5.8] UnsupportedDiscoveryMethod   One of the requested discovery methods is not
+                                                    supported by the current platform.
+    \value [since 6.2] LocationServiceTurnedOffError    The location service is turned off.
+                                                        Usage of Bluetooth APIs is not possible
+                                                        when location service is turned off.
     \value [since 6.4] MissingPermissionsError  The operating system requests
                                                 permissions which were not
                                                 granted by the user.

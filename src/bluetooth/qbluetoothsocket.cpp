@@ -129,8 +129,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
                                     supported on this platform.
     \value OperationError           An operation was attempted while the socket was in a state
                                     that did not permit it.
-    \value RemoteHostClosedError    The remote host closed the connection. This value was
-                                    introduced by Qt 5.10.
+    \value [since 5.10] RemoteHostClosedError   The remote host closed the connection.
     \value [since 6.4] MissingPermissionsError  The operating system requests
                                                 permissions which were not
                                                 granted by the user.

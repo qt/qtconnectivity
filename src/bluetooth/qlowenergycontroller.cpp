@@ -160,15 +160,11 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
     \value InvalidBluetoothAdapterError The local Bluetooth device with the address passed to
                                         the constructor of this class cannot be found or
                                         there is no local Bluetooth device.
-    \value ConnectionError              The attempt to connect to the remote device failed.
-                                        This value was introduced by Qt 5.5.
-    \value AdvertisingError             The attempt to start advertising failed.
-                                        This value was introduced by Qt 5.7.
-    \value RemoteHostClosedError        The remote device closed the connection.
-                                        This value was introduced by Qt 5.10.
-    \value AuthorizationError           The local Bluetooth device closed the connection due to
-                                        insufficient authorization.
-                                        This value was introduced by Qt 5.14.
+    \value [since 5.5] ConnectionError  The attempt to connect to the remote device failed.
+    \value [since 5.7] AdvertisingError The attempt to start advertising failed.
+    \value [since 5.10] RemoteHostClosedError   The remote device closed the connection.
+    \value [since 5.14] AuthorizationError      The local Bluetooth device closed the connection
+                                                due to insufficient authorization.
     \value [since 6.4] MissingPermissionsError  The operating system requests
                                                 permissions which were not
                                                 granted by the user.
@@ -187,8 +183,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
     \value DiscoveredState    The controller has discovered all services offered by the
                               remote device.
     \value ClosingState       The controller is about to be disconnected from the remote device.
-    \value AdvertisingState   The controller is currently advertising data.
-                              This value was introduced by Qt 5.7.
+    \value [since 5.7] AdvertisingState The controller is currently advertising data.
 */
 
 /*!
