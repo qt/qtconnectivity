@@ -502,7 +502,7 @@ void QLowEnergyControllerPrivateAndroid::servicesDiscovered(
 
     if (errorCode == QLowEnergyController::NoError) {
         //Android delivers all services in one go
-        const QStringList list = foundServices.split(QStringLiteral(" "), Qt::SkipEmptyParts);
+        const QStringList list = foundServices.split(QChar::Space, Qt::SkipEmptyParts);
         for (const QString &entry : list) {
             const QBluetoothUuid service(entry);
             if (service.isNull())
@@ -550,8 +550,7 @@ void QLowEnergyControllerPrivateAndroid::serviceDetailsDiscoveryFinished(
                                         uuid.object<jstring>());
         if (javaIncludes.isValid()) {
             const QStringList list = javaIncludes.toString()
-                                                 .split(QStringLiteral(" "),
-                                                        Qt::SkipEmptyParts);
+                                         .split(QChar::Space, Qt::SkipEmptyParts);
             for (const QString &entry : list) {
                 const QBluetoothUuid service(entry);
                 if (service.isNull())
@@ -928,8 +927,8 @@ static QAndroidJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData
                                        !data.localName().isEmpty());
     builder = builder.callObjectMethod("setIncludeTxPowerLevel", "(Z)Landroid/bluetooth/le/AdvertiseData$Builder;",
                                        data.includePowerLevel());
-    for (const auto service: data.services())
-    {
+    const auto services = data.services();
+    for (const auto &service : services) {
         builder = builder.callObjectMethod("addServiceUuid",
                                        "(Landroid/os/ParcelUuid;)Landroid/bluetooth/le/AdvertiseData$Builder;",
                                        javaParcelUuidfromQtUuid(service).object());

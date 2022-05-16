@@ -233,11 +233,17 @@ CFStrongReference<CFUUIDRef> cf_uuid(const QBluetoothUuid &qtUuid)
 
 ObjCStrongReference<CBUUID> cb_uuid(const QBluetoothUuid &qtUuid)
 {
-    CFStrongReference<CFUUIDRef> cfUuid(cf_uuid(qtUuid));
-    if (!cfUuid)
-        return ObjCStrongReference<CBUUID>();
+    bool ok = false;
+    const auto asUInt16 = qToBigEndian(qtUuid.toUInt16(&ok));
+    const auto asUInt128 = qtUuid.toUInt128();
 
-    ObjCStrongReference<CBUUID> cbUuid([CBUUID UUIDWithCFUUID:cfUuid], true); //true == retain.
+    const NSUInteger length = ok ? sizeof asUInt16 : sizeof asUInt128;
+    const void *bytes = &asUInt128;
+    if (ok)
+        bytes = &asUInt16;
+
+    NSData *uuidData = [NSData dataWithBytes:bytes length:length];
+    ObjCStrongReference<CBUUID> cbUuid([CBUUID UUIDWithData:uuidData], true); // true == retain.
     return cbUuid;
 }
 
