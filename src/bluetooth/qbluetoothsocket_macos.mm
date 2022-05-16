@@ -245,7 +245,7 @@ bool QBluetoothSocketPrivateDarwin::setSocketDescriptor(int socketDescriptor, QB
 
     qCWarning(QT_BT_DARWIN) << "setting a socket descriptor is not supported by IOBluetooth";
     // Noop on macOS.
-    return true;
+    return false;
 }
 
 void QBluetoothSocketPrivateDarwin::connectToServiceHelper(const QBluetoothAddress &address, quint16 port,
