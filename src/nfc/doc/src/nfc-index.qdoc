@@ -62,6 +62,7 @@ and write NDEF messages on NFC Forum Tags, and send tag-specific commands.
 
 \list
     \li \l {Qt NFC Overview}
+    \li \l {Supported NFC Features}
     \li \l {Qt NFC on Android}
     \li \l {PC/SC in Qt NFC}
 \endlist
