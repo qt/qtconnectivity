@@ -48,23 +48,35 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_NFC_EXPORT QNdefMessage : public QList<QNdefRecord>
+// This class used to be exported exposing QList methods, see QTBUG-102367.
+#if defined(QT_BUILD_NFC_LIB)
+#    define Q_NFC_EXPORT_COMPAT QT6_ONLY(Q_NFC_EXPORT)
+#else
+#    define Q_NFC_EXPORT_COMPAT
+#endif
+
+class QNdefMessage : public QList<QNdefRecord>
 {
 public:
-    inline QNdefMessage() { }
-    inline explicit QNdefMessage(const QNdefRecord &record) { append(record); }
-    inline QNdefMessage(const QNdefMessage &message) : QList<QNdefRecord>(message) { }
-    inline QNdefMessage(const QList<QNdefRecord> &records) : QList<QNdefRecord>(records) { }
+    Q_NFC_EXPORT_COMPAT
+    QNdefMessage() = default;
+    Q_NFC_EXPORT_COMPAT
+    explicit QNdefMessage(const QNdefRecord &record) { append(record); }
+    Q_NFC_EXPORT_COMPAT
+    QNdefMessage(const QNdefMessage &message) = default;
+    Q_NFC_EXPORT_COMPAT
+    QNdefMessage(const QList<QNdefRecord> &records) : QList<QNdefRecord>(records) { }
 
-    QNdefMessage &operator=(const QNdefMessage &other)
-    { QList<QNdefRecord>::operator=(other); return *this; }
-    QNdefMessage &operator=(QNdefMessage &&other) noexcept
-    { QList<QNdefRecord>::operator=(std::move(other)); return *this; }
-    bool operator==(const QNdefMessage &other) const;
+    Q_NFC_EXPORT_COMPAT
+    QNdefMessage &operator=(const QNdefMessage &other) = default;
+    Q_NFC_EXPORT_COMPAT
+    QNdefMessage &operator=(QNdefMessage &&other) noexcept = default;
 
-    QByteArray toByteArray() const;
+    Q_NFC_EXPORT bool operator==(const QNdefMessage &other) const;
 
-    static QNdefMessage fromByteArray(const QByteArray &message);
+    Q_NFC_EXPORT QByteArray toByteArray() const;
+
+    Q_NFC_EXPORT static QNdefMessage fromByteArray(const QByteArray &message);
 };
 
 QT_END_NAMESPACE
