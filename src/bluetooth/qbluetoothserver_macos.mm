@@ -52,7 +52,6 @@
 #include "qbluetoothsocket.h"
 
 #include <QtCore/qloggingcategory.h>
-#include <QtCore/qscopedpointer.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qmutex.h>
@@ -379,7 +378,7 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
     if (!d_ptr->pendingConnections.size())
         return nullptr;
 
-    QScopedPointer<QBluetoothSocket> newSocket(new QBluetoothSocket);
+    std::unique_ptr<QBluetoothSocket> newSocket = std::make_unique<QBluetoothSocket>();
     QBluetoothServerPrivate::PendingConnection channel(d_ptr->pendingConnections.front());
 
     // Remove it even if we have some errors below.
@@ -393,7 +392,7 @@ QBluetoothSocket *QBluetoothServer::nextPendingConnection()
             return nullptr;
     }
 
-    return newSocket.take();
+    return newSocket.release();
 }
 
 QBluetoothAddress QBluetoothServer::serverAddress() const
