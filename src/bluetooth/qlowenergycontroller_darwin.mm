@@ -174,10 +174,10 @@ void QLowEnergyControllerPrivateDarwin::init()
         return;
     }
 
-    QScopedPointer<LECBManagerNotifier> notifier(new LECBManagerNotifier);
+    std::unique_ptr<LECBManagerNotifier> notifier = std::make_unique<LECBManagerNotifier>();
     if (role == QLowEnergyController::PeripheralRole) {
 #ifndef Q_OS_TVOS
-        peripheralManager.reset([[ObjCPeripheralManager alloc] initWith:notifier.data()],
+        peripheralManager.reset([[ObjCPeripheralManager alloc] initWith:notifier.get()],
                                 DarwinBluetooth::RetainPolicy::noInitialRetain);
         if (!peripheralManager) {
             qCWarning(QT_BT_DARWIN) << "failed to create a peripheral manager";
@@ -188,7 +188,7 @@ void QLowEnergyControllerPrivateDarwin::init()
         return;
 #endif // Q_OS_TVOS
     } else {
-        centralManager.reset([[ObjCCentralManager alloc] initWith:notifier.data()],
+        centralManager.reset([[ObjCCentralManager alloc] initWith:notifier.get()],
                              DarwinBluetooth::RetainPolicy::noInitialRetain);
         if (!centralManager) {
             qCWarning(QT_BT_DARWIN) << "failed to initialize a central manager";
@@ -196,11 +196,11 @@ void QLowEnergyControllerPrivateDarwin::init()
         }
     }
 
-    if (!connectSlots(notifier.data()))
+    if (!connectSlots(notifier.get()))
         qCWarning(QT_BT_DARWIN) << "failed to connect to notifier's signal(s)";
 
     // Ownership was taken by central manager.
-    notifier.take();
+    notifier.release();
 }
 
 void QLowEnergyControllerPrivateDarwin::connectToDevice()
