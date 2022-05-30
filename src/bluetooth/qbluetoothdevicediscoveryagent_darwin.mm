@@ -60,7 +60,6 @@
 #include "qbluetoothuuid.h"
 
 #include <QtCore/qloggingcategory.h>
-#include <QtCore/qscopedpointer.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
@@ -244,24 +243,24 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLE()
 
     using namespace DarwinBluetooth;
 
-    QScopedPointer<LECBManagerNotifier> notifier(new LECBManagerNotifier);
+    std::unique_ptr<LECBManagerNotifier> notifier = std::make_unique<LECBManagerNotifier>();
     // Connections:
     using ErrMemFunPtr = void (LECBManagerNotifier::*)(QBluetoothDeviceDiscoveryAgent::Error);
-    notifier->connect(notifier.data(), ErrMemFunPtr(&LECBManagerNotifier::CBManagerError),
+    notifier->connect(notifier.get(), ErrMemFunPtr(&LECBManagerNotifier::CBManagerError),
                       this, &QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryError);
-    notifier->connect(notifier.data(), &LECBManagerNotifier::LEnotSupported,
+    notifier->connect(notifier.get(), &LECBManagerNotifier::LEnotSupported,
                       this, &QBluetoothDeviceDiscoveryAgentPrivate::LEnotSupported);
-    notifier->connect(notifier.data(), &LECBManagerNotifier::discoveryFinished,
+    notifier->connect(notifier.get(), &LECBManagerNotifier::discoveryFinished,
                       this, &QBluetoothDeviceDiscoveryAgentPrivate::LEinquiryFinished);
     using DeviceMemFunPtr = void (QBluetoothDeviceDiscoveryAgentPrivate::*)(const QBluetoothDeviceInfo &);
-    notifier->connect(notifier.data(), &LECBManagerNotifier::deviceDiscovered,
+    notifier->connect(notifier.get(), &LECBManagerNotifier::deviceDiscovered,
                       this, DeviceMemFunPtr(&QBluetoothDeviceDiscoveryAgentPrivate::deviceFound));
 
     // Check queue and create scanner:
-    inquiryLE.reset([[LEInquiryObjC alloc] initWithNotifier:notifier.data()],
+    inquiryLE.reset([[LEInquiryObjC alloc] initWithNotifier:notifier.get()],
                     DarwinBluetooth::RetainPolicy::noInitialRetain);
     if (inquiryLE)
-        notifier.take(); // Whatever happens next, inquiryLE is already the owner ...
+        notifier.release(); // Whatever happens next, inquiryLE is already the owner ...
 
     dispatch_queue_t leQueue(qt_LE_queue());
     if (!leQueue || !inquiryLE) {

@@ -48,7 +48,6 @@
 
 #include <QtCore/qoperatingsystemversion.h>
 #include <QtCore/qloggingcategory.h>
-#include <QtCore/qscopedpointer.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qdebug.h>
