@@ -56,11 +56,23 @@ else()
     )
 endif()
 
+set_target_properties(bttestui PROPERTIES
+    WIN32_EXECUTABLE TRUE
+    MACOSX_BUNDLE TRUE
+)
 
-#### Keys ignored in scope 1:.:.:bttestui.pro:<TRUE>:
-# OTHER_FILES = "main.qml" "Button.qml"
-# TEMPLATE = "app"
+if(APPLE)
+    # Ninja has trouble with relative paths, convert to absolute as a workaround
+    get_filename_component(SHARED_PLIST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../shared ABSOLUTE)
+    if(IOS)
+        set_target_properties(bttestui PROPERTIES
+            MACOSX_BUNDLE_INFO_PLIST "${SHARED_PLIST_DIR}/Info.ios.plist"
+        )
+    else()
+        set_target_properties(bttestui PROPERTIES
+            MACOSX_BUNDLE_INFO_PLIST "${SHARED_PLIST_DIR}/Info.macos.plist"
+        )
+    endif()
+endif()
 
-## Scopes:
-#####################################################################
 

@@ -31,6 +31,9 @@
 #include <QDebug>
 #include <QTimer>
 #include <QtBluetooth/QBluetoothServiceInfo>
+#include <QtBluetooth/QLowEnergyCharacteristicData>
+#include <QtBluetooth/QLowEnergyDescriptorData>
+#include <QtBluetooth/QLowEnergyAdvertisingParameters>
 
 #define BTCHAT_DEVICE_ADDR "00:15:83:38:17:C3"
 
@@ -42,6 +45,61 @@
 
 #define SOCKET_PROTOCOL QBluetoothServiceInfo::RfcommProtocol
 //#define SOCKET_PROTOCOL QBluetoothServiceInfo::L2capProtocol
+
+using namespace Qt::Literals::StringLiterals;
+static const auto leServiceUuid = "1ff5e37c-ac16-11eb-ae5c-93d3a763feed"_L1;
+static const auto leCharacteristicUuid = "2ff4f68e-ac16-11eb-9956-cfe55a8ccafe"_L1;
+// Used for finding a matching LE peripheral device. Typically the default BtTestUi is ok
+// when running against macOS/iOS/Linux peripheral, but with Android this needs to be adjusted
+// to device's name. We can't use bluetooth address for matching as the public address of the
+// peripheral may change
+static const auto leRemotePeriphreralDeviceName = "BtTestUi"_L1;
+static const qsizetype leCharacteristicSize = 4; // Set to 1...512 bytes
+static auto leCharacteristicValue = QByteArray{leCharacteristicSize, 0};
+static quint8 leValueUpdate = 1;
+
+// String tables to shorten the enum strings to fit the screen estate.
+// The values in the tables must be in same order as the corresponding enums
+static constexpr const char* controllerStateString[] = {
+    "Unconnected",
+    "Connecting",
+    "Connected",
+    "Discovering",
+    "Discovered",
+    "Closing",
+    "Advertising",
+};
+
+static constexpr const char* controllerErrorString[] = {
+    "None",
+    "UnknownError",
+    "UnknownRemDev",
+    "NetworkError",
+    "InvAdapter",
+    "ConnectionErr",
+    "AdvertisingErr",
+    "RemHostClosed",
+    "AuthError",
+    "MissingPerm",
+};
+
+static constexpr const char* serviceStateString[] = {
+    "InvalidService",
+    "RemoteService",
+    "RemDiscovering",
+    "RemDiscovered",
+    "LocalService",
+};
+
+static constexpr const char* serviceErrorString[] = {
+    "None",
+    "Operation",
+    "CharWrite",
+    "DescWrite",
+    "Unknown",
+    "CharRead",
+    "DescRead",
+};
 
 BtLocalDevice::BtLocalDevice(QObject *parent)
     : QObject(parent), securityFlags(QBluetooth::Security::NoSecurity)
@@ -124,15 +182,17 @@ void BtLocalDevice::setSecFlags(int newFlags)
 
 QString BtLocalDevice::hostMode() const
 {
-    switch (localDevice->hostMode()) {
-    case QBluetoothLocalDevice::HostDiscoverable:
-        return QStringLiteral("HostMode: Discoverable");
-    case QBluetoothLocalDevice::HostConnectable:
-        return QStringLiteral("HostMode: Connectable");
-    case QBluetoothLocalDevice::HostDiscoverableLimitedInquiry:
-        return QStringLiteral("HostMode: DiscoverableLimit");
-    case QBluetoothLocalDevice::HostPoweredOff:
-        return QStringLiteral("HostMode: Powered Off");
+    if (localDevice) {
+        switch (localDevice->hostMode()) {
+        case QBluetoothLocalDevice::HostDiscoverable:
+            return QStringLiteral("HostMode: Discoverable");
+        case QBluetoothLocalDevice::HostConnectable:
+            return QStringLiteral("HostMode: Connectable");
+        case QBluetoothLocalDevice::HostDiscoverableLimitedInquiry:
+            return QStringLiteral("HostMode: DiscoverableLimit");
+        case QBluetoothLocalDevice::HostPoweredOff:
+            return QStringLiteral("HostMode: Powered Off");
+        }
     }
 
     return QStringLiteral("HostMode: <None>");
@@ -140,16 +200,15 @@ QString BtLocalDevice::hostMode() const
 
 void BtLocalDevice::setHostMode(int newMode)
 {
-    localDevice->setHostMode(static_cast<QBluetoothLocalDevice::HostMode>(newMode));
+    if (localDevice)
+        localDevice->setHostMode(static_cast<QBluetoothLocalDevice::HostMode>(newMode));
 }
 
 void BtLocalDevice::requestPairingUpdate(bool isPairing)
 {
     QBluetoothAddress baddr(BTCHAT_DEVICE_ADDR);
-    if (baddr.isNull())
+    if (!localDevice || baddr.isNull())
         return;
-
-
 
     if (isPairing) {
         //toggle between authorized and non-authorized pairing to achieve better
@@ -228,7 +287,11 @@ void BtLocalDevice::deviceDiscovered(const QBluetoothDeviceInfo &info)
     qDebug() << "Found new device: " << info.name() << info.isValid() << info.address().toString()
                                      << info.rssi() << info.majorDeviceClass()
                                      << info.minorDeviceClass() << services;
-
+    // With LE we match the device by its name as the public bluetooth address can change
+    if (info.name() == leRemotePeriphreralDeviceName) {
+        qDebug() << "#### Matching LE peripheral device found";
+        leRemotePeripheralDevice = info;
+    }
 }
 
 void BtLocalDevice::discoveryFinished()
@@ -742,6 +805,8 @@ void BtLocalDevice::dumpServerInformation()
 
 void BtLocalDevice::dumpInformation()
 {
+    if (!localDevice)
+        return;
     qDebug() << "###### default local device";
     dumpLocalDevice(localDevice);
     const QList<QBluetoothHostInfo> list = QBluetoothLocalDevice::allDevices();
@@ -795,10 +860,14 @@ void BtLocalDevice::dumpInformation()
     QBluetoothServiceDiscoveryAgent validSAgent(localDevice->address());
     validSAgent.start();
     qDebug() << "######" << (validSAgent.error() == QBluetoothServiceDiscoveryAgent::NoError) << "(Expected: true)";
+
+    dumpLeInfo();
 }
 
 void BtLocalDevice::powerOn()
 {
+    if (!localDevice)
+        return;
     qDebug() << "Powering on";
     localDevice->powerOn();
 }
@@ -818,4 +887,463 @@ void BtLocalDevice::dumpLocalDevice(QBluetoothLocalDevice *dev)
     qDebug() << "    Name" << dev->name();
     qDebug() << "    Address" << dev->address().toString();
     qDebug() << "    HostMode" << dev->hostMode();
+}
+
+void BtLocalDevice::peripheralCreate()
+{
+    qDebug() << "######" << "LE create peripheral";
+    if (lePeripheralController) {
+        qDebug() << "Peripheral already existed";
+        return;
+    }
+
+    lePeripheralController.reset(QLowEnergyController::createPeripheral());
+    emit leChanged();
+
+    QObject::connect(lePeripheralController.get(), &QLowEnergyController::errorOccurred,
+                     [this](QLowEnergyController::Error error) {
+        qDebug() << "QLowEnergyController peripheral errorOccurred:" << error;
+        emit leChanged();
+    });
+    QObject::connect(lePeripheralController.get(), &QLowEnergyController::stateChanged,
+                     [this](QLowEnergyController::ControllerState state) {
+        qDebug() << "QLowEnergyController peripheral stateChanged:" << state;
+        emit leChanged();
+    });
+}
+
+void BtLocalDevice::peripheralStartAdvertising()
+{
+    qDebug() << "######" << "LE start advertising";
+    if (!lePeripheralController) {
+        qDebug() << "Create peripheral first";
+        return;
+    }
+
+    if (!leServiceData.isValid()) {
+        // Create service data if this is the first advertisement
+        leServiceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
+        leServiceData.setUuid(QBluetoothUuid(leServiceUuid));
+
+        QLowEnergyCharacteristicData charData;
+        charData.setUuid(QBluetoothUuid(leCharacteristicUuid));
+        charData.setValue(leCharacteristicValue);
+        charData.setValueLength(leCharacteristicSize, leCharacteristicSize);
+        charData.setProperties(QLowEnergyCharacteristic::PropertyType::Read
+                               | QLowEnergyCharacteristic::PropertyType::Write
+                               | QLowEnergyCharacteristic::PropertyType::Notify);
+
+        const QLowEnergyDescriptorData clientConfig(
+                QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration,
+                QLowEnergyCharacteristic::CCCDDisable);
+        charData.addDescriptor(clientConfig);
+        leServiceData.addCharacteristic(charData);
+
+        // Create advertisement data
+        leAdvertisingData.setDiscoverability(QLowEnergyAdvertisingData::DiscoverabilityGeneral);
+        leAdvertisingData.setIncludePowerLevel(true);
+        leAdvertisingData.setLocalName(leRemotePeriphreralDeviceName);
+        // Results in too big advertisement data, can be useful for testing such scenario
+        // leAdvertisingData.setServices(QList{leServiceData.uuid()});
+    }
+
+    // Add/create the service
+    lePeripheralService.reset(lePeripheralController->addService(leServiceData));
+    emit leChanged();
+    if (!lePeripheralService) {
+        qDebug() << "Peripheral service creation failed";
+        return;
+    }
+    QObject::connect(lePeripheralService.get(), &QLowEnergyService::characteristicWritten,
+                     [](const QLowEnergyCharacteristic&, const QByteArray& value){
+        qDebug() << "LE peripheral service characteristic value written" << value;
+    });
+    QObject::connect(lePeripheralService.get(), &QLowEnergyService::characteristicRead,
+                     [](const QLowEnergyCharacteristic&, const QByteArray& value){
+        qDebug() << "LE peripheral service characteristic value read" << value;
+    });
+    QObject::connect(lePeripheralService.get(), &QLowEnergyService::characteristicChanged,
+                     [](const QLowEnergyCharacteristic&, const QByteArray& value){
+        qDebug() << "LE peripheral service characteristic value changed" << value;
+    });
+    QObject::connect(lePeripheralService.get(), &QLowEnergyService::errorOccurred,
+                     [this](QLowEnergyService::ServiceError error){
+        qDebug() << "LE peripheral service errorOccurred:" << error;
+        emit leChanged();
+    });
+    QObject::connect(lePeripheralService.get(), &QLowEnergyService::stateChanged,
+                     [this](QLowEnergyService::ServiceState state){
+        qDebug() << "LE peripheral service state changed:" << state;
+        emit leChanged();
+    });
+
+    // Start advertising
+    lePeripheralController->startAdvertising(QLowEnergyAdvertisingParameters{},
+                                             leAdvertisingData, leAdvertisingData);
+}
+
+void BtLocalDevice::peripheralStopAdvertising()
+{
+    qDebug() << "######" << "LE stop advertising";
+    if (!lePeripheralController) {
+        qDebug() << "Peripheral does not exist";
+        return;
+    }
+    lePeripheralController->stopAdvertising();
+}
+
+void BtLocalDevice::centralWrite()
+{
+    qDebug() << "######" << "LE central write";
+    if (!leCentralController || !leCentralService) {
+        qDebug() << "Central or central service does not exist";
+        return;
+    }
+    // Update value at the beginning and end so we can check whole data is sent in large writes.
+    // Value is offset'd with 100 to easily see which end did the write when testing
+    leValueUpdate += 1;
+    leCharacteristicValue[0] = leValueUpdate + 100;
+    leCharacteristicValue[leCharacteristicSize - 1] = leValueUpdate + 100;
+    auto characteristic = leCentralService->characteristic(QBluetoothUuid(leCharacteristicUuid));
+    if (characteristic.isValid()) {
+        qDebug() << "    Central writes value:" << leCharacteristicValue;
+        leCentralService->writeCharacteristic(characteristic, leCharacteristicValue);
+    } else {
+        qDebug() << "Characteristic was invalid";
+    }
+}
+
+void BtLocalDevice::centralRead()
+{
+    qDebug() << "######" << "LE central read";
+    if (!leCentralController || !leCentralService) {
+        qDebug() << "Central or central service does not exist";
+        return;
+    }
+    auto characteristic = leCentralService->characteristic(QBluetoothUuid(leCharacteristicUuid));
+    if (characteristic.isValid()) {
+        qDebug() << "    Value before issuing read():" << characteristic.value();
+        leCentralService->readCharacteristic(characteristic);
+    } else {
+        qDebug() << "Characteristic was invalid";
+    }
+}
+
+void BtLocalDevice::peripheralWrite()
+{
+    qDebug() << "######" << "LE peripheral write";
+    if (!lePeripheralController || !lePeripheralService) {
+        qDebug() << "Peripheral or peripheral service does not exist";
+        return;
+    }
+    // Update value at the beginning and end so we can check whole data is sent in large writes
+    leCharacteristicValue[0] = ++leValueUpdate;
+    leCharacteristicValue[leCharacteristicSize - 1] = leValueUpdate;
+    auto characteristic = lePeripheralService->characteristic(QBluetoothUuid(leCharacteristicUuid));
+    if (characteristic.isValid()) {
+        qDebug() << "    Peripheral writes value:" << leCharacteristicValue;
+        lePeripheralService->writeCharacteristic(characteristic, leCharacteristicValue);
+    } else {
+        qDebug() << "Characteristic was invalid";
+    }
+}
+
+void BtLocalDevice::peripheralRead()
+{
+    qDebug() << "######" << "LE peripheral read";
+    if (!lePeripheralController || !lePeripheralService) {
+        qDebug() << "Peripheral or peripheral service does not exist";
+        return;
+    }
+    auto characteristic = lePeripheralService->characteristic(QBluetoothUuid(leCharacteristicUuid));
+    if (characteristic.isValid())
+        qDebug() << "    Value:" << characteristic.value();
+    else
+        qDebug() << "Characteristic was invalid";
+}
+
+void BtLocalDevice::startLeDeviceDiscovery()
+{
+    qDebug() << "######" << "LE device discovery start for:" << leRemotePeriphreralDeviceName;
+    if (deviceAgent)
+        deviceAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+}
+
+void BtLocalDevice::centralStartServiceDiscovery()
+{
+    qDebug() << "######" << "LE service discovery start";
+    if (!leCentralController) {
+        qDebug() << "Create and connect central first";
+        return;
+    }
+    leCentralController->discoverServices();
+}
+
+void BtLocalDevice::centralCreate()
+{
+    qDebug() << "######" << "Central create";
+    if (leCentralController) {
+        qDebug() << "Central already existed";
+        return;
+    }
+
+    if (!leRemotePeripheralDevice.isValid()) {
+        qDebug() << "Creation failed, needs successful LE device discovery first";
+        return;
+    }
+
+    leCentralController.reset(QLowEnergyController::createCentral(leRemotePeripheralDevice));
+    emit leChanged();
+
+    if (!leCentralController) {
+        qDebug() << "LE Central creation failed";
+        return;
+    }
+
+    QObject::connect(leCentralController.get(), &QLowEnergyController::errorOccurred,
+                     [](QLowEnergyController::Error error) {
+        qDebug() << "QLowEnergyController peripheral errorOccurred:" << error;
+    });
+    QObject::connect(leCentralController.get(), &QLowEnergyController::stateChanged,
+                     [this](QLowEnergyController::ControllerState state) {
+        qDebug() << "QLowEnergyController peripheral stateChanged:" << state;
+        emit leChanged();
+    });
+}
+
+void BtLocalDevice::centralDiscoverServiceDetails()
+{
+     qDebug() << "###### Discover Service details";
+     if (!leCentralController) {
+         qDebug() << "Central does not exist";
+         return;
+     }
+     leCentralService.reset(
+                 leCentralController->createServiceObject(QBluetoothUuid(leServiceUuid)));
+     emit leChanged();
+     if (!leCentralService) {
+         qDebug() << "Service creation failed, cannot discover details";
+         return;
+     }
+     QObject::connect(leCentralService.get(), &QLowEnergyService::stateChanged,
+                      [this](QLowEnergyService::ServiceState state){
+         qDebug() << "LE central service state changed:" << state;
+         emit leChanged();
+     });
+     QObject::connect(leCentralService.get(), &QLowEnergyService::characteristicWritten,
+                      [](const QLowEnergyCharacteristic&, const QByteArray& value){
+         qDebug() << "LE central service characteristic value written" << value;
+     });
+     QObject::connect(leCentralService.get(), &QLowEnergyService::characteristicRead,
+                      [](const QLowEnergyCharacteristic&, const QByteArray& value){
+         qDebug() << "LE central service characteristic value read" << value;
+     });
+     QObject::connect(leCentralService.get(), &QLowEnergyService::characteristicChanged,
+                      [](const QLowEnergyCharacteristic&, const QByteArray& value){
+         qDebug() << "LE central service characteristic value changed" << value;
+     });
+     QObject::connect(leCentralService.get(), &QLowEnergyService::descriptorWritten,
+                      [this](const QLowEnergyDescriptor&, const QByteArray& value){
+         qDebug() << "LE central service descriptor value written" << value;
+         emit leChanged();
+     });
+     QObject::connect(leCentralService.get(), &QLowEnergyService::errorOccurred,
+                      [](QLowEnergyService::ServiceError error){
+         qDebug() << "LE central service error occurred:" << error;
+     });
+     leCentralService->discoverDetails(QLowEnergyService::FullDiscovery);
+}
+
+void BtLocalDevice::centralConnect()
+{
+    qDebug() << "######" <<  "Central connect";
+    if (!leCentralController) {
+        qDebug() << "Create central first";
+        return;
+    }
+    leCentralController->connectToDevice();
+}
+
+void BtLocalDevice::dumpLeInfo()
+{
+    const auto controllerDump = [](QLowEnergyController* controller) {
+        qDebug() << "    State:" << controller->state();
+        qDebug() << "    Role:" << controller->role();
+        qDebug() << "    Error:" << controller->error();
+        qDebug() << "    ErrorString:" << controller->errorString();
+        qDebug() << "    MTU:" << controller->mtu();
+        qDebug() << "    Local Address:" << controller->localAddress();
+        qDebug() << "    RemoteAddress:" << controller->remoteAddress();
+        qDebug() << "    RemoteName:" << controller->remoteName();
+        qDebug() << "    Services count:" << controller->services().size();
+    };
+    qDebug() << "######" << "LE Peripheral controller";
+    if (lePeripheralController)
+        controllerDump(lePeripheralController.get());
+
+    qDebug() << "######" << "LE Central controller";
+    if (leCentralController)
+        controllerDump(leCentralController.get());
+
+    qDebug() << "######" << "LE Found peripheral device";
+    if (leRemotePeripheralDevice.isValid()) {
+        qDebug() << "    Name:" << leRemotePeripheralDevice.name();
+        qDebug() << "    UUID:" << leRemotePeripheralDevice.deviceUuid();
+        qDebug() << "    Address:" << leRemotePeripheralDevice.address();
+    }
+
+    const auto serviceDump = [](QLowEnergyService* service){
+        qDebug() << "    Name:" << service->serviceName();
+        qDebug() << "    Uuid:" << service->serviceUuid();
+        qDebug() << "    Error:" << service->error();
+        auto characteristics = service->characteristics();
+        for (const auto& characteristic : characteristics) {
+            qDebug() << "    Characteristic";
+            qDebug() << "        Uuid" << characteristic.uuid();
+            qDebug() << "        Value" << characteristic.value();
+
+        }
+    };
+
+    qDebug() << "######" << "LE Central-side service";
+    if (leCentralService)
+        serviceDump(leCentralService.get());
+
+    qDebug() << "######" << "LE Peripheral-side service";
+    if (lePeripheralService)
+        serviceDump(lePeripheralService.get());
+}
+
+void BtLocalDevice::centralSubscribeUnsubscribe()
+{
+    qDebug() << "######" << "LE Central (Un)Subscribe";
+    if (!leCentralService) {
+        qDebug() << "Service object does not exist";
+        return;
+    }
+    auto characteristic = leCentralService->characteristic(QBluetoothUuid(leCharacteristicUuid));
+    if (!characteristic.isValid()) {
+        qDebug() << "Characteristic is not valid";
+        return;
+    }
+
+    auto descriptor = characteristic.descriptor(
+                QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
+    if (!descriptor.isValid()) {
+        qDebug() << "Descriptor is not valid";
+        return;
+    }
+    if (descriptor.value() == QByteArray::fromHex("0000")) {
+        qDebug() << "    Subscribing notifications";
+        leCentralService->writeDescriptor(descriptor, QByteArray::fromHex("0100"));
+    } else {
+        qDebug() << "    Unsubscribing notifications";
+        leCentralService->writeDescriptor(descriptor, QByteArray::fromHex("0000"));
+    }
+    emit leChanged();
+}
+
+void BtLocalDevice::centralDelete()
+{
+    qDebug() << "######" << "Delete central" << leCentralController.get();
+    leCentralController.reset(nullptr);
+    emit leChanged();
+}
+
+void BtLocalDevice::peripheralDelete()
+{
+    qDebug() << "######" << "Delete peripheral" << lePeripheralController.get();
+    lePeripheralController.reset(nullptr);
+    emit leChanged();
+}
+
+bool BtLocalDevice::centralExists() const
+{
+    return leCentralController.get();
+}
+
+bool BtLocalDevice::centralSubscribed() const
+{
+    if (!leCentralService)
+        return false;
+
+    auto characteristic = leCentralService->characteristic(QBluetoothUuid(leCharacteristicUuid));
+    if (!characteristic.isValid())
+        return false;
+
+    auto descriptor = characteristic.descriptor(
+                QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration);
+    if (!descriptor.isValid())
+        return false;
+
+    return (descriptor.value() != QByteArray::fromHex("0000"));
+}
+
+QByteArray BtLocalDevice::centralState() const
+{
+    if (!leCentralController)
+        return "(N/A)"_ba;
+
+    return controllerStateString[leCentralController->state()];
+}
+
+QByteArray BtLocalDevice::centralServiceState() const
+{
+    if (!leCentralService)
+        return "(N/A)"_ba;
+
+    return serviceStateString[leCentralService->state()];
+}
+
+QByteArray BtLocalDevice::centralError() const
+{
+    if (!leCentralController)
+        return "(N/A)"_ba;
+
+    return controllerErrorString[leCentralController->error()];
+}
+
+QByteArray BtLocalDevice::centralServiceError() const
+{
+    if (!leCentralService)
+        return "(N/A)"_ba;
+
+    return serviceErrorString[leCentralService->error()];
+}
+
+QByteArray BtLocalDevice::peripheralState() const
+{
+    if (!lePeripheralController)
+        return "(N/A)"_ba;
+
+    return controllerStateString[lePeripheralController->state()];
+}
+
+QByteArray BtLocalDevice::peripheralServiceState() const
+{
+    if (!lePeripheralService)
+        return "(N/A)"_ba;
+
+    return serviceStateString[lePeripheralService->state()];
+}
+
+QByteArray BtLocalDevice::peripheralError() const
+{
+    if (!lePeripheralController)
+        return "(N/A)"_ba;
+
+    return controllerErrorString[lePeripheralController->error()];
+}
+
+QByteArray BtLocalDevice::peripheralServiceError() const
+{
+    if (!lePeripheralService)
+        return "(N/A)"_ba;
+
+    return serviceErrorString[lePeripheralService->error()];
+}
+
+bool BtLocalDevice::peripheralExists() const
+{
+    return lePeripheralController.get();
 }

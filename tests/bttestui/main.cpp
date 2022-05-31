@@ -39,12 +39,10 @@ int main(int argc, char *argv[])
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     QGuiApplication app(argc, argv);
-    qmlRegisterType<BtLocalDevice>("Local", 5, 2, "BluetoothDevice");
+    qmlRegisterType<BtLocalDevice>("Local", 6, 5, "BluetoothDevice");
 
     QQuickView view;
     view.setSource(QStringLiteral("qrc:///main.qml"));
-    view.setWidth(550);
-    view.setHeight(550);
     view.setResizeMode(QQuickView::SizeRootObjectToView);
 
     QObject::connect(view.engine(), SIGNAL(quit()), qApp, SLOT(quit()));

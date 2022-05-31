@@ -35,6 +35,8 @@
 #include <QtBluetooth/QBluetoothServer>
 #include <QtBluetooth/QBluetoothServiceDiscoveryAgent>
 #include <QtBluetooth/QBluetoothSocket>
+#include <QtBluetooth/QLowEnergyController>
+#include <QtBluetooth/QLowEnergyServiceData>
 
 class BtLocalDevice : public QObject
 {
@@ -43,8 +45,18 @@ public:
     explicit BtLocalDevice(QObject *parent = 0);
     ~BtLocalDevice();
     Q_PROPERTY(QString hostMode READ hostMode NOTIFY hostModeStateChanged)
-    Q_PROPERTY(int secFlags READ secFlags WRITE setSecFlags
-               NOTIFY secFlagsChanged)
+    Q_PROPERTY(int secFlags READ secFlags WRITE setSecFlags NOTIFY secFlagsChanged)
+    Q_PROPERTY(bool centralExists READ centralExists NOTIFY leChanged);
+    Q_PROPERTY(bool centralSubscribed READ centralSubscribed NOTIFY leChanged);
+    Q_PROPERTY(QByteArray centralState READ centralState NOTIFY leChanged);
+    Q_PROPERTY(QByteArray centralError READ centralError NOTIFY leChanged);
+    Q_PROPERTY(QByteArray centralServiceState READ centralServiceState NOTIFY leChanged);
+    Q_PROPERTY(QByteArray centralServiceError READ centralServiceError NOTIFY leChanged);
+    Q_PROPERTY(QByteArray peripheralState READ peripheralState NOTIFY leChanged);
+    Q_PROPERTY(QByteArray peripheralError READ peripheralError NOTIFY leChanged);
+    Q_PROPERTY(QByteArray peripheralServiceState READ peripheralServiceState NOTIFY leChanged);
+    Q_PROPERTY(QByteArray peripheralServiceError READ peripheralServiceError NOTIFY leChanged);
+    Q_PROPERTY(bool peripheralExists READ peripheralExists NOTIFY leChanged);
 
     QBluetooth::SecurityFlags secFlags() const;
     void setSecFlags(int);
@@ -55,6 +67,7 @@ signals:
     void hostModeStateChanged();
     void socketStateUpdate(int foobar);
     void secFlagsChanged();
+    bool leChanged(); // Same signal used for LE changes for simplicity
 
 public slots:
     //QBluetoothLocalDevice
@@ -110,6 +123,39 @@ public slots:
     void clientSocketReadyRead();
     void dumpServerInformation();
 
+    //QLowEnergyController central
+    void centralCreate();
+    void centralConnect();
+    void centralStartServiceDiscovery();
+    void centralDiscoverServiceDetails();
+    void centralWrite();
+    void centralRead();
+    void centralSubscribeUnsubscribe();
+    void centralDelete();
+    bool centralExists() const;
+    bool centralSubscribed() const;
+    QByteArray centralState() const;
+    QByteArray centralServiceState() const;
+    QByteArray centralError() const;
+    QByteArray centralServiceError() const;
+
+    //QLowEnergyController peripheral
+    void peripheralCreate();
+    void peripheralStartAdvertising();
+    void peripheralStopAdvertising();
+    void peripheralWrite();
+    void peripheralRead();
+    void peripheralDelete();
+    bool peripheralExists() const;
+    QByteArray peripheralState() const;
+    QByteArray peripheralServiceState() const;
+    QByteArray peripheralError() const;
+    QByteArray peripheralServiceError() const;
+
+    // QLowEnergyController misc
+    void startLeDeviceDiscovery();
+    void dumpLeInfo();
+
 private:
     void dumpLocalDevice(QBluetoothLocalDevice *dev);
 
@@ -120,9 +166,16 @@ private:
     QBluetoothServer *server = nullptr;
     QList<QBluetoothSocket *> serverSockets;
     QBluetoothServiceInfo serviceInfo;
-
     QList<QBluetoothServiceInfo> foundTestServers;
     QBluetooth::SecurityFlags securityFlags;
+
+    std::unique_ptr<QLowEnergyController> leCentralController;
+    std::unique_ptr<QLowEnergyController> lePeripheralController;
+    std::unique_ptr<QLowEnergyService> lePeripheralService;
+    std::unique_ptr<QLowEnergyService> leCentralService;
+    QLowEnergyAdvertisingData leAdvertisingData;
+    QLowEnergyServiceData leServiceData;
+    QBluetoothDeviceInfo leRemotePeripheralDevice;
 };
 
 #endif // BTLOCALDEVICE_H
