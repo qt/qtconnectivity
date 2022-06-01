@@ -134,12 +134,7 @@ MainWindow::MainWindow(QWidget *parent)
 {
     ui->setupUi(this);
 
-    QMenu *addRecordMenu = new QMenu(this);
-    addRecordMenu->addAction(tr("NFC Text Record"), this, SLOT(addNfcTextRecord()));
-    addRecordMenu->addAction(tr("NFC URI Record"), this, SLOT(addNfcUriRecord()));
-    addRecordMenu->addAction(tr("MIME Image Record"), this, SLOT(addMimeImageRecord()));
-    addRecordMenu->addAction(tr("Empty Record"), this, SLOT(addEmptyRecord()));
-    ui->addRecord->setMenu(addRecordMenu);
+    connect(ui->addRecord, &QPushButton::clicked, this, &MainWindow::showMenu);
 
     QVBoxLayout *vbox = new QVBoxLayout;
     ui->scrollAreaWidgetContents->setLayout(vbox);
@@ -366,6 +361,28 @@ void MainWindow::targetError(QNearFieldTarget::Error error, const QNearFieldTarg
         m_manager->stopTargetDetection();
         m_request = QNearFieldTarget::RequestId();
     }
+}
+
+void MainWindow::showMenu()
+{
+    // We have to manually call QMenu::popup() because of QTBUG-98651.
+    // And we need to re-create menu each time because of QTBUG-97482.
+    if (m_menu) {
+        m_menu->setParent(nullptr);
+        delete m_menu;
+    }
+    m_menu = new QMenu(this);
+    m_menu->addAction(tr("NFC Text Record"), this, &MainWindow::addNfcTextRecord);
+    m_menu->addAction(tr("NFC URI Record"), this, &MainWindow::addNfcUriRecord);
+    m_menu->addAction(tr("MIME Image Record"), this, &MainWindow::addMimeImageRecord);
+    m_menu->addAction(tr("Empty Record"), this, &MainWindow::addEmptyRecord);
+
+    // Use menu's sizeHint() to position it so that its right side is aligned
+    // with button's right side.
+    QPushButton *button = ui->addRecord;
+    const int x = button->x() + button->width() - m_menu->sizeHint().width();
+    const int y = button->y() + button->height();
+    m_menu->popup(mapToGlobal(QPoint(x, y)));
 }
 
 void MainWindow::clearMessage()

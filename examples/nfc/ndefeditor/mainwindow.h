@@ -58,6 +58,7 @@
 QT_FORWARD_DECLARE_CLASS(QNearFieldManager)
 QT_FORWARD_DECLARE_CLASS(QNdefMessage)
 QT_FORWARD_DECLARE_CLASS(QScreen)
+QT_FORWARD_DECLARE_CLASS(QMenu)
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -98,6 +99,8 @@ private slots:
     void ndefMessageWritten(const QNearFieldTarget::RequestId &id);
     void targetError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id);
 
+    void showMenu();
+
 private:
     enum TouchAction {
         NoAction,
@@ -111,6 +114,7 @@ private:
 
 private:
     Ui::MainWindow *ui;
+    QMenu *m_menu = nullptr;
 
     QNearFieldManager *m_manager;
     TouchAction m_touchAction;
