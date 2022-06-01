@@ -11,6 +11,8 @@ SOURCES += main.cpp \
 HEADERS  += mainwindow.h \
     annotatedurl.h
 
+ios: QMAKE_INFO_PLIST = Info.plist
+
 android {
     ANDROID_PACKAGE_SOURCE_DIR = $$PWD/android
 

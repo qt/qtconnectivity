@@ -17,6 +17,8 @@ HEADERS += \
     urirecordeditor.h \
     mimeimagerecordeditor.h
 
+ios: QMAKE_INFO_PLIST = Info.plist
+
 FORMS += \
     mainwindow.ui \
     textrecordeditor.ui \
