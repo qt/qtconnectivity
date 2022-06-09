@@ -904,7 +904,7 @@ HRESULT QLowEnergyControllerPrivateWinRT::onMtuChange(IGattSession *session, IIn
 {
     qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
     if (session != mGattSession.Get()) {
-        qCWarning(QT_BT_WINDOWS) << "Got MTU changed event for wrong GattSession.";
+        qCWarning(QT_BT_WINDOWS) << "Got MTU changed event for wrong or outdated GattSession.";
         return S_OK;
     }
 
