@@ -94,7 +94,7 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
         try {
             ((Activity)qtContext).startActivityForResult(intent, TURN_BT_DISCOVERABLE);
         } catch (Exception ex) {
-            Log.w(TAG, "setDisabled() failed to initiate Bluetooth discoverability change");
+            Log.w(TAG, "setDiscoverable() failed to initiate Bluetooth discoverability change");
             ex.printStackTrace();
             return false;
         }
