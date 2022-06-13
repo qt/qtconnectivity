@@ -421,7 +421,7 @@ void DeviceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, j
         emit finished();
     } else if (action == valueForStaticField(JavaNames::BluetoothAdapter,
                                              JavaNames::ActionDiscoveryStarted).toString()) {
-
+        emit discoveryStarted();
     } else if (action == valueForStaticField(JavaNames::BluetoothDevice,
                                              JavaNames::ActionFound).toString()) {
         //get BluetoothDevice

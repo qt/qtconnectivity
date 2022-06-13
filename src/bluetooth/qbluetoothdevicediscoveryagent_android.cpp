@@ -58,6 +58,9 @@ enum {
     BtleScanActive = 2
 };
 
+static constexpr auto deviceDiscoveryStartTimeLimit = std::chrono::seconds{5};
+static constexpr short deviceDiscoveryStartMaxAttempts = 6;
+
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     const QBluetoothAddress &deviceAdapter, QBluetoothDeviceDiscoveryAgent *parent) :
     inquiryType(QBluetoothDeviceDiscoveryAgent::GeneralUnlimitedInquiry),
@@ -66,6 +69,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     m_adapterAddress(deviceAdapter),
     m_active(NoScanActive),
     leScanTimeout(0),
+    deviceDiscoveryStartAttemptsLeft(deviceDiscoveryStartMaxAttempts),
     pendingCancel(false),
     pendingStart(false),
     lowEnergySearchTimeout(25000),
@@ -112,9 +116,42 @@ QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent:
     return (LowEnergyMethod | ClassicMethod);
 }
 
+void QBluetoothDeviceDiscoveryAgentPrivate::classicDiscoveryStartFail()
+{
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+    lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
+    errorString = QBluetoothDeviceDiscoveryAgent::tr("Classic Discovery cannot be started");
+    emit q->error(lastError);
+}
+
+// Sets & emits an error and returns true if bluetooth is off
+bool QBluetoothDeviceDiscoveryAgentPrivate::setErrorIfPowerOff()
+{
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+
+    const int state = adapter.callMethod<jint>("getState");
+    if (state != 12) {  // BluetoothAdapter.STATE_ON
+        lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
+        m_active = NoScanActive;
+        errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
+        emit q->error(lastError);
+        return true;
+    }
+    return false;
+}
+
+/*
+The Classic/LE discovery method precedence is handled as follows:
+
+If only classic method is set => only classic method is used
+If only LE method is set => only LE method is used
+If both classic and LE methods are set, start classic scan first
+    If classic scan fails to start, start LE scan immediately in the start function
+    Otherwise start LE scan when classic scan completes
+*/
+
 void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
 {
-    //TODO Implement discovery method handling (see input parameter)
     requestedMethods = methods;
 
     if (pendingCancel) {
@@ -142,13 +179,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         return;
     }
 
-    const int state = adapter.callMethod<jint>("getState");
-    if (state != 12) {  // BluetoothAdapter.STATE_ON
-        lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
-        errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
-        emit q->error(lastError);
+    if (setErrorIfPowerOff())
         return;
-    }
 
     // check Android v23+ permissions
     // -> any device search requires android.permission.ACCESS_COARSE_LOCATION or android.permission.ACCESS_FINE_LOCATION
@@ -247,16 +279,54 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         const bool success = adapter.callMethod<jboolean>("startDiscovery");
         if (!success) {
             qCDebug(QT_BT_ANDROID) << "Classic Discovery cannot be started";
+            // Check if only classic discovery requested -> error out and return.
+            // Otherwise since LE was also requested => don't return but allow the
+            // function to continue to LE scanning
             if (requestedMethods == QBluetoothDeviceDiscoveryAgent::ClassicMethod) {
-                //only classic discovery requested -> error out
-                lastError = QBluetoothDeviceDiscoveryAgent::InputOutputError;
-                errorString = QBluetoothDeviceDiscoveryAgent::tr("Classic Discovery cannot be started");
-
-                emit q->error(lastError);
+                classicDiscoveryStartFail();
                 return;
-            } // else fall through to LE discovery
+            }
         } else {
             m_active = SDPScanActive;
+            if (!deviceDiscoveryStartTimeout) {
+                // In some bluetooth environments device discovery does not start properly
+                // if it is done shortly after (up to 20 seconds) a full service discovery.
+                // In that case we never get DISOVERY_STARTED action and device discovery never
+                // finishes. Here we use a small timeout to guard it; if we don't get the
+                // 'started' action in time, we restart the query. In the normal case the action
+                // is received in < 1 second. See QTBUG-101066
+                deviceDiscoveryStartTimeout = new QTimer(this);
+                deviceDiscoveryStartTimeout->setInterval(deviceDiscoveryStartTimeLimit);
+                deviceDiscoveryStartTimeout->setSingleShot(true);
+                QObject::connect(receiver, &DeviceDiscoveryBroadcastReceiver::discoveryStarted,
+                                 deviceDiscoveryStartTimeout, &QTimer::stop);
+                QObject::connect(deviceDiscoveryStartTimeout, &QTimer::timeout, [this]() {
+                    deviceDiscoveryStartAttemptsLeft -= 1;
+                    qCWarning(QT_BT_ANDROID) << "Discovery start not received, attempts left:"
+                                             <<  deviceDiscoveryStartAttemptsLeft;
+                    // Check that bluetooth is not switched off
+                    if (setErrorIfPowerOff())
+                        return;
+                    // If this was the last retry attempt, cancel the discovery just in case
+                    // as a good cleanup practice
+                    if (deviceDiscoveryStartAttemptsLeft <= 0) {
+                        qCWarning(QT_BT_ANDROID) << "Classic device discovery failed to start";
+                        (void)adapter.callMethod<jboolean>("cancelDiscovery");
+                    }
+                    // Restart the discovery and retry timer.
+                    // The logic below is similar as in the start()
+                    if (deviceDiscoveryStartAttemptsLeft > 0 &&
+                            adapter.callMethod<jboolean>("startDiscovery"))
+                        deviceDiscoveryStartTimeout->start();
+                    else if (requestedMethods == QBluetoothDeviceDiscoveryAgent::ClassicMethod)
+                        classicDiscoveryStartFail(); // No LE scan requested, scan is done
+                    else
+                        startLowEnergyScan(); // Continue to LE scan
+                });
+            }
+            deviceDiscoveryStartAttemptsLeft = deviceDiscoveryStartMaxAttempts;
+            deviceDiscoveryStartTimeout->start();
+
             qCDebug(QT_BT_ANDROID)
                 << "QBluetoothDeviceDiscoveryAgentPrivate::start() - Classic search successfully started.";
             return;
@@ -264,9 +334,6 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     }
 
     if (requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod) {
-        // LE search only requested or classic discovery failed but lets try LE scan anyway
-        Q_ASSERT(requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
-
         if (QtAndroidPrivate::androidSdkVersion() < 18) {
             qCDebug(QT_BT_ANDROID) << "Skipping Bluetooth Low Energy device scan due to"
                                       "insufficient Android version.";
@@ -276,7 +343,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
             emit q->error(lastError);
             return;
         }
-
+        // LE search only requested or classic discovery failed but lets try LE scan anyway
         startLowEnergyScan();
     }
 }
@@ -286,6 +353,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
     pendingStart = false;
+
+    if (deviceDiscoveryStartTimeout)
+        deviceDiscoveryStartTimeout->stop();
 
     if (m_active == NoScanActive)
         return;
@@ -330,16 +400,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::processSdpDiscoveryFinished()
         start(requestedMethods);
     } else {
         // check that it didn't finish due to turned off Bluetooth Device
-        const int state = adapter.callMethod<jint>("getState");
-        if (state != 12) {  // BluetoothAdapter.STATE_ON
-            m_active = NoScanActive;
-            lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
-            errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
-            emit q->error(lastError);
+        if (setErrorIfPowerOff())
             return;
-        }
-
-        // no BTLE scan requested
+        // Since no BTLE scan requested and classic scan is done => finished()
         if (!(requestedMethods & QBluetoothDeviceDiscoveryAgent::LowEnergyMethod)) {
             m_active = NoScanActive;
             emit q->finished();
