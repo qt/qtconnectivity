@@ -114,12 +114,16 @@ private slots:
 
 private:
     void startLowEnergyScan();
+    void classicDiscoveryStartFail();
+    bool setErrorIfPowerOff();
 
     DeviceDiscoveryBroadcastReceiver *receiver = nullptr;
     short m_active;
     QJniObject adapter;
     QJniObject leScanner;
     QTimer *leScanTimeout = nullptr;
+    QTimer *deviceDiscoveryStartTimeout = nullptr;
+    short deviceDiscoveryStartAttemptsLeft;
 
     bool pendingCancel = false;
     bool pendingStart = false;
