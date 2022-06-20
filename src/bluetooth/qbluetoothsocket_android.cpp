@@ -186,12 +186,12 @@ bool QBluetoothSocketPrivateAndroid::fallBackReversedConnect(const QBluetoothUui
                                                                        inputString.object<jstring>());
 
     if (secFlags == QBluetooth::SecurityFlags(QBluetooth::Security::NoSecurity)) {
-        qCDebug(QT_BT_ANDROID) << "Connnecting via insecure rfcomm";
+        qCDebug(QT_BT_ANDROID) << "Connecting via insecure rfcomm";
         socketObject = remoteDevice.callObjectMethod("createInsecureRfcommSocketToServiceRecord",
                                                  "(Ljava/util/UUID;)Landroid/bluetooth/BluetoothSocket;",
                                                  uuidObject.object<jobject>());
     } else {
-        qCDebug(QT_BT_ANDROID) << "Connnecting via secure rfcomm";
+        qCDebug(QT_BT_ANDROID) << "Connecting via secure rfcomm";
         socketObject = remoteDevice.callObjectMethod("createRfcommSocketToServiceRecord",
                                                      "(Ljava/util/UUID;)Landroid/bluetooth/BluetoothSocket;",                                       
                                                      uuidObject.object<jobject>());

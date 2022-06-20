@@ -353,11 +353,11 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
     }
 
     [uuids addObject:nsUuid];
-    // With the latest CoreBluetooth, we can synchronously retrive peripherals:
+    // With the latest CoreBluetooth, we can synchronously retrieve peripherals:
     QT_BT_MAC_AUTORELEASEPOOL;
     NSArray *const peripherals = [manager retrievePeripheralsWithIdentifiers:uuids];
     if (!peripherals || peripherals.count != 1) {
-        qCWarning(QT_BT_DARWIN) << "failed to retrive a peripheral";
+        qCWarning(QT_BT_DARWIN) << "failed to retrieve a peripheral";
         if (notifier)
             emit notifier->CBManagerError(QLowEnergyController::UnknownRemoteDeviceError);
         return;
