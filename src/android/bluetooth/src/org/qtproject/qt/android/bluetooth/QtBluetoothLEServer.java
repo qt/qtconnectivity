@@ -262,12 +262,7 @@ public class QtBluetoothLEServer {
             return;
         }
 
-        mLeAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
-
-        if (!mBluetoothAdapter.isMultipleAdvertisementSupported())
-            Log.w(TAG, "Device does not support Bluetooth Low Energy advertisement.");
-        else
-            Log.w(TAG, "Let's do BTLE Peripheral.");
+        Log.w(TAG, "Let's do BTLE Peripheral.");
     }
 
     // The following functions are synchronized callback handlers. The callbacks
@@ -743,8 +738,20 @@ public class QtBluetoothLEServer {
                                     AdvertiseData scanResponse,
                                     AdvertiseSettings settings)
     {
-        if (mLeAdvertiser == null)
+        // Check that the bluetooth is on
+        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
+            Log.w(TAG, "StartAdvertising: Bluetooth not available or offline");
             return false;
+        }
+
+        // According to Android doc this check should always precede the advertiser creation
+        if (mLeAdvertiser == null && mBluetoothAdapter.isMultipleAdvertisementSupported())
+            mLeAdvertiser = mBluetoothAdapter.getBluetoothLeAdvertiser();
+
+        if (mLeAdvertiser == null) {
+            Log.w(TAG, "StartAdvertising: LE advertisement not supported");
+            return false;
+        }
 
         if (!connectServer()) {
             Log.w(TAG, "Server::startAdvertising: Cannot open GATT server");
