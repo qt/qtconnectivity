@@ -156,7 +156,7 @@ public:
     };
     Q_ENUM(HciError);
 
-    explicit HciManager(const QBluetoothAddress &deviceAdapter, QObject *parent = nullptr);
+    explicit HciManager(const QBluetoothAddress &deviceAdapter);
     ~HciManager();
 
     bool isValid() const;
