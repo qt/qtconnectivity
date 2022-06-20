@@ -82,23 +82,24 @@ static QByteArray byteArrayFromStruct(const T &data)
 QLeAdvertiserBluez::QLeAdvertiserBluez(const QLowEnergyAdvertisingParameters &params,
                                        const QLowEnergyAdvertisingData &advertisingData,
                                        const QLowEnergyAdvertisingData &scanResponseData,
-                                       HciManager &hciManager, QObject *parent)
+                                       std::shared_ptr<HciManager> hciManager, QObject *parent)
     : QLeAdvertiser(params, advertisingData, scanResponseData, parent), m_hciManager(hciManager)
 {
-    connect(&m_hciManager, &HciManager::commandCompleted, this,
+    Q_ASSERT(m_hciManager);
+    connect(m_hciManager.get(), &HciManager::commandCompleted, this,
             &QLeAdvertiserBluez::handleCommandCompleted);
 }
 
 QLeAdvertiserBluez::~QLeAdvertiserBluez()
 {
-    disconnect(&m_hciManager, &HciManager::commandCompleted, this,
+    disconnect(m_hciManager.get(), &HciManager::commandCompleted, this,
                &QLeAdvertiserBluez::handleCommandCompleted);
     doStopAdvertising();
 }
 
 void QLeAdvertiserBluez::doStartAdvertising()
 {
-    if (!m_hciManager.monitorEvent(HciManager::HciEvent::EVT_CMD_COMPLETE)) {
+    if (!m_hciManager->monitorEvent(HciManager::HciEvent::EVT_CMD_COMPLETE)) {
         handleError();
         return;
     }
@@ -130,7 +131,7 @@ void QLeAdvertiserBluez::sendNextCommand()
         return;
     }
     const Command &c = m_pendingCommands.first();
-    if (!m_hciManager.sendCommand(QBluezConst::OgfLinkControl, c.ocf, c.data)) {
+    if (!m_hciManager->sendCommand(QBluezConst::OgfLinkControl, c.ocf, c.data)) {
         handleError();
         return;
     }

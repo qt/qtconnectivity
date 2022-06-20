@@ -57,8 +57,8 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
-HciManager::HciManager(const QBluetoothAddress& deviceAdapter, QObject *parent) :
-    QObject(parent), hciSocket(-1), hciDev(-1)
+HciManager::HciManager(const QBluetoothAddress& deviceAdapter) :
+    QObject(nullptr), hciSocket(-1), hciDev(-1)
 {
     hciSocket = ::socket(AF_BLUETOOTH, SOCK_RAW | SOCK_CLOEXEC, BTPROTO_HCI);
     if (hciSocket < 0) {

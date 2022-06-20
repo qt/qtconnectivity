@@ -202,7 +202,7 @@ private:
     bool encryptionChangePending;
     bool receivedMtuExchangeRequest = false;
 
-    HciManager *hciManager = nullptr;
+    std::shared_ptr<HciManager> hciManager;
     QLeAdvertiser *advertiser = nullptr;
     QSocketNotifier *serverSocketNotifier = nullptr;
     QTimer *requestTimer = nullptr;

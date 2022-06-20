@@ -104,7 +104,8 @@ class QLeAdvertiserBluez : public QLeAdvertiser
 public:
     QLeAdvertiserBluez(const QLowEnergyAdvertisingParameters &params,
                        const QLowEnergyAdvertisingData &advertisingData,
-                       const QLowEnergyAdvertisingData &scanResponseData, HciManager &hciManager,
+                       const QLowEnergyAdvertisingData &scanResponseData,
+                       std::shared_ptr<HciManager> hciManager,
                        QObject *parent = nullptr);
     ~QLeAdvertiserBluez() override;
 
@@ -133,7 +134,7 @@ private:
     void handleCommandCompleted(quint16 opCode, quint8 status, const QByteArray &advertisingData);
     void handleError();
 
-    HciManager &m_hciManager;
+    std::shared_ptr<HciManager> m_hciManager;
 
     struct Command {
         Command() {}
