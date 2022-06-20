@@ -187,28 +187,30 @@ QLowEnergyControllerPrivateBluez::QLowEnergyControllerPrivateBluez()
 
 void QLowEnergyControllerPrivateBluez::init()
 {
-    hciManager = new HciManager(localAdapter, this);
+    // The HCI manager is shared between this class and the advertiser
+    hciManager = std::make_shared<HciManager>(localAdapter);
+
     if (!hciManager->isValid()){
         setError(QLowEnergyController::InvalidBluetoothAdapterError);
         return;
     }
 
     hciManager->monitorEvent(HciManager::HciEvent::EVT_ENCRYPT_CHANGE);
-    connect(hciManager, SIGNAL(encryptionChangedEvent(QBluetoothAddress,bool)),
+    connect(hciManager.get(), SIGNAL(encryptionChangedEvent(QBluetoothAddress,bool)),
             this, SLOT(encryptionChangedEvent(QBluetoothAddress,bool)));
     hciManager->monitorEvent(HciManager::HciEvent::EVT_LE_META_EVENT);
     hciManager->monitorAclPackets();
-    connect(hciManager, &HciManager::connectionComplete, [this](quint16 handle) {
+    connect(hciManager.get(), &HciManager::connectionComplete, [this](quint16 handle) {
         connectionHandle = handle;
         qCDebug(QT_BT_BLUEZ) << "received connection complete event, handle:" << handle;
     });
-    connect(hciManager, &HciManager::connectionUpdate,
+    connect(hciManager.get(), &HciManager::connectionUpdate,
             [this](quint16 handle, const QLowEnergyConnectionParameters &params) {
                 if (handle == connectionHandle)
                     emit q_ptr->connectionUpdated(params);
             }
     );
-    connect(hciManager, &HciManager::signatureResolvingKeyReceived,
+    connect(hciManager.get(), &HciManager::signatureResolvingKeyReceived,
             [this](quint16 handle, bool remoteKey, const quint128 &csrk) {
                 if (handle != connectionHandle)
                     return;
@@ -331,6 +333,7 @@ QLowEnergyControllerPrivateBluez::~QLowEnergyControllerPrivateBluez()
 {
     closeServerSocket();
     delete cmacCalculator;
+    cmacCalculator = nullptr;
 }
 
 class ServerSocket
@@ -389,7 +392,7 @@ void QLowEnergyControllerPrivateBluez::startAdvertising(const QLowEnergyAdvertis
 {
     qCDebug(QT_BT_BLUEZ) << "Starting to advertise";
     if (!advertiser) {
-        advertiser = new QLeAdvertiserBluez(params, advertisingData, scanResponseData, *hciManager,
+        advertiser = new QLeAdvertiserBluez(params, advertisingData, scanResponseData, hciManager,
                                             this);
         connect(advertiser, &QLeAdvertiser::errorOccurred, this,
                 &QLowEnergyControllerPrivateBluez::handleAdvertisingError);
