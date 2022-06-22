@@ -786,13 +786,15 @@ void QBluetoothSocket::close()
 }
 
 /*!
-  Set the socket to use \a socketDescriptor with a type of \a socketType,
-  which is in state, \a socketState, and mode, \a openMode.
+  \fn bool QBluetoothSocket::setSocketDescriptor(int socketDescriptor, QBluetoothServiceInfo::Protocol socketType, SocketState socketState, OpenMode openMode)
 
-  The set socket descriptor is considered owned by the QBluetoothSocket
-  and may be e.g. closed once finished.
+  Sets the socket to use \a socketDescriptor with a type of \a socketType,
+  which is in state \a socketState, and mode \a openMode.
 
-  Returns true on success
+  The socket descriptor is owned by the QBluetoothSocket instance and may
+  be closed once finished.
+
+  Returns \c true on success.
 */
 
 // ### Qt 7 consider making this function private. The qbluetoothsocket_bluez backend is the
