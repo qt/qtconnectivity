@@ -46,3 +46,6 @@ imagedirs   += images
 
 navigation.landingpage = "Qt Bluetooth"
 navigation.cppclassespage = "Qt Bluetooth C++ Classes"
+
+# Fail the documentation build if there are more warnings than the limit
+warninglimit = 0
