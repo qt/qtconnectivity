@@ -226,6 +226,7 @@ elseif(QT_FEATURE_winrt_bt)
             qbluetoothsocket_winrt.cpp qbluetoothsocket_winrt_p.h
             qbluetoothutils_winrt.cpp qbluetoothutils_winrt_p.h
             qlowenergycontroller_winrt.cpp qlowenergycontroller_winrt_p.h
+            qbluetoothdevicewatcher_winrt.cpp qbluetoothdevicewatcher_winrt_p.h
         DEFINES
             QT_WINRT_BLUETOOTH
         LIBRARIES
