@@ -37,7 +37,7 @@
 **
 ******************************************************************************/
 
-#include <qbluetoothutils_winrt_p.h>
+#include <private/qbluetoothutils_winrt_p.h>
 
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothaddress.h"
