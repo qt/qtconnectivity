@@ -192,6 +192,12 @@ private:
     LocalDeviceBroadcastReceiver *localDeviceReceiver = nullptr;
 
     QJniObject btAdapter;
+    // The sdpCache caches service discovery results while it is running, and is
+    // cleared once finished. The cache is used as we may (or may not) get more accurate
+    // results after the first result. This temporary caching allows to send the
+    // serviceDiscovered() signal once per service and with the most accurate information.
+    // Partial cache clearing may occur already during the scan if the second (more accurate)
+    // scan result is received.
     QMap<QBluetoothAddress,QPair<QBluetoothDeviceInfo,QList<QBluetoothUuid> > > sdpCache;
 #endif
 
