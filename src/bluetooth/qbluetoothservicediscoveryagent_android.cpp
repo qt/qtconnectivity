@@ -20,6 +20,8 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
+static constexpr auto uuidFetchTimeLimit = std::chrono::seconds{4};
+
 QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
         QBluetoothServiceDiscoveryAgent *qp, const QBluetoothAddress &deviceAdapter)
     : error(QBluetoothServiceDiscoveryAgent::NoError),
@@ -216,7 +218,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
     if (address.isNull() || uuids.isEmpty()) {
         if (discoveredDevices.size() == 1) {
             Q_Q(QBluetoothServiceDiscoveryAgent);
-            QTimer::singleShot(4000, q, [this]() {
+            QTimer::singleShot(uuidFetchTimeLimit, q, [this]() {
                 this->_q_fetchUuidsTimeout();
             }); // will also call _q_serviceDiscoveryFinished()
         } else {
@@ -235,7 +237,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
         qCDebug(QT_BT_ANDROID) << result;
     }
 
-    /* In general there are two uuid events per device.
+    /* In general there may be up-to two uuid events per device.
      * We'll wait for the second event to arrive before we process the UUIDs.
      * We utilize a timeout to catch cases when the second
      * event doesn't arrive at all.
@@ -266,10 +268,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_processFetchedUuids(
         sdpCache.insert(address, pair);
 
         //the discovery on the last device cannot immediately finish
-        //we have to grant the 2 seconds timeout delay
+        //we have to grant the timeout delay to allow potential second event to arrive
         if (discoveredDevices.size() == 1) {
             Q_Q(QBluetoothServiceDiscoveryAgent);
-            QTimer::singleShot(4000, q, [this]() {
+            QTimer::singleShot(uuidFetchTimeLimit, q, [this]() {
                 this->_q_fetchUuidsTimeout();
             });
             return;
@@ -422,14 +424,18 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
 
 void QBluetoothServiceDiscoveryAgentPrivate::_q_fetchUuidsTimeout()
 {
-    if (sdpCache.isEmpty())
+    // In practice if device list is empty, discovery has been stopped or bluetooth is offline
+    if (discoveredDevices.isEmpty())
         return;
 
-    QPair<QBluetoothDeviceInfo,QList<QBluetoothUuid> > pair;
-    const QList<QBluetoothAddress> keys = sdpCache.keys();
-    for (const QBluetoothAddress &key : keys) {
-        pair = sdpCache.take(key);
-        populateDiscoveredServices(pair.first, pair.second);
+    // Process remaining services in the cache (these didn't get a second UUID event)
+    if (!sdpCache.isEmpty()) {
+        QPair<QBluetoothDeviceInfo,QList<QBluetoothUuid> > pair;
+        const QList<QBluetoothAddress> keys = sdpCache.keys();
+        for (const QBluetoothAddress &key : keys) {
+            pair = sdpCache.take(key);
+            populateDiscoveredServices(pair.first, pair.second);
+        }
     }
 
     Q_ASSERT(sdpCache.isEmpty());
