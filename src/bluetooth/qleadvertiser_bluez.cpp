@@ -222,7 +222,8 @@ static void addServicesData(AdvData &data, const QList<T> &services)
         return;
     constexpr auto sizeofT = static_cast<int>(sizeof(T)); // signed is more convenient
     const qsizetype spaceAvailable = sizeof data.data - data.length;
-    const qsizetype maxServices = (std::max)((spaceAvailable - 2) / sizeofT, services.size());
+    // Determine how many services will be set, space may limit the number
+    const qsizetype maxServices = (std::min)((spaceAvailable - 2) / sizeofT, services.size());
     if (maxServices <= 0) {
         qCWarning(QT_BT_BLUEZ) << "services data does not fit into advertising data packet";
         return;
