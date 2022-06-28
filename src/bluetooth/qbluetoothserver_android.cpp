@@ -3,6 +3,7 @@
 
 #include "android/serveracceptancethread_p.h"
 #include "android/androidutils_p.h"
+#include "android/jni_android_p.h"
 #include "qbluetoothserver.h"
 #include "qbluetoothserver_p.h"
 #include "qbluetoothsocket.h"
@@ -131,10 +132,9 @@ bool QBluetoothServer::listen(const QBluetoothAddress &localAdapter, quint16 por
         return false;
 
     //check Bluetooth is available and online
-    QJniObject btAdapter = QJniObject::callStaticObjectMethod(
-                                        "android/bluetooth/BluetoothAdapter",
-                                        "getDefaultAdapter",
-                                        "()Landroid/bluetooth/BluetoothAdapter;");
+    QJniObject btAdapter = QJniObject::callStaticMethod<QtJniTypes::BluetoothAdapter>(
+                QtJniTypes::className<QtJniTypes::BluetoothAdapter>(), "getDefaultAdapter");
+
     if (!btAdapter.isValid()) {
         qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
         d->m_lastError = QBluetoothServer::UnknownError;

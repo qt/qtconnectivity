@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include <android/log.h>
+#include <android/jni_android_p.h>
 #include "android/androidbroadcastreceiver_p.h"
 #include <QtCore/QLoggingCategory>
 #include <QtCore/qnativeinterface.h>
@@ -19,12 +20,12 @@ AndroidBroadcastReceiver::AndroidBroadcastReceiver(QObject* parent)
     // get Qt Context
     contextObject = QJniObject(QNativeInterface::QAndroidApplication::context());
 
-    broadcastReceiverObject = QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver");
+    broadcastReceiverObject = QJniObject::construct<QtJniTypes::QtBtBroadcastReceiver>();
     if (!broadcastReceiverObject.isValid())
         return;
     broadcastReceiverObject.setField<jlong>("qtObject", reinterpret_cast<long>(this));
 
-    intentFilterObject = QJniObject("android/content/IntentFilter");
+    intentFilterObject = QJniObject::construct<QtJniTypes::IntentFilter>();
     if (!intentFilterObject.isValid())
         return;
 
@@ -53,13 +54,12 @@ void AndroidBroadcastReceiver::addAction(const QJniObject &action)
     if (!valid || !action.isValid())
         return;
 
-    intentFilterObject.callMethod<void>("addAction", "(Ljava/lang/String;)V", action.object<jstring>());
+    intentFilterObject.callMethod<void>("addAction", action.object<jstring>());
 
-    contextObject.callObjectMethod(
+    contextObject.callMethod<QtJniTypes::Intent>(
                 "registerReceiver",
-                "(Landroid/content/BroadcastReceiver;Landroid/content/IntentFilter;)Landroid/content/Intent;",
-                broadcastReceiverObject.object<jobject>(),
-                intentFilterObject.object<jobject>());
+                broadcastReceiverObject.object<QtJniTypes::BroadcastReceiver>(),
+                intentFilterObject.object<QtJniTypes::IntentFilter>());
 }
 
 QT_END_NAMESPACE

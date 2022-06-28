@@ -24,7 +24,7 @@ void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, 
     Q_UNUSED(env);
 
     QJniObject intentObject(intent);
-    const QString action = intentObject.callObjectMethod("getAction", "()Ljava/lang/String;").toString();
+    const QString action = intentObject.callMethod<jstring>("getAction").toString();
 
     qCDebug(QT_BT_ANDROID) << "ServiceDiscoveryBroadcastReceiver::onReceive() - event:" << action;
 
@@ -33,9 +33,8 @@ void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, 
 
         QJniObject keyExtra = valueForStaticField(JavaNames::BluetoothDevice,
                                                          JavaNames::ExtraUuid);
-        QJniObject parcelableUuids = intentObject.callObjectMethod(
+        QJniObject parcelableUuids = intentObject.callMethod<QtJniTypes::ParcelableArray>(
                                                 "getParcelableArrayExtra",
-                                                "(Ljava/lang/String;)[Landroid/os/Parcelable;",
                                                 keyExtra.object<jstring>());
         if (!parcelableUuids.isValid()) {
             emit uuidFetchFinished(QBluetoothAddress(), QList<QBluetoothUuid>());
@@ -45,12 +44,12 @@ void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, 
 
         keyExtra = valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ExtraDevice);
         QJniObject bluetoothDevice =
-        intentObject.callObjectMethod("getParcelableExtra",
-                                  "(Ljava/lang/String;)Landroid/os/Parcelable;",
+        intentObject.callMethod<QtJniTypes::Parcelable>("getParcelableExtra",
                                   keyExtra.object<jstring>());
         QBluetoothAddress address;
         if (bluetoothDevice.isValid()) {
-            address = QBluetoothAddress(bluetoothDevice.callObjectMethod<jstring>("getAddress").toString());
+            address =
+                    QBluetoothAddress(bluetoothDevice.callMethod<jstring>("getAddress").toString());
             emit uuidFetchFinished(address, result);
         } else {
             emit uuidFetchFinished(QBluetoothAddress(), QList<QBluetoothUuid>());
@@ -71,7 +70,7 @@ QList<QBluetoothUuid> ServiceDiscoveryBroadcastReceiver::convertParcelableArray(
     for (jint i = 0; i < size; ++i) {
         auto p = QJniObject::fromLocalRef(env->GetObjectArrayElement(parcels, i));
 
-        QBluetoothUuid uuid(p.callObjectMethod<jstring>("toString").toString());
+        QBluetoothUuid uuid(p.callMethod<jstring>("toString").toString());
         //qCDebug(QT_BT_ANDROID) << uuid.toString();
         result.append(uuid);
     }

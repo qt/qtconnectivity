@@ -6,6 +6,7 @@
 #include "android/servicediscoverybroadcastreceiver_p.h"
 #include "android/localdevicebroadcastreceiver_p.h"
 #include "android/androidutils_p.h"
+#include "android/jni_android_p.h"
 
 #include <QCoreApplication>
 #include <QtCore/qcoreapplication.h>
@@ -57,10 +58,11 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
       The logic below must change once there is more than one adapter.
     */
 
-    if (createAdapter)
-        btAdapter = QJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
-                                                           "getDefaultAdapter",
-                                                           "()Landroid/bluetooth/BluetoothAdapter;");
+    if (createAdapter) {
+        btAdapter = QJniObject::callStaticMethod<QtJniTypes::BluetoothAdapter>(
+                    QtJniTypes::className<QtJniTypes::BluetoothAdapter>(), "getDefaultAdapter");
+    }
+
     if (!btAdapter.isValid())
         qCWarning(QT_BT_ANDROID) << "Platform does not support Bluetooth";
 
@@ -114,9 +116,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 
     QJniObject inputString = QJniObject::fromString(address.toString());
     QJniObject remoteDevice =
-            btAdapter.callObjectMethod("getRemoteDevice",
-                                               "(Ljava/lang/String;)Landroid/bluetooth/BluetoothDevice;",
-                                               inputString.object<jstring>());
+            btAdapter.callMethod<QtJniTypes::BluetoothDevice>("getRemoteDevice",
+                                                              inputString.object<jstring>());
     if (!remoteDevice.isValid()) {
 
         //if it was only device then its error -> otherwise go to next device
@@ -138,8 +139,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
                                << ")" << address.toString() ;
 
         //Minimal discovery uses BluetoothDevice.getUuids()
-        QJniObject parcelUuidArray = remoteDevice.callObjectMethod(
-                    "getUuids", "()[Landroid/os/ParcelUuid;");
+        QJniObject parcelUuidArray =
+                remoteDevice.callMethod<QtJniTypes::ParcelUuidArray>("getUuids");
 
         if (!parcelUuidArray.isValid()) {
             if (singleDevice) {

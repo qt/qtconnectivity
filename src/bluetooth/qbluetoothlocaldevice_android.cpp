@@ -5,6 +5,7 @@
 #include "qbluetoothlocaldevice_p.h"
 #include "android/localdevicebroadcastreceiver_p.h"
 #include "android/androidutils_p.h"
+#include "android/jni_android_p.h"
 #include <QCoreApplication>
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QJniEnvironment>
@@ -47,15 +48,14 @@ QJniObject *QBluetoothLocalDevicePrivate::adapter()
 
 static QJniObject getDefaultAdapter()
 {
-    QJniObject adapter = QJniObject::callStaticObjectMethod(
-                                    "android/bluetooth/BluetoothAdapter", "getDefaultAdapter",
-                                    "()Landroid/bluetooth/BluetoothAdapter;");
-    if (!adapter.isValid()) {
+    QJniObject adapter = QJniObject::callStaticMethod<QtJniTypes::BluetoothAdapter>(
+                QtJniTypes::className<QtJniTypes::BluetoothAdapter>(), "getDefaultAdapter");
 
-        // workaround stupid bt implementations where first call of BluetoothAdapter.getDefaultAdapter() always fails
-        adapter = QJniObject::callStaticObjectMethod(
-                                            "android/bluetooth/BluetoothAdapter", "getDefaultAdapter",
-                                            "()Landroid/bluetooth/BluetoothAdapter;");
+    if (!adapter.isValid()) {
+        // on some BT implementations the first call to getDefaultAdapter() may fail
+        adapter = QJniObject::callStaticMethod<QtJniTypes::BluetoothAdapter>(
+                                             QtJniTypes::className<QtJniTypes::BluetoothAdapter>(),
+                                             "getDefaultAdapter");
     }
     return adapter;
 }
@@ -76,8 +76,7 @@ void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
 
     obj = new QJniObject(adapter);
     if (!address.isNull()) {
-        const QString localAddress
-            = obj->callObjectMethod("getAddress", "()Ljava/lang/String;").toString();
+        const QString localAddress = obj->callMethod<jstring>("getAddress").toString();
         if (localAddress != address.toString()) {
             // passed address not local one -> invalid
             delete obj;
@@ -105,7 +104,7 @@ void QBluetoothLocalDevicePrivate::processHostModeChange(QBluetoothLocalDevice::
     // we can enter the targeted 'Connectable' state
     if (isValid() && newMode == QBluetoothLocalDevice::HostPoweredOff) {
         const bool success = (bool)QJniObject::callStaticMethod<jboolean>(
-                    "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
+                    QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(),
                     "setEnabled");
         if (!success) {
             qCWarning(QT_BT_ANDROID) << "Transitioning Bluetooth from OFF to ON failed";
@@ -173,7 +172,7 @@ QBluetoothLocalDevice::QBluetoothLocalDevice(const QBluetoothAddress &address, Q
 QString QBluetoothLocalDevice::name() const
 {
     if (d_ptr->adapter())
-        return d_ptr->adapter()->callObjectMethod("getName", "()Ljava/lang/String;").toString();
+        return d_ptr->adapter()->callMethod<jstring>("getName").toString();
 
     return QString();
 }
@@ -181,10 +180,8 @@ QString QBluetoothLocalDevice::name() const
 QBluetoothAddress QBluetoothLocalDevice::address() const
 {
     QString result;
-    if (d_ptr->adapter()) {
-        result
-            = d_ptr->adapter()->callObjectMethod("getAddress", "()Ljava/lang/String;").toString();
-    }
+    if (d_ptr->adapter())
+        result = d_ptr->adapter()->callMethod<jstring>("getAddress").toString();
 
     QBluetoothAddress address(result);
     return address;
@@ -199,10 +196,10 @@ void QBluetoothLocalDevice::powerOn()
         bool success(false);
         if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31) {
             success = (bool)QJniObject::callStaticMethod<jboolean>(
-                        "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
+                        QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(),
                         "setEnabled");
         } else {
-            success = (bool)d_ptr->adapter()->callMethod<jboolean>("enable", "()Z");
+            success = (bool)d_ptr->adapter()->callMethod<jboolean>("enable");
         }
         if (!success) {
             qCWarning(QT_BT_ANDROID) << "Enabling bluetooth failed";
@@ -227,10 +224,10 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode requeste
         if (d_ptr->adapter()) {
             if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31) {
                 success = (bool)QJniObject::callStaticMethod<jboolean>(
-                            "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
+                            QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(),
                             "setDisabled");
             } else {
-                success = (bool)d_ptr->adapter()->callMethod<jboolean>("disable", "()Z");
+                success = (bool)d_ptr->adapter()->callMethod<jboolean>("disable");
             }
         }
         if (!success) {
@@ -249,7 +246,7 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode requeste
             d_ptr->pendingConnectableHostModeTransition = true;
         } else {
             const bool success = (bool)QJniObject::callStaticMethod<jboolean>(
-                        "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
+                        QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(),
                         "setEnabled");
             if (!success) {
                 qCWarning(QT_BT_ANDROID) << "Unable to enable the Bluetooth";
@@ -267,7 +264,7 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode requeste
             return;
         }
         const bool success = (bool)QJniObject::callStaticMethod<jboolean>(
-                    "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
+                    QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(),
                     "setDiscoverable");
         if (!success) {
             qCWarning(QT_BT_ANDROID) << "Unable to set Bluetooth as discoverable";
@@ -315,9 +312,8 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
     QJniObject o = getDefaultAdapter();
     if (o.isValid()) {
         QBluetoothHostInfo info;
-        info.setName(o.callObjectMethod("getName", "()Ljava/lang/String;").toString());
-        info.setAddress(QBluetoothAddress(o.callObjectMethod("getAddress",
-                                                             "()Ljava/lang/String;").toString()));
+        info.setName(o.callMethod<jstring>("getName").toString());
+        info.setAddress(QBluetoothAddress(o.callMethod<jstring>("getAddress").toString()));
         localDevices.append(info);
     }
     return localDevices;
@@ -354,11 +350,10 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
 
     QJniObject inputString = QJniObject::fromString(address.toString());
     jboolean success = QJniObject::callStaticMethod<jboolean>(
-        "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
+        QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(),
         "setPairingMode",
-        "(Ljava/lang/String;Z)Z",
         inputString.object<jstring>(),
-        newPairing == Paired ? JNI_TRUE : JNI_FALSE);
+        jboolean(newPairing == Paired ? JNI_TRUE : JNI_FALSE));
 
     if (!success) {
         QMetaObject::invokeMethod(this, "errorOccurred", Qt::QueuedConnection,
@@ -377,12 +372,11 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(
 
     QJniObject inputString = QJniObject::fromString(address.toString());
     QJniObject remoteDevice
-        = d_ptr->adapter()->callObjectMethod("getRemoteDevice",
-                                             "(Ljava/lang/String;)Landroid/bluetooth/BluetoothDevice;",
-                                             inputString.object<jstring>());
-    if (!remoteDevice.isValid()) {
+        = d_ptr->adapter()->callMethod<QtJniTypes::BluetoothDevice>("getRemoteDevice",
+                                                                    inputString.object<jstring>());
+
+    if (!remoteDevice.isValid())
         return Unpaired;
-    }
 
     jint bondState = remoteDevice.callMethod<jint>("getBondState");
     switch (bondState) {
@@ -408,10 +402,8 @@ QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
      * returns a few connections of common profiles. The returned list is not complete either
      * but at least it can complement our already detected connections.
      */
-    QJniObject connectedDevices = QJniObject::callStaticObjectMethod(
-        "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver",
-        "getConnectedDevices",
-        "()[Ljava/lang/String;");
+    QJniObject connectedDevices = QJniObject::callStaticMethod<QtJniTypes::StringArray>(
+        QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(), "getConnectedDevices");
 
     if (!connectedDevices.isValid())
         return d_ptr->connectedDevices;

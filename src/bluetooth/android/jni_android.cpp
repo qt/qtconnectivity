@@ -17,10 +17,6 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 typedef QHash<QByteArray, QJniObject> JCachedStringFields;
 Q_GLOBAL_STATIC(JCachedStringFields, cachedStringFields)
 
-//Java class names
-static const char * const javaBluetoothAdapterClassName = "android/bluetooth/BluetoothAdapter";
-static const char * const javaBluetoothDeviceClassName = "android/bluetooth/BluetoothDevice" ;
-
 //Java field names
 static const char * const javaActionAclConnected = "ACTION_ACL_CONNECTED";
 static const char * const javaActionAclDisconnected = "ACTION_ACL_DISCONNECTED";
@@ -51,9 +47,11 @@ QJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldName)
     const char* className;
     switch (javaName) {
     case JavaNames::BluetoothAdapter:
-        className = javaBluetoothAdapterClassName; break;
+        className = QtJniTypes::className<QtJniTypes::BluetoothAdapter>();
+        break;
     case JavaNames::BluetoothDevice:
-        className = javaBluetoothDeviceClassName; break;
+        className = QtJniTypes::className<QtJniTypes::BluetoothDevice>();
+        break;
     default:
         qCWarning(QT_BT_ANDROID) << "Unknown java class name passed to valueForStaticField():" << javaName;
         return QJniObject();

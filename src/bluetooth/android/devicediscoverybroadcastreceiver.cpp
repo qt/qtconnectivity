@@ -368,7 +368,7 @@ void DeviceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, j
     Q_UNUSED(env)
 
     QJniObject intentObject(intent);
-    const QString action = intentObject.callObjectMethod("getAction", "()Ljava/lang/String;").toString();
+    const QString action = intentObject.callMethod<jstring>("getAction").toString();
 
     qCDebug(QT_BT_ANDROID) << "DeviceDiscoveryBroadcastReceiver::onReceive() - event:" << action;
 
@@ -384,9 +384,8 @@ void DeviceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, j
         QJniObject keyExtra = valueForStaticField(JavaNames::BluetoothDevice,
                                                          JavaNames::ExtraDevice);
         const QJniObject bluetoothDevice =
-                intentObject.callObjectMethod("getParcelableExtra",
-                                              "(Ljava/lang/String;)Landroid/os/Parcelable;",
-                                              keyExtra.object<jstring>());
+                intentObject.callMethod<QtJniTypes::Parcelable>("getParcelableExtra",
+                                                                keyExtra.object<jstring>());
 
         if (!bluetoothDevice.isValid())
             return;
@@ -394,9 +393,7 @@ void DeviceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, j
         keyExtra = valueForStaticField(JavaNames::BluetoothDevice,
                                        JavaNames::ExtraRssi);
         int rssi = intentObject.callMethod<jshort>("getShortExtra",
-                                                "(Ljava/lang/String;S)S",
-                                                keyExtra.object<jstring>(),
-                                                0);
+                                                   keyExtra.object<jstring>(), jshort(0));
 
         const QBluetoothDeviceInfo info = retrieveDeviceInfo(bluetoothDevice, rssi);
         if (info.isValid())
@@ -419,11 +416,12 @@ void DeviceDiscoveryBroadcastReceiver::onReceiveLeScan(
 
 QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(const QJniObject &bluetoothDevice, int rssi, jbyteArray scanRecord)
 {
-    const QString deviceName = bluetoothDevice.callObjectMethod<jstring>("getName").toString();
-    const QBluetoothAddress deviceAddress(bluetoothDevice.callObjectMethod<jstring>("getAddress").toString());
+    const QString deviceName = bluetoothDevice.callMethod<jstring>("getName").toString();
+    const QBluetoothAddress deviceAddress(
+                bluetoothDevice.callMethod<jstring>("getAddress").toString());
+    const QJniObject bluetoothClass =
+            bluetoothDevice.callMethod<QtJniTypes::BluetoothClass>("getBluetoothClass");
 
-    const QJniObject bluetoothClass = bluetoothDevice.callObjectMethod("getBluetoothClass",
-                                                                        "()Landroid/bluetooth/BluetoothClass;");
     if (!bluetoothClass.isValid())
         return QBluetoothDeviceInfo();
 
@@ -453,7 +451,7 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(const 
     quint32 serviceResult = 0;
     for (quint32 current : services) {
         int androidId = (current << 16); // Android values shift by 2 bytes compared to Qt enums
-        if (bluetoothClass.callMethod<jboolean>("hasService", "(I)Z", androidId))
+        if (bluetoothClass.callMethod<jboolean>("hasService", androidId))
             serviceResult |= current;
     }
 
