@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "lowenergynotificationhub_p.h"
+#include "android/jni_android_p.h"
 
 #include <QCoreApplication>
 #include <QtCore/QHash>
@@ -26,16 +27,14 @@ LowEnergyNotificationHub::LowEnergyNotificationHub(const QBluetoothAddress &remo
 
     if (isPeripheral) {
         qCDebug(QT_BT_ANDROID) << "Creating Android Peripheral/Server support for BTLE";
-        jBluetoothLe = QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothLEServer",
-                                         "(Landroid/content/Context;)V", QNativeInterface::QAndroidApplication::context());
+        jBluetoothLe = QJniObject::construct<QtJniTypes::QtBtLEServer>(
+                    QNativeInterface::QAndroidApplication::context());
     } else {
         qCDebug(QT_BT_ANDROID) << "Creating Android Central/Client support for BTLE";
         const QJniObject address =
             QJniObject::fromString(remote.toString());
-        jBluetoothLe = QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothLE",
-                                     "(Ljava/lang/String;Landroid/content/Context;)V",
-                                     address.object<jstring>(),
-                                     QNativeInterface::QAndroidApplication::context());
+        jBluetoothLe = QJniObject::construct<QtJniTypes::QtBtLECentral>(
+                    address.object<jstring>(), QNativeInterface::QAndroidApplication::context());
     }
 
     if (!jBluetoothLe.isValid()) return;

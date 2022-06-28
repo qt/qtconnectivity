@@ -5,6 +5,7 @@
 #include <QtCore/QJniEnvironment>
 
 #include "android/serveracceptancethread_p.h"
+#include "android/jni_android_p.h"
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
@@ -72,7 +73,7 @@ void ServerAcceptanceThread::run()
         shutdownPendingConnections();
     }
 
-    javaThread = QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothSocketServer");
+    javaThread = QJniObject::construct<QtJniTypes::QtBtSocketServer>();
     if (!javaThread.isValid())
         return;
 
@@ -84,7 +85,7 @@ void ServerAcceptanceThread::run()
     QJniObject uuidString = QJniObject::fromString(tempUuid);
     QJniObject serviceNameString = QJniObject::fromString(m_serviceName);
     bool isSecure = !(secFlags == QBluetooth::SecurityFlags(QBluetooth::Security::NoSecurity));
-    javaThread.callMethod<void>("setServiceDetails", "(Ljava/lang/String;Ljava/lang/String;Z)V",
+    javaThread.callMethod<void>("setServiceDetails",
                                 uuidString.object<jstring>(),
                                 serviceNameString.object<jstring>(),
                                 isSecure);

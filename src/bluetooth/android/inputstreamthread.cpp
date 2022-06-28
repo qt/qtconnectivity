@@ -6,6 +6,7 @@
 #include <QtCore/QJniEnvironment>
 
 #include "android/inputstreamthread_p.h"
+#include "android/jni_android_p.h"
 #include "qbluetoothsocket_android_p.h"
 
 QT_BEGIN_NAMESPACE
@@ -21,12 +22,12 @@ bool InputStreamThread::run()
 {
     QMutexLocker lock(&m_mutex);
 
-    javaInputStreamThread = QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothInputStreamThread");
+    javaInputStreamThread = QJniObject::construct<QtJniTypes::QtBtInputStreamThread>();
     if (!javaInputStreamThread.isValid() || !m_socket_p->inputStream.isValid())
         return false;
 
-    javaInputStreamThread.callMethod<void>("setInputStream", "(Ljava/io/InputStream;)V",
-                                           m_socket_p->inputStream.object<jobject>());
+    javaInputStreamThread.callMethod<void>("setInputStream",
+                                        m_socket_p->inputStream.object<QtJniTypes::InputStream>());
     javaInputStreamThread.setField<jlong>("qtObject", reinterpret_cast<long>(this));
     javaInputStreamThread.setField<jboolean>("logEnabled", QT_BT_ANDROID().isDebugEnabled());
 

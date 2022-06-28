@@ -25,14 +25,14 @@ LocalDeviceBroadcastReceiver::LocalDeviceBroadcastReceiver(QObject *parent) :
     //don't use the java fields directly but refer to them by name
     for (uint i = 0; i < (sizeof(hostModePreset)/sizeof(hostModePreset[0])); i++) {
         hostModePreset[i] = QJniObject::getStaticField<jint>(
-                                                "android/bluetooth/BluetoothAdapter",
-                                                scanModes[i]);
+                                             QtJniTypes::className<QtJniTypes::BluetoothAdapter>(),
+                                             scanModes[i]);
     }
 
     for (uint i = 0; i < (sizeof(bondingModePreset)/sizeof(bondingModePreset[0])); i++) {
         bondingModePreset[i] = QJniObject::getStaticField<jint>(
-                                                "android/bluetooth/BluetoothDevice",
-                                                bondModes[i]);
+                                              QtJniTypes::className<QtJniTypes::BluetoothDevice>(),
+                                              bondModes[i]);
     }
 }
 
@@ -42,20 +42,18 @@ void LocalDeviceBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobje
     Q_UNUSED(env);
 
     QJniObject intentObject(intent);
-    const QString action = intentObject.callObjectMethod("getAction", "()Ljava/lang/String;").toString();
+    const QString action = intentObject.callMethod<jstring>("getAction").toString();
     qCDebug(QT_BT_ANDROID) << QStringLiteral("LocalDeviceBroadcastReceiver::onReceive() - event: %1").arg(action);
 
     if (action == valueForStaticField(JavaNames::BluetoothAdapter,
                                       JavaNames::ActionScanModeChanged).toString()) {
 
         const QJniObject extrasBundle =
-                intentObject.callObjectMethod("getExtras","()Landroid/os/Bundle;");
+                intentObject.callMethod<QtJniTypes::Bundle>("getExtras");
         const QJniObject keyExtra = valueForStaticField(JavaNames::BluetoothAdapter,
                                                                JavaNames::ExtraScanMode);
 
-        int extra = extrasBundle.callMethod<jint>("getInt",
-                                                  "(Ljava/lang/String;)I",
-                                                  keyExtra.object<jstring>());
+        int extra = extrasBundle.callMethod<jint>("getInt", keyExtra.object<jstring>());
 
         if (previousScanMode != extra) {
             previousScanMode = extra;
@@ -75,19 +73,16 @@ void LocalDeviceBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobje
         QJniObject keyExtra = valueForStaticField(JavaNames::BluetoothDevice,
                                                          JavaNames::ExtraDevice);
         const QJniObject bluetoothDevice =
-                intentObject.callObjectMethod("getParcelableExtra",
-                                              "(Ljava/lang/String;)Landroid/os/Parcelable;",
-                                              keyExtra.object<jstring>());
+                intentObject.callMethod<QtJniTypes::Parcelable>("getParcelableExtra",
+                                                                keyExtra.object<jstring>());
 
         //get new bond state
         keyExtra = valueForStaticField(JavaNames::BluetoothDevice, JavaNames::ExtraBondState);
         const QJniObject extrasBundle =
-                intentObject.callObjectMethod("getExtras","()Landroid/os/Bundle;");
-        int bondState = extrasBundle.callMethod<jint>("getInt",
-                                                      "(Ljava/lang/String;)I",
-                                                      keyExtra.object<jstring>());
+                intentObject.callMethod<QtJniTypes::Bundle>("getExtras");
+        int bondState = extrasBundle.callMethod<jint>("getInt", keyExtra.object<jstring>());
 
-        QBluetoothAddress address(bluetoothDevice.callObjectMethod<jstring>("getAddress").toString());
+        QBluetoothAddress address(bluetoothDevice.callMethod<jstring>("getAddress").toString());
         if (address.isNull())
                 return;
 
@@ -114,11 +109,10 @@ void LocalDeviceBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobje
         const QJniObject keyExtra = valueForStaticField(JavaNames::BluetoothDevice,
                                                                JavaNames::ExtraDevice);
         QJniObject bluetoothDevice =
-                intentObject.callObjectMethod("getParcelableExtra",
-                                              "(Ljava/lang/String;)Landroid/os/Parcelable;",
-                                              keyExtra.object<jstring>());
+                intentObject.callMethod<QtJniTypes::Parcelable>("getParcelableExtra",
+                                                                keyExtra.object<jstring>());
 
-        QBluetoothAddress address(bluetoothDevice.callObjectMethod<jstring>("getAddress").toString());
+        QBluetoothAddress address(bluetoothDevice.callMethod<jstring>("getAddress").toString());
         if (address.isNull())
             return;
 

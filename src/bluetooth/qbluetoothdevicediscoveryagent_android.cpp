@@ -4,6 +4,7 @@
 
 #include "android/devicediscoverybroadcastreceiver_p.h"
 #include "android/androidutils_p.h"
+#include "android/jni_android_p.h"
 #include "qbluetoothdevicediscoveryagent_p.h"
 #include <QCoreApplication>
 #include <QtCore/QLoggingCategory>
@@ -32,13 +33,11 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     deviceDiscoveryStartAttemptsLeft(deviceDiscoveryStartMaxAttempts),
     q_ptr(parent)
 {
-    QJniEnvironment env;
-    adapter = QJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
-                                                        "getDefaultAdapter",
-                                                        "()Landroid/bluetooth/BluetoothAdapter;");
-    if (!adapter.isValid()) {
+    adapter = QJniObject::callStaticMethod<QtJniTypes::BluetoothAdapter>(
+                       QtJniTypes::className<QtJniTypes::BluetoothAdapter>(), "getDefaultAdapter");
+
+    if (!adapter.isValid())
         qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
-    }
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
@@ -123,7 +122,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     }
 
     if (!adapterAddress.isNull()
-        && adapter.callObjectMethod<jstring>("getAddress").toString()
+        && adapter.callMethod<jstring>("getAddress").toString()
         != adapterAddress.toString()) {
         qCWarning(QT_BT_ANDROID) << "Incorrect local adapter passed.";
         lastError = QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError;
@@ -155,9 +154,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     bool locationTurnedOn = true; // backwards compatible behavior to previous Qt versions
     const  QJniObject locString = QJniObject::getStaticObjectField(
                 "android/content/Context", "LOCATION_SERVICE", "Ljava/lang/String;");
-    const QJniObject locService = QJniObject(QNativeInterface::QAndroidApplication::context()).callObjectMethod(
+
+    const QJniObject locService =
+            QJniObject(QNativeInterface::QAndroidApplication::context()).callMethod<jobject>(
                 "getSystemService",
-                "(Ljava/lang/String;)Ljava/lang/Object;",
                 locString.object<jstring>());
 
     if (locService.isValid()) {
@@ -166,10 +166,10 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         } else {
             // check whether there is any enabled provider
             QJniObject listOfEnabledProviders =
-                    locService.callObjectMethod("getProviders", "(Z)Ljava/util/List;", true);
+                    locService.callMethod<QtJniTypes::List>("getProviders", true);
 
             if (listOfEnabledProviders.isValid()) {
-                int size = listOfEnabledProviders.callMethod<jint>("size", "()I");
+                int size = listOfEnabledProviders.callMethod<jint>("size");
                 locationTurnedOn = size > 0;
                 qCDebug(QT_BT_ANDROID) << size << "enabled location providers detected.";
             }
@@ -419,7 +419,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
     m_active = BtleScanActive;
 
     if (!leScanner.isValid()) {
-        leScanner = QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothLE");
+        leScanner = QJniObject::construct<QtJniTypes::QtBtLECentral>();
         if (!leScanner.isValid()) {
             qCWarning(QT_BT_ANDROID) << "Cannot load BTLE device scan class";
             m_active = NoScanActive;
@@ -430,7 +430,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
         leScanner.setField<jlong>("qtObject", reinterpret_cast<long>(receiver));
     }
 
-    jboolean result = leScanner.callMethod<jboolean>("scanForLeDevice", "(Z)Z", true);
+    jboolean result = leScanner.callMethod<jboolean>("scanForLeDevice", true);
     if (!result) {
         qCWarning(QT_BT_ANDROID) << "Cannot start BTLE device scanner";
         m_active = NoScanActive;
@@ -457,7 +457,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
 
 void QBluetoothDeviceDiscoveryAgentPrivate::stopLowEnergyScan()
 {
-    jboolean result = leScanner.callMethod<jboolean>("scanForLeDevice", "(Z)Z", false);
+    jboolean result = leScanner.callMethod<jboolean>("scanForLeDevice", false);
     if (!result)
         qCWarning(QT_BT_ANDROID) << "Cannot stop BTLE device scanner";
 
