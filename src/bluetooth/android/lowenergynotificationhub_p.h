@@ -22,6 +22,7 @@
 #include <QtBluetooth/QLowEnergyController>
 #include <QtBluetooth/QLowEnergyService>
 #include <QtCore/private/qglobal_p.h>
+#include "android/jni_android_p.h"
 #include <jni.h>
 
 #include <QtBluetooth/QLowEnergyCharacteristic>
@@ -38,36 +39,71 @@ public:
 
     static void lowEnergy_connectionChange(JNIEnv*, jobject, jlong qtObject,
                                            jint errorCode, jint newState);
-    static void lowEnergy_mtuChanged(JNIEnv*, jobject, jlong qtObject,
-                                           jint mtu);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_connectionChange,
+                                                 leConnectionStateChange)
+
+    static void lowEnergy_mtuChanged(JNIEnv*, jobject, jlong qtObject, jint mtu);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_mtuChanged, leMtuChanged)
+
     static void lowEnergy_servicesDiscovered(JNIEnv*, jobject, jlong qtObject,
-                                             jint errorCode, jobject uuidList);
+                                             jint errorCode, jstring uuidList);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_servicesDiscovered,
+                                                 leServicesDiscovered)
+
     static void lowEnergy_serviceDetailsDiscovered(JNIEnv *, jobject,
-                                                   jlong qtObject, jobject uuid,
+                                                   jlong qtObject, jstring uuid,
                                                    jint startHandle, jint endHandle);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_serviceDetailsDiscovered,
+                                                 leServiceDetailDiscoveryFinished)
+
     static void lowEnergy_characteristicRead(JNIEnv*env, jobject, jlong qtObject,
-                                             jobject serviceUuid,
-                                             jint handle, jobject charUuid,
+                                             jstring serviceUuid,
+                                             jint handle, jstring charUuid,
                                              jint properties, jbyteArray data);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_characteristicRead,
+                                                 leCharacteristicRead)
+
     static void lowEnergy_descriptorRead(JNIEnv *env, jobject, jlong qtObject,
-                                         jobject sUuid, jobject cUuid,
-                                         jint handle, jobject dUuid, jbyteArray data);
+                                         jstring sUuid, jstring cUuid,
+                                         jint handle, jstring dUuid, jbyteArray data);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_descriptorRead, leDescriptorRead)
+
     static void lowEnergy_characteristicWritten(JNIEnv *, jobject, jlong qtObject,
                                                 jint charHandle, jbyteArray data,
                                                 jint errorCode);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_characteristicWritten,
+                                                 leCharacteristicWritten)
+
     static void lowEnergy_descriptorWritten(JNIEnv *, jobject, jlong qtObject,
                                             jint descHandle, jbyteArray data,
                                             jint errorCode);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_descriptorWritten,
+                                                 leDescriptorWritten)
+
     static void lowEnergy_serverDescriptorWritten(JNIEnv *, jobject, jlong qtObject,
-                                                  jobject descriptor, jbyteArray newValue);
+                                                  QtJniTypes::BluetoothGattDescriptor descriptor,
+                                                  jbyteArray newValue);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_serverDescriptorWritten,
+                                                 leServerDescriptorWritten)
+
     static void lowEnergy_characteristicChanged(JNIEnv *, jobject, jlong qtObject,
                                                 jint charHandle, jbyteArray data);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_characteristicChanged,
+                                                 leCharacteristicChanged)
+
     static void lowEnergy_serverCharacteristicChanged(JNIEnv *, jobject, jlong qtObject,
-                                                jobject characteristic, jbyteArray newValue);
+                                            QtJniTypes::BluetoothGattCharacteristic characteristic,
+                                            jbyteArray newValue);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_serverCharacteristicChanged,
+                                                 leServerCharacteristicChanged)
+
     static void lowEnergy_serviceError(JNIEnv *, jobject, jlong qtObject,
                                        jint attributeHandle, int errorCode);
-    static void lowEnergy_advertisementError(JNIEnv *, jobject, jlong qtObject,
-                                               jint status);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_serviceError, leServiceError)
+
+    static void lowEnergy_advertisementError(JNIEnv *, jobject, jlong qtObject, jint status);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_advertisementError,
+                                                 leServerAdvertisementError)
 
     QJniObject javaObject()
     {

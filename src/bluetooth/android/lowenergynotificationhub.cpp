@@ -90,7 +90,7 @@ void LowEnergyNotificationHub::lowEnergy_mtuChanged(
 }
 
 void LowEnergyNotificationHub::lowEnergy_servicesDiscovered(
-        JNIEnv *, jobject, jlong qtObject, jint errorCode, jobject uuidList)
+        JNIEnv *, jobject, jlong qtObject, jint errorCode, jstring uuidList)
 {
     lock.lockForRead();
     LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
@@ -106,7 +106,7 @@ void LowEnergyNotificationHub::lowEnergy_servicesDiscovered(
 }
 
 void LowEnergyNotificationHub::lowEnergy_serviceDetailsDiscovered(
-        JNIEnv *, jobject, jlong qtObject, jobject uuid, jint startHandle,
+        JNIEnv *, jobject, jlong qtObject, jstring uuid, jint startHandle,
         jint endHandle)
 {
     lock.lockForRead();
@@ -124,8 +124,8 @@ void LowEnergyNotificationHub::lowEnergy_serviceDetailsDiscovered(
 }
 
 void LowEnergyNotificationHub::lowEnergy_characteristicRead(
-        JNIEnv *env, jobject, jlong qtObject, jobject sUuid, jint handle,
-        jobject cUuid, jint properties, jbyteArray data)
+        JNIEnv *env, jobject, jlong qtObject, jstring sUuid, jint handle,
+        jstring cUuid, jint properties, jbyteArray data)
 {
     lock.lockForRead();
     LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
@@ -159,8 +159,8 @@ void LowEnergyNotificationHub::lowEnergy_characteristicRead(
 }
 
 void LowEnergyNotificationHub::lowEnergy_descriptorRead(
-        JNIEnv *env, jobject, jlong qtObject, jobject sUuid, jobject cUuid,
-        jint handle, jobject dUuid, jbyteArray data)
+        JNIEnv *env, jobject, jlong qtObject, jstring sUuid, jstring cUuid,
+        jint handle, jstring dUuid, jbyteArray data)
 {
     lock.lockForRead();
     LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
@@ -244,7 +244,8 @@ void LowEnergyNotificationHub::lowEnergy_descriptorWritten(
 }
 
 void LowEnergyNotificationHub::lowEnergy_serverDescriptorWritten(
-        JNIEnv *env, jobject, jlong qtObject, jobject descriptor, jbyteArray newValue)
+        JNIEnv *env, jobject, jlong qtObject, QtJniTypes::BluetoothGattDescriptor descriptor,
+        jbyteArray newValue)
 {
     lock.lockForRead();
     LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
@@ -287,7 +288,8 @@ void LowEnergyNotificationHub::lowEnergy_characteristicChanged(
 }
 
 void LowEnergyNotificationHub::lowEnergy_serverCharacteristicChanged(
-        JNIEnv *env, jobject, jlong qtObject, jobject characteristic, jbyteArray newValue)
+        JNIEnv *env, jobject, jlong qtObject,
+        QtJniTypes::BluetoothGattCharacteristic characteristic, jbyteArray newValue)
 {
     lock.lockForRead();
     LowEnergyNotificationHub *hub = hubMap()->value(qtObject);

@@ -342,7 +342,7 @@ public class QtBluetoothLEServer {
                 break;
         }
 
-        leServerConnectionStateChange(qtObject, qtErrorCode, qtControllerState);
+        leConnectionStateChange(qtObject, qtErrorCode, qtControllerState);
     }
 
     public synchronized void handleOnServiceAdded(int status, BluetoothGattService service)
@@ -730,7 +730,8 @@ public class QtBluetoothLEServer {
         mGattServer = null;
 
         mRemoteName = mRemoteAddress = "";
-        leServerConnectionStateChange(qtObject, 0 /*NoError*/, 0 /*QLowEnergyController::UnconnectedState*/);
+        leConnectionStateChange(qtObject, 0 /*NoError*/,
+                                0 /*QLowEnergyController::UnconnectedState*/);
     }
 
     // This function is called from Qt thread
@@ -954,7 +955,7 @@ public class QtBluetoothLEServer {
         }
     };
 
-    public native void leServerConnectionStateChange(long qtObject, int errorCode, int newState);
+    public native void leConnectionStateChange(long qtObject, int errorCode, int newState);
     public native void leMtuChanged(long qtObject, int mtu);
     public native void leServerAdvertisementError(long qtObject, int status);
     public native void leServerCharacteristicChanged(long qtObject,
