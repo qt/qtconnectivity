@@ -118,37 +118,44 @@ QJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldName)
 }
 
 void QtBroadcastReceiver_jniOnReceive(JNIEnv *env, jobject /*javaObject*/,
-                                             jlong qtObject, jobject context, jobject intent)
+                                      jlong qtObject, QtJniTypes::Context context,
+                                      QtJniTypes::Intent intent)
 {
     reinterpret_cast<AndroidBroadcastReceiver*>(qtObject)->onReceive(env, context, intent);
 }
+Q_DECLARE_JNI_NATIVE_METHOD(QtBroadcastReceiver_jniOnReceive, jniOnReceive)
 
 static void QtBluetoothSocketServer_errorOccurred(JNIEnv */*env*/, jobject /*javaObject*/,
                                            jlong qtObject, jint errorCode)
 {
     reinterpret_cast<ServerAcceptanceThread*>(qtObject)->javaThreadErrorOccurred(errorCode);
 }
+Q_DECLARE_JNI_NATIVE_METHOD(QtBluetoothSocketServer_errorOccurred, errorOccurred)
 
 static void QtBluetoothSocketServer_newSocket(JNIEnv */*env*/, jobject /*javaObject*/,
-                                       jlong qtObject, jobject socket)
+                                              jlong qtObject, QtJniTypes::BluetoothSocket socket)
 {
     reinterpret_cast<ServerAcceptanceThread*>(qtObject)->javaNewSocket(socket);
 }
+Q_DECLARE_JNI_NATIVE_METHOD(QtBluetoothSocketServer_newSocket, newSocket)
 
 static void QtBluetoothInputStreamThread_errorOccurred(JNIEnv */*env*/, jobject /*javaObject*/,
                                            jlong qtObject, jint errorCode)
 {
     reinterpret_cast<InputStreamThread*>(qtObject)->javaThreadErrorOccurred(errorCode);
 }
+Q_DECLARE_JNI_NATIVE_METHOD(QtBluetoothInputStreamThread_errorOccurred, errorOccurred)
 
 static void QtBluetoothInputStreamThread_readyData(JNIEnv */*env*/, jobject /*javaObject*/,
                                        jlong qtObject, jbyteArray buffer, jint bufferLength)
 {
     reinterpret_cast<InputStreamThread*>(qtObject)->javaReadyRead(buffer, bufferLength);
 }
+Q_DECLARE_JNI_NATIVE_METHOD(QtBluetoothInputStreamThread_readyData, readyData)
 
-void QtBluetoothLE_leScanResult(JNIEnv *env, jobject, jlong qtObject, jobject bluetoothDevice,
-                                jint rssi, jbyteArray scanRecord)
+void QtBluetoothLE_leScanResult(JNIEnv *env, jobject, jlong qtObject,
+                                QtJniTypes::BluetoothDevice bluetoothDevice, jint rssi,
+                                jbyteArray scanRecord)
 {
     if (Q_UNLIKELY(qtObject == 0))
         return;
@@ -157,107 +164,94 @@ void QtBluetoothLE_leScanResult(JNIEnv *env, jobject, jlong qtObject, jobject bl
                                                                 env, bluetoothDevice, rssi,
                                                                 scanRecord);
 }
-
-
-static JNINativeMethod methods[] = {
-    {"jniOnReceive", "(JLandroid/content/Context;Landroid/content/Intent;)V",
-                (void *) QtBroadcastReceiver_jniOnReceive},
-};
-
-static JNINativeMethod methods_le[] = {
-    {"leScanResult", "(JLandroid/bluetooth/BluetoothDevice;I[B)V",
-                (void *) QtBluetoothLE_leScanResult},
-    {"leConnectionStateChange", "(JII)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_connectionChange},
-    {"leMtuChanged", "(JI)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_mtuChanged},
-    {"leServicesDiscovered", "(JILjava/lang/String;)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_servicesDiscovered},
-    {"leServiceDetailDiscoveryFinished", "(JLjava/lang/String;II)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_serviceDetailsDiscovered},
-    {"leCharacteristicRead", "(JLjava/lang/String;ILjava/lang/String;I[B)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_characteristicRead},
-    {"leDescriptorRead", "(JLjava/lang/String;Ljava/lang/String;ILjava/lang/String;[B)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_descriptorRead},
-    {"leCharacteristicWritten", "(JI[BI)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_characteristicWritten},
-    {"leDescriptorWritten", "(JI[BI)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_descriptorWritten},
-    {"leCharacteristicChanged", "(JI[B)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_characteristicChanged},
-    {"leServiceError", "(JII)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_serviceError},
-};
-
-static JNINativeMethod methods_leServer[] = {
-    {"leServerConnectionStateChange", "(JII)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_connectionChange},
-    {"leMtuChanged", "(JI)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_mtuChanged},
-    {"leServerAdvertisementError", "(JI)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_advertisementError},
-    {"leServerCharacteristicChanged", "(JLandroid/bluetooth/BluetoothGattCharacteristic;[B)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_serverCharacteristicChanged},
-    {"leServerDescriptorWritten", "(JLandroid/bluetooth/BluetoothGattDescriptor;[B)V",
-                (void *) LowEnergyNotificationHub::lowEnergy_serverDescriptorWritten},
-};
-
-static JNINativeMethod methods_server[] = {
-        {"errorOccurred", "(JI)V",
-                    (void *) QtBluetoothSocketServer_errorOccurred},
-        {"newSocket", "(JLandroid/bluetooth/BluetoothSocket;)V",
-                    (void *) QtBluetoothSocketServer_newSocket},
-};
-
-static JNINativeMethod methods_inputStream[] = {
-        {"errorOccurred", "(JI)V",
-                    (void *) QtBluetoothInputStreamThread_errorOccurred},
-        {"readyData", "(J[BI)V",
-                    (void *) QtBluetoothInputStreamThread_readyData},
-};
+Q_DECLARE_JNI_NATIVE_METHOD(QtBluetoothLE_leScanResult, leScanResult)
 
 static const char logTag[] = "QtBluetooth";
 static const char classErrorMsg[] = "Can't find class \"%s\"";
 
-#define FIND_AND_CHECK_CLASS(CLASS_NAME) \
-clazz = env->FindClass(CLASS_NAME); \
-if (!clazz) { \
-    __android_log_print(ANDROID_LOG_FATAL, logTag, classErrorMsg, CLASS_NAME); \
-    return JNI_FALSE; \
-}
+#define FIND_AND_CHECK_CLASS(CLASS_NAME)                             \
+clazz = env.findClass<CLASS_NAME>();                                 \
+if (!clazz) {                                                        \
+    __android_log_print(ANDROID_LOG_FATAL, logTag, classErrorMsg,    \
+                        QtJniTypes::className<CLASS_NAME>().data()); \
+    return JNI_FALSE;                                                \
+}                                                                    \
 
-static bool registerNatives(JNIEnv *env)
+#define LEHUB_SCOPED_METHOD(Method) Q_JNI_NATIVE_SCOPED_METHOD(Method, LowEnergyNotificationHub)
+
+static bool registerNatives()
 {
     jclass clazz;
-    FIND_AND_CHECK_CLASS("org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver");
+    QJniEnvironment env;
 
-    if (env->RegisterNatives(clazz, methods, sizeof(methods) / sizeof(methods[0])) < 0) {
-        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for BroadcastReceiver failed");
+    FIND_AND_CHECK_CLASS(QtJniTypes::QtBtBroadcastReceiver);
+    if (!env.registerNativeMethods(clazz,
+                                  {
+                                      Q_JNI_NATIVE_METHOD(QtBroadcastReceiver_jniOnReceive)
+                                  }))
+    {
+        __android_log_print(ANDROID_LOG_FATAL, logTag,
+                            "registerNativeMethods for BroadcastReceiver failed");
         return false;
     }
 
-    FIND_AND_CHECK_CLASS("org/qtproject/qt/android/bluetooth/QtBluetoothLE");
-    if (env->RegisterNatives(clazz, methods_le, sizeof(methods_le) / sizeof(methods_le[0])) < 0) {
-        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for QBLuetoothLE failed");
+    FIND_AND_CHECK_CLASS(QtJniTypes::QtBtLECentral);
+    if (!env.registerNativeMethods(clazz,
+                              {
+                                   Q_JNI_NATIVE_METHOD(QtBluetoothLE_leScanResult),
+                                   LEHUB_SCOPED_METHOD(lowEnergy_connectionChange),
+                                   LEHUB_SCOPED_METHOD(lowEnergy_mtuChanged),
+                                   LEHUB_SCOPED_METHOD(lowEnergy_servicesDiscovered),
+                                   LEHUB_SCOPED_METHOD(lowEnergy_serviceDetailsDiscovered),
+                                   LEHUB_SCOPED_METHOD(lowEnergy_characteristicRead),
+                                   LEHUB_SCOPED_METHOD(lowEnergy_descriptorRead),
+                                   LEHUB_SCOPED_METHOD(lowEnergy_characteristicWritten),
+                                   LEHUB_SCOPED_METHOD(lowEnergy_descriptorWritten),
+                                   LEHUB_SCOPED_METHOD(lowEnergy_characteristicChanged),
+                                   LEHUB_SCOPED_METHOD(lowEnergy_serviceError)
+                               }))
+    {
+        __android_log_print(ANDROID_LOG_FATAL, logTag,
+                            "registerNativeMethods for QBLuetoothLE failed");
         return false;
     }
 
-    FIND_AND_CHECK_CLASS("org/qtproject/qt/android/bluetooth/QtBluetoothLEServer");
-    if (env->RegisterNatives(clazz, methods_leServer, sizeof(methods_leServer) / sizeof(methods_leServer[0])) < 0) {
-        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for QBLuetoothLEServer failed");
+    FIND_AND_CHECK_CLASS(QtJniTypes::QtBtLEServer);
+    if (!env.registerNativeMethods(clazz,
+                            {
+                                 LEHUB_SCOPED_METHOD(lowEnergy_connectionChange),
+                                 LEHUB_SCOPED_METHOD(lowEnergy_mtuChanged),
+                                 LEHUB_SCOPED_METHOD(lowEnergy_advertisementError),
+                                 LEHUB_SCOPED_METHOD(lowEnergy_serverCharacteristicChanged),
+                                 LEHUB_SCOPED_METHOD(lowEnergy_serverDescriptorWritten)
+                             }))
+    {
+        __android_log_print(ANDROID_LOG_FATAL, logTag,
+                            "registerNativeMethods for QBLuetoothLEServer failed");
         return false;
     }
 
-    FIND_AND_CHECK_CLASS("org/qtproject/qt/android/bluetooth/QtBluetoothSocketServer");
-    if (env->RegisterNatives(clazz, methods_server, sizeof(methods_server) / sizeof(methods_server[0])) < 0) {
-        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for SocketServer failed");
+    FIND_AND_CHECK_CLASS(QtJniTypes::QtBtSocketServer);
+    if (!env.registerNativeMethods(clazz,
+                                  {
+                                      Q_JNI_NATIVE_METHOD(QtBluetoothSocketServer_errorOccurred),
+                                      Q_JNI_NATIVE_METHOD(QtBluetoothSocketServer_newSocket)
+                                  }))
+    {
+        __android_log_print(ANDROID_LOG_FATAL, logTag,
+                            "registerNativeMethods for SocketServer failed");
         return false;
     }
 
-    FIND_AND_CHECK_CLASS("org/qtproject/qt/android/bluetooth/QtBluetoothInputStreamThread");
-    if (env->RegisterNatives(clazz, methods_inputStream,
-                             sizeof(methods_inputStream) / sizeof(methods_inputStream[0])) < 0) {
-        __android_log_print(ANDROID_LOG_FATAL, logTag, "RegisterNatives for InputStreamThread failed");
+    FIND_AND_CHECK_CLASS(QtJniTypes::QtBtInputStreamThread);
+    if (!env.registerNativeMethods(clazz,
+                               {
+                                   Q_JNI_NATIVE_METHOD(QtBluetoothInputStreamThread_errorOccurred),
+                                   Q_JNI_NATIVE_METHOD(QtBluetoothInputStreamThread_readyData)
+                               }))
+    {
+        __android_log_print(ANDROID_LOG_FATAL, logTag,
+                            "registerNativeMethods for InputStreamThread failed");
         return false;
     }
 
@@ -284,8 +278,7 @@ Q_BLUETOOTH_EXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* /*reserved*/)
         return -1;
     }
 
-    JNIEnv *env = uenv.nativeEnvironment;
-    if (!registerNatives(env)) {
+    if (!registerNatives()) {
         __android_log_print(ANDROID_LOG_FATAL, logTag, "registerNatives failed");
         return -1;
     }

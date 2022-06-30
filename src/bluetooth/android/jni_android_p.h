@@ -18,6 +18,7 @@
 #include "qbluetooth.h"
 #include <QtCore/QJniObject>
 #include <QtCore/private/qglobal_p.h>
+#include <QtCore/qcoreapplication_platform.h>
 
 QT_BEGIN_NAMESPACE
 

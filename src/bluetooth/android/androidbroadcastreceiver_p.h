@@ -20,11 +20,13 @@
 #include <QtCore/QObject>
 #include <QtCore/private/qglobal_p.h>
 #include <android/log.h>
+#include <android/jni_android_p.h>
 #include <QtCore/QJniObject>
 
 QT_BEGIN_NAMESPACE
 
-void QtBroadcastReceiver_jniOnReceive(JNIEnv *, jobject, jlong, jobject, jobject);
+void QtBroadcastReceiver_jniOnReceive(JNIEnv *, jobject, jlong,
+                                      QtJniTypes::Context, QtJniTypes::Intent);
 
 class AndroidBroadcastReceiver: public QObject
 {
@@ -38,9 +40,11 @@ public:
     void unregisterReceiver();
 
 protected:
-    friend void QtBroadcastReceiver_jniOnReceive(JNIEnv *, jobject, jlong, jobject, jobject);
+    friend void QtBroadcastReceiver_jniOnReceive(JNIEnv *, jobject, jlong, QtJniTypes::Context,
+                                                 QtJniTypes::Intent);
     virtual void onReceive(JNIEnv *env, jobject context, jobject intent) = 0;
-    friend void QtBluetoothLE_leScanResult(JNIEnv *, jobject, jlong, jobject, jint, jbyteArray);
+    friend void QtBluetoothLE_leScanResult(JNIEnv *, jobject, jlong, QtJniTypes::BluetoothDevice,
+                                           jint, jbyteArray);
     virtual void onReceiveLeScan(JNIEnv *env, jobject jBluetoothDevice, jint rssi, jbyteArray scanRecord) = 0;
 
 
