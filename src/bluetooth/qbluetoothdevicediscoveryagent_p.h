@@ -150,7 +150,7 @@ private slots:
 
 private:
     void disconnectAndClearWorker();
-    QPointer<QWinRTBluetoothDeviceDiscoveryWorker> worker;
+    std::shared_ptr<QWinRTBluetoothDeviceDiscoveryWorker> worker = nullptr;
     QTimer *leScanTimer = nullptr;
 #endif
 
