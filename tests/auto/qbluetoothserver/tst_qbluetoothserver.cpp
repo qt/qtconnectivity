@@ -144,6 +144,12 @@ void tst_QBluetoothServer::tst_receive()
 {
     QFETCH(QBluetoothLocalDevice::HostMode, hostmode);
 
+#ifdef Q_OS_ANDROID
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31) {
+        QSKIP("Skipping test on Android 12+, it can timeout waiting for user input (QTBUG-104914)");
+    }
+#endif
+
     QBluetoothLocalDevice localDev;
 #ifdef Q_OS_OSX
     if (localDev.hostMode() == QBluetoothLocalDevice::HostPoweredOff)
