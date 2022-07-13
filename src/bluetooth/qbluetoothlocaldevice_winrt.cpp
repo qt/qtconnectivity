@@ -37,11 +37,12 @@
 **
 ****************************************************************************/
 
-#include <qbluetoothutils_winrt_p.h>
+#include <private/qbluetoothutils_winrt_p.h>
 
 #include "qbluetoothlocaldevice.h"
 #include "qbluetoothaddress.h"
 
+#include "qbluetoothdevicewatcher_winrt_p.h"
 #include "qbluetoothlocaldevice_p.h"
 #include "qbluetoothutils_winrt_p.h"
 
@@ -50,20 +51,18 @@
 #include <winrt/Windows.Devices.Enumeration.h>
 #include <winrt/Windows.Devices.Bluetooth.h>
 #include <winrt/Windows.Devices.Radios.h>
-#include <wrl.h>
 
-#include <QtCore/private/qfunctions_winrt_p.h>
+#include <QtCore/QCoreApplication>
+#include <QtCore/QElapsedTimer>
+#include <QtCore/QLoggingCategory>
+#include <QtCore/QMutex>
 #include <QtCore/QPointer>
 #include <QtCore/QTimer>
-#include <QtCore/QMutex>
-#include <QtCore/QLoggingCategory>
 
 using namespace winrt::Windows::Foundation;
 using namespace winrt::Windows::Foundation::Collections;
 using namespace winrt::Windows::Devices::Enumeration;
 using namespace winrt::Windows::Devices::Bluetooth;
-using namespace Microsoft::WRL;
-using namespace Microsoft::WRL::Wrappers;
 using namespace winrt::Windows::Devices::Radios;
 
 QT_BEGIN_NAMESPACE
@@ -111,66 +110,35 @@ static RadioState windowsStateFromMode(QBluetoothLocalDevice::HostMode mode)
 
 class AdapterManager;
 
-class WatcherWrapper : public QObject, public std::enable_shared_from_this<WatcherWrapper>
+class WatcherWrapper
 {
-    Q_OBJECT
 public:
-    WatcherWrapper(winrt::hstring selector) : mWatcher(DeviceInformation::CreateWatcher(selector))
+    // we do not really care about unique ids here
+    WatcherWrapper(winrt::hstring selector) :
+        mWatcher(std::make_shared<QBluetoothDeviceWatcherWinRT>(0, selector))
     {
-    }
-    ~WatcherWrapper()
-    {
-        if (mWatcher && mInitialized) {
-            mWatcher.Stop();
-            unsubscribeFromEvents();
-        }
     }
 
     template<typename AddedSlot, typename RemovedSlot>
-    bool init(AdapterManager *manager, AddedSlot onAdded, RemovedSlot onRemoved)
+    void init(AdapterManager *manager, AddedSlot onAdded, RemovedSlot onRemoved)
     {
         if (!mWatcher) {
-            qWarning() << "Windows failed to create an instance of DeviceWatcher. "
-                       << "QBluetoothLocalDevice might fail to provide some information.";
-            return false;
+            qWarning("QBluetoothLocalDevice: failed to create device watcher!");
+            return;
         }
 
-        subscribeToEvents();
-        connect(this, &WatcherWrapper::deviceAdded, manager, onAdded, Qt::QueuedConnection);
-        connect(this, &WatcherWrapper::deviceRemoved, manager, onRemoved, Qt::QueuedConnection);
-        mInitialized = true;
-        mWatcher.Start();
-        return true;
-    }
+        QObject::connect(mWatcher.get(), &QBluetoothDeviceWatcherWinRT::deviceAdded,
+                         manager, onAdded, Qt::QueuedConnection);
+        QObject::connect(mWatcher.get(), &QBluetoothDeviceWatcherWinRT::deviceRemoved,
+                         manager, onRemoved, Qt::QueuedConnection);
 
-signals:
-    void deviceAdded(winrt::hstring id);
-    void deviceRemoved(winrt::hstring id);
+        // This will also print a warning on failure.
+        if (mWatcher->init())
+            mWatcher->start();
+    }
 
 private:
-    void subscribeToEvents()
-    {
-        // The callbacks are triggered from separate threads. So we capture
-        // thisPtr to make sure that the object is valid.
-        auto thisPtr = shared_from_this();
-        mAddedToken = mWatcher.Added([thisPtr](DeviceWatcher, const DeviceInformation &info) {
-            emit thisPtr->deviceAdded(info.Id());
-        });
-        mRemovedToken =
-                mWatcher.Removed([thisPtr](DeviceWatcher, const DeviceInformationUpdate &upd) {
-                    emit thisPtr->deviceRemoved(upd.Id());
-                });
-    }
-    void unsubscribeFromEvents()
-    {
-        mWatcher.Added(mAddedToken);
-        mWatcher.Removed(mRemovedToken);
-    }
-
-    bool mInitialized = false;
-    DeviceWatcher mWatcher = nullptr;
-    winrt::event_token mAddedToken;
-    winrt::event_token mRemovedToken;
+    std::shared_ptr<QBluetoothDeviceWatcherWinRT> mWatcher = nullptr;
 };
 
 /*
@@ -222,7 +190,7 @@ private:
     void onStateChange(Radio radio);
     Q_SLOT void tryResubscribeToStateChanges(winrt::hstring id, int numAttempts);
 
-    std::shared_ptr<WatcherWrapper> mAdapterWatcher = nullptr;
+    std::unique_ptr<WatcherWrapper> mAdapterWatcher = nullptr;
     QMutex mRadiosMutex;
     // Key for this map is BluetoothAdapter Id, *not* Radio Id.
     QMap<winrt::hstring, RadioInfo> mRadios;
@@ -230,9 +198,8 @@ private:
 
 AdapterManager::AdapterManager() : QObject()
 {
-    qRegisterMetaType<winrt::hstring>("winrt::hstring");
     const auto adapterSelector = BluetoothAdapter::GetDeviceSelector();
-    mAdapterWatcher = std::make_shared<WatcherWrapper>(adapterSelector);
+    mAdapterWatcher = std::make_unique<WatcherWrapper>(adapterSelector);
     mAdapterWatcher->init(this, &AdapterManager::onAdapterAdded, &AdapterManager::onAdapterRemoved);
 }
 
