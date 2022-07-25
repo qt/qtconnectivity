@@ -20,6 +20,8 @@
 
 QT_BEGIN_NAMESPACE
 
+Q_DECLARE_JNI_CLASS(QtNfcBroadcastReceiver, "org/qtproject/qt/android/nfc/QtNfcBroadcastReceiver")
+
 Q_DECLARE_JNI_TYPE(StringArray, "[Ljava/lang/String;")
 
 Q_DECLARE_JNI_CLASS(NdefMessage, "android/nfc/NdefMessage")

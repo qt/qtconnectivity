@@ -3,34 +3,24 @@
 
 #include "qnearfieldmanager_android_p.h"
 
-#include "qndeffilter.h"
 #include "qndefmessage.h"
-#include "qndefrecord.h"
 #include "qbytearray.h"
 #include "qcoreapplication.h"
-#include "qdebug.h"
-#include "qlist.h"
 
-#include <QCoreApplication>
-#include <QScopedPointer>
 #include <QtCore/QMetaType>
-#include <QtCore/QMetaMethod>
 
 QT_BEGIN_NAMESPACE
-
-Q_GLOBAL_STATIC(QJniObject, broadcastReceiver)
-Q_GLOBAL_STATIC(QList<QNearFieldManagerPrivateImpl *>, broadcastListener)
 
 extern "C"
 {
     JNIEXPORT void JNICALL Java_org_qtproject_qt_android_nfc_QtNfcBroadcastReceiver_jniOnReceive(
-        JNIEnv */*env*/, jobject /*javaObject*/, jint state)
+        JNIEnv */*env*/, jobject /*javaObject*/, jlong qtObject, jint state)
     {
-        QNearFieldManager::AdapterState adapterState = static_cast<QNearFieldManager::AdapterState>((int) state);
-
-        for (const auto listener : qAsConst(*broadcastListener)) {
-            Q_EMIT listener->adapterStateChanged(adapterState);
-        }
+        QNearFieldManager::AdapterState adapterState =
+                static_cast<QNearFieldManager::AdapterState>(state);
+        auto obj = reinterpret_cast<QNearFieldManagerPrivateImpl *>(qtObject);
+        Q_ASSERT(obj != nullptr);
+        obj->adapterStateChanged(adapterState);
     }
 }
 
@@ -40,20 +30,13 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
     qRegisterMetaType<QJniObject>("QJniObject");
     qRegisterMetaType<QNdefMessage>("QNdefMessage");
 
-    if (!broadcastReceiver->isValid()) {
-        *broadcastReceiver = QJniObject("org/qtproject/qt/android/nfc/QtNfcBroadcastReceiver",
-                                        "(Landroid/content/Context;)V", QNativeInterface::QAndroidApplication::context());
-    }
-    broadcastListener->append(this);
+    broadcastReceiver = QJniObject::construct<QtJniTypes::QtNfcBroadcastReceiver>(
+            reinterpret_cast<jlong>(this), QNativeInterface::QAndroidApplication::context());
 }
 
 QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
 {
-    broadcastListener->removeOne(this);
-    if (broadcastListener->isEmpty()) {
-        broadcastReceiver->callMethod<void>("unregisterReceiver");
-        *broadcastReceiver = QJniObject();
-    }
+    broadcastReceiver.callMethod<void>("unregisterReceiver");
 }
 
 void QNearFieldManagerPrivateImpl::onTargetDetected(QNearFieldTargetPrivateImpl *target)
@@ -153,7 +136,7 @@ QByteArray QNearFieldManagerPrivateImpl::getUidforTag(const QJniObject &tag)
         return QByteArray();
 
     QJniEnvironment env;
-    QJniObject tagId = tag.callObjectMethod("getId", "()[B");
+    QJniObject tagId = tag.callMethod<jbyteArray>("getId");
     QByteArray uid;
     jsize len = env->GetArrayLength(tagId.object<jbyteArray>());
     uid.resize(len);

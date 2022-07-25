@@ -9,13 +9,14 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 
-
 public class QtNfcBroadcastReceiver extends BroadcastReceiver
 {
-    private Context qtContext;
+    final private long qtObject;
+    final private Context qtContext;
 
-    public QtNfcBroadcastReceiver(Context context)
+    public QtNfcBroadcastReceiver(long obj, Context context)
     {
+        qtObject = obj;
         qtContext = context;
         IntentFilter filter = new IntentFilter(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
         qtContext.registerReceiver(this, filter);
@@ -29,8 +30,8 @@ public class QtNfcBroadcastReceiver extends BroadcastReceiver
     public void onReceive(Context context, Intent intent)
     {
         final int state = intent.getIntExtra(NfcAdapter.EXTRA_ADAPTER_STATE, NfcAdapter.STATE_OFF);
-        jniOnReceive(state);
+        jniOnReceive(qtObject, state);
     }
 
-    public native void jniOnReceive(int state);
+    public native void jniOnReceive(long qtObject, int state);
 }

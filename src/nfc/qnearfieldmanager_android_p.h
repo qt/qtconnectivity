@@ -16,18 +16,13 @@
 //
 
 #include "qnearfieldmanager_p.h"
-#include "qnearfieldmanager.h"
 #include "qnearfieldtarget_android_p.h"
 #include "android/androidjninfc_p.h"
 
 #include <QHash>
-#include <QMap>
 #include <QtCore/QJniObject>
-#include <QtCore/QJniEnvironment>
 
 QT_BEGIN_NAMESPACE
-
-typedef QList<QNdefMessage> QNdefMessageList;
 
 class QByteArray;
 class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate, public AndroidNfc::AndroidNfcListenerInterface
@@ -53,6 +48,8 @@ private:
     bool detecting;
     QNearFieldTarget::AccessMethod requestedMethod;
     QHash<QByteArray, QNearFieldTargetPrivateImpl*> detectedTargets;
+
+    QJniObject broadcastReceiver;
 
 private slots:
     void onTargetDiscovered(QJniObject intent);
