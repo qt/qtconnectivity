@@ -18,6 +18,14 @@
 
 #include <QtCore/QJniObject>
 
+QT_BEGIN_NAMESPACE
+
+Q_DECLARE_JNI_TYPE(StringArray, "[Ljava/lang/String;")
+
+Q_DECLARE_JNI_CLASS(NdefMessage, "android/nfc/NdefMessage")
+
+QT_END_NAMESPACE
+
 #define QT_USE_ANDROIDNFC_NAMESPACE using namespace ::AndroidNfc;
 #define QT_BEGIN_ANDROIDNFC_NAMESPACE namespace AndroidNfc {
 #define QT_END_ANDROIDNFC_NAMESPACE }
