@@ -42,7 +42,6 @@ public:
 
 protected:
     static QByteArray getUidforTag(const QJniObject &tag);
-    void updateReceiveState();
 
 private:
     bool detecting;

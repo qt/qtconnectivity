@@ -74,14 +74,14 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::Access
 
     detecting = true;
     requestedMethod = accessMethod;
-    updateReceiveState();
+    AndroidNfc::registerListener(this);
     return true;
 }
 
 void QNearFieldManagerPrivateImpl::stopTargetDetection(const QString &)
 {
     detecting = false;
-    updateReceiveState();
+    AndroidNfc::unregisterListener(this);
     Q_EMIT targetDetectionStopped();
 }
 
@@ -142,15 +142,6 @@ QByteArray QNearFieldManagerPrivateImpl::getUidforTag(const QJniObject &tag)
     uid.resize(len);
     env->GetByteArrayRegion(tagId.object<jbyteArray>(), 0, len, reinterpret_cast<jbyte*>(uid.data()));
     return uid;
-}
-
-void QNearFieldManagerPrivateImpl::updateReceiveState()
-{
-    if (detecting) {
-        AndroidNfc::registerListener(this);
-    } else {
-        AndroidNfc::unregisterListener(this);
-    }
 }
 
 QT_END_NAMESPACE
