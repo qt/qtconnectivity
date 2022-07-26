@@ -8,7 +8,7 @@
 qt_internal_add_test(tst_qbluetoothsocket
     SOURCES
         tst_qbluetoothsocket.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::BluetoothPrivate
         Qt::Network
 )
@@ -23,7 +23,7 @@ qt_internal_add_test(tst_qbluetoothsocket
 qt_internal_extend_target(tst_qbluetoothsocket CONDITION MACOS
     DEFINES
         QT_OSX_BLUETOOTH
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Widgets
 )
 

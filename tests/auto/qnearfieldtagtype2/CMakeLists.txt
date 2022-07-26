@@ -25,7 +25,7 @@ qt_internal_add_test(tst_qnearfieldtagtype2
         SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/nfcdata\\\"
     INCLUDE_DIRECTORIES
         ../nfccommons
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::NfcPrivate
     TESTDATA ${test_data}
 )

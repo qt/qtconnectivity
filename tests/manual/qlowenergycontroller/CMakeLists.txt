@@ -29,7 +29,7 @@ else()
 qt_internal_add_test(tst_qlowenergycontroller_device
     SOURCES
         tst_qlowenergycontroller_device.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Bluetooth
 )
 

@@ -8,7 +8,7 @@
 qt_internal_add_test(tst_qbluetoothserviceinfo
     SOURCES
         tst_qbluetoothserviceinfo.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Bluetooth
 )
 
@@ -16,7 +16,7 @@ qt_internal_add_test(tst_qbluetoothserviceinfo
 #####################################################################
 
 qt_internal_extend_target(tst_qbluetoothserviceinfo CONDITION MACOS
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Widgets
 )
 

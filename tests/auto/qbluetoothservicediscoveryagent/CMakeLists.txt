@@ -8,7 +8,7 @@
 qt_internal_add_test(tst_qbluetoothservicediscoveryagent
     SOURCES
         tst_qbluetoothservicediscoveryagent.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Bluetooth
 )
 
@@ -16,7 +16,7 @@ qt_internal_add_test(tst_qbluetoothservicediscoveryagent
 #####################################################################
 
 qt_internal_extend_target(tst_qbluetoothservicediscoveryagent CONDITION MACOS
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Widgets
 )
 

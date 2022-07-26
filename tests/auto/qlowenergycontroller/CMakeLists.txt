@@ -8,7 +8,7 @@
 qt_internal_add_test(tst_qlowenergycontroller
     SOURCES
         tst_qlowenergycontroller.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::BluetoothPrivate
 )
 
@@ -16,12 +16,12 @@ qt_internal_add_test(tst_qlowenergycontroller
 #####################################################################
 
 qt_internal_extend_target(tst_qlowenergycontroller CONDITION ANDROID
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Widgets
 )
 
 qt_internal_extend_target(tst_qlowenergycontroller CONDITION IOS OR MACOS
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Widgets
 )
 

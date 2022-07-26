@@ -10,6 +10,6 @@ qt_internal_add_executable(qlecontroller-server
     OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
     SOURCES
         qlowenergycontroller-gattserver.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Bluetooth
 )

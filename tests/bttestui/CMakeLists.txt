@@ -45,7 +45,7 @@ else()
         SOURCES
             btlocaldevice.cpp btlocaldevice.h
             main.cpp
-        PUBLIC_LIBRARIES
+        LIBRARIES
             Qt::Bluetooth
             Qt::Gui
             Qt::Quick

@@ -8,7 +8,7 @@
 qt_internal_add_test(tst_qbluetoothserver
     SOURCES
         tst_qbluetoothserver.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::BluetoothPrivate
 )
 
@@ -19,6 +19,6 @@ qt_internal_add_test(tst_qbluetoothserver
 #####################################################################
 
 qt_internal_extend_target(tst_qbluetoothserver CONDITION MACOS
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Widgets
 )

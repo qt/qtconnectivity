@@ -8,7 +8,7 @@
 qt_internal_add_test(tst_qlowenergycontroller-gattserver
     SOURCES
         tst_qlowenergycontroller-gattserver.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Bluetooth
         Qt::BluetoothPrivate
 )

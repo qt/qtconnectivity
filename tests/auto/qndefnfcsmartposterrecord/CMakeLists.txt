@@ -8,6 +8,6 @@
 qt_internal_add_test(tst_qndefnfcsmartposterrecord
     SOURCES
         tst_qndefnfcsmartposterrecord.cpp
-    PUBLIC_LIBRARIES
+    LIBRARIES
         Qt::Nfc
 )
