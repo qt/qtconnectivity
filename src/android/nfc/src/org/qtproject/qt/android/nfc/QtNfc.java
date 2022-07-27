@@ -94,7 +94,7 @@ public class QtNfc
                 try {
                     filters[1].addDataType("*/*");
                 } catch (MalformedMimeTypeException e) {
-                    throw new RuntimeException("Check your mime type.");
+                    throw new RuntimeException("IntentFilter.addDataType() failed");
                 }
                 // some tags will report as tech, even if they are ndef formatted/formattable.
                 filters[2] = new IntentFilter();
