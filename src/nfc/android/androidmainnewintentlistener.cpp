@@ -4,40 +4,38 @@
 
 #include "androidmainnewintentlistener_p.h"
 #include "android/androidjninfc_p.h"
-#include "qdebug.h"
 #include <QtGui/QGuiApplication>
 #include <QtCore/QJniObject>
 
-QT_BEGIN_ANDROIDNFC_NAMESPACE
+QT_BEGIN_NAMESPACE
 
-MainNfcNewIntentListener::MainNfcNewIntentListener()
- : listeners(), listenersLock(), paused(true), receiving(false)
+QMainNfcNewIntentListener::QMainNfcNewIntentListener() : paused(true), receiving(false)
 {
     QtAndroidPrivate::registerNewIntentListener(this);
     QtAndroidPrivate::registerResumePauseListener(this);
 }
 
-MainNfcNewIntentListener::~MainNfcNewIntentListener()
+QMainNfcNewIntentListener::~QMainNfcNewIntentListener()
 {
     QtAndroidPrivate::unregisterNewIntentListener(this);
     QtAndroidPrivate::unregisterResumePauseListener(this);
 }
 
-bool MainNfcNewIntentListener::handleNewIntent(JNIEnv */*env*/, jobject intent)
+bool QMainNfcNewIntentListener::handleNewIntent(JNIEnv * /*env*/, jobject intent)
 {
     // Only intents with a tag are relevant
     if (!AndroidNfc::getTag(intent).isValid())
         return false;
 
     listenersLock.lockForRead();
-    for (AndroidNfc::AndroidNfcListenerInterface *listener : qAsConst(listeners)) {
+    for (auto listener : qAsConst(listeners)) {
         listener->newIntent(QJniObject(intent));
     }
     listenersLock.unlock();
     return true;
 }
 
-bool MainNfcNewIntentListener::registerListener(AndroidNfcListenerInterface *listener)
+bool QMainNfcNewIntentListener::registerListener(QAndroidNfcListenerInterface *listener)
 {
     static bool firstListener = true;
     if (firstListener) {
@@ -56,7 +54,7 @@ bool MainNfcNewIntentListener::registerListener(AndroidNfcListenerInterface *lis
     return true;
 }
 
-bool MainNfcNewIntentListener::unregisterListener(AndroidNfcListenerInterface *listener)
+bool QMainNfcNewIntentListener::unregisterListener(QAndroidNfcListenerInterface *listener)
 {
     listenersLock.lockForWrite();
     listeners.removeOne(listener);
@@ -65,19 +63,19 @@ bool MainNfcNewIntentListener::unregisterListener(AndroidNfcListenerInterface *l
     return true;
 }
 
-void MainNfcNewIntentListener::handleResume()
+void QMainNfcNewIntentListener::handleResume()
 {
     paused = false;
     updateReceiveState();
 }
 
-void MainNfcNewIntentListener::handlePause()
+void QMainNfcNewIntentListener::handlePause()
 {
     paused = true;
     updateReceiveState();
 }
 
-void MainNfcNewIntentListener::updateReceiveState()
+void QMainNfcNewIntentListener::updateReceiveState()
 {
     if (paused) {
         // We were paused while receiving, so we stop receiving.
@@ -102,4 +100,4 @@ void MainNfcNewIntentListener::updateReceiveState()
     listenersLock.unlock();
 }
 
-QT_END_ANDROIDNFC_NAMESPACE
+QT_END_NAMESPACE

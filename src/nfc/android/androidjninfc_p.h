@@ -34,20 +34,11 @@ QT_END_NAMESPACE
 
 QT_BEGIN_ANDROIDNFC_NAMESPACE
 
-class AndroidNfcListenerInterface
-{
-public:
-    virtual ~AndroidNfcListenerInterface(){}
-    virtual void newIntent(QJniObject intent) = 0;
-};
-
 bool startDiscovery();
 bool stopDiscovery();
 QJniObject getStartIntent();
 bool isEnabled();
 bool isSupported();
-bool registerListener(AndroidNfcListenerInterface *listener);
-bool unregisterListener(AndroidNfcListenerInterface *listener);
 QJniObject getTag(const QJniObject &intent);
 
 QT_END_ANDROIDNFC_NAMESPACE

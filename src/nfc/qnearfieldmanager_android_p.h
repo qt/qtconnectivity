@@ -18,6 +18,7 @@
 #include "qnearfieldmanager_p.h"
 #include "qnearfieldtarget_android_p.h"
 #include "android/androidjninfc_p.h"
+#include "android/androidmainnewintentlistener_p.h"
 
 #include <QHash>
 #include <QtCore/QJniObject>
@@ -25,7 +26,8 @@
 QT_BEGIN_NAMESPACE
 
 class QByteArray;
-class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate, public AndroidNfc::AndroidNfcListenerInterface
+class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate,
+                                     public QAndroidNfcListenerInterface
 {
     Q_OBJECT
 

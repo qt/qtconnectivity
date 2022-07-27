@@ -24,6 +24,8 @@ extern "C"
     }
 }
 
+Q_GLOBAL_STATIC(QMainNfcNewIntentListener, newIntentListener)
+
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl() :
     detecting(false)
 {
@@ -72,16 +74,20 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::Access
     if (detecting)
         return false;   // Already detecting targets
 
+    if (newIntentListener.isDestroyed())
+        return false;
+
     detecting = true;
     requestedMethod = accessMethod;
-    AndroidNfc::registerListener(this);
+    newIntentListener->registerListener(this);
     return true;
 }
 
 void QNearFieldManagerPrivateImpl::stopTargetDetection(const QString &)
 {
     detecting = false;
-    AndroidNfc::unregisterListener(this);
+    if (newIntentListener.exists())
+        newIntentListener->unregisterListener(this);
     Q_EMIT targetDetectionStopped();
 }
 

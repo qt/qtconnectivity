@@ -19,21 +19,30 @@
 
 #include "qlist.h"
 #include "qreadwritelock.h"
-#include "androidjninfc_p.h"
 
-QT_BEGIN_ANDROIDNFC_NAMESPACE
+QT_BEGIN_NAMESPACE
 
-class MainNfcNewIntentListener : public QtAndroidPrivate::NewIntentListener, QtAndroidPrivate::ResumePauseListener
+class QJniObject;
+
+class QAndroidNfcListenerInterface
 {
 public:
-    MainNfcNewIntentListener();
-    ~MainNfcNewIntentListener();
+    virtual ~QAndroidNfcListenerInterface() = default;
+    virtual void newIntent(QJniObject intent) = 0;
+};
+
+class QMainNfcNewIntentListener : public QtAndroidPrivate::NewIntentListener,
+                                  QtAndroidPrivate::ResumePauseListener
+{
+public:
+    QMainNfcNewIntentListener();
+    ~QMainNfcNewIntentListener();
 
     //QtAndroidPrivate::NewIntentListener
     bool handleNewIntent(JNIEnv *env, jobject intent);
 
-    bool registerListener(AndroidNfcListenerInterface *listener);
-    bool unregisterListener(AndroidNfcListenerInterface *listener);
+    bool registerListener(QAndroidNfcListenerInterface *listener);
+    bool unregisterListener(QAndroidNfcListenerInterface *listener);
 
     //QtAndroidPrivate::ResumePauseListener
     void handleResume();
@@ -41,13 +50,13 @@ public:
 
 private:
     void updateReceiveState();
-protected:
-    QList<AndroidNfc::AndroidNfcListenerInterface*> listeners;
+
+    QList<QAndroidNfcListenerInterface *> listeners;
     QReadWriteLock listenersLock;
     bool paused;
     bool receiving;
 };
 
-QT_END_ANDROIDNFC_NAMESPACE
+QT_END_NAMESPACE
 
 #endif /* ANDROIDMAINNEWINTENTLISTENER_P_H_ */

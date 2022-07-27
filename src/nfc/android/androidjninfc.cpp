@@ -13,8 +13,6 @@
 
 static const char *nfcClassName = "org/qtproject/qt/android/nfc/QtNfc";
 
-static AndroidNfc::MainNfcNewIntentListener mainListener;
-
 QT_BEGIN_ANDROIDNFC_NAMESPACE
 
 bool startDiscovery()
@@ -41,16 +39,6 @@ QJniObject getStartIntent()
 {
     QJniObject ret = QJniObject::callStaticObjectMethod(nfcClassName, "getStartIntent", "()Landroid/content/Intent;");
     return ret;
-}
-
-bool registerListener(AndroidNfcListenerInterface *listener)
-{
-    return mainListener.registerListener(listener);
-}
-
-bool unregisterListener(AndroidNfcListenerInterface *listener)
-{
-    return mainListener.unregisterListener(listener);
 }
 
 QJniObject getTag(const QJniObject &intent)
