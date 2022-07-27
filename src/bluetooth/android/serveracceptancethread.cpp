@@ -7,6 +7,8 @@
 #include "android/serveracceptancethread_p.h"
 #include "android/jni_android_p.h"
 
+QT_BEGIN_NAMESPACE
+
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 ServerAcceptanceThread::ServerAcceptanceThread(QObject *parent) :
@@ -146,3 +148,5 @@ void ServerAcceptanceThread::shutdownPendingConnections()
         socket.callMethod<void>("close");
     }
 }
+
+QT_END_NAMESPACE

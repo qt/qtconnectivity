@@ -45,14 +45,17 @@ QT_END_NAMESPACE
 #include "darwin/btraii_p.h"
 #endif
 
+#ifdef QT_ANDROID_BLUETOOTH
+#include <QtCore/QJniObject>
+#include <QtBluetooth/QBluetoothLocalDevice>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgent;
 #ifdef QT_ANDROID_BLUETOOTH
 class ServiceDiscoveryBroadcastReceiver;
 class LocalDeviceBroadcastReceiver;
-#include <QtCore/QJniObject>
-#include <QtBluetooth/QBluetoothLocalDevice>
 #endif
 
 #ifdef QT_WINRT_BLUETOOTH

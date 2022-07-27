@@ -22,6 +22,7 @@
 #include "qbluetooth.h"
 #include "private/qglobal_p.h"
 
+QT_BEGIN_NAMESPACE
 
 class ServerAcceptanceThread : public QObject
 {
@@ -62,5 +63,7 @@ private:
     QJniObject javaThread;
 
 };
+
+QT_END_NAMESPACE
 
 #endif // SERVERACCEPTANCETHREAD_H

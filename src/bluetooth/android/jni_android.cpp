@@ -12,6 +12,8 @@
 #include "android/inputstreamthread_p.h"
 #include "android/lowenergynotificationhub_p.h"
 
+QT_BEGIN_NAMESPACE
+
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 typedef QHash<QByteArray, QJniObject> JCachedStringFields;
@@ -263,6 +265,8 @@ static bool registerNatives(JNIEnv *env)
 
     return true;
 }
+
+QT_END_NAMESPACE
 
 Q_BLUETOOTH_EXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* /*reserved*/)
 {
