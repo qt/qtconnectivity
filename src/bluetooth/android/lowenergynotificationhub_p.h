@@ -132,7 +132,6 @@ signals:
     void serviceError(int attributeHandle, QLowEnergyService::ServiceError errorCode);
     void advertisementError(int status);
 
-public slots:
 private:
     static QReadWriteLock lock;
 
