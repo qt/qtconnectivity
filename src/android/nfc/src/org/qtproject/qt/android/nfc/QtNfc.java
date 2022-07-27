@@ -27,7 +27,6 @@ public class QtNfc
     static private final String TAG = "QtNfc";
     static public NfcAdapter m_adapter = null;
     static public PendingIntent m_pendingIntent = null;
-    static public IntentFilter[] m_filters;
     static public Context m_context = null;
     static public Activity m_activity = null;
 
@@ -59,20 +58,6 @@ public class QtNfc
             flags);
 
         //Log.d(TAG, "Pending intent:" + m_pendingIntent);
-
-        IntentFilter filter = new IntentFilter(NfcAdapter.ACTION_TAG_DISCOVERED);
-
-        m_filters = new IntentFilter[]{
-            filter
-        };
-
-        try {
-            filter.addDataType("*/*");
-        } catch(MalformedMimeTypeException e) {
-            throw new RuntimeException("Fail", e);
-        }
-
-        //Log.d(TAG, "Thread:" + Thread.currentThread().getId());
     }
 
     static public boolean start()
