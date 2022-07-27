@@ -19,10 +19,10 @@ import android.content.pm.PackageManager;
 public class QtNfc
 {
     static private final String TAG = "QtNfc";
-    static public NfcAdapter m_adapter = null;
-    static public PendingIntent m_pendingIntent = null;
-    static public Context m_context = null;
-    static public Activity m_activity = null;
+    static private NfcAdapter m_adapter = null;
+    static private PendingIntent m_pendingIntent = null;
+    static private Context m_context = null;
+    static private Activity m_activity = null;
 
     static public void setContext(Context context)
     {
