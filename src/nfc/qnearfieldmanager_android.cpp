@@ -58,7 +58,7 @@ void QNearFieldManagerPrivateImpl::onTargetLost(QNearFieldTargetPrivateImpl *tar
 
 bool QNearFieldManagerPrivateImpl::isEnabled() const
 {
-    return AndroidNfc::isEnabled();
+    return QtNfc::isEnabled();
 }
 
 bool QNearFieldManagerPrivateImpl::isSupported(QNearFieldTarget::AccessMethod accessMethod) const
@@ -66,7 +66,7 @@ bool QNearFieldManagerPrivateImpl::isSupported(QNearFieldTarget::AccessMethod ac
     if (accessMethod == QNearFieldTarget::UnknownAccess)
         return false;
 
-    return AndroidNfc::isSupported();
+    return QtNfc::isSupported();
 }
 
 bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::AccessMethod accessMethod)
@@ -104,7 +104,7 @@ QByteArray QNearFieldManagerPrivateImpl::getUid(const QJniObject &intent)
     if (!intent.isValid())
         return QByteArray();
 
-    QJniObject tag = AndroidNfc::getTag(intent);
+    QJniObject tag = QtNfc::getTag(intent);
     return getUidforTag(tag);
 }
 

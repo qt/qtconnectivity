@@ -329,7 +329,7 @@ void QNearFieldTargetPrivateImpl::updateTechList()
 
     // Getting tech list
     QJniEnvironment env;
-    QJniObject tag = AndroidNfc::getTag(targetIntent);
+    QJniObject tag = QtNfc::getTag(targetIntent);
     Q_ASSERT_X(tag.isValid(), "updateTechList", "could not get Tag object");
 
     QJniObject techListArray = tag.callMethod<QtJniTypes::StringArray>("getTechList");
@@ -421,7 +421,7 @@ QJniObject QNearFieldTargetPrivateImpl::getTagTechnology(const QString &tech) co
     techClass.replace(QLatin1Char('.'), QLatin1Char('/'));
 
     // Getting requested technology
-    QJniObject tag = AndroidNfc::getTag(targetIntent);
+    QJniObject tag = QtNfc::getTag(targetIntent);
     Q_ASSERT_X(tag.isValid(), "getTagTechnology", "could not get Tag object");
 
     const QString sig = QString::fromUtf8("(Landroid/nfc/Tag;)L%1;");

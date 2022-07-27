@@ -13,6 +13,7 @@ import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.content.IntentFilter.MalformedMimeTypeException;
 import android.os.Build;
+import android.os.Parcelable;
 import android.util.Log;
 import android.content.pm.PackageManager;
 
@@ -51,7 +52,7 @@ public class QtNfc
             flags);
     }
 
-    static public boolean start()
+    static public boolean startDiscovery()
     {
         if (m_adapter == null || m_activity == null
                || !m_activity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC))
@@ -89,7 +90,7 @@ public class QtNfc
         return true;
     }
 
-    static public boolean stop()
+    static public boolean stopDiscovery()
     {
         if (m_adapter == null || m_activity == null
                || !m_activity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC))
@@ -135,5 +136,10 @@ public class QtNfc
         } else {
             return null;
         }
+    }
+
+    static public Parcelable getTag(Intent intent)
+    {
+        return intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
     }
 }

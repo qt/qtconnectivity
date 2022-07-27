@@ -3,52 +3,50 @@
 
 #include "androidjninfc_p.h"
 
-#include <android/log.h>
+QT_BEGIN_NAMESPACE
 
-#include "androidmainnewintentlistener_p.h"
-
-#include "qglobal.h"
-#include "qbytearray.h"
-#include "qdebug.h"
-
-static const char *nfcClassName = "org/qtproject/qt/android/nfc/QtNfc";
-
-QT_BEGIN_ANDROIDNFC_NAMESPACE
+namespace QtNfc {
 
 bool startDiscovery()
 {
-    return QJniObject::callStaticMethod<jboolean>(nfcClassName,"start");
+    return QJniObject::callStaticMethod<jboolean>(QtJniTypes::className<QtJniTypes::QtNfc>(),
+                                                  "startDiscovery");
 }
 
 bool isEnabled()
 {
-    return QJniObject::callStaticMethod<jboolean>(nfcClassName,"isEnabled");
+    return QJniObject::callStaticMethod<jboolean>(QtJniTypes::className<QtJniTypes::QtNfc>(),
+                                                  "isEnabled");
 }
 
 bool isSupported()
 {
-    return QJniObject::callStaticMethod<jboolean>(nfcClassName,"isSupported");
+    return QJniObject::callStaticMethod<jboolean>(QtJniTypes::className<QtJniTypes::QtNfc>(),
+                                                  "isSupported");
 }
 
 bool stopDiscovery()
 {
-    return QJniObject::callStaticMethod<jboolean>(nfcClassName,"stop");
+    return QJniObject::callStaticMethod<jboolean>(QtJniTypes::className<QtJniTypes::QtNfc>(),
+                                                  "stopDiscovery");
 }
 
 QJniObject getStartIntent()
 {
-    QJniObject ret = QJniObject::callStaticObjectMethod(nfcClassName, "getStartIntent", "()Landroid/content/Intent;");
-    return ret;
+    return QJniObject::callStaticMethod<QtJniTypes::Intent>(
+            QtJniTypes::className<QtJniTypes::QtNfc>(), "getStartIntent");
 }
 
 QJniObject getTag(const QJniObject &intent)
 {
-    QJniObject extraTag = QJniObject::getStaticObjectField("android/nfc/NfcAdapter", "EXTRA_TAG", "Ljava/lang/String;");
-    QJniObject tag = intent.callObjectMethod("getParcelableExtra", "(Ljava/lang/String;)Landroid/os/Parcelable;", extraTag.object<jstring>());
-    return tag;
+    return QJniObject::callStaticMethod<QtJniTypes::Parcellable>(
+            QtJniTypes::className<QtJniTypes::QtNfc>(), "getTag",
+            intent.object<QtJniTypes::Intent>());
 }
 
-QT_END_ANDROIDNFC_NAMESPACE
+} // namespace QtNfc
+
+QT_END_NAMESPACE
 
 Q_DECL_EXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void * /*reserved*/)
 {

@@ -24,7 +24,7 @@ QMainNfcNewIntentListener::~QMainNfcNewIntentListener()
 bool QMainNfcNewIntentListener::handleNewIntent(JNIEnv * /*env*/, jobject intent)
 {
     // Only intents with a tag are relevant
-    if (!AndroidNfc::getTag(intent).isValid())
+    if (!QtNfc::getTag(intent).isValid())
         return false;
 
     listenersLock.lockForRead();
@@ -39,7 +39,7 @@ bool QMainNfcNewIntentListener::registerListener(QAndroidNfcListenerInterface *l
 {
     static bool firstListener = true;
     if (firstListener) {
-        QJniObject intent = AndroidNfc::getStartIntent();
+        QJniObject intent = QtNfc::getStartIntent();
         if (intent.isValid()) {
             listener->newIntent(intent);
         }
@@ -80,7 +80,7 @@ void QMainNfcNewIntentListener::updateReceiveState()
     if (paused) {
         // We were paused while receiving, so we stop receiving.
         if (receiving) {
-            AndroidNfc::stopDiscovery();
+            QtNfc::stopDiscovery();
             receiving = false;
         }
         return;
@@ -90,11 +90,11 @@ void QMainNfcNewIntentListener::updateReceiveState()
     listenersLock.lockForRead();
     // We have nfc listeners and do not receive. Switch on.
     if (!listeners.isEmpty() && !receiving)
-        receiving = AndroidNfc::startDiscovery();
+        receiving = QtNfc::startDiscovery();
 
     // we have no nfc listeners and do receive. Switch off.
     if (listeners.isEmpty() && receiving) {
-        AndroidNfc::stopDiscovery();
+        QtNfc::stopDiscovery();
         receiving = false;
     }
     listenersLock.unlock();
