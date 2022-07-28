@@ -683,6 +683,6 @@ void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *wat
     watcher->deleteLater();
 }
 
-#include "moc_qbluetoothlocaldevice_p.cpp"
-
 QT_END_NAMESPACE
+
+#include "moc_qbluetoothlocaldevice_p.cpp"

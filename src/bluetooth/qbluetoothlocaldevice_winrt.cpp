@@ -793,6 +793,6 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
     return devices;
 }
 
-#include "qbluetoothlocaldevice_winrt.moc"
-
 QT_END_NAMESPACE
+
+#include "qbluetoothlocaldevice_winrt.moc"
