@@ -851,6 +851,12 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
     return lastKnownMtu;
 }
 
+- (void)readRssi
+{
+    Q_ASSERT([self isConnected]);
+    [peripheral readRSSI];
+}
+
 - (void)setNotifyValue:(const QByteArray &)value
         forCharacteristic:(QLowEnergyHandle)charHandle
         onService:(const QBluetoothUuid &)serviceUuid
@@ -1834,6 +1840,26 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
     }
 
     [self performNextRequest];
+}
+
+- (void)peripheral:(CBPeripheral *)aPeripheral didReadRSSI:(NSNumber *)RSSI error:(nullable NSError *)error
+{
+    Q_UNUSED(aPeripheral);
+
+    if (!notifier) // This controller was detached.
+        return;
+
+    if (error) {
+        NSLog(@"Reading RSSI finished with error: %@", error);
+        return emit notifier->CBManagerError(QLowEnergyController::RssiReadError);
+    }
+
+    if (!RSSI) {
+        qCWarning(QT_BT_DARWIN, "Reading RSSI returned no value");
+        return emit notifier->CBManagerError(QLowEnergyController::RssiReadError);
+    }
+
+    emit notifier->rssiUpdated(qint16([RSSI shortValue]));
 }
 
 - (void)detach

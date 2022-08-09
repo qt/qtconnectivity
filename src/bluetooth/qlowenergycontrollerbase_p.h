@@ -79,6 +79,7 @@ public:
                         QLowEnergyHandle startHandle) = 0;
 
     virtual int mtu() const = 0;
+    virtual void readRssi();
 
     virtual QLowEnergyService *addServiceHelper(
                         const QLowEnergyServiceData &service);

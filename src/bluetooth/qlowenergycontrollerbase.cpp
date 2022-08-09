@@ -76,6 +76,9 @@ void QLowEnergyControllerPrivate::setError(
     case QLowEnergyController::MissingPermissionsError:
         errorString = QLowEnergyController::tr("Missing permissions error");
         break;
+    case QLowEnergyController::RssiReadError:
+        errorString = QLowEnergyController::tr("Error reading RSSI value");
+        break;
     case QLowEnergyController::NoError:
         return;
     default:
@@ -293,6 +296,12 @@ QLowEnergyService *QLowEnergyControllerPrivate::addServiceHelper(
 
     this->addToGenericAttributeList(service, servicePrivate->startHandle);
     return new QLowEnergyService(servicePrivate);
+}
+
+void QLowEnergyControllerPrivate::readRssi()
+{
+    qCWarning(QT_BT, "This platform does not support reading RSSI");
+    setError(QLowEnergyController::RssiReadError);
 }
 
 QT_END_NAMESPACE

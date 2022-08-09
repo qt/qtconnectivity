@@ -323,6 +323,21 @@ int QLowEnergyControllerPrivateDarwin::mtu() const
     return mtu;
 }
 
+void QLowEnergyControllerPrivateDarwin::readRssi()
+{
+    Q_ASSERT(role == QLowEnergyController::CentralRole);
+    Q_ASSERT(state == QLowEnergyController::ConnectedState ||
+             state == QLowEnergyController::DiscoveringState ||
+             state == QLowEnergyController::DiscoveredState);
+
+    if (const auto leQueue = DarwinBluetooth::qt_LE_queue()) {
+        const auto *manager = centralManager.getAs<ObjCCentralManager>();
+        dispatch_async(leQueue, ^{
+            [manager readRssi];
+        });
+    }
+}
+
 QLowEnergyService * QLowEnergyControllerPrivateDarwin::addServiceHelper(const QLowEnergyServiceData &service)
 {
     // Three checks below should be removed, they are done in the q_ptr's class.
@@ -990,6 +1005,9 @@ void QLowEnergyControllerPrivateDarwin::setErrorDescription(QLowEnergyController
     case QLowEnergyController::MissingPermissionsError:
         errorString = QLowEnergyController::tr("Error missing permission");
         break;
+    case QLowEnergyController::RssiReadError:
+        errorString = QLowEnergyController::tr("Error reading RSSI value");
+        break;
     case QLowEnergyController::UnknownError:
     default:
         errorString = QLowEnergyController::tr("Unknown Error");
@@ -1035,6 +1053,8 @@ bool QLowEnergyControllerPrivateDarwin::connectSlots(DarwinBluetooth::LECBManage
                        this, SLOT(_q_CBManagerError(const QBluetoothUuid &, QLowEnergyService::ServiceError)));
     ok = ok && connect(notifier, &LECBManagerNotifier::mtuChanged, this,
                        &QLowEnergyControllerPrivateDarwin::_q_mtuChanged);
+    ok = ok && connect(notifier, &LECBManagerNotifier::rssiUpdated, q_ptr,
+                       &QLowEnergyController::rssiRead, Qt::QueuedConnection);
 
     if (!ok)
         notifier->disconnect();

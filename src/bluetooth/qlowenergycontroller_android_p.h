@@ -80,6 +80,7 @@ public:
                                    QLowEnergyHandle startHandle) override;
 
     int mtu() const override;
+    void readRssi() override;
 
 private:
 

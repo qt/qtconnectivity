@@ -32,7 +32,8 @@ public:
         AdvertisingError,
         RemoteHostClosedError,
         AuthorizationError,
-        MissingPermissionsError
+        MissingPermissionsError,
+        RssiReadError
     };
     Q_ENUM(Error)
 
@@ -103,6 +104,7 @@ public:
     Role role() const;
 
     int mtu() const;
+    void readRssi();
 
 Q_SIGNALS:
     void connected();
@@ -110,10 +112,12 @@ Q_SIGNALS:
     void stateChanged(QLowEnergyController::ControllerState state);
     void errorOccurred(QLowEnergyController::Error newError);
     void mtuChanged(int mtu);
+    void rssiRead(qint16 rssi);
 
     void serviceDiscovered(const QBluetoothUuid &newService);
     void discoveryFinished();
     void connectionUpdated(const QLowEnergyConnectionParameters &parameters);
+
 
 private:
     // peripheral role ctor

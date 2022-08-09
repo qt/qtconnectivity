@@ -132,6 +132,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
     \value [since 6.4] MissingPermissionsError  The operating system requests
                                                 permissions which were not
                                                 granted by the user.
+    \value [since 6.5] RssiReadError An attempt to read RSSI (received signal strength indicator)
+                                     of a remote device finished with error.
 */
 
 /*!
@@ -209,6 +211,17 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
     several times in a row for one or several devices.
 
     \sa mtu()
+*/
+
+/*!
+    \fn void QLowEnergyController::rssiRead(qint16 rssi)
+
+    This signal is emitted after successful read of RSSI (received
+    signal strength indicator) for a connected remote device.
+    \a rssi parameter represents the new value.
+
+    \sa readRssi()
+    \since 6.5
 */
 
 /*!
@@ -896,6 +909,38 @@ QLowEnergyController::Role QLowEnergyController::role() const
 int QLowEnergyController::mtu() const
 {
     return d_ptr->mtu();
+}
+
+/*!
+    readRssi() reads RSSI (received signal strength indicator) for a connected remote device.
+    If the read was successful, the RSSI is then reported by rssiRead() signal.
+
+    \note Prior to calling readRssi(), this controller must be connected to a peripheral.
+    This controller must be created using createCentral().
+
+    \note In case Bluetooth backend you are using does not support reading RSSI,
+    the errorOccurred() signal is emitted with an error code QLowEnergyController::RssiReadError.
+    At the moment platforms supporting reading RSSI include Android, iOS and macOS.
+
+    \sa rssiRead(), connectToDevice(), state(), createCentral(), errorOccurred()
+    \since 6.5
+*/
+void QLowEnergyController::readRssi()
+{
+    if (role() != CentralRole) {
+        qCWarning(QT_BT, "Invalid role (peripheral), cannot read RSSI");
+        return d_ptr->setError(RssiReadError); // This also emits.
+    }
+
+    switch (state()) {
+    case UnconnectedState:
+    case ConnectingState:
+    case ClosingState:
+        qCWarning(QT_BT, "Cannot read RSSI while not in 'Connected' state, connect first");
+        return d_ptr->setError(RssiReadError); // Will emit.
+    default:
+        d_ptr->readRssi();
+    }
 }
 
 QT_END_NAMESPACE

@@ -1260,4 +1260,9 @@ int QLowEnergyControllerPrivateAndroid::mtu() const
     }
 }
 
+void QLowEnergyControllerPrivateAndroid::readRssi()
+{
+    Q_UNIMPLEMENTED();
+}
+
 QT_END_NAMESPACE

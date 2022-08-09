@@ -69,6 +69,7 @@ public:
                                    QLowEnergyHandle startHandle) override;
 
     int mtu() const override;
+    void readRssi() override;
 
     void startAdvertising(const QLowEnergyAdvertisingParameters &params,
                           const QLowEnergyAdvertisingData &advertisingData,
