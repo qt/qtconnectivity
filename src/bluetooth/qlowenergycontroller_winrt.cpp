@@ -1057,6 +1057,7 @@ HRESULT QLowEnergyControllerPrivateWinRT::onServiceDiscoveryFinished(ABI::Window
         hr = deviceService->get_Uuid(&guuid);
         WARN_AND_CONTINUE_IF_FAILED(hr, "Could not obtain service's Uuid");
         const QBluetoothUuid service(guuid);
+        m_openedServices[service] = deviceService;
 
         qCDebug(QT_BT_WINDOWS_SERVICE_THREAD) << __FUNCTION__
                                             << "Changing service pointer from thread"
