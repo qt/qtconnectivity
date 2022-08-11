@@ -354,6 +354,8 @@ void QWinRTBluetoothDeviceDiscoveryWorker::start()
 
 void QWinRTBluetoothDeviceDiscoveryWorker::stop()
 {
+    if (m_leScanTimer && m_leScanTimer->isActive())
+        m_leScanTimer->stop();
     m_classicWatcher->stop();
     m_lowEnergyWatcher->stop();
     m_advertisementWatcher->stop();
