@@ -66,18 +66,16 @@ QBluetoothDeviceInfo DeviceInfo::getDevice() const
 
 QString DeviceInfo::getName() const
 {
-#ifdef SIMULATOR
-    return "Demo device";
-#else
+    if (simulator)
+        return "Demo device";
     return m_device.name();
-#endif
 }
 
 QString DeviceInfo::getAddress() const
 {
-#ifdef SIMULATOR
-    return "00:11:22:33:44:55";
-#elif defined Q_OS_DARWIN
+    if (simulator)
+        return "00:11:22:33:44:55";
+#ifdef Q_OS_DARWIN
     // workaround for Core Bluetooth:
     return m_device.deviceUuid().toString();
 #else

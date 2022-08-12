@@ -51,6 +51,7 @@
 #include "devicefinder.h"
 #include "devicehandler.h"
 #include "deviceinfo.h"
+#include "heartrate-global.h"
 
 DeviceFinder::DeviceFinder(DeviceHandler *handler, QObject *parent):
     BluetoothBaseClass(parent),
@@ -69,11 +70,11 @@ DeviceFinder::DeviceFinder(DeviceHandler *handler, QObject *parent):
     //! [devicediscovery-1]
 
 
-#ifdef SIMULATOR
-    m_demoTimer.setSingleShot(true);
-    m_demoTimer.setInterval(2000);
-    connect(&m_demoTimer, &QTimer::timeout, this, &DeviceFinder::scanFinished);
-#endif
+    if (simulator) {
+        m_demoTimer.setSingleShot(true);
+        m_demoTimer.setInterval(2000);
+        connect(&m_demoTimer, &QTimer::timeout, this, &DeviceFinder::scanFinished);
+    }
 }
 
 DeviceFinder::~DeviceFinder()
@@ -91,13 +92,14 @@ void DeviceFinder::startSearch()
 
     emit devicesChanged();
 
-#ifdef SIMULATOR
-    m_demoTimer.start();
-#else
-    //! [devicediscovery-2]
-    m_deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
-    //! [devicediscovery-2]
-#endif
+    if (simulator) {
+        m_demoTimer.start();
+    }  else {
+        //! [devicediscovery-2]
+        m_deviceDiscoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+        //! [devicediscovery-2]
+    }
+
     emit scanningChanged();
     setInfo(tr("Scanning for devices..."));
 }
@@ -129,11 +131,11 @@ void DeviceFinder::scanError(QBluetoothDeviceDiscoveryAgent::Error error)
 
 void DeviceFinder::scanFinished()
 {
-#ifdef SIMULATOR
-    // Only for testing
-    for (int i = 0; i < 4; i++)
-        m_devices.append(new DeviceInfo(QBluetoothDeviceInfo()));
-#endif
+    if (simulator) {
+        // Only for testing
+        for (int i = 0; i < 4; i++)
+            m_devices.append(new DeviceInfo(QBluetoothDeviceInfo()));
+    }
 
     if (m_devices.isEmpty())
         setError(tr("No Low Energy devices found."));
@@ -165,11 +167,9 @@ void DeviceFinder::connectToService(const QString &address)
 
 bool DeviceFinder::scanning() const
 {
-#ifdef SIMULATOR
-    return m_demoTimer.isActive();
-#else
+    if (simulator)
+        return m_demoTimer.isActive();
     return m_deviceDiscoveryAgent->isActive();
-#endif
 }
 
 QVariant DeviceFinder::devices()

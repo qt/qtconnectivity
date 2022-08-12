@@ -51,11 +51,6 @@
 #ifndef HEARTRATEGLOBAL_H
 #define HEARTRATEGLOBAL_H
 
-//#define USE_SIMULATOR
-
-#if defined(Q_OS_WIN32) || defined(USE_SIMULATOR)
-#define SIMULATOR
-#endif
-
+extern bool simulator;
 
 #endif // HEARTRATEGLOBAL_H

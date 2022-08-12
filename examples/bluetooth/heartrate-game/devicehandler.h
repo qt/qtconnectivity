@@ -122,9 +122,8 @@ private:
     void confirmedDescriptorWrite(const QLowEnergyDescriptor &d,
                               const QByteArray &value);
 
-#ifdef SIMULATOR
     void updateDemoHR();
-#endif
+
 private:
     void addMeasurement(int value);
 
@@ -145,9 +144,7 @@ private:
     QList<int> m_measurements;
     QLowEnergyController::RemoteAddressType m_addressType = QLowEnergyController::PublicAddress;
 
-#ifdef SIMULATOR
     QTimer m_demoTimer;
-#endif
 };
 
 #endif // DEVICEHANDLER_H
