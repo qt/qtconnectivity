@@ -1,6 +1,6 @@
 /***************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the QtBluetooth module of the Qt Toolkit.
@@ -53,12 +53,12 @@
 
 #include "bluetoothbaseclass.h"
 
+#include <QLowEnergyController>
+#include <QLowEnergyService>
+
 #include <QDateTime>
 #include <QList>
 #include <QTimer>
-
-#include <QLowEnergyController>
-#include <QLowEnergyService>
 
 class DeviceInfo;
 
@@ -133,10 +133,10 @@ private:
     QLowEnergyDescriptor m_notificationDesc;
     DeviceInfo *m_currentDevice = nullptr;
 
-    bool m_foundHeartRateService;
-    bool m_measuring;
-    int m_currentValue, m_min, m_max, m_sum;
-    float m_avg, m_calories;
+    bool m_foundHeartRateService = false;
+    bool m_measuring = false;
+    int m_currentValue = 0, m_min = 0, m_max = 0, m_sum = 0;
+    float m_avg = 0, m_calories = 0;
 
     // Statistics
     QDateTime m_start;

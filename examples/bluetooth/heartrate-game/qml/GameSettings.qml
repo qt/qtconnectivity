@@ -1,6 +1,6 @@
 /***************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the QtBluetooth module of the Qt Toolkit.
@@ -49,7 +49,7 @@
 ****************************************************************************/
 
 pragma Singleton
-import QtQuick 2.5
+import QtQuick
 
 Item {
     property int wHeight

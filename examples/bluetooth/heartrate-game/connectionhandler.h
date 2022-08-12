@@ -1,6 +1,6 @@
 /***************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the QtBluetooth module of the Qt Toolkit.
@@ -51,17 +51,19 @@
 #ifndef CONNECTIONHANDLER_H
 #define CONNECTIONHANDLER_H
 
-#include <QObject>
 #include <QBluetoothLocalDevice>
+
+#include <QObject>
 
 class ConnectionHandler : public QObject
 {
+    Q_OBJECT
+
     Q_PROPERTY(bool alive READ alive NOTIFY deviceChanged)
     Q_PROPERTY(QString name READ name NOTIFY deviceChanged)
     Q_PROPERTY(QString address READ address NOTIFY deviceChanged)
     Q_PROPERTY(bool requiresAddressType READ requiresAddressType CONSTANT)
 
-    Q_OBJECT
 public:
     explicit ConnectionHandler(QObject *parent = nullptr);
 

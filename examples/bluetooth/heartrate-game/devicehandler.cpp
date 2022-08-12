@@ -1,6 +1,6 @@
 /***************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the QtBluetooth module of the Qt Toolkit.
@@ -51,15 +51,12 @@
 #include "heartrate-global.h"
 #include "devicehandler.h"
 #include "deviceinfo.h"
+
 #include <QtEndian>
 #include <QRandomGenerator>
 
 DeviceHandler::DeviceHandler(QObject *parent) :
-    BluetoothBaseClass(parent),
-    m_foundHeartRateService(false),
-    m_measuring(false),
-    m_currentValue(0),
-    m_min(0), m_max(0), m_sum(0), m_avg(0), m_calories(0)
+    BluetoothBaseClass(parent)
 {
 #ifdef SIMULATOR
     m_demoTimer.setSingleShot(false);

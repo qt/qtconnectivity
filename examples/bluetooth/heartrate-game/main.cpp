@@ -1,6 +1,6 @@
 /***************************************************************************
 **
-** Copyright (C) 2017 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the examples of the QtBluetooth module of the Qt Toolkit.
@@ -48,14 +48,16 @@
 **
 ****************************************************************************/
 
-#include <QGuiApplication>
-#include <QLoggingCategory>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
-
 #include "connectionhandler.h"
 #include "devicefinder.h"
 #include "devicehandler.h"
+
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+
+#include <QGuiApplication>
+
+#include <QLoggingCategory>
 
 int main(int argc, char *argv[])
 {
