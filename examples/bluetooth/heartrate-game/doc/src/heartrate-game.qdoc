@@ -29,8 +29,8 @@
     Bluetooth Low Energy device which might simulate the service. You can also use the
     \l {heartrate-server} {Heart Rate server} example for that purpose.
     If no such device is available, a demo mode is available which creates and displays
-    random values. This demo mode is enabled by defining USE_SIMULATOR in
-    heartrate-global.h.
+    random values. This demo mode is enabled by passing --simulator on the
+    command line.
 
     The goal of the game is to increase the measured heart rate as much as possible.
 

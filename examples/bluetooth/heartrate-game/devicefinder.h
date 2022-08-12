@@ -4,7 +4,6 @@
 #ifndef DEVICEFINDER_H
 #define DEVICEFINDER_H
 
-#include "heartrate-global.h"
 #include "bluetoothbaseclass.h"
 
 #include <QBluetoothDeviceDiscoveryAgent>
@@ -48,9 +47,7 @@ private:
     QBluetoothDeviceDiscoveryAgent *m_deviceDiscoveryAgent;
     QList<QObject*> m_devices;
 
-#ifdef SIMULATOR
     QTimer m_demoTimer;
-#endif
 };
 
 #endif // DEVICEFINDER_H
