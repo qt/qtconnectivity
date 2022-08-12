@@ -11,13 +11,13 @@
 DeviceHandler::DeviceHandler(QObject *parent) :
     BluetoothBaseClass(parent)
 {
-#ifdef SIMULATOR
-    m_demoTimer.setSingleShot(false);
-    m_demoTimer.setInterval(2000);
-    connect(&m_demoTimer, &QTimer::timeout, this, &DeviceHandler::updateDemoHR);
-    m_demoTimer.start();
-    updateDemoHR();
-#endif
+    if (simulator) {
+        m_demoTimer.setSingleShot(false);
+        m_demoTimer.setInterval(2000);
+        connect(&m_demoTimer, &QTimer::timeout, this, &DeviceHandler::updateDemoHR);
+        m_demoTimer.start();
+        updateDemoHR();
+    }
 }
 
 void DeviceHandler::setAddressType(AddressType type)
@@ -45,10 +45,10 @@ void DeviceHandler::setDevice(DeviceInfo *device)
     clearMessages();
     m_currentDevice = device;
 
-#ifdef SIMULATOR
-    setInfo(tr("Demo device connected."));
-    return;
-#endif
+    if (simulator) {
+        setInfo(tr("Demo device connected."));
+        return;
+    }
 
     // Disconnect and delete old connection
     if (m_control) {
@@ -201,7 +201,6 @@ void DeviceHandler::updateHeartRateValue(const QLowEnergyCharacteristic &c, cons
 }
 //! [Reading value]
 
-#ifdef SIMULATOR
 void DeviceHandler::updateDemoHR()
 {
     int randomValue = 0;
@@ -215,7 +214,6 @@ void DeviceHandler::updateDemoHR()
 
     addMeasurement(randomValue);
 }
-#endif
 
 void DeviceHandler::confirmedDescriptorWrite(const QLowEnergyDescriptor &d, const QByteArray &value)
 {
@@ -251,9 +249,8 @@ bool DeviceHandler::measuring() const
 
 bool DeviceHandler::alive() const
 {
-#ifdef SIMULATOR
-    return true;
-#endif
+    if (simulator)
+        return true;
 
     if (m_service)
         return m_service->state() == QLowEnergyService::RemoteServiceDiscovered;
