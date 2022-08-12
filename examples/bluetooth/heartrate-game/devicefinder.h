@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #ifndef DEVICEFINDER_H
@@ -7,11 +7,11 @@
 #include "heartrate-global.h"
 #include "bluetoothbaseclass.h"
 
-#include <QTimer>
-#include <QVariant>
 #include <QBluetoothDeviceDiscoveryAgent>
 #include <QBluetoothDeviceInfo>
 
+#include <QTimer>
+#include <QVariant>
 
 class DeviceInfo;
 class DeviceHandler;

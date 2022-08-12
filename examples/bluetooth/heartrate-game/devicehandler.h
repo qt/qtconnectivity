@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #ifndef DEVICEHANDLER_H
@@ -6,12 +6,12 @@
 
 #include "bluetoothbaseclass.h"
 
+#include <QLowEnergyController>
+#include <QLowEnergyService>
+
 #include <QDateTime>
 #include <QList>
 #include <QTimer>
-
-#include <QLowEnergyController>
-#include <QLowEnergyService>
 
 class DeviceInfo;
 
@@ -86,10 +86,10 @@ private:
     QLowEnergyDescriptor m_notificationDesc;
     DeviceInfo *m_currentDevice = nullptr;
 
-    bool m_foundHeartRateService;
-    bool m_measuring;
-    int m_currentValue, m_min, m_max, m_sum;
-    float m_avg, m_calories;
+    bool m_foundHeartRateService = false;
+    bool m_measuring = false;
+    int m_currentValue = 0, m_min = 0, m_max = 0, m_sum = 0;
+    float m_avg = 0, m_calories = 0;
 
     // Statistics
     QDateTime m_start;

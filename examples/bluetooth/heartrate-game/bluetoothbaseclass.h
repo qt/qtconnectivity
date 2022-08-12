@@ -1,4 +1,4 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #ifndef BLUETOOTHBASECLASS_H
@@ -9,6 +9,7 @@
 class BluetoothBaseClass : public QObject
 {
     Q_OBJECT
+
     Q_PROPERTY(QString error READ error WRITE setError NOTIFY errorChanged)
     Q_PROPERTY(QString info READ info WRITE setInfo NOTIFY infoChanged)
 
