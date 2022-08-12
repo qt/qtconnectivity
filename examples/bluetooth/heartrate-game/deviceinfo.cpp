@@ -1,8 +1,9 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include "heartrate-global.h"
 #include "deviceinfo.h"
+
 #include <QBluetoothAddress>
 #include <QBluetoothUuid>
 

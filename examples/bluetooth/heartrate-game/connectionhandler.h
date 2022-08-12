@@ -1,20 +1,22 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #ifndef CONNECTIONHANDLER_H
 #define CONNECTIONHANDLER_H
 
-#include <QObject>
 #include <QBluetoothLocalDevice>
+
+#include <QObject>
 
 class ConnectionHandler : public QObject
 {
+    Q_OBJECT
+
     Q_PROPERTY(bool alive READ alive NOTIFY deviceChanged)
     Q_PROPERTY(QString name READ name NOTIFY deviceChanged)
     Q_PROPERTY(QString address READ address NOTIFY deviceChanged)
     Q_PROPERTY(bool requiresAddressType READ requiresAddressType CONSTANT)
 
-    Q_OBJECT
 public:
     explicit ConnectionHandler(QObject *parent = nullptr);
 

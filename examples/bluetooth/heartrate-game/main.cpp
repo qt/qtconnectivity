@@ -1,14 +1,16 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
-
-#include <QGuiApplication>
-#include <QLoggingCategory>
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
 
 #include "connectionhandler.h"
 #include "devicefinder.h"
 #include "devicehandler.h"
+
+#include <QQmlApplicationEngine>
+#include <QQmlContext>
+
+#include <QGuiApplication>
+
+#include <QLoggingCategory>
 
 int main(int argc, char *argv[])
 {
