@@ -34,6 +34,12 @@ target_link_libraries(heartrate-game PUBLIC
     Qt::Quick
 )
 
+qt_add_qml_module(heartrate-game
+    URI Shared
+    VERSION 1.0
+    NO_RESOURCE_TARGET_PATH
+)
+
 if (APPLE)
     if (IOS)
         set_target_properties(heartrate-game PROPERTIES

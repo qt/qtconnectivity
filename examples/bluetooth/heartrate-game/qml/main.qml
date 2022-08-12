@@ -4,6 +4,7 @@
 import QtQuick
 import QtQuick.Window
 import "."
+import Shared
 
 Window {
     id: wroot
@@ -12,6 +13,10 @@ Window {
     height: 1240 * .7
     title: qsTr("HeartRateGame")
     color: GameSettings.backgroundColor
+
+    required property ConnectionHandler connectionHandler
+    required property DeviceFinder deviceFinder
+    required property AddressType deviceHandler
 
     Component.onCompleted: {
         GameSettings.wWidth = Qt.binding(function() {return width})

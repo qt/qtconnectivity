@@ -44,12 +44,12 @@ int main(int argc, char *argv[])
     DeviceHandler deviceHandler;
     DeviceFinder deviceFinder(&deviceHandler);
 
-    qmlRegisterUncreatableType<DeviceHandler>("Shared", 1, 0, "AddressType", "Enum is not a type");
-
     QQmlApplicationEngine engine;
-    engine.rootContext()->setContextProperty("connectionHandler", &connectionHandler);
-    engine.rootContext()->setContextProperty("deviceFinder", &deviceFinder);
-    engine.rootContext()->setContextProperty("deviceHandler", &deviceHandler);
+    engine.setInitialProperties({
+        {"connectionHandler", QVariant::fromValue(&connectionHandler)},
+        {"deviceFinder", QVariant::fromValue(&deviceFinder)},
+        {"deviceHandler", QVariant::fromValue(&deviceHandler)}
+    });
 
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
     if (engine.rootObjects().isEmpty())

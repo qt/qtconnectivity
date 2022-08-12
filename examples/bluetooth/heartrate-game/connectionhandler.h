@@ -6,6 +6,8 @@
 
 #include <QBluetoothLocalDevice>
 
+#include <qqml.h>
+
 #include <QObject>
 
 class ConnectionHandler : public QObject
@@ -17,6 +19,7 @@ class ConnectionHandler : public QObject
     Q_PROPERTY(QString address READ address NOTIFY deviceChanged)
     Q_PROPERTY(bool requiresAddressType READ requiresAddressType CONSTANT)
 
+    QML_ELEMENT
 public:
     explicit ConnectionHandler(QObject *parent = nullptr);
 

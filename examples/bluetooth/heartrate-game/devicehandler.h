@@ -9,6 +9,8 @@
 #include <QLowEnergyController>
 #include <QLowEnergyService>
 
+#include <qqml.h>
+
 #include <QDateTime>
 #include <QList>
 #include <QTimer>
@@ -28,6 +30,9 @@ class DeviceHandler : public BluetoothBaseClass
     Q_PROPERTY(int time READ time NOTIFY statsChanged)
     Q_PROPERTY(float calories READ calories NOTIFY statsChanged)
     Q_PROPERTY(AddressType addressType READ addressType WRITE setAddressType)
+
+    QML_NAMED_ELEMENT(AddressType)
+    QML_UNCREATABLE("Enum is not a type")
 
 public:
     enum class AddressType {
