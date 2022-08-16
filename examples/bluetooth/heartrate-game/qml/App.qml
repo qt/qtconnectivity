@@ -84,7 +84,7 @@ Item {
         id: titleBar
         currentIndex: __currentIndex
 
-        onTitleClicked: {
+        onTitleClicked: (index) => {
             if (index < __currentIndex)
                 pageLoader.item.close()
         }
@@ -106,7 +106,7 @@ Item {
         }
     }
 
-    Keys.onReleased: {
+    Keys.onReleased: (event) => {
         switch (event.key) {
         case Qt.Key_Escape:
         case Qt.Key_Back: {
