@@ -377,7 +377,7 @@ qint64 QBluetoothSocket::bytesToWrite() const
     \a service. If a connection is established, QBluetoothSocket enters ConnectedState and
     emits connected().
 
-    At any point, the socket can emit error() to signal that an error occurred.
+    At any point, the socket can emit errorOccurred() to signal that an error occurred.
 
     Note that most platforms require a pairing prior to connecting to the remote device. Otherwise
     the connection process may fail.
@@ -417,7 +417,7 @@ void QBluetoothSocket::connectToService(const QBluetoothServiceInfo &service, Op
     the \l ServiceLookupState and \l socketType() is always set to
     \l QBluetoothServiceInfo::RfcommProtocol.
 
-    At any point, the socket can emit error() to signal that an error occurred.
+    At any point, the socket can emit errorOccurred() to signal that an error occurred.
 
     Note that most platforms require a pairing prior to connecting to the remote device. Otherwise
     the connection process may fail.
@@ -438,7 +438,7 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
     The socket first enters ConnectingState, and attempts to connect to \a address. If a
     connection is established, QBluetoothSocket enters ConnectedState and emits connected().
 
-    At any point, the socket can emit error() to signal that an error occurred.
+    At any point, the socket can emit errorOccurred() to signal that an error occurred.
 
     On Android and BlueZ (version 5.46 or above), a connection to a service can not be established using a port.
     Calling this function will emit a \l {QBluetoothSocket::SocketError::ServiceNotFoundError}{ServiceNotFoundError}.
