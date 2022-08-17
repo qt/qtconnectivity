@@ -103,7 +103,7 @@ QT_BEGIN_NAMESPACE
 
     Unlike the \l QBluetoothDeviceDiscoveryAgent::finished() signal this
     signal will even be emitted when an error occurred during the service discovery. Therefore
-    it is recommended to check the \l error() signal to evaluate the success of the
+    it is recommended to check the \l errorOccurred() signal to evaluate the success of the
     service discovery discovery.
 */
 
