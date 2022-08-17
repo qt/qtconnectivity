@@ -320,7 +320,7 @@ QT_BEGIN_NAMESPACE
 
     This signal is emitted when the read request for \a characteristic successfully returned
     its \a value. The signal might be triggered by calling \l characteristicRead(). If
-    the read operation is not successful, the \l error() signal is emitted using the
+    the read operation is not successful, the \l errorOccurred() signal is emitted using the
     \l CharacteristicReadError flag.
 
     \note This signal is only emitted for Central Role related use cases.
@@ -335,13 +335,13 @@ QT_BEGIN_NAMESPACE
     This signal is emitted when the value of \a characteristic
     is successfully changed to \a newValue. The change must have been triggered
     by calling \l writeCharacteristic(). If the write operation is not successful,
-    the \l error() signal is emitted using the \l CharacteristicWriteError flag.
+    the \l errorOccurred() signal is emitted using the \l CharacteristicWriteError flag.
 
     The reception of the written signal can be considered as a sign that the target device
     received the to-be-written value and reports back the status of write request.
 
     \note If \l writeCharacteristic() is called using the \l WriteWithoutResponse mode,
-    this signal and the \l error() are never emitted.
+    this signal and the \l errorOccurred() are never emitted.
 
     \note This signal is only emitted for Central Role related use cases.
 
@@ -373,7 +373,7 @@ QT_BEGIN_NAMESPACE
 
     This signal is emitted when the read request for \a descriptor successfully returned
     its \a value. The signal might be triggered by calling \l descriptorRead(). If
-    the read operation is not successful, the \l error() signal is emitted using the
+    the read operation is not successful, the \l errorOccurred() signal is emitted using the
     \l DescriptorReadError flag.
 
     \note This signal is only emitted for Central Role related use cases.
