@@ -23,7 +23,6 @@ qt_add_executable(heartrate-server
 )
 
 set_target_properties(heartrate-server PROPERTIES
-    WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
 
