@@ -100,10 +100,25 @@ int main(int argc, char *argv[])
     //! [Service Data]
 
     //! [Start Advertising]
+    bool errorOccurred = false;
     const QScopedPointer<QLowEnergyController> leController(QLowEnergyController::createPeripheral());
+    auto errorHandler = [&leController,&errorOccurred](QLowEnergyController::Error errorCode)
+    {
+            qWarning().noquote().nospace() << errorCode << " occurred: "
+                << leController->errorString();
+            if (errorCode != QLowEnergyController::RemoteHostClosedError) {
+                qWarning("Heartrate-server quitting due to the error.");
+                errorOccurred = true;
+                QCoreApplication::quit();
+            }
+    };
+    QObject::connect(leController.data(), &QLowEnergyController::errorOccurred, errorHandler);
+
     QScopedPointer<QLowEnergyService> service(leController->addService(serviceData));
     leController->startAdvertising(QLowEnergyAdvertisingParameters(), advertisingData,
                                    advertisingData);
+    if (errorOccurred)
+        return -1;
     //! [Start Advertising]
 
     //! [Provide Heartbeat]
@@ -140,5 +155,6 @@ int main(int argc, char *argv[])
     };
     QObject::connect(leController.data(), &QLowEnergyController::disconnected, reconnect);
 
-    return app.exec();
+    const int retval = QCoreApplication::exec();
+    return errorOccurred ? -1 : retval;
 }
