@@ -128,6 +128,10 @@ void tst_QBluetoothDeviceDiscoveryAgent::deviceDiscoveryDebug(const QBluetoothDe
 
 void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
 {
+#ifdef Q_OS_ANDROID
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
+        QSKIP("Fails on Android 12 in CI (QTBUG-105803)");
+#endif
     QBluetoothDeviceDiscoveryAgent discoveryAgent;
 
     QVERIFY(discoveryAgent.error() == discoveryAgent.NoError);
@@ -400,6 +404,10 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryTimeout()
 
 void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryMethods()
 {
+#ifdef Q_OS_ANDROID
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
+        QSKIP("Fails on Android 12 in CI (QTBUG-105803)");
+#endif
     const QBluetoothLocalDevice localDevice;
     if (localDevice.allDevices().size() != 1) {
         // On iOS it returns 0 but we still have working BT.
