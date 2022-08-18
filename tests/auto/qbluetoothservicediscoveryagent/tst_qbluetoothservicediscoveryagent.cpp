@@ -115,6 +115,10 @@ void tst_QBluetoothServiceDiscoveryAgent::serviceError(const QBluetoothServiceDi
 
 void tst_QBluetoothServiceDiscoveryAgent::initTestCase()
 {
+#ifdef Q_OS_ANDROID
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
+        QSKIP("Fails on Android 12 in CI (QTBUG-105803)");
+#endif
     if (localDeviceAvailable) {
         QBluetoothDeviceDiscoveryAgent discoveryAgent;
 
