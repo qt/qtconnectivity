@@ -162,7 +162,12 @@ private:
     QMap<QBluetoothUuid, Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService>> m_openedServices;
 
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> getNativeService(const QBluetoothUuid &serviceUuid);
-    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> getNativeCharacteristic(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
+
+    using GattCharacteristicComPtr = Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic>;
+    using NativeCharacteristicCallback = std::function<void(GattCharacteristicComPtr)>;
+    HRESULT getNativeCharacteristic(const QBluetoothUuid &serviceUuid,
+                                    const QBluetoothUuid &charUuid,
+                                    NativeCharacteristicCallback callback);
 
     void registerForValueChanges(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
     void unregisterFromValueChanges();
@@ -181,6 +186,23 @@ private:
         Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);
     HRESULT onServiceDiscoveryFinished(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult *> *op,
                                        ABI::Windows::Foundation::AsyncStatus status);
+
+    void readCharacteristicHelper(const QSharedPointer<QLowEnergyServicePrivate> service,
+                                  const QLowEnergyHandle charHandle,
+                                  GattCharacteristicComPtr characteristic);
+    void readDescriptorHelper(const QSharedPointer<QLowEnergyServicePrivate> service,
+                              const QLowEnergyHandle charHandle,
+                              const QLowEnergyHandle descriptorHandle,
+                              GattCharacteristicComPtr characteristic);
+    void writeCharacteristicHelper(const QSharedPointer<QLowEnergyServicePrivate> service,
+                                   const QLowEnergyHandle charHandle, const QByteArray &newValue,
+                                   bool writeWithResponse,
+                                   GattCharacteristicComPtr characteristic);
+    void writeDescriptorHelper(const QSharedPointer<QLowEnergyServicePrivate> service,
+                               const QLowEnergyHandle charHandle,
+                               const QLowEnergyHandle descriptorHandle,
+                               const QByteArray &newValue,
+                               GattCharacteristicComPtr characteristic);
 
     void clearAllServices();
     void closeAndRemoveService(const QBluetoothUuid &uuid);

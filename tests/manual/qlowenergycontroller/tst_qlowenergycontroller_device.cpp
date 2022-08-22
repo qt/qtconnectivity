@@ -638,7 +638,9 @@ void tst_qlowenergycontroller_device::testNotificationAndIndication()
         service->writeDescriptor(cccd, newValue);
         QTRY_VERIFY(cccdWritten);
 
-        // check that there are no updates:
+        // wait for a moment in case there is a value change just happening,
+        // then check that there are no more notifications:
+        QTest::qWait(200);
         oldvalue = characteristic.value();
         for (int i = 0; i < 3; ++i) {
             QTest::qWait(100);
@@ -666,7 +668,9 @@ void tst_qlowenergycontroller_device::testNotificationAndIndication()
         service->writeDescriptor(cccd, newValue);
         QTRY_VERIFY(cccdWritten);
 
-        // check that there are no indications:
+        // wait for a moment in case there is a value change just happening,
+        // then check that there are no more indications:
+        QTest::qWait(200);
         oldvalue = characteristic.value();
         for (int i = 0; i < 3; ++i) {
             QTest::qWait(100);
