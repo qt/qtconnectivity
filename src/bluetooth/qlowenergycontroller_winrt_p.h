@@ -123,9 +123,12 @@ private:
         EventRegistrationToken token;
     };
     QList<ValueChangedEntry> mValueChangedTokens;
-    QMap<QBluetoothUuid, Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService>> m_openedServices;
 
-    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> getNativeService(const QBluetoothUuid &serviceUuid);
+    using GattDeviceServiceComPtr = Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService>;
+    QMap<QBluetoothUuid, GattDeviceServiceComPtr> m_openedServices;
+
+    using NativeServiceCallback = std::function<void(GattDeviceServiceComPtr)>;
+    HRESULT getNativeService(const QBluetoothUuid &serviceUuid, NativeServiceCallback callback);
 
     using GattCharacteristicComPtr = Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic>;
     using NativeCharacteristicCallback = std::function<void(GattCharacteristicComPtr)>;
@@ -167,6 +170,9 @@ private:
                                const QLowEnergyHandle descriptorHandle,
                                const QByteArray &newValue,
                                GattCharacteristicComPtr characteristic);
+    void discoverServiceDetailsHelper(const QBluetoothUuid &service,
+                                      QLowEnergyService::DiscoveryMode mode,
+                                      GattDeviceServiceComPtr deviceService);
 
     void clearAllServices();
     void closeAndRemoveService(const QBluetoothUuid &uuid);
