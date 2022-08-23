@@ -91,6 +91,27 @@ static const QLatin1String connectionCountCharUuid("9414ec2d-792f-46a2-a19e-186d
 static const QLatin1String mtuServiceUuid("9a9483eb-cf4f-4c32-9a6b-794238d5b483");
 static const QLatin1String mtuCharUuid("960d7e2a-a850-4a70-8064-cd74e9ccb6ff");
 
+static const QLatin1String repeatedWriteServiceUuid("72b12a31-98ea-406d-a89d-2c932d11ff67");
+static const QLatin1String repeatedWriteTargetCharUuid("2192ee43-6d17-4e78-b286-db2c3b696833");
+static const QLatin1String repeatedWriteNotifyCharUuid("b3f9d1a2-3d55-49c9-8b29-e09cec77ff86");
+
+static void establishNotifyOnWriteConnection(QLowEnergyService *svc)
+{
+    // Make sure that the value from the repeatedWriteTargetCharUuid
+    // characteristic is writted to the repeatedWriteNotifyCharUuid
+    // characteristic
+    Q_ASSERT(svc->serviceUuid() == QBluetoothUuid(repeatedWriteServiceUuid));
+    QObject::connect(svc, &QLowEnergyService::characteristicChanged, svc,
+                     [svc](const QLowEnergyCharacteristic &characteristic,
+                           const QByteArray &newValue)
+    {
+        if (characteristic.uuid() == QBluetoothUuid(repeatedWriteTargetCharUuid)) {
+            auto notifyChar = svc->characteristic(QBluetoothUuid(repeatedWriteNotifyCharUuid));
+            svc->writeCharacteristic(notifyChar, newValue);
+        }
+    });
+}
+
 int main(int argc, char *argv[])
 {
     qDebug() << "build:" << __DATE__ << __TIME__;
@@ -278,6 +299,56 @@ int main(int argc, char *argv[])
         serviceDefinitions << serviceData;
     }
 
+    {
+        // repeated characteristic write service
+        //
+        // This service offers an 8 bytes large characteristic which can
+        // be read and written. Once the value is updated, it writes the
+        // same value to the other characteristic, which notifies the client
+        // about its change. This way we can make sure that all write were
+        // successful and happened in the right order.
+        // We can't use one characteristics for writing and notification,
+        // because on most backends when the characteristics was written
+        // by the client, there will be no notification about it.
+        QLowEnergyServiceData serviceData;
+        serviceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
+        serviceData.setUuid(QBluetoothUuid(repeatedWriteServiceUuid));
+
+        {
+            // The characteristics to be written by the client.
+            QLowEnergyCharacteristicData charData;
+            charData.setUuid(QBluetoothUuid(repeatedWriteTargetCharUuid));
+            QByteArray initialValue(8, 0);
+            charData.setValue(initialValue);
+            charData.setValueLength(8, 8);
+            charData.setProperties(QLowEnergyCharacteristic::PropertyType::Read
+                                   | QLowEnergyCharacteristic::PropertyType::Write);
+
+            serviceData.addCharacteristic(charData);
+        }
+        {
+            // The characteristics written by the server,
+            // it will send notifications to the client.
+            QLowEnergyCharacteristicData charData;
+            charData.setUuid(QBluetoothUuid(repeatedWriteNotifyCharUuid));
+            QByteArray initialValue(8, 0);
+            charData.setValue(initialValue);
+            charData.setValueLength(8, 8);
+            charData.setProperties(QLowEnergyCharacteristic::PropertyType::Read
+                                   | QLowEnergyCharacteristic::PropertyType::Write
+                                   | QLowEnergyCharacteristic::PropertyType::Notify);
+
+            const QLowEnergyDescriptorData clientConfig(
+                    QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration,
+                    QLowEnergyCharacteristic::CCCDDisable);
+            charData.addDescriptor(clientConfig);
+
+            serviceData.addCharacteristic(charData);
+        }
+
+        serviceDefinitions << serviceData;
+    }
+
 #ifndef Q_OS_IOS
     auto localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.isEmpty()) {
@@ -316,6 +387,8 @@ int main(int argc, char *argv[])
         services.emplaceBack(leController->addService(serviceData));
     }
 
+    establishNotifyOnWriteConnection(services[5].get());
+
     leController->startAdvertising(QLowEnergyAdvertisingParameters(), advertisingData,
                                    advertisingData);
 
@@ -326,6 +399,7 @@ int main(int argc, char *argv[])
             services[i].reset(leController->addService(serviceDefinitions[i]));
         }
 
+        establishNotifyOnWriteConnection(services[5].get());
 
         {
             // set connection counter
