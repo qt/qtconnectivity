@@ -32,6 +32,11 @@ static const QLatin1String
 static const QLatin1String connectionCountServiceUuid("78c61a07-a0f9-4b92-be2d-2570d8dbf010");
 static const QLatin1String connectionCountCharUuid("9414ec2d-792f-46a2-a19e-186d0fb38a08");
 
+static const QLatin1String repeatedWriteServiceUuid("72b12a31-98ea-406d-a89d-2c932d11ff67");
+static const QLatin1String repeatedWriteTargetCharUuid("2192ee43-6d17-4e78-b286-db2c3b696833");
+static const QLatin1String repeatedWriteNotifyCharUuid("b3f9d1a2-3d55-49c9-8b29-e09cec77ff86");
+
+
 
 #if defined(QT_ANDROID_BLUETOOTH) || defined(QT_WINRT_BLUETOOTH) || defined(Q_OS_DARWIN)
 #define QT_BLUETOOTH_MTU_SUPPORTED
@@ -79,6 +84,7 @@ private slots:
     void readDuringServiceDiscovery();
     void readNotificationAndIndicationProperty();
     void testNotificationAndIndication();
+    void testRepeatedCharacteristicsWrite();
 
 public:
     void checkconnectionCounter(std::unique_ptr<QLowEnergyController> &control);
@@ -652,6 +658,83 @@ void tst_qlowenergycontroller_device::testNotificationAndIndication()
             QCOMPARE(characteristic.value(), oldvalue);
         }
     }
+}
+
+void tst_qlowenergycontroller_device::testRepeatedCharacteristicsWrite()
+{
+    // This test generates multiple consecutive writes to the same characteristic
+    // and waits for the notifications (on other characteristic) with the same
+    // values. After that it verifies that the received values are the same (and
+    // in the same order) as written values. The server writes each received
+    // value to a notifying characteristic, which allows us to perform the check.
+
+    // Discover services
+    QVERIFY(mController->services().isEmpty());
+    mController->discoverServices();
+    QTRY_COMPARE(mController->state(), QLowEnergyController::DiscoveredState);
+
+    checkconnectionCounter(mController);
+
+    // Get service object.
+    QSharedPointer<QLowEnergyService> service(mController->createServiceObject(
+            QBluetoothUuid(repeatedWriteServiceUuid)));
+    QVERIFY(service != nullptr);
+    service->discoverDetails(QLowEnergyService::FullDiscovery);
+    QTRY_COMPARE(service->state(), QLowEnergyService::ServiceState::RemoteServiceDiscovered);
+
+    // Enable notification.
+    QLowEnergyCharacteristic notifyChar =
+            service->characteristic(QBluetoothUuid(repeatedWriteNotifyCharUuid));
+    const auto notifyOrIndicate = QLowEnergyCharacteristic::PropertyType::Notify
+            | QLowEnergyCharacteristic::PropertyType::Indicate;
+    QCOMPARE(notifyChar.properties() & notifyOrIndicate,
+             QLowEnergyCharacteristic::PropertyType::Notify);
+
+    QLowEnergyDescriptor cccd = notifyChar.clientCharacteristicConfiguration();
+    QVERIFY(cccd.isValid());
+
+    QObject dummy; // for lifetime management
+    bool cccdWritten = false;
+    connect(service.get(), &QLowEnergyService::descriptorWritten, &dummy,
+            [&cccdWritten](const QLowEnergyDescriptor &info, const QByteArray &) {
+                if (info.uuid()
+                    == QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration) {
+                    cccdWritten = true;
+                }
+            });
+    service->writeDescriptor(cccd, QLowEnergyCharacteristic::CCCDEnableNotification);
+    QTRY_VERIFY(cccdWritten);
+
+    // Track the notifications of value changes.
+    QList<QByteArray> receivedValues;
+    connect(service.get(), &QLowEnergyService::characteristicChanged, &dummy,
+            [&receivedValues](const QLowEnergyCharacteristic &characteristic,
+                              const QByteArray &value)
+    {
+        if (characteristic.uuid() == QBluetoothUuid(repeatedWriteNotifyCharUuid)) {
+            receivedValues.push_back(value);
+        }
+    });
+
+    // Write characteristics multiple times. This shouldn't crash, and all
+    // values should be written. We use the notifications to track it.
+    receivedValues.clear();
+    QList<QByteArray> sentValues;
+    QLowEnergyCharacteristic writeChar =
+            service->characteristic(QBluetoothUuid(repeatedWriteTargetCharUuid));
+    static const int totalWrites = 50;
+    QByteArray value(8, 0);
+    for (int i = 0; i < totalWrites; ++i) {
+        value[0] += 1;
+        value[7] += 1;
+        service->writeCharacteristic(writeChar, value);
+        sentValues.push_back(value);
+    }
+
+    // We expect to get notifications about all writes.
+    // We set a large timeout to be on a safe side.
+    QTRY_COMPARE_WITH_TIMEOUT(receivedValues.size(), totalWrites, 60000);
+    QCOMPARE(receivedValues, sentValues);
 }
 
 QTEST_MAIN(tst_qlowenergycontroller_device)
