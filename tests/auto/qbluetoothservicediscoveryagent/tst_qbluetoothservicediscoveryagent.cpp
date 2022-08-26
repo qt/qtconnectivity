@@ -115,9 +115,9 @@ void tst_QBluetoothServiceDiscoveryAgent::serviceError(const QBluetoothServiceDi
 
 void tst_QBluetoothServiceDiscoveryAgent::initTestCase()
 {
-#ifdef Q_OS_ANDROID
+#ifdef ANDROID_CI_TEST_ENVIRONMENT
     if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
-        QSKIP("Fails on Android 12 in CI (QTBUG-105803)");
+        QSKIP("Skipping test on Android 12+, emulator on CI can timeout waiting for user input");
 #endif
     if (localDeviceAvailable) {
         QBluetoothDeviceDiscoveryAgent discoveryAgent;

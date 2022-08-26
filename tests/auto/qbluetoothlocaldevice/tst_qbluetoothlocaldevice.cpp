@@ -102,9 +102,9 @@ void tst_QBluetoothLocalDevice::initTestCase()
 
 void tst_QBluetoothLocalDevice::tst_powerOn()
 {
-#ifdef Q_OS_ANDROID
+#ifdef ANDROID_CI_TEST_ENVIRONMENT
     if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
-        QSKIP("Skipping test on Android 12+, it can timeout waiting for user input (QTBUG-104914)");
+        QSKIP("Skipping test on Android 12+, emulator on CI can timeout waiting for user input");
 #endif
 #ifdef Q_OS_OSX
     QSKIP("Not possible on OS X");
@@ -138,9 +138,9 @@ void tst_QBluetoothLocalDevice::tst_powerOn()
 
 void tst_QBluetoothLocalDevice::tst_powerOff()
 {
-#ifdef Q_OS_ANDROID
+#ifdef ANDROID_CI_TEST_ENVIRONMENT
     if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
-        QSKIP("Skipping test on Android 12+, it can timeout waiting for user input (QTBUG-104914)");
+        QSKIP("Skipping test on Android 12+, emulator on CI can timeout waiting for user input");
 #endif
 #ifdef Q_OS_OSX
     QSKIP("Not possible on OS X");
@@ -200,9 +200,9 @@ void tst_QBluetoothLocalDevice::tst_hostModes_data()
 
 void tst_QBluetoothLocalDevice::tst_hostModes()
 {
-#ifdef Q_OS_ANDROID
+#ifdef ANDROID_CI_TEST_ENVIRONMENT
     if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
-        QSKIP("Skipping test on Android 12+, it can timeout waiting for user input (QTBUG-104914)");
+        QSKIP("Skipping test on Android 12+, emulator on CI can timeout waiting for user input");
 #endif
 #ifdef Q_OS_OSX
     QSKIP("Not possible on OS X");
@@ -383,10 +383,9 @@ void tst_QBluetoothLocalDevice::tst_pairDevice_data()
 
 void tst_QBluetoothLocalDevice::tst_pairDevice()
 {
-#ifdef Q_OS_ANDROID
-    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31) {
-        QSKIP("Skipping test on Android 12+, it can timeout waiting for user input (QTBUG-104914)");
-    }
+#ifdef ANDROID_CI_TEST_ENVIRONMENT
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
+        QSKIP("Skipping test on Android 12+, emulator on CI can timeout waiting for user input");
 #endif
 #if defined(Q_OS_MACOS)
     QSKIP("The pair device test fails on macOS");
