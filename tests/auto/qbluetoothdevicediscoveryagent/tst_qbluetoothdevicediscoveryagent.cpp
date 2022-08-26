@@ -128,9 +128,9 @@ void tst_QBluetoothDeviceDiscoveryAgent::deviceDiscoveryDebug(const QBluetoothDe
 
 void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
 {
-#ifdef Q_OS_ANDROID
+#ifdef ANDROID_CI_TEST_ENVIRONMENT
     if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
-        QSKIP("Fails on Android 12 in CI (QTBUG-105803)");
+        QSKIP("Skipping test on Android 12+, emulator on CI can timeout waiting for user input");
 #endif
     QBluetoothDeviceDiscoveryAgent discoveryAgent;
 
@@ -404,9 +404,9 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryTimeout()
 
 void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryMethods()
 {
-#ifdef Q_OS_ANDROID
+#ifdef ANDROID_CI_TEST_ENVIRONMENT
     if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
-        QSKIP("Fails on Android 12 in CI (QTBUG-105803)");
+        QSKIP("Skipping test on Android 12+, emulator on CI can timeout waiting for user input");
 #endif
     const QBluetoothLocalDevice localDevice;
     if (localDevice.allDevices().size() != 1) {
