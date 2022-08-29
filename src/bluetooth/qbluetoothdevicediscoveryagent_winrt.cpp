@@ -263,8 +263,8 @@ private:
     std::shared_ptr<AdvertisementWatcherWrapper> createAdvertisementWatcher();
 
     // invokable methods for handling finish conditions
-    Q_INVOKABLE void incrementPendingDevicesCount();
-    Q_INVOKABLE void decrementPendingDevicesCountAndCheckFinished();
+    Q_INVOKABLE void decrementPendingDevicesCountAndCheckFinished(
+            std::shared_ptr<QWinRTBluetoothDeviceDiscoveryWorker> worker);
 
 Q_SIGNALS:
     void deviceFound(const QBluetoothDeviceInfo &info);
@@ -308,15 +308,13 @@ private:
     QTimer *m_leScanTimer = nullptr;
 };
 
-static void invokeIncrementPendingDevicesCount(QObject *context)
+static void invokeDecrementPendingDevicesCountAndCheckFinished(
+        std::shared_ptr<QWinRTBluetoothDeviceDiscoveryWorker> worker)
 {
-    QMetaObject::invokeMethod(context, "incrementPendingDevicesCount", Qt::QueuedConnection);
-}
-
-static void invokeDecrementPendingDevicesCountAndCheckFinished(QObject *context)
-{
-    QMetaObject::invokeMethod(context, "decrementPendingDevicesCountAndCheckFinished",
-                              Qt::QueuedConnection);
+    QMetaObject::invokeMethod(worker.get(), "decrementPendingDevicesCountAndCheckFinished",
+                              Qt::QueuedConnection,
+                              Q_ARG(std::shared_ptr<QWinRTBluetoothDeviceDiscoveryWorker>,
+                                    worker));
 }
 
 QWinRTBluetoothDeviceDiscoveryWorker::QWinRTBluetoothDeviceDiscoveryWorker(
@@ -482,7 +480,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::onAdvertisementDataReceived(
             m_foundLEDevicesMap.insert(address, info);
         }
     }
-    invokeIncrementPendingDevicesCount(this); // as if we discovered a new LE device
+    ++m_pendingDevices; // as if we discovered a new LE device
     auto thisPtr = shared_from_this();
     auto asyncOp = BluetoothLEDevice::FromBluetoothAddressAsync(address);
     asyncOp.Completed([thisPtr, address](auto &&op, AsyncStatus status) {
@@ -497,7 +495,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::onAdvertisementDataReceived(
             // status != Completed or failed to extract result
             qCDebug(QT_BT_WINDOWS) << "Failed to get LE device from address"
                                    << QBluetoothAddress(address);
-            invokeDecrementPendingDevicesCountAndCheckFinished(thisPtr.get());
+            invokeDecrementPendingDevicesCountAndCheckFinished(thisPtr);
         }
     });
 }
@@ -560,7 +558,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::getClassicDeviceFromId(const winrt::h
             }
             // status != Completed or failed to extract result
             qCDebug(QT_BT_WINDOWS) << "Failed to get Classic device from id";
-            invokeDecrementPendingDevicesCountAndCheckFinished(thisPtr.get());
+            invokeDecrementPendingDevicesCountAndCheckFinished(thisPtr);
         }
     });
 }
@@ -585,7 +583,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::handleClassicDevice(const BluetoothDe
             }
             // Failed to get services
             qCDebug(QT_BT_WINDOWS) << "Failed to get RFCOMM services for device" << btName;
-            invokeDecrementPendingDevicesCountAndCheckFinished(thisPtr.get());
+            invokeDecrementPendingDevicesCountAndCheckFinished(thisPtr);
         }
     });
 }
@@ -596,8 +594,9 @@ void QWinRTBluetoothDeviceDiscoveryWorker::handleRfcommServices(
         const QString &name, uint32_t classOfDeviceInt)
 {
     // need to perform the check even if some of the operations fails
-    auto guard = qScopeGuard([this]() {
-        invokeDecrementPendingDevicesCountAndCheckFinished(this);
+    auto shared = shared_from_this();
+    auto guard = qScopeGuard([shared]() {
+        invokeDecrementPendingDevicesCountAndCheckFinished(shared);
     });
     Q_UNUSED(guard); // to suppress warning
 
@@ -630,16 +629,15 @@ void QWinRTBluetoothDeviceDiscoveryWorker::handleRfcommServices(
                               Q_ARG(QBluetoothDeviceInfo, info));
 }
 
-void QWinRTBluetoothDeviceDiscoveryWorker::incrementPendingDevicesCount()
-{
-    ++m_pendingDevices;
-}
-
-void QWinRTBluetoothDeviceDiscoveryWorker::decrementPendingDevicesCountAndCheckFinished()
+void QWinRTBluetoothDeviceDiscoveryWorker::decrementPendingDevicesCountAndCheckFinished(
+        std::shared_ptr<QWinRTBluetoothDeviceDiscoveryWorker> worker)
 {
     --m_pendingDevices;
     if (isFinished())
         finishDiscovery();
+    // Worker is passed here simply to make sure that the object is still alive
+    // when we call this method via QObject::invoke().
+    Q_UNUSED(worker)
 }
 
 // this function executes in main worker thread
@@ -659,7 +657,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::getLowEnergyDeviceFromId(const winrt:
             }
             // status != Completed or failed to extract result
             qCDebug(QT_BT_WINDOWS) << "Failed to get LE device from id";
-            invokeDecrementPendingDevicesCountAndCheckFinished(thisPtr.get());
+            invokeDecrementPendingDevicesCountAndCheckFinished(thisPtr);
         }
     });
 }
@@ -691,7 +689,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::handleLowEnergyDevice(const Bluetooth
     // Use the services obtained from the advertisement data if the device is not paired
     if (!isPaired) {
         info.setServiceUuids(adInfo.services);
-        invokeDecrementPendingDevicesCountAndCheckFinished(this);
+        invokeDecrementPendingDevicesCountAndCheckFinished(shared_from_this());
         invokeDeviceFoundWithDebug(info);
     } else {
         auto asyncOp = device.GetGattServicesAsync();
@@ -706,7 +704,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::handleLowEnergyDevice(const Bluetooth
             }
             // Failed to get services
             qCDebug(QT_BT_WINDOWS) << "Failed to get GATT services for device" << info.name();
-            invokeDecrementPendingDevicesCountAndCheckFinished(thisPtr.get());
+            invokeDecrementPendingDevicesCountAndCheckFinished(thisPtr);
         });
     }
 }
@@ -716,8 +714,9 @@ void QWinRTBluetoothDeviceDiscoveryWorker::handleGattServices(
         const GattDeviceServicesResult &servicesResult, QBluetoothDeviceInfo &info)
 {
     // need to perform the check even if some of the operations fails
-    auto guard = qScopeGuard([this]() {
-        invokeDecrementPendingDevicesCountAndCheckFinished(this);
+    auto shared = shared_from_this();
+    auto guard = qScopeGuard([shared]() {
+        invokeDecrementPendingDevicesCountAndCheckFinished(shared);
     });
     Q_UNUSED(guard); // to suppress warning
 
