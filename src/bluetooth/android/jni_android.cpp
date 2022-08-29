@@ -215,7 +215,8 @@ static bool registerNatives()
                                    LEHUB_SCOPED_METHOD(lowEnergy_characteristicWritten),
                                    LEHUB_SCOPED_METHOD(lowEnergy_descriptorWritten),
                                    LEHUB_SCOPED_METHOD(lowEnergy_characteristicChanged),
-                                   LEHUB_SCOPED_METHOD(lowEnergy_serviceError)
+                                   LEHUB_SCOPED_METHOD(lowEnergy_serviceError),
+                                   LEHUB_SCOPED_METHOD(lowEnergy_remoteRssiRead)
                                }))
     {
         __android_log_print(ANDROID_LOG_FATAL, logTag,

@@ -37,9 +37,14 @@ static const QLatin1String repeatedWriteTargetCharUuid("2192ee43-6d17-4e78-b286-
 static const QLatin1String repeatedWriteNotifyCharUuid("b3f9d1a2-3d55-49c9-8b29-e09cec77ff86");
 
 
-
+// With the defines below some test cases are picked on at compile-time as opposed to runtime skips
+// to avoid the lengthy init() and clean() executions
 #if defined(QT_ANDROID_BLUETOOTH) || defined(QT_WINRT_BLUETOOTH) || defined(Q_OS_DARWIN)
 #define QT_BLUETOOTH_MTU_SUPPORTED
+#endif
+
+#if defined(QT_ANDROID_BLUETOOTH) || defined(Q_OS_DARWIN)
+#define QT_BLUETOOTH_RSSI_SUPPORTED
 #endif
 
 #if defined(QT_BLUETOOTH_MTU_SUPPORTED)
@@ -79,6 +84,9 @@ private slots:
 
 #if defined(QT_BLUETOOTH_MTU_SUPPORTED)
     void checkMtuNegotiation();
+#endif
+#if defined(QT_BLUETOOTH_RSSI_SUPPORTED)
+    void rssiRead();
 #endif
     void readWriteLargeCharacteristic();
     void readDuringServiceDiscovery();
@@ -229,8 +237,6 @@ void tst_qlowenergycontroller_device::readServerPlatform()
 
 
 #if defined(QT_BLUETOOTH_MTU_SUPPORTED)
-// Don't use QSKIP here as that
-// would still cause lengthy init() and clean() executions.
 void tst_qlowenergycontroller_device::checkMtuNegotiation()
 {
     // service discovery, including MTU negotiation
@@ -267,8 +273,124 @@ void tst_qlowenergycontroller_device::checkMtuNegotiation()
         QCOMPARE(mtu, mController->mtu());
 }
 #endif
-
 #undef QT_BLUETOOTH_MTU_SUPPORTED
+
+#if defined(QT_BLUETOOTH_RSSI_SUPPORTED)
+
+#define READ_AND_VERIFY_RSSI_VALUE \
+        errorSpy.clear(); \
+        rssiSpy.clear();  \
+        mController->readRssi(); \
+        QTRY_VERIFY(!rssiSpy.isEmpty()); \
+        QVERIFY(errorSpy.isEmpty()); \
+        rssi = rssiSpy.takeFirst().at(0).toInt(); \
+        QCOMPARE_GE(rssi, -127); \
+        QCOMPARE_LE(rssi, 127);  \
+
+void tst_qlowenergycontroller_device::rssiRead()
+{
+    QSignalSpy errorSpy(mController.get(), &QLowEnergyController::errorOccurred);
+    QSignalSpy rssiSpy(mController.get(), &QLowEnergyController::rssiRead);
+    int rssi = 1000; // valid values are -127..127
+
+    // 1) Read RSSI in connected state
+    QCOMPARE(mController->state(), QLowEnergyController::ConnectedState);
+    READ_AND_VERIFY_RSSI_VALUE;
+    // Check that the value changes. This might seem flaky with stationary bluetooth
+    // devices but in practice the RSSI constantly fluctuates
+    const int initialRssi = rssi;
+    for (int attempt = 1; attempt < 20; attempt++) {
+        READ_AND_VERIFY_RSSI_VALUE;
+        QTest::qWait(200); // Provide a bit time for the RSSI to change
+        if (rssi != initialRssi)
+            break;
+    }
+    QVERIFY(rssi != initialRssi);
+
+    // 2) Read RSSI while discovering services
+    QVERIFY(mController->services().isEmpty());
+    mController->discoverServices();
+    QCOMPARE(mController->state(), QLowEnergyController::DiscoveringState);
+    READ_AND_VERIFY_RSSI_VALUE;
+
+    // 3) Read RSSI after services have been discovered
+    QTRY_COMPARE(mController->state(), QLowEnergyController::DiscoveredState);
+    READ_AND_VERIFY_RSSI_VALUE;
+
+    // 4) Read RSSI while discovering service details
+    QSharedPointer<QLowEnergyService> service(mController->createServiceObject(
+            QBluetoothUuid(repeatedWriteServiceUuid)));
+    QVERIFY(service != nullptr);
+    service->discoverDetails(QLowEnergyService::FullDiscovery);
+    QCOMPARE(service->state(), QLowEnergyService::ServiceState::RemoteServiceDiscovering);
+    READ_AND_VERIFY_RSSI_VALUE;
+
+    // 5) Read RSSI after service detail discovery
+    QTRY_COMPARE(service->state(), QLowEnergyService::ServiceState::RemoteServiceDiscovered);
+    READ_AND_VERIFY_RSSI_VALUE;
+
+    checkconnectionCounter(mController);
+
+    // 6) Read RSSI amidst characteristic reads and writes
+    QSignalSpy writeSpy(service.get(), &QLowEnergyService::characteristicWritten);
+    QSignalSpy readSpy(service.get(), &QLowEnergyService::characteristicRead);
+    auto characteristic = service->characteristic(QBluetoothUuid(repeatedWriteTargetCharUuid));
+    QByteArray value(8, 'a');
+    service->writeCharacteristic(characteristic, value);
+    READ_AND_VERIFY_RSSI_VALUE;
+    QTRY_VERIFY(!writeSpy.isEmpty());
+
+    service->readCharacteristic(characteristic);
+    READ_AND_VERIFY_RSSI_VALUE;
+    QTRY_VERIFY(!readSpy.isEmpty());
+
+    // A bit of stress-testing to check that read/write and
+    // RSSI reading don't interfere with one another
+    writeSpy.clear();
+    readSpy.clear();
+    rssiSpy.clear();
+    errorSpy.clear();
+    const int TIMES = 5;
+    for (int i = 0; i < TIMES; i++) {
+        mController->readRssi();
+        service->writeCharacteristic(characteristic, value);
+        mController->readRssi();
+        service->readCharacteristic(characteristic);
+    }
+    QTRY_COMPARE(writeSpy.size(), TIMES);
+    QTRY_COMPARE(readSpy.size(), TIMES);
+#if defined(Q_OS_ANDROID)
+    QTRY_COMPARE(rssiSpy.size(), TIMES * 2);
+#else
+    // On darwin several pending requests will get one callback
+    QTRY_COMPARE_GE(rssiSpy.size(), 1);
+#endif
+    QVERIFY(errorSpy.isEmpty());
+
+    // 7) Disconnect the device and verify we get error for RSSI read
+    errorSpy.clear();
+    rssiSpy.clear();
+    mController->disconnectFromDevice();
+    // First right after requesting disconnect
+    mController->readRssi();
+    QTRY_COMPARE(errorSpy.size(), 1);
+    QCOMPARE(errorSpy.takeFirst().at(0).value<QLowEnergyController::Error>(),
+             QLowEnergyController::Error::RssiReadError);
+    QCOMPARE(mController->error(), QLowEnergyController::Error::RssiReadError);
+    QVERIFY(rssiSpy.isEmpty());
+
+    // Then once the disconnection is complete
+    QTRY_COMPARE(mController->state(), QLowEnergyController::UnconnectedState);
+    errorSpy.clear();
+    mController->readRssi();
+    QTRY_COMPARE(errorSpy.size(), 1);
+    QCOMPARE(errorSpy.takeFirst().at(0).value<QLowEnergyController::Error>(),
+             QLowEnergyController::Error::RssiReadError);
+    QCOMPARE(mController->error(), QLowEnergyController::Error::RssiReadError);
+    QVERIFY(rssiSpy.isEmpty());
+}
+#endif
+#undef QT_BLUETOOTH_RSSI_SUPPORTED
 
 void tst_qlowenergycontroller_device::checkconnectionCounter(
         std::unique_ptr<QLowEnergyController> &mController)

@@ -89,6 +89,20 @@ void LowEnergyNotificationHub::lowEnergy_mtuChanged(
     QMetaObject::invokeMethod(hub, "mtuChanged", Qt::QueuedConnection, Q_ARG(int, mtu));
 }
 
+void LowEnergyNotificationHub::lowEnergy_remoteRssiRead(JNIEnv *, jobject, jlong qtObject,
+                                                        int rssi, bool success)
+{
+    lock.lockForRead();
+    LowEnergyNotificationHub *hub = hubMap()->value(qtObject);
+    lock.unlock();
+    if (!hub)
+        return;
+
+    QMetaObject::invokeMethod(hub, "remoteRssiRead", Qt::QueuedConnection,
+                              Q_ARG(int, rssi), Q_ARG(bool, success));
+}
+
+
 void LowEnergyNotificationHub::lowEnergy_servicesDiscovered(
         JNIEnv *, jobject, jlong qtObject, jint errorCode, jstring uuidList)
 {

@@ -90,6 +90,7 @@ private slots:
     void connectionUpdated(QLowEnergyController::ControllerState newState,
                            QLowEnergyController::Error errorCode);
     void mtuChanged(int mtu);
+    void remoteRssiRead(int rssi, bool success);
     void servicesDiscovered(QLowEnergyController::Error errorCode,
                             const QString &foundServices);
     void serviceDetailsDiscoveryFinished(const QString& serviceUuid,

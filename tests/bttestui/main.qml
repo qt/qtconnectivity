@@ -235,6 +235,7 @@ Flickable {
                         Text { text: "SState:" + device.centralServiceState }
                         Text { text: "SError:" + device.centralServiceError }
                         Text { text: "Subscribed: " + device.centralSubscribed }
+                        Text { text: "RSSI: " + device.centralRSSI }
                     }
                 }
                 // The ordinal numbers below indicate the typical sequence
@@ -274,6 +275,10 @@ Flickable {
                 Button {
                     buttonText: "DeleteController"
                     onClicked: device.centralDelete()
+                }
+                Button {
+                    buttonText: "ReadRSSI"
+                    onClicked: device.centralReadRSSI()
                 }
             }
             Column {

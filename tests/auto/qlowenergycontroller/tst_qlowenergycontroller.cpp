@@ -49,6 +49,7 @@ private slots:
     void tst_readWriteDescriptor();
     void tst_customProgrammableDevice();
     void tst_errorCases();
+    void tst_rssiError();
 private:
     void verifyServiceProperties(const QLowEnergyService *info);
     bool verifyClientCharacteristicValue(const QByteArray& value);
@@ -2733,6 +2734,34 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     control->disconnectFromDevice();
     QTRY_COMPARE(control->state(), QLowEnergyController::UnconnectedState);
     QCOMPARE(control->error(), QLowEnergyController::NoError);
+}
+
+using namespace Qt::Literals::StringLiterals;
+
+void tst_QLowEnergyController::tst_rssiError()
+{
+    // Create unconnected/invalid controller instances and verify that
+    // reading RSSI value triggers error signal. For the actual
+    // RSSI read testing see tst_qlowenergycontroller_device
+
+    // Peripheral
+    std::unique_ptr<QLowEnergyController> peripheral{QLowEnergyController::createPeripheral()};
+    QSignalSpy peripheralErrorSpy(peripheral.get(), &QLowEnergyController::errorOccurred);
+    peripheral->readRssi();
+    QTRY_VERIFY(!peripheralErrorSpy.isEmpty());
+    QCOMPARE(peripheralErrorSpy.takeFirst().at(0).value<QLowEnergyController::Error>(),
+             QLowEnergyController::Error::RssiReadError);
+    QCOMPARE(peripheral->error(), QLowEnergyController::Error::RssiReadError);
+
+    // Central
+    QBluetoothDeviceInfo info(QBluetoothAddress{u"11:22:33:44:55:66"_s}, u"invalid"_s, 1);
+    std::unique_ptr<QLowEnergyController> central{QLowEnergyController::createCentral(info)};
+    QSignalSpy centralErrorSpy(central.get(), &QLowEnergyController::errorOccurred);
+    central->readRssi();
+    QTRY_VERIFY(!centralErrorSpy.isEmpty());
+    QCOMPARE(centralErrorSpy.takeFirst().at(0).value<QLowEnergyController::Error>(),
+             QLowEnergyController::Error::RssiReadError);
+    QCOMPARE(central->error(), QLowEnergyController::Error::RssiReadError);
 }
 
 QTEST_MAIN(tst_QLowEnergyController)

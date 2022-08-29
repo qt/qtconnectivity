@@ -105,6 +105,10 @@ public:
     Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_advertisementError,
                                                  leServerAdvertisementError)
 
+    static void lowEnergy_remoteRssiRead(JNIEnv *, jobject, jlong qtObject, int rssi,
+                                         bool success);
+    Q_DECLARE_JNI_NATIVE_METHOD_IN_CURRENT_SCOPE(lowEnergy_remoteRssiRead, leRemoteRssiRead);
+
     QJniObject javaObject()
     {
         return jBluetoothLe;
@@ -114,6 +118,7 @@ signals:
     void connectionUpdated(QLowEnergyController::ControllerState newState,
             QLowEnergyController::Error errorCode);
     void mtuChanged(int mtu);
+    void remoteRssiRead(int rssi, bool success);
     void servicesDiscovered(QLowEnergyController::Error errorCode, const QString &uuids);
     void serviceDetailsDiscoveryFinished(const QString& serviceUuid,
             int startHandle, int endHandle);

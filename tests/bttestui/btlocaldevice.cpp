@@ -56,6 +56,7 @@ static constexpr const char* controllerErrorString[] = {
     "RemHostClosed",
     "AuthError",
     "MissingPerm",
+    "RssiError"
 };
 
 static constexpr const char* serviceStateString[] = {
@@ -95,6 +96,8 @@ BtLocalDevice::BtLocalDevice(QObject *parent)
         deviceAgent = new QBluetoothDeviceDiscoveryAgent(this);
         connect(deviceAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
                 this, &BtLocalDevice::deviceDiscovered);
+        connect(deviceAgent, &QBluetoothDeviceDiscoveryAgent::deviceUpdated,
+                this, &BtLocalDevice::deviceUpdated);
         connect(deviceAgent, &QBluetoothDeviceDiscoveryAgent::finished,
                 this, &BtLocalDevice::discoveryFinished);
         connect(deviceAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred, this,
@@ -266,6 +269,19 @@ void BtLocalDevice::deviceDiscovered(const QBluetoothDeviceInfo &info)
     if (info.name() == leRemotePeriphreralDeviceName) {
         qDebug() << "#### Matching LE peripheral device found";
         leRemotePeripheralDevice = info;
+        latestRSSI = QByteArray::number(info.rssi());
+        emit leChanged();
+    }
+}
+
+void BtLocalDevice::deviceUpdated(const QBluetoothDeviceInfo &info,
+                   QBluetoothDeviceInfo::Fields updateFields)
+{
+    if (info.name() == leRemotePeriphreralDeviceName
+            && updateFields & QBluetoothDeviceInfo::Field::RSSI) {
+        qDebug() << "#### LE peripheral RSSI updated during scan";
+        latestRSSI = QByteArray::number(info.rssi());
+        emit leChanged();
     }
 }
 
@@ -1067,6 +1083,11 @@ void BtLocalDevice::centralCreate()
         return;
     }
 
+    if (deviceAgent && deviceAgent->isActive()) {
+        qDebug() << "###### Stopping device discovery agent";
+        deviceAgent->stop();
+    }
+
     leCentralController.reset(QLowEnergyController::createCentral(leRemotePeripheralDevice));
     emit leChanged();
 
@@ -1077,11 +1098,19 @@ void BtLocalDevice::centralCreate()
 
     QObject::connect(leCentralController.get(), &QLowEnergyController::errorOccurred,
                      [](QLowEnergyController::Error error) {
-        qDebug() << "QLowEnergyController peripheral errorOccurred:" << error;
+        qDebug() << "QLowEnergyController central errorOccurred:" << error;
     });
     QObject::connect(leCentralController.get(), &QLowEnergyController::stateChanged,
                      [this](QLowEnergyController::ControllerState state) {
-        qDebug() << "QLowEnergyController peripheral stateChanged:" << state;
+        qDebug() << "QLowEnergyController central stateChanged:" << state;
+        if (state == QLowEnergyController::UnconnectedState)
+            latestRSSI = "N/A"_ba;
+        emit leChanged();
+    });
+    QObject::connect(leCentralController.get(), &QLowEnergyController::rssiRead,
+                     [this](qint16 rssi) {
+        qDebug() << "QLowEnergyController central RSSI updated:" << rssi;
+        latestRSSI = QByteArray::number(rssi);
         emit leChanged();
     });
 }
@@ -1222,6 +1251,7 @@ void BtLocalDevice::centralDelete()
 {
     qDebug() << "######" << "Delete central" << leCentralController.get();
     leCentralController.reset(nullptr);
+    latestRSSI = "(N/A)"_ba;
     emit leChanged();
 }
 
@@ -1284,6 +1314,19 @@ QByteArray BtLocalDevice::centralServiceError() const
         return "(N/A)"_ba;
 
     return serviceErrorString[leCentralService->error()];
+}
+
+void BtLocalDevice::centralReadRSSI() const
+{
+    qDebug() << "######" << "LE central readRSSI";
+    if (!leCentralController)
+        return;
+    leCentralController->readRssi();
+}
+
+QByteArray BtLocalDevice::centralRSSI() const
+{
+    return latestRSSI;
 }
 
 QByteArray BtLocalDevice::peripheralState() const

@@ -61,6 +61,7 @@ public class QtBluetoothLE {
     // handle values below zero are reserved for handle-independent requests
     private int HANDLE_FOR_RESET = -1;
     private int HANDLE_FOR_MTU_EXCHANGE = -2;
+    private int HANDLE_FOR_RSSI_READ = -3;
     private AtomicInteger handleForTimeout = new AtomicInteger(HANDLE_FOR_RESET); // implies not running by default
 
     private final int RUNNABLE_TIMEOUT = 3000; // 3 seconds
@@ -119,20 +120,24 @@ public class QtBluetoothLE {
                     intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1);
 
         if (bondState == BluetoothDevice.BOND_BONDING) {
-            if (pendingJob == null || pendingJob.jobType == IoJobType.Mtu)
+            if (pendingJob == null
+                || pendingJob.jobType == IoJobType.Mtu || pendingJob.jobType == IoJobType.Rssi) {
                     return;
+            }
 
             timeoutHandler.removeCallbacksAndMessages(null);
             handleForTimeout.set(HANDLE_FOR_RESET);
         } else if (previousBondState == BluetoothDevice.BOND_BONDING &&
             (bondState == BluetoothDevice.BOND_BONDED || bondState == BluetoothDevice.BOND_NONE)) {
-            if (pendingJob == null || pendingJob.jobType == IoJobType.Mtu)
+            if (pendingJob == null
+                || pendingJob.jobType == IoJobType.Mtu || pendingJob.jobType == IoJobType.Rssi) {
                 return;
+            }
 
-                readWriteQueue.addFirst(pendingJob);
-                pendingJob = null;
+            readWriteQueue.addFirst(pendingJob);
+            pendingJob = null;
 
-                performNextIO();
+            performNextIO();
         } else if (previousBondState == BluetoothDevice.BOND_BONDED
                    && bondState == BluetoothDevice.BOND_NONE) {
             // peripheral or central removed the bond information;
@@ -596,6 +601,24 @@ public class QtBluetoothLE {
         performNextIO();
     }
 
+    private synchronized void handleOnReadRemoteRssi(android.bluetooth.BluetoothGatt gatt,
+                                                     int rssi, int status)
+    {
+        Log.d(TAG, "RSSI read callback, rssi: " + rssi + ", status: " + status);
+        leRemoteRssiRead(qtObject, rssi, status == BluetoothGatt.GATT_SUCCESS);
+
+        boolean requestTimedOut = !handleForTimeout.compareAndSet(
+                modifiedReadWriteHandle(HANDLE_FOR_RSSI_READ, IoJobType.Rssi), HANDLE_FOR_RESET);
+        if (requestTimedOut) {
+            Log.w(TAG, "Late RSSI read reply after timeout was hit");
+            // Timeout has hit before this response -> ignore the response
+            // no need to unlock pendingJob -> the timeout has done that already
+            return;
+        }
+        pendingJob = null;
+        performNextIO();
+    }
+
     /*************************************************************/
     /* Service Discovery                                         */
     /*************************************************************/
@@ -657,10 +680,11 @@ public class QtBluetoothLE {
 //            System.out.println("onReliableWriteCompleted");
 //        }
 //
-//        public void onReadRemoteRssi(android.bluetooth.BluetoothGatt gatt,
-//                                     int rssi, int status) {
-//            System.out.println("onReadRemoteRssi");
-//        }
+        public void onReadRemoteRssi(android.bluetooth.BluetoothGatt gatt, int rssi, int status)
+        {
+            super.onReadRemoteRssi(gatt, rssi, status);
+            handleOnReadRemoteRssi(gatt, rssi, status);
+        }
 
         public void onMtuChanged(android.bluetooth.BluetoothGatt gatt, int mtu, int status)
         {
@@ -676,6 +700,27 @@ public class QtBluetoothLE {
         } else {
             return mSupportedMtu;
         }
+    }
+
+    // This function is called from Qt thread
+    public synchronized boolean readRemoteRssi() {
+        if (mBluetoothGatt == null)
+            return false;
+
+        // Reading of RSSI can sometimes be 'lost' especially if amidst
+        // characteristic reads/writes ('lost' here meaning that there is no callback).
+        // To avoid this schedule the RSSI read in the job queue.
+        ReadWriteJob newJob = new ReadWriteJob();
+        newJob.jobType = IoJobType.Rssi;
+        newJob.entry = null;
+
+        if (!readWriteQueue.add(newJob)) {
+            Log.w(TAG, "Cannot add remote RSSI read to queue" );
+            return false;
+        }
+
+        performNextIOThreaded();
+        return true;
     }
 
     // This function is called from Qt thread
@@ -794,7 +839,7 @@ public class QtBluetoothLE {
     private enum IoJobType
     {
         Read, Write, Mtu,
-        SkippedRead
+        SkippedRead, Rssi
         // a skipped read is a read which is not executed
         // introduced in Qt 6.2 to skip reads without changing service discovery logic
     }
@@ -1095,6 +1140,17 @@ public class QtBluetoothLE {
         return true;
     }
 
+    private boolean executeRemoteRssiRead()
+    {
+        if (mBluetoothGatt.readRemoteRssi()) {
+            Log.d(TAG, "RSSI read initiated");
+            return false;
+        }
+        Log.w(TAG, "Initiating remote RSSI read failed");
+        leRemoteRssiRead(qtObject, 0, false);
+        return true;
+    }
+
     /*
      * Already executed in GattCallback so executed by the HandlerThread. No need to
      * post it to the Hander.
@@ -1311,7 +1367,7 @@ public class QtBluetoothLE {
 
         performNextIOThreaded();
 
-        if (handle == HANDLE_FOR_MTU_EXCHANGE)
+        if (handle == HANDLE_FOR_MTU_EXCHANGE || handle == HANDLE_FOR_RSSI_READ)
             return;
 
         try {
@@ -1367,8 +1423,11 @@ public class QtBluetoothLE {
             return;
 
         nextJob = readWriteQueue.remove();
+        // MTU requests and RSSI reads are special cases
         if (nextJob.jobType == IoJobType.Mtu) {
-            handle = HANDLE_FOR_MTU_EXCHANGE; //mtu request is special case
+            handle = HANDLE_FOR_MTU_EXCHANGE;
+        } else if (nextJob.jobType == IoJobType.Rssi) {
+            handle = HANDLE_FOR_RSSI_READ;
         } else {
             switch (nextJob.entry.type) {
                 case Characteristic:
@@ -1402,6 +1461,8 @@ public class QtBluetoothLE {
                 break;
             case Mtu:
                 skip = executeMtuExchange();
+            case Rssi:
+                skip = executeRemoteRssiRead();
                 break;
         }
 
@@ -1413,7 +1474,7 @@ public class QtBluetoothLE {
                     modifiedReadWriteHandle(handle, nextJob.jobType)), RUNNABLE_TIMEOUT);
         }
 
-        if (nextJob.jobType != IoJobType.Mtu) {
+        if (nextJob.jobType != IoJobType.Mtu && nextJob.jobType != IoJobType.Rssi) {
             Log.w(TAG, "Performing queued job, handle: " + handle + " " + nextJob.jobType + " (" +
                     (nextJob.requestedWriteType == BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE) +
                    ") ValueKnown: " + nextJob.entry.valueKnown + " Skipping: " + skip +
@@ -1647,6 +1708,9 @@ public class QtBluetoothLE {
             case Mtu:
                 modifiedHandle = HANDLE_FOR_MTU_EXCHANGE;
                 break;
+            case Rssi:
+                modifiedHandle = HANDLE_FOR_RSSI_READ;
+                break;
         }
 
         return modifiedHandle;
@@ -1674,6 +1738,7 @@ public class QtBluetoothLE {
 
     public native void leConnectionStateChange(long qtObject, int wasErrorTransition, int newState);
     public native void leMtuChanged(long qtObject, int mtu);
+    public native void leRemoteRssiRead(long qtObject, int rssi, boolean success);
     public native void leServicesDiscovered(long qtObject, int errorCode, String uuidList);
     public native void leServiceDetailDiscoveryFinished(long qtObject, final String serviceUuid,
                                                         int startHandle, int endHandle);

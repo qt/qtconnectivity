@@ -21,12 +21,15 @@ public:
     ~BtLocalDevice();
     Q_PROPERTY(QString hostMode READ hostMode NOTIFY hostModeStateChanged)
     Q_PROPERTY(int secFlags READ secFlags WRITE setSecFlags NOTIFY secFlagsChanged)
+
     Q_PROPERTY(bool centralExists READ centralExists NOTIFY leChanged);
     Q_PROPERTY(bool centralSubscribed READ centralSubscribed NOTIFY leChanged);
     Q_PROPERTY(QByteArray centralState READ centralState NOTIFY leChanged);
     Q_PROPERTY(QByteArray centralError READ centralError NOTIFY leChanged);
     Q_PROPERTY(QByteArray centralServiceState READ centralServiceState NOTIFY leChanged);
     Q_PROPERTY(QByteArray centralServiceError READ centralServiceError NOTIFY leChanged);
+    Q_PROPERTY(QByteArray centralRSSI READ centralRSSI NOTIFY leChanged);
+
     Q_PROPERTY(QByteArray peripheralState READ peripheralState NOTIFY leChanged);
     Q_PROPERTY(QByteArray peripheralError READ peripheralError NOTIFY leChanged);
     Q_PROPERTY(QByteArray peripheralServiceState READ peripheralServiceState NOTIFY leChanged);
@@ -58,6 +61,8 @@ public slots:
 
     //QBluetoothDeviceDiscoveryAgent
     void deviceDiscovered(const QBluetoothDeviceInfo &info);
+    void deviceUpdated(const QBluetoothDeviceInfo &info,
+                       QBluetoothDeviceInfo::Fields updateFields);
     void discoveryFinished();
     void discoveryCanceled();
     void discoveryError(QBluetoothDeviceDiscoveryAgent::Error error);
@@ -113,6 +118,8 @@ public slots:
     QByteArray centralServiceState() const;
     QByteArray centralError() const;
     QByteArray centralServiceError() const;
+    void centralReadRSSI() const;
+    QByteArray centralRSSI() const;
 
     //QLowEnergyController peripheral
     void peripheralCreate();
@@ -151,6 +158,7 @@ private:
     QLowEnergyAdvertisingData leAdvertisingData;
     QLowEnergyServiceData leServiceData;
     QBluetoothDeviceInfo leRemotePeripheralDevice;
+    QByteArray latestRSSI = "N/A";
 };
 
 #endif // BTLOCALDEVICE_H

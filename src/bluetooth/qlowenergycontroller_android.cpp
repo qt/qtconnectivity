@@ -96,6 +96,8 @@ void QLowEnergyControllerPrivateAndroid::init()
                 this, &QLowEnergyControllerPrivateAndroid::characteristicChanged);
         connect(hub, &LowEnergyNotificationHub::serviceError,
                 this, &QLowEnergyControllerPrivateAndroid::serviceError);
+        connect(hub, &LowEnergyNotificationHub::remoteRssiRead,
+                this, &QLowEnergyControllerPrivateAndroid::remoteRssiRead);
     }
 }
 
@@ -363,6 +365,18 @@ void QLowEnergyControllerPrivateAndroid::mtuChanged(int mtu)
     emit q->mtuChanged(mtu);
 }
 
+void QLowEnergyControllerPrivateAndroid::remoteRssiRead(int rssi, bool success)
+{
+    Q_Q(QLowEnergyController);
+    if (success) {
+        // BT Core v5.3, 7.5.4, Vol 4, Part E
+        // The LE RSSI can take values -127..127 => narrowing to qint16 is safe
+        emit q->rssiRead(rssi);
+    } else {
+        qCDebug(QT_BT_ANDROID) << "Reading remote RSSI failed";
+        setError(QLowEnergyController::RssiReadError);
+    }
+}
 
 // called if server/peripheral
 void QLowEnergyControllerPrivateAndroid::peripheralConnectionUpdated(
@@ -1262,7 +1276,11 @@ int QLowEnergyControllerPrivateAndroid::mtu() const
 
 void QLowEnergyControllerPrivateAndroid::readRssi()
 {
-    Q_UNIMPLEMENTED();
+    if (!hub || !hub->javaObject().callMethod<jboolean>("readRemoteRssi")) {
+        qCWarning(QT_BT_ANDROID) << "request to read RSSI failed";
+        setError(QLowEnergyController::RssiReadError);
+        return;
+    }
 }
 
 QT_END_NAMESPACE
