@@ -35,7 +35,7 @@
 The NFC API provides connectivity between NFC enabled devices.
 
 Currently the API is supported on \l{Qt for Android}{Android},
-and \l{Qt for Linux/X11}{Linux} using \l {https://01.org/linux-nfc}{Neard} v0.14 or later.
+and \l{Qt for Linux/X11}{Linux} using \l {https://github.com/linux-nfc/neard}{Neard} v0.14 or later.
 
 \section1 Overview
 
