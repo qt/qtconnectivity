@@ -153,19 +153,22 @@ public:
     AdvertisementWatcherWrapper() {}
     ~AdvertisementWatcherWrapper()
     {
-        unsubscribeFromEvents();
         stop();
     }
     void init()
     {
         m_watcher.ScanningMode(BluetoothLEScanningMode::Active);
-        subscribeToEvents();
     }
-    void start() { m_watcher.Start(); }
+    void start() {
+        subscribeToEvents();
+        m_watcher.Start();
+    }
     void stop()
     {
-        if (canStop())
+        if (canStop()) {
+            unsubscribeFromEvents();
             m_watcher.Stop();
+        }
     }
 
 signals:
