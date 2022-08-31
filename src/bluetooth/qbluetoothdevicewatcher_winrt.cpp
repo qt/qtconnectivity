@@ -64,11 +64,7 @@ QBluetoothDeviceWatcherWinRT::QBluetoothDeviceWatcherWinRT(int id, winrt::hstrin
 
 QBluetoothDeviceWatcherWinRT::~QBluetoothDeviceWatcherWinRT()
 {
-    if (m_watcher && m_initialized) {
-        stop();
-        unsubscribeFromEvents();
-        m_initialized = false;
-    }
+    stop();
 }
 
 bool QBluetoothDeviceWatcherWinRT::init()
@@ -78,23 +74,23 @@ bool QBluetoothDeviceWatcherWinRT::init()
                  "Detection of Bluetooth devices might not work correctly.");
         return false;
     }
-    if (!m_initialized) {
-        subscribeToEvents();
-        m_initialized = true;
-    }
     return true;
 }
 
 void QBluetoothDeviceWatcherWinRT::start()
 {
-    if (m_watcher)
+    if (m_watcher) {
+        subscribeToEvents();
         m_watcher.Start();
+    }
 }
 
 void QBluetoothDeviceWatcherWinRT::stop()
 {
-    if (m_watcher && canStop())
+    if (m_watcher && canStop()) {
+        unsubscribeFromEvents();
         m_watcher.Stop();
+    }
 }
 
 void QBluetoothDeviceWatcherWinRT::subscribeToEvents()

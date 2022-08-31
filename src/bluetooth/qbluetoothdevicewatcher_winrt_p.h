@@ -91,7 +91,6 @@ private:
 
     const int m_id; // used to uniquely identify the wrapper
     winrt::Windows::Devices::Enumeration::DeviceWatcher m_watcher = nullptr;
-    bool m_initialized = false;
 
     winrt::event_token m_addedToken;
     winrt::event_token m_removedToken;
