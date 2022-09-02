@@ -440,7 +440,6 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
     //parameter to nil is considerably slower and is not recommended."
     //
     // ... but we'd like to have them all:
-    [peripheral setDelegate:self];
     managerState = CentralManagerDiscovering;
     [self watchAfter:peripheral timeout:OperationTimeout::serviceDiscovery];
     [peripheral discoverServices:nil];
@@ -1303,6 +1302,8 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
     }
 
     void([self mtu]);
+
+    [peripheral setDelegate:self];
 
     managerState = DarwinBluetooth::CentralManagerIdle;
     if (notifier)
