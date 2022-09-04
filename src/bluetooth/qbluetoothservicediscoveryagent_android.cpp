@@ -58,10 +58,8 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
       The logic below must change once there is more than one adapter.
     */
 
-    if (createAdapter) {
-        btAdapter = QJniObject::callStaticMethod<QtJniTypes::BluetoothAdapter>(
-                    QtJniTypes::className<QtJniTypes::BluetoothAdapter>(), "getDefaultAdapter");
-    }
+    if (createAdapter)
+        btAdapter = getDefaultBluetoothAdapter();
 
     if (!btAdapter.isValid())
         qCWarning(QT_BT_ANDROID) << "Platform does not support Bluetooth";

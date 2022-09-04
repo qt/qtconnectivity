@@ -41,12 +41,14 @@ Q_DECLARE_JNI_CLASS(BluetoothGattDescriptor, "android/bluetooth/BluetoothGattDes
 Q_DECLARE_JNI_CLASS(BluetoothGattCharacteristic, "android/bluetooth/BluetoothGattCharacteristic")
 Q_DECLARE_JNI_CLASS(BluetoothDevice, "android/bluetooth/BluetoothDevice")
 Q_DECLARE_JNI_CLASS(IntentFilter, "android/content/IntentFilter")
+Q_DECLARE_JNI_CLASS(AndroidContext, "android/content/Context")
 Q_DECLARE_JNI_CLASS(UUID, "java/util/UUID")
 
 Q_DECLARE_JNI_TYPE(ParcelableArray, "[Landroid/os/Parcelable;")
 Q_DECLARE_JNI_TYPE(ParcelUuidArray, "[Landroid/os/ParcelUuid;")
 Q_DECLARE_JNI_TYPE(StringArray, "[Ljava/lang/String;")
 
+Q_DECLARE_JNI_TYPE(BluetoothManager, "Landroid/bluetooth/BluetoothManager;")
 Q_DECLARE_JNI_TYPE(AdvertiseData, "Landroid/bluetooth/le/AdvertiseData;")
 Q_DECLARE_JNI_TYPE(AdvertiseSettings, "Landroid/bluetooth/le/AdvertiseSettings;")
 Q_DECLARE_JNI_TYPE(InputStream, "Ljava/io/InputStream;")

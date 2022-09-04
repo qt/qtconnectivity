@@ -143,9 +143,7 @@ QBluetoothSocketPrivateAndroid::QBluetoothSocketPrivateAndroid()
     inputThread(0)
 {
     secFlags = QBluetooth::Security::Secure;
-    adapter = QJniObject::callStaticMethod<QtJniTypes::BluetoothAdapter>(
-                       QtJniTypes::className<QtJniTypes::BluetoothAdapter>(), "getDefaultAdapter");
-
+    adapter = getDefaultBluetoothAdapter();
     qRegisterMetaType<QBluetoothSocket::SocketError>();
     qRegisterMetaType<QBluetoothSocket::SocketState>();
 }

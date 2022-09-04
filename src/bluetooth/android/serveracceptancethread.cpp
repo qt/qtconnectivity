@@ -75,7 +75,8 @@ void ServerAcceptanceThread::run()
         shutdownPendingConnections();
     }
 
-    javaThread = QJniObject::construct<QtJniTypes::QtBtSocketServer>();
+    javaThread = QJniObject::construct<QtJniTypes::QtBtSocketServer>(
+                     QNativeInterface::QAndroidApplication::context());
     if (!javaThread.isValid())
         return;
 

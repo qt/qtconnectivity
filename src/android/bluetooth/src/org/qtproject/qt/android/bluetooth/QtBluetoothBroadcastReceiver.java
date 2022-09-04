@@ -121,7 +121,15 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
 
     static public boolean setPairingMode(String address, boolean isPairing)
     {
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothManager manager =
+            (BluetoothManager)qtContext.getSystemService(Context.BLUETOOTH_SERVICE);
+        if (manager == null)
+            return false;
+
+        BluetoothAdapter adapter = manager.getAdapter();
+        if (adapter == null)
+            return false;
+
         // Uses reflection as the removeBond() is not part of public API
         try {
             BluetoothDevice device = adapter.getRemoteDevice(address);

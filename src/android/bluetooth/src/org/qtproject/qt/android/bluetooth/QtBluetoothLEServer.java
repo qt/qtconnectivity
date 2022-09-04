@@ -43,7 +43,7 @@ public class QtBluetoothLEServer {
     private Context qtContext = null;
 
     // Bluetooth members
-    private final BluetoothAdapter mBluetoothAdapter;
+    private BluetoothAdapter mBluetoothAdapter = null;
     private BluetoothManager mBluetoothManager = null;
     private BluetoothGattServer mGattServer = null;
     private BluetoothLeAdvertiser mLeAdvertiser = null;
@@ -249,16 +249,21 @@ public class QtBluetoothLEServer {
     public QtBluetoothLEServer(Context context)
     {
         qtContext = context;
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
-
-        if (mBluetoothAdapter == null || qtContext == null) {
-            Log.w(TAG, "Missing Bluetooth adapter or Qt context. Peripheral role disabled.");
+        if (qtContext == null) {
+            Log.w(TAG, "Missing context object. Peripheral role disabled.");
             return;
         }
 
-        mBluetoothManager = (BluetoothManager) qtContext.getSystemService(Context.BLUETOOTH_SERVICE);
+        mBluetoothManager =
+            (BluetoothManager) qtContext.getSystemService(Context.BLUETOOTH_SERVICE);
         if (mBluetoothManager == null) {
-            Log.w(TAG, "Bluetooth service not available.");
+            Log.w(TAG, "Bluetooth service not available. Peripheral role disabled.");
+            return;
+        }
+
+        mBluetoothAdapter = mBluetoothManager.getAdapter();
+        if (mBluetoothAdapter == null) {
+            Log.w(TAG, "Missing Bluetooth adapter. Peripheral role disabled.");
             return;
         }
 

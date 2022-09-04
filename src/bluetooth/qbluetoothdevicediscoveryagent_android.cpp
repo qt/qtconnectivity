@@ -33,8 +33,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     deviceDiscoveryStartAttemptsLeft(deviceDiscoveryStartMaxAttempts),
     q_ptr(parent)
 {
-    adapter = QJniObject::callStaticMethod<QtJniTypes::BluetoothAdapter>(
-                       QtJniTypes::className<QtJniTypes::BluetoothAdapter>(), "getDefaultAdapter");
+    adapter = getDefaultBluetoothAdapter();
 
     if (!adapter.isValid())
         qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
@@ -419,7 +418,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
     m_active = BtleScanActive;
 
     if (!leScanner.isValid()) {
-        leScanner = QJniObject::construct<QtJniTypes::QtBtLECentral>();
+        leScanner = QJniObject::construct<QtJniTypes::QtBtLECentral>(
+                    QNativeInterface::QAndroidApplication::context());
         if (!leScanner.isValid()) {
             qCWarning(QT_BT_ANDROID) << "Cannot load BTLE device scan class";
             m_active = NoScanActive;
