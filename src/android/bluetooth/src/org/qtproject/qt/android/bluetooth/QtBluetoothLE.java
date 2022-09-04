@@ -11,6 +11,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
@@ -39,7 +40,7 @@ import java.util.UUID;
 
 public class QtBluetoothLE {
     private static final String TAG = "QtBluetoothGatt";
-    private final BluetoothAdapter mBluetoothAdapter;
+    private BluetoothAdapter mBluetoothAdapter = null;
     private boolean mLeScanRunning = false;
 
     private BluetoothGatt mBluetoothGatt = null;
@@ -163,14 +164,23 @@ public class QtBluetoothLE {
     Context qtContext = null;
 
     @SuppressWarnings("WeakerAccess")
-    public QtBluetoothLE() {
-        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+    public QtBluetoothLE(Context context) {
+        qtContext = context;
+
+        BluetoothManager manager =
+            (BluetoothManager)qtContext.getSystemService(Context.BLUETOOTH_SERVICE);
+        if (manager == null)
+            return;
+
+        mBluetoothAdapter = manager.getAdapter();
+        if (mBluetoothAdapter == null)
+            return;
+
         mBluetoothLeScanner = mBluetoothAdapter.getBluetoothLeScanner();
     }
 
     public QtBluetoothLE(final String remoteAddress, Context context) {
-        this();
-        qtContext = context;
+        this(context);
         mRemoteGattAddress = remoteAddress;
     }
 
@@ -184,6 +194,11 @@ public class QtBluetoothLE {
     public boolean scanForLeDevice(final boolean isEnabled) {
         if (isEnabled == mLeScanRunning)
             return true;
+
+        if (mBluetoothLeScanner == null) {
+            Log.w(TAG, "Cannot start LE scan, no bluetooth scanner");
+            return false;
+        }
 
         if (isEnabled) {
             Log.d(TAG, "Attempting to start BTLE scan");
@@ -681,6 +696,11 @@ public class QtBluetoothLE {
     // This function is called from Qt thread
     public synchronized boolean connect() {
         BluetoothDevice mRemoteGattDevice;
+
+        if (mBluetoothAdapter == null) {
+            Log.w(TAG, "Cannot connect, no bluetooth adapter");
+            return false;
+        }
 
         try {
             mRemoteGattDevice = mBluetoothAdapter.getRemoteDevice(mRemoteGattAddress);

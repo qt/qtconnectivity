@@ -5,7 +5,9 @@ package org.qtproject.qt.android.bluetooth;
 
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothServerSocket;
+import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothSocket;
+import android.content.Context;
 import android.util.Log;
 import java.io.IOException;
 import java.util.UUID;
@@ -19,6 +21,8 @@ public class QtBluetoothSocketServer extends Thread
     long qtObject = 0;
     @SuppressWarnings({"WeakerAccess", "CanBeFinal"})
     public boolean logEnabled = false;
+    @SuppressWarnings("WeakerAccess")
+    static Context qtContext = null;
 
     private static final String TAG = "QtBluetooth";
     private boolean m_isSecure = false;
@@ -31,8 +35,9 @@ public class QtBluetoothSocketServer extends Thread
     private static final int QT_LISTEN_FAILED = 1;
     private static final int QT_ACCEPT_FAILED = 2;
 
-    public QtBluetoothSocketServer()
+    public QtBluetoothSocketServer(Context context)
     {
+        qtContext = context;
         setName("QtSocketServerThread");
     }
 
@@ -46,7 +51,15 @@ public class QtBluetoothSocketServer extends Thread
 
     public void run()
     {
-        BluetoothAdapter adapter = BluetoothAdapter.getDefaultAdapter();
+        BluetoothManager manager =
+            (BluetoothManager)qtContext.getSystemService(Context.BLUETOOTH_SERVICE);
+
+        if (manager == null) {
+            errorOccurred(qtObject, QT_NO_BLUETOOTH_SUPPORTED);
+            return;
+        }
+
+        BluetoothAdapter adapter = manager.getAdapter();
         if (adapter == null) {
             errorOccurred(qtObject, QT_NO_BLUETOOTH_SUPPORTED);
             return;

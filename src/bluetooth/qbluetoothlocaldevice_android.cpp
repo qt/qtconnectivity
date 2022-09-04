@@ -46,23 +46,10 @@ QJniObject *QBluetoothLocalDevicePrivate::adapter()
     return obj;
 }
 
-static QJniObject getDefaultAdapter()
-{
-    QJniObject adapter = QJniObject::callStaticMethod<QtJniTypes::BluetoothAdapter>(
-                QtJniTypes::className<QtJniTypes::BluetoothAdapter>(), "getDefaultAdapter");
-
-    if (!adapter.isValid()) {
-        // on some BT implementations the first call to getDefaultAdapter() may fail
-        adapter = QJniObject::callStaticMethod<QtJniTypes::BluetoothAdapter>(
-                                             QtJniTypes::className<QtJniTypes::BluetoothAdapter>(),
-                                             "getDefaultAdapter");
-    }
-    return adapter;
-}
-
 void QBluetoothLocalDevicePrivate::initialize(const QBluetoothAddress &address)
 {
-    QJniObject adapter = getDefaultAdapter();
+    QJniObject adapter = getDefaultBluetoothAdapter();
+
     if (!adapter.isValid()) {
         qCWarning(QT_BT_ANDROID) <<  "Device does not support Bluetooth";
         return;
@@ -309,7 +296,7 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
     // Android only supports max of one device (so far)
     QList<QBluetoothHostInfo> localDevices;
 
-    QJniObject o = getDefaultAdapter();
+    QJniObject o = getDefaultBluetoothAdapter();
     if (o.isValid()) {
         QBluetoothHostInfo info;
         info.setName(o.callMethod<jstring>("getName").toString());
