@@ -39,6 +39,7 @@
 
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QJniEnvironment>
+#include <QtCore/QCoreApplication>
 
 #include "android/serveracceptancethread_p.h"
 
@@ -108,7 +109,9 @@ void ServerAcceptanceThread::run()
         shutdownPendingConnections();
     }
 
-    javaThread = QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothSocketServer");
+    javaThread = QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothSocketServer",
+                            "(Landroid/content/Context;)V",
+                            QNativeInterface::QAndroidApplication::context());
     if (!javaThread.isValid())
         return;
 

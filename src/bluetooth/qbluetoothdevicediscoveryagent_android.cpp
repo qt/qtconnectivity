@@ -68,13 +68,10 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     deviceDiscoveryStartAttemptsLeft(deviceDiscoveryStartMaxAttempts),
     q_ptr(parent)
 {
-    QJniEnvironment env;
-    adapter = QJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
-                                                        "getDefaultAdapter",
-                                                        "()Landroid/bluetooth/BluetoothAdapter;");
-    if (!adapter.isValid()) {
+    adapter = getDefaultBluetoothAdapter();
+
+    if (!adapter.isValid())
         qCWarning(QT_BT_ANDROID) << "Device does not support Bluetooth";
-    }
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
@@ -447,7 +444,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
     m_active = BtleScanActive;
 
     if (!leScanner.isValid()) {
-        leScanner = QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothLE");
+        leScanner = QJniObject("org/qtproject/qt/android/bluetooth/QtBluetoothLE",
+                               "(Landroid/content/Context;)V",
+                               QNativeInterface::QAndroidApplication::context());
         if (!leScanner.isValid()) {
             qCWarning(QT_BT_ANDROID) << "Cannot load BTLE device scan class";
             m_active = NoScanActive;
