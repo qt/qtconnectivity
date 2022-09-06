@@ -60,6 +60,7 @@ qt_configure_add_summary_entry(ARGS bluez)
 qt_configure_add_summary_entry(ARGS bluez_le)
 qt_configure_add_summary_entry(ARGS linux_crypto_api)
 qt_configure_add_summary_entry(ARGS winrt_bt)
+qt_configure_end_summary_section()
 qt_configure_add_report_entry(
     TYPE NOTE
     MESSAGE "Bluez version is too old to support Bluetooth Low Energy. Only classic Bluetooth will be available."
