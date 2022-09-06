@@ -109,6 +109,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         return;
     }
 
+    lastError = QBluetoothDeviceDiscoveryAgent::NoError;
+    errorString.clear();
     discoveredDevices.clear();
     devicesProperties.clear();
 
