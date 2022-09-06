@@ -17,94 +17,12 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 typedef QHash<QByteArray, QJniObject> JCachedStringFields;
 Q_GLOBAL_STATIC(JCachedStringFields, cachedStringFields)
 
-//Java field names
-static const char * const javaActionAclConnected = "ACTION_ACL_CONNECTED";
-static const char * const javaActionAclDisconnected = "ACTION_ACL_DISCONNECTED";
-static const char * const javaActionBondStateChanged = "ACTION_BOND_STATE_CHANGED";
-static const char * const javaActionDiscoveryStarted = "ACTION_DISCOVERY_STARTED";
-static const char * const javaActionDiscoveryFinished = "ACTION_DISCOVERY_FINISHED";
-static const char * const javaActionFound = "ACTION_FOUND";
-static const char * const javaActionScanModeChanged = "ACTION_SCAN_MODE_CHANGED";
-static const char * const javaActionUuid = "ACTION_UUID";
-static const char * const javaExtraBondState = "EXTRA_BOND_STATE";
-static const char * const javaExtraDevice = "EXTRA_DEVICE";
-static const char * const javaExtraPairingKey = "EXTRA_PAIRING_KEY";
-static const char * const javaExtraPairingVariant = "EXTRA_PAIRING_VARIANT";
-static const char * const javaExtraRssi = "EXTRA_RSSI";
-static const char * const javaExtraScanMode = "EXTRA_SCAN_MODE";
-static const char * const javaExtraUuid = "EXTRA_UUID";
-
 /*
  * This function operates on the assumption that each
  * field is of type java/lang/String.
  */
-inline QByteArray classNameForStaticField(JavaNames javaName)
+QJniObject valueFromStaticFieldCache(const char *key, const char *className, const char *fieldName)
 {
-    switch (javaName) {
-    case JavaNames::BluetoothAdapter: {
-        constexpr auto cn = QtJniTypes::className<QtJniTypes::BluetoothAdapter>();
-        return QByteArray(cn.data(), cn.size());
-    }
-    case JavaNames::BluetoothDevice: {
-        constexpr auto cn = QtJniTypes::className<QtJniTypes::BluetoothDevice>();
-        return QByteArray(cn.data(), cn.size());
-    }
-    default:
-        break;
-    }
-    return {};
-}
-
-QJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldName)
-{
-    //construct key
-    //the switch statements are used to reduce the number of duplicated strings
-    //in the library
-
-    const char *fieldName;
-    switch (javaFieldName) {
-    case JavaNames::ActionAclConnected:
-        fieldName = javaActionAclConnected; break;
-    case JavaNames::ActionAclDisconnected:
-        fieldName = javaActionAclDisconnected; break;
-    case JavaNames::ActionBondStateChanged:
-        fieldName = javaActionBondStateChanged; break;
-    case JavaNames::ActionDiscoveryStarted:
-        fieldName = javaActionDiscoveryStarted; break;
-    case JavaNames::ActionDiscoveryFinished:
-        fieldName = javaActionDiscoveryFinished; break;
-    case JavaNames::ActionFound:
-        fieldName = javaActionFound; break;
-    case JavaNames::ActionScanModeChanged:
-        fieldName = javaActionScanModeChanged; break;
-    case JavaNames::ActionUuid:
-        fieldName = javaActionUuid; break;
-    case JavaNames::ExtraBondState:
-        fieldName = javaExtraBondState; break;
-    case JavaNames::ExtraDevice:
-        fieldName = javaExtraDevice; break;
-    case JavaNames::ExtraPairingKey:
-        fieldName = javaExtraPairingKey; break;
-    case JavaNames::ExtraPairingVariant:
-        fieldName = javaExtraPairingVariant; break;
-    case JavaNames::ExtraRssi:
-        fieldName = javaExtraRssi; break;
-    case JavaNames::ExtraScanMode:
-        fieldName = javaExtraScanMode; break;
-    case JavaNames::ExtraUuid:
-        fieldName = javaExtraUuid; break;
-    default:
-        qCWarning(QT_BT_ANDROID) << "Unknown java field name passed to valueForStaticField():" << javaFieldName;
-        return QJniObject();
-    }
-
-    const QByteArray className = classNameForStaticField(javaName);
-    if (className.isEmpty()) {
-        qCWarning(QT_BT_ANDROID) << "Unknown java class name passed to valueForStaticField():" << javaName;
-        return QJniObject();
-    }
-
-    const QByteArray key = className + fieldName;
     JCachedStringFields::iterator it = cachedStringFields()->find(key);
     if (it == cachedStringFields()->end()) {
         QJniEnvironment env;
