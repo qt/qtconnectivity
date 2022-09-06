@@ -308,6 +308,9 @@ void QBluetoothServiceDiscoveryAgent::start(DiscoveryMode mode)
         d->foundHostAdapterPath.clear();
 #endif
         d->setDiscoveryMode(mode);
+        // Clear any possible previous errors
+        d->error = QBluetoothServiceDiscoveryAgent::NoError;
+        d->errorString.clear();
         if (d->deviceAddress.isNull()) {
             d->startDeviceDiscovery();
         } else {
@@ -378,9 +381,10 @@ bool QBluetoothServiceDiscoveryAgent::isActive() const
     discovered by a scan, errors during service discovery on individual
     devices are not saved and no signals are emitted. In this case, errors are
     fairly normal as some devices may not respond to discovery or
-    may no longer be in range.  Such errors are surpressed.  If no services
+    may no longer be in range.  Such errors are suppressed.  If no services
     are returned, it can be assumed no services could be discovered.
 
+    Any possible previous errors are cleared upon restarting the discovery.
 */
 QBluetoothServiceDiscoveryAgent::Error QBluetoothServiceDiscoveryAgent::error() const
 {
@@ -392,6 +396,8 @@ QBluetoothServiceDiscoveryAgent::Error QBluetoothServiceDiscoveryAgent::error() 
 /*!
     Returns a human-readable description of the last error that occurred during the
     service discovery.
+
+    \sa error(), errorOccurred()
 */
 QString QBluetoothServiceDiscoveryAgent::errorString() const
 {

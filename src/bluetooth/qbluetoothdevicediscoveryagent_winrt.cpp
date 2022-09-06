@@ -766,6 +766,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
 
     worker = std::make_shared<QWinRTBluetoothDeviceDiscoveryWorker>(methods,
                                                                     lowEnergySearchTimeout);
+    lastError = QBluetoothDeviceDiscoveryAgent::NoError;
+    errorString.clear();
     discoveredDevices.clear();
     connect(worker.get(), &QWinRTBluetoothDeviceDiscoveryWorker::deviceFound,
             this, &QBluetoothDeviceDiscoveryAgentPrivate::registerDevice);
