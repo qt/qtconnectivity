@@ -205,6 +205,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         QObject::connect(receiver, SIGNAL(finished()), this, SLOT(processSdpDiscoveryFinished()));
     }
 
+    lastError = QBluetoothDeviceDiscoveryAgent::NoError;
+    errorString.clear();
     discoveredDevices.clear();
 
     // by arbitrary definition we run classic search first

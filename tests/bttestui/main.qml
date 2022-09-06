@@ -350,6 +350,11 @@ Flickable {
                     buttonText: "Reset"
                     onClicked: device.reset()
                 }
+                Button {
+                    id: errorButton
+                    buttonText: "Errors"
+                    onClicked: device.dumpErrors()
+                }
             }
         }
     }

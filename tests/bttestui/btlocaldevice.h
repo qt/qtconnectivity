@@ -50,6 +50,7 @@ signals:
 public slots:
     //QBluetoothLocalDevice
     void dumpInformation();
+    void dumpErrors();
     void powerOn();
     void reset();
     void setHostMode(int newMode);

@@ -794,6 +794,27 @@ void BtLocalDevice::dumpServerInformation()
     }
 }
 
+template <typename T>
+void printError(const QLatin1StringView name, T* ptr)
+{
+    if (!ptr)
+        return;
+    qDebug() << name << "error:" << ptr->error();
+}
+
+void BtLocalDevice::dumpErrors()
+{
+    qDebug() << "###### Errors";
+    printError("Device agent"_L1, deviceAgent);
+    printError("Service agent"_L1, serviceAgent);
+    printError("LE Central"_L1, leCentralController.get());
+    printError("LE Central Service"_L1, leCentralService.get());
+    printError("LE Peripheral"_L1, lePeripheralController.get());
+    printError("LE Peripheral Service"_L1, lePeripheralService.get());
+    printError("Socket"_L1, socket);
+    printError("Server"_L1, server);
+}
+
 void BtLocalDevice::dumpInformation()
 {
     if (!localDevice)
