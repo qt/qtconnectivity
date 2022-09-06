@@ -38,24 +38,28 @@ static const char * const javaExtraUuid = "EXTRA_UUID";
  * This function operates on the assumption that each
  * field is of type java/lang/String.
  */
+inline QByteArray classNameForStaticField(JavaNames javaName)
+{
+    switch (javaName) {
+    case JavaNames::BluetoothAdapter: {
+        constexpr auto cn = QtJniTypes::className<QtJniTypes::BluetoothAdapter>();
+        return QByteArray(cn.data(), cn.size());
+    }
+    case JavaNames::BluetoothDevice: {
+        constexpr auto cn = QtJniTypes::className<QtJniTypes::BluetoothDevice>();
+        return QByteArray(cn.data(), cn.size());
+    }
+    default:
+        break;
+    }
+    return {};
+}
+
 QJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldName)
 {
     //construct key
     //the switch statements are used to reduce the number of duplicated strings
     //in the library
-
-    const char* className;
-    switch (javaName) {
-    case JavaNames::BluetoothAdapter:
-        className = QtJniTypes::className<QtJniTypes::BluetoothAdapter>();
-        break;
-    case JavaNames::BluetoothDevice:
-        className = QtJniTypes::className<QtJniTypes::BluetoothDevice>();
-        break;
-    default:
-        qCWarning(QT_BT_ANDROID) << "Unknown java class name passed to valueForStaticField():" << javaName;
-        return QJniObject();
-    }
 
     const char *fieldName;
     switch (javaFieldName) {
@@ -94,12 +98,13 @@ QJniObject valueForStaticField(JavaNames javaName, JavaNames javaFieldName)
         return QJniObject();
     }
 
-    const size_t offset_class = qstrlen(className);
-    const size_t offset_field = qstrlen(fieldName);
-    QByteArray key(qsizetype(offset_class + offset_field), Qt::Uninitialized);
-    memcpy(key.data(), className, offset_class);
-    memcpy(key.data()+offset_class, fieldName, offset_field);
+    const QByteArray className = classNameForStaticField(javaName);
+    if (className.isEmpty()) {
+        qCWarning(QT_BT_ANDROID) << "Unknown java class name passed to valueForStaticField():" << javaName;
+        return QJniObject();
+    }
 
+    const QByteArray key = className + fieldName;
     JCachedStringFields::iterator it = cachedStringFields()->find(key);
     if (it == cachedStringFields()->end()) {
         QJniEnvironment env;
