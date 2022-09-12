@@ -119,6 +119,7 @@ signals:
 
 private slots:
     void handleCharacteristicChanged(quint16 charHandle, const QByteArray &data);
+    void doConnectToDevice();
 
 private:
     Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;

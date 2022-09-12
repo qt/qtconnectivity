@@ -253,6 +253,12 @@ QNearFieldTarget::RequestId NearFieldTarget::sendCommand(const QByteArray &comma
     // Writing
     QAndroidJniObject myNewVal = m_tagTech.callObjectMethod("transceive", "([B)[B", jba);
     if (catchJavaExceptions()) {
+        // Some devices (Samsung, Huawei) throw an exception when the card is lost:
+        // "android.nfc.TagLostException: Tag was lost". But there seems to be a bug that
+        // isConnected still reports true. So we need to invalidate the target as soon as
+        // possible and treat the card as lost.
+        handleTargetLost();
+
         reportError(QNearFieldTarget::CommandError, requestId);
         return requestId;
     }
