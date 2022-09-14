@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "darwin/btsocketlistener_p.h"
@@ -32,7 +32,6 @@ namespace {
 
 using DarwinBluetooth::RetainPolicy;
 using ServiceInfo = QBluetoothServiceInfo;
-using ObjCListener = QT_MANGLE_NAMESPACE(DarwinBTSocketListener);
 
 QMap<quint16, QBluetoothServerPrivate *> &busyPSMs()
 {
@@ -76,15 +75,15 @@ bool QBluetoothServerPrivate::startListener(quint16 realPort)
     }
 
     if (!listener) {
-        listener.reset([[ObjCListener alloc] initWithListener:this],
+        listener.reset([[DarwinBTSocketListener alloc] initWithListener:this],
                        RetainPolicy::noInitialRetain);
     }
 
     bool result = false;
     if (serverType == ServiceInfo::RfcommProtocol)
-        result = [listener.getAs<ObjCListener>() listenRFCOMMConnectionsWithChannelID:realPort];
+        result = [listener.getAs<DarwinBTSocketListener>() listenRFCOMMConnectionsWithChannelID:realPort];
     else
-        result = [listener.getAs<ObjCListener>() listenL2CAPConnectionsWithPSM:realPort];
+        result = [listener.getAs<DarwinBTSocketListener>() listenL2CAPConnectionsWithPSM:realPort];
 
     if (!result)
         listener.reset();
@@ -321,7 +320,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &address, quint16 port)
     // (provided after a service was registered).
     d_ptr->port = port;
     d_ptr->registerServer(d_ptr, port);
-    d_ptr->listener.reset([[ObjCListener alloc] initWithListener:d_ptr],
+    d_ptr->listener.reset([[DarwinBTSocketListener alloc] initWithListener:d_ptr],
                           RetainPolicy::noInitialRetain);
 
     return true;

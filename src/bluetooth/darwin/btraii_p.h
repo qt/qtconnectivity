@@ -1,4 +1,4 @@
-// Copyright (C) 2019 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef BTRAII_P_H
@@ -40,10 +40,6 @@ enum class RetainPolicy
 // Objective-C compiler to work. Member-function template 'getAs' is
 // a convenience shortcut giving the desired pointer type in
 // Objective-C++ files (*.mm).
-
-// TODO: on top of these classes I can build ObjCStrongReference (it's
-// now inside osxbtutils_p.h, a template class that does have type
-// information needed but works only in Objective-C++ environment.
 class StrongReference
 {
 public:

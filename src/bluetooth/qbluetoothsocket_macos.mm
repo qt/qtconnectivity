@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qbluetoothservicediscoveryagent.h"
@@ -27,8 +27,6 @@ QT_BEGIN_NAMESPACE
 namespace {
 
 using DarwinBluetooth::RetainPolicy;
-using ObjCL2CAPChannel = QT_MANGLE_NAMESPACE(DarwinBTL2CAPChannel);
-using ObjCRFCOMMChannel = QT_MANGLE_NAMESPACE(DarwinBTRFCOMMChannel);
 
 } // unnamed namespace
 
@@ -76,10 +74,10 @@ QString QBluetoothSocketPrivateDarwin::peerName() const
     NSString *nsName = nil;
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         if (rfcommChannel)
-            nsName = [rfcommChannel.getAs<ObjCRFCOMMChannel>() peerName];
+            nsName = [rfcommChannel.getAs<DarwinBTRFCOMMChannel>() peerName];
     } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
         if (l2capChannel)
-            nsName = [l2capChannel.getAs<ObjCL2CAPChannel>() peerName];
+            nsName = [l2capChannel.getAs<DarwinBTL2CAPChannel>() peerName];
     }
 
     if (nsName)
@@ -93,10 +91,10 @@ QBluetoothAddress QBluetoothSocketPrivateDarwin::peerAddress() const
     BluetoothDeviceAddress addr = {};
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         if (rfcommChannel)
-            addr = [rfcommChannel.getAs<ObjCRFCOMMChannel>() peerAddress];
+            addr = [rfcommChannel.getAs<DarwinBTRFCOMMChannel>() peerAddress];
     } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
         if (l2capChannel)
-            addr = [l2capChannel.getAs<ObjCL2CAPChannel>() peerAddress];
+            addr = [l2capChannel.getAs<DarwinBTL2CAPChannel>() peerAddress];
     }
 
     return DarwinBluetooth::qt_address(&addr);
@@ -106,10 +104,10 @@ quint16 QBluetoothSocketPrivateDarwin::peerPort() const
 {
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
         if (rfcommChannel)
-            return [rfcommChannel.getAs<ObjCRFCOMMChannel>() getChannelID];
+            return [rfcommChannel.getAs<DarwinBTRFCOMMChannel>() getChannelID];
     } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
         if (l2capChannel)
-            return [l2capChannel.getAs<ObjCL2CAPChannel>() getPSM];
+            return [l2capChannel.getAs<DarwinBTL2CAPChannel>() getPSM];
     }
 
     return 0;
@@ -330,15 +328,15 @@ void QBluetoothSocketPrivateDarwin::connectToService(const QBluetoothAddress &ad
     openMode = mode;
 
     if (socketType == QBluetoothServiceInfo::RfcommProtocol) {
-        rfcommChannel.reset([[ObjCRFCOMMChannel alloc] initWithDelegate:this], RetainPolicy::noInitialRetain);
+        rfcommChannel.reset([[DarwinBTRFCOMMChannel alloc] initWithDelegate:this], RetainPolicy::noInitialRetain);
         if (rfcommChannel)
-            status = [rfcommChannel.getAs<ObjCRFCOMMChannel>() connectAsyncToDevice:address withChannelID:port];
+            status = [rfcommChannel.getAs<DarwinBTRFCOMMChannel>() connectAsyncToDevice:address withChannelID:port];
         else
             status = kIOReturnNoMemory;
     } else if (socketType == QBluetoothServiceInfo::L2capProtocol) {
-        l2capChannel.reset([[ObjCL2CAPChannel alloc] initWithDelegate:this], RetainPolicy::noInitialRetain);
+        l2capChannel.reset([[DarwinBTL2CAPChannel alloc] initWithDelegate:this], RetainPolicy::noInitialRetain);
         if (l2capChannel)
-            status = [l2capChannel.getAs<ObjCL2CAPChannel>() connectAsyncToDevice:address withPSM:port];
+            status = [l2capChannel.getAs<DarwinBTL2CAPChannel>() connectAsyncToDevice:address withPSM:port];
         else
             status = kIOReturnNoMemory;
     }
@@ -389,14 +387,14 @@ void QBluetoothSocketPrivateDarwin::_q_writeNotify()
     if (txBuffer.size()) {
         const bool isL2CAP = socketType == QBluetoothServiceInfo::L2capProtocol;
         writeChunk.resize(isL2CAP ? std::numeric_limits<UInt16>::max() :
-                          [rfcommChannel.getAs<ObjCRFCOMMChannel>() getMTU]);
+                          [rfcommChannel.getAs<DarwinBTRFCOMMChannel>() getMTU]);
 
         const auto size = txBuffer.read(writeChunk.data(), writeChunk.size());
         IOReturn status = kIOReturnError;
         if (!isL2CAP)
-            status = [rfcommChannel.getAs<ObjCRFCOMMChannel>() writeAsync:writeChunk.data() length:UInt16(size)];
+            status = [rfcommChannel.getAs<DarwinBTRFCOMMChannel>() writeAsync:writeChunk.data() length:UInt16(size)];
         else
-            status = [l2capChannel.getAs<ObjCL2CAPChannel>() writeAsync:writeChunk.data() length:UInt16(size)];
+            status = [l2capChannel.getAs<DarwinBTL2CAPChannel>() writeAsync:writeChunk.data() length:UInt16(size)];
 
         if (status != kIOReturnSuccess) {
             errorString = QCoreApplication::translate(SOCKET, SOC_NETWORK_ERROR);
@@ -425,7 +423,7 @@ bool QBluetoothSocketPrivateDarwin::setRFCOMChannel(void *generic)
                Q_FUNC_INFO, "unexpected socket state");
 
     openMode = QIODevice::ReadWrite;
-    rfcommChannel.reset([[ObjCRFCOMMChannel alloc] initWithDelegate:this channel:channel],
+    rfcommChannel.reset([[DarwinBTRFCOMMChannel alloc] initWithDelegate:this channel:channel],
                         RetainPolicy::noInitialRetain);
     if (rfcommChannel) {// We do not handle errors, up to an external user.
         q_ptr->setOpenMode(QIODevice::ReadWrite);
@@ -451,7 +449,7 @@ bool QBluetoothSocketPrivateDarwin::setL2CAPChannel(void *generic)
                Q_FUNC_INFO, "unexpected socket state");
 
     openMode = QIODevice::ReadWrite;
-    l2capChannel.reset([[ObjCL2CAPChannel alloc] initWithDelegate:this channel:channel], RetainPolicy::noInitialRetain);
+    l2capChannel.reset([[DarwinBTL2CAPChannel alloc] initWithDelegate:this channel:channel], RetainPolicy::noInitialRetain);
     if (l2capChannel) {// We do not handle errors, up to an external user.
         q_ptr->setOpenMode(QIODevice::ReadWrite);
         state = QBluetoothSocket::SocketState::ConnectedState;

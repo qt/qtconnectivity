@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "darwin/btconnectionmonitor_p.h"
@@ -64,13 +64,11 @@ private:
     using HostController = DarwinBluetooth::ObjCScopedPointer<IOBluetoothHostController>;
     HostController hostController;
 
-    using ObjCPairingRequest = QT_MANGLE_NAMESPACE(DarwinBTClassicPairing);
-    using PairingRequest = DarwinBluetooth::ObjCStrongReference<ObjCPairingRequest>;
+    using PairingRequest = DarwinBluetooth::ObjCStrongReference<DarwinBTClassicPairing>;
     using RequestMap = QMap<QBluetoothAddress, PairingRequest>;
 
     RequestMap pairingRequests;
-    using ObjCConnectionMonitor = QT_MANGLE_NAMESPACE(DarwinBTConnectionMonitor);
-    DarwinBluetooth::ObjCScopedPointer<ObjCConnectionMonitor> connectionMonitor;
+    DarwinBluetooth::ObjCScopedPointer<DarwinBTConnectionMonitor> connectionMonitor;
     QList<QBluetoothAddress> discoveredDevices;
 };
 
@@ -113,7 +111,7 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
 
     defaultController.swap(hostController);
     // This one is optional, if it fails to initialize, we do not care at all.
-    connectionMonitor.reset([[ObjCConnectionMonitor alloc] initWithMonitor:this],
+    connectionMonitor.reset([[DarwinBTConnectionMonitor alloc] initWithMonitor:this],
                             DarwinBluetooth::RetainPolicy::noInitialRetain);
 }
 
@@ -165,7 +163,7 @@ void QBluetoothLocalDevicePrivate::requestPairing(const QBluetoothAddress &addre
     // That's a totally new request ('Paired', since we are here).
     // Even if this device is paired (not by our local device), I still create a pairing request,
     // it'll just finish with success (skipping any intermediate steps).
-    PairingRequest newRequest([[ObjCPairingRequest alloc] initWithTarget:address delegate:this],
+    PairingRequest newRequest([[DarwinBTClassicPairing alloc] initWithTarget:address delegate:this],
                               RetainPolicy::noInitialRetain);
     if (!newRequest) {
         qCCritical(QT_BT_DARWIN) << "failed to allocate a new pairing request";
@@ -244,7 +242,7 @@ void QBluetoothLocalDevicePrivate::error(void *pair, IOReturn errorCode)
 
 void QBluetoothLocalDevicePrivate::pairingFinished(void *generic)
 {
-    auto pair = static_cast<ObjCPairingRequest *>(generic);
+    auto pair = static_cast<DarwinBTClassicPairing *>(generic);
     Q_ASSERT_X(pair, Q_FUNC_INFO, "invalid pairing request (nil)");
 
     const QBluetoothAddress &deviceAddress = [pair targetAddress];

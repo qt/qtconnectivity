@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qbluetoothdeviceinfo.h"
@@ -93,12 +93,12 @@ QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
-@interface  QT_MANGLE_NAMESPACE(DarwinBTLEDeviceInquiry)(PrivateAPI)
+@interface  DarwinBTLEDeviceInquiry (PrivateAPI)
 - (void)stopScanSafe;
 - (void)stopNotifier;
 @end
 
-@implementation QT_MANGLE_NAMESPACE(DarwinBTLEDeviceInquiry)
+@implementation DarwinBTLEDeviceInquiry
 {
     LECBManagerNotifier *notifier;
     ObjCScopedPointer<CBCentralManager> manager;
@@ -183,7 +183,7 @@ QT_USE_NAMESPACE
 
             if (inquiryTimeoutMS > 0) {
                 [elapsedTimer cancelTimer];
-                elapsedTimer.reset([[GCDTimerObjC alloc] initWithDelegate:self], RetainPolicy::noInitialRetain);
+                elapsedTimer.reset([[DarwinBTGCDTimer alloc] initWithDelegate:self], RetainPolicy::noInitialRetain);
                 [elapsedTimer startWithTimeout:inquiryTimeoutMS step:timeStepMS];
             }
 
@@ -224,7 +224,7 @@ QT_USE_NAMESPACE
             // we'll receive 'PoweredOn' state update later.
             // No change in internalState. Wait for 30 seconds.
             [elapsedTimer cancelTimer];
-            elapsedTimer.reset([[GCDTimerObjC alloc] initWithDelegate:self], RetainPolicy::noInitialRetain);
+            elapsedTimer.reset([[DarwinBTGCDTimer alloc] initWithDelegate:self], RetainPolicy::noInitialRetain);
             [elapsedTimer startWithTimeout:powerOffTimeoutMS step:300];
             return;
         }

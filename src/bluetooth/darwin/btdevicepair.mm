@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "btdevicepair_p.h"
@@ -27,7 +27,7 @@ QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
-@implementation QT_MANGLE_NAMESPACE(DarwinBTClassicPairing)
+@implementation DarwinBTClassicPairing
 {
     QT_PREPEND_NAMESPACE(QBluetoothAddress) m_targetAddress;
 

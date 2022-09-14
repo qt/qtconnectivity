@@ -1,4 +1,4 @@
-// Copyright (C) 2018 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef BTGCDTIMER_P_H
@@ -16,6 +16,8 @@
 //
 
 #include "btutility_p.h"
+
+#include <QtCore/private/qcore_mac_p.h>
 
 #include <QtCore/qelapsedtimer.h>
 #include <QtCore/qglobal.h>
@@ -57,12 +59,13 @@ QT_END_NAMESPACE
 - (QT_PREPEND_NAMESPACE(DarwinBluetooth)::OperationTimeout)timeoutType;
 @end
 
+QT_NAMESPACE_ALIAS_OBJC_CLASS(DarwinBTGCDTimer);
+
 QT_BEGIN_NAMESPACE
 
 namespace DarwinBluetooth {
 
-using GCDTimerObjC = QT_MANGLE_NAMESPACE(DarwinBTGCDTimer);
-using GCDTimer = ObjCStrongReference<GCDTimerObjC>;
+using GCDTimer = ObjCStrongReference<DarwinBTGCDTimer>;
 
 } // namespace DarwinBluetooth
 

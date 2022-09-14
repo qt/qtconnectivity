@@ -1,4 +1,4 @@
-// Copyright (C) 2020 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef BTSDPINQUIRY_H
@@ -19,6 +19,7 @@
 #include "qbluetoothuuid.h"
 
 #include <QtCore/private/qglobal_p.h>
+#include <QtCore/private/qcore_mac_p.h>
 #include <QtCore/qlist.h>
 
 #include <Foundation/Foundation.h>
@@ -58,5 +59,7 @@ QT_END_NAMESPACE
 - (void)sdpQueryComplete:(IOBluetoothDevice *)aDevice status:(IOReturn)status;
 
 @end
+
+QT_NAMESPACE_ALIAS_OBJC_CLASS(DarwinBTSDPInquiry);
 
 #endif

@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "btdeviceinquiry_p.h"
@@ -14,7 +14,7 @@ QT_USE_NAMESPACE
 
 const uint8_t IOBlueoothInquiryLengthS = 15;
 
-@implementation QT_MANGLE_NAMESPACE(DarwinBTClassicDeviceInquiry)
+@implementation DarwinBTClassicDeviceInquiry
 {
     IOBluetoothDeviceInquiry *m_inquiry;
     bool m_active;

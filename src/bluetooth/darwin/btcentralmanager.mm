@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qlowenergyserviceprivate_p.h"
@@ -71,7 +71,7 @@ QT_END_NAMESPACE
 
 QT_USE_NAMESPACE
 
-@interface QT_MANGLE_NAMESPACE(DarwinBTCentralManager) (PrivateAPI)
+@interface DarwinBTCentralManager (PrivateAPI)
 
 - (void)watchAfter:(id)object timeout:(DarwinBluetooth::OperationTimeout)type;
 - (bool)objectIsUnderWatch:(id)object operation:(DarwinBluetooth::OperationTimeout)type;
@@ -105,7 +105,7 @@ QT_USE_NAMESPACE
 
 using DiscoveryMode = QLowEnergyService::DiscoveryMode;
 
-@implementation QT_MANGLE_NAMESPACE(DarwinBTCentralManager)
+@implementation DarwinBTCentralManager
 {
 @private
     CBCentralManager *manager;
@@ -211,7 +211,7 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
 {
     using namespace DarwinBluetooth;
 
-    GCDTimer newWatcher([[GCDTimerObjC alloc] initWithDelegate:self], RetainPolicy::noInitialRetain);
+    GCDTimer newWatcher([[DarwinBTGCDTimer alloc] initWithDelegate:self], RetainPolicy::noInitialRetain);
     [newWatcher watchAfter:object withTimeoutType:type];
     timeoutWatchdogs.push_back(newWatcher);
     [newWatcher startWithTimeout:timeoutMS step:200];
@@ -244,7 +244,7 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
 
     using namespace DarwinBluetooth;
 
-    GCDTimerObjC *watcher = static_cast<GCDTimerObjC *>(sender);
+    DarwinBTGCDTimer *watcher = static_cast<DarwinBTGCDTimer *>(sender);
     id cbObject = [watcher objectUnderWatch];
     const OperationTimeout type = [watcher timeoutType];
 

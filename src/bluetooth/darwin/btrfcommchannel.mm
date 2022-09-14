@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "btrfcommchannel_p.h"
@@ -8,7 +8,7 @@
 
 QT_USE_NAMESPACE
 
-@implementation QT_MANGLE_NAMESPACE(DarwinBTRFCOMMChannel)
+@implementation DarwinBTRFCOMMChannel
 {
     QT_PREPEND_NAMESPACE(DarwinBluetooth)::ChannelDelegate *delegate;
     IOBluetoothDevice *device;

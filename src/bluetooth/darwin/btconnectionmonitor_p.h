@@ -18,6 +18,8 @@
 #include "qbluetoothaddress.h"
 #include "btdelegates_p.h"
 
+#include <QtCore/private/qcore_mac_p.h>
+
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>
@@ -32,5 +34,7 @@
 
 - (void)stopMonitoring;
 @end
+
+QT_NAMESPACE_ALIAS_OBJC_CLASS(DarwinBTConnectionMonitor);
 
 #endif

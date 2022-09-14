@@ -162,7 +162,6 @@ elseif(MACOS)
             darwin/btl2capchannel.mm darwin/btl2capchannel_p.h
             darwin/btledeviceinquiry.mm darwin/btledeviceinquiry_p.h
             darwin/btnotifier.cpp darwin/btnotifier_p.h
-            darwin/btobexsession.mm darwin/btobexsession_p.h
             darwin/btperipheralmanager.mm darwin/btperipheralmanager_p.h
             darwin/btraii.mm darwin/btraii_p.h
             darwin/btrfcommchannel.mm darwin/btrfcommchannel_p.h
@@ -181,6 +180,7 @@ elseif(MACOS)
         DEFINES
             QT_OSX_BLUETOOTH
         LIBRARIES
+            Qt::CorePrivate
             ${FWFoundation}
             ${FWIOBluetooth}
     )
@@ -206,6 +206,7 @@ elseif(IOS)
         DEFINES
             QT_IOS_BLUETOOTH
         LIBRARIES
+            Qt::CorePrivate
             ${FWCoreBluetooth}
             ${FWFoundation}
     )
