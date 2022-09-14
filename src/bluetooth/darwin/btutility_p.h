@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef BTUTILITY_P_H
@@ -133,24 +133,5 @@ bool qt_appPlistContainsDescription(NSString *key);
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_DARWIN)
 
 QT_END_NAMESPACE
-
-#if QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE(101300) && QT_MACOS_DEPLOYMENT_TARGET_BELOW(101300)
-
- // In the macOS 10.13 SDK, the identifier property was moved from the CBPeripheral
- // and CBCentral classes to a new CBPeer base class. Because CBPeer is only available
- // on macOS 10.13 and above, the same is true for -[CBPeer identifier]. However,
- // since we know that the derived classes have always had this property,
- // we'll explicitly mark its availability here. This will not adversely affect
- // using the identifier through the CBPeer base class, which will still require macOS 10.13.
-
-@interface CBPeripheral (UnguardedWorkaround)
-@property (readonly, nonatomic) NSUUID *identifier NS_AVAILABLE(10_7, 5_0);
-@end
-
-@interface CBCentral (UnguardedWorkaround)
-@property (readonly, nonatomic) NSUUID *identifier NS_AVAILABLE(10_7, 5_0);
-@end
-
-#endif // QT_MACOS_PLATFORM_SDK_EQUAL_OR_ABOVE
 
 #endif // BTUTILITY_P_H

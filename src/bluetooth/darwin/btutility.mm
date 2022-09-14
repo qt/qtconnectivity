@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #include "qlowenergycharacteristicdata.h"
@@ -137,7 +137,6 @@ void qt_test_iobluetooth_runloop()
 }
 
 #endif // !QT_IOS_BLUETOOTH
-
 
 // Apple has: CBUUID, NSUUID, CFUUID, IOBluetoothSDPUUID
 // and it's handy to have several converters:
