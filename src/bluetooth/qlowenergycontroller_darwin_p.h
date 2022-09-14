@@ -1,4 +1,4 @@
-// Copyright (C) 2016 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // Copyright (C) 2016 Javier S. Pedro <maemo@javispedro.com>
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 #ifndef QLOWENERGYCONTROLLER_DARWIN_P_H
@@ -115,14 +115,10 @@ private:
                                     const QByteArray &value,
                                     bool appendValue);
 
-    void setErrorDescription(QLowEnergyController::Error errorCode);
     bool connectSlots(DarwinBluetooth::LECBManagerNotifier *notifier);
 
     DarwinBluetooth::ScopedPointer centralManager;
-
-#ifndef Q_OS_TVOS
     DarwinBluetooth::ScopedPointer peripheralManager;
-#endif
 
     using ServiceMap = QMap<QBluetoothUuid, QSharedPointer<QLowEnergyServicePrivate>>;
 };

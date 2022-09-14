@@ -184,7 +184,7 @@ elseif(MACOS)
             ${FWFoundation}
             ${FWIOBluetooth}
     )
-elseif(IOS OR TVOS)
+elseif(IOS)
     qt_internal_extend_target(Bluetooth
         SOURCES
             darwin/btcentralmanager.mm darwin/btcentralmanager_p.h
@@ -202,19 +202,13 @@ elseif(IOS OR TVOS)
             qbluetoothserviceinfo_p.cpp
             qbluetoothsocket_dummy.cpp qbluetoothsocket_dummy_p.h
             qlowenergycontroller_darwin.mm qlowenergycontroller_darwin_p.h
+            darwin/btperipheralmanager.mm darwin/btperipheralmanager_p.h
         DEFINES
             QT_IOS_BLUETOOTH
         LIBRARIES
             ${FWCoreBluetooth}
             ${FWFoundation}
     )
-
-    if(IOS)
-        qt_internal_extend_target(Bluetooth
-            SOURCES
-                darwin/btperipheralmanager.mm darwin/btperipheralmanager_p.h
-        )
-    endif()
 elseif(QT_FEATURE_winrt_bt)
     qt_internal_extend_target(Bluetooth
         SOURCES
