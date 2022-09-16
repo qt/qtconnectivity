@@ -184,7 +184,17 @@ void tst_QLowEnergyController::tst_emptyCtor()
         QSignalSpy connectedSpy(control.data(), SIGNAL(connected()));
         QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
         QSignalSpy errorSpy(control.data(), SIGNAL(errorOccurred(QLowEnergyController::Error)));
+#if QT_CONFIG(bluez)
+        QBluetoothLocalDevice localDevice;
+        // With bluez Kernel ATT interface we get the error already at construction time if the
+        // device does not have a bluetooth adapter
+        if (!isBluezDbusLE && !localDevice.isValid())
+            QCOMPARE(control->error(), QLowEnergyController::InvalidBluetoothAdapterError);
+        else
+            QCOMPARE(control->error(), QLowEnergyController::NoError);
+#else
         QCOMPARE(control->error(), QLowEnergyController::NoError);
+#endif
         control->connectToDevice();
 
         QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 10000);
@@ -203,7 +213,15 @@ void tst_QLowEnergyController::tst_emptyCtor()
         QSignalSpy connectedSpy(control.data(), SIGNAL(connected()));
         QSignalSpy stateSpy(control.data(), SIGNAL(stateChanged(QLowEnergyController::ControllerState)));
         QSignalSpy errorSpy(control.data(), SIGNAL(errorOccurred(QLowEnergyController::Error)));
+#if QT_CONFIG(bluez)
+        QBluetoothLocalDevice localDevice;
+        if (!isBluezDbusLE && !localDevice.isValid())
+            QCOMPARE(control->error(), QLowEnergyController::InvalidBluetoothAdapterError);
+        else
+            QCOMPARE(control->error(), QLowEnergyController::NoError);
+#else
         QCOMPARE(control->error(), QLowEnergyController::NoError);
+#endif
         control->connectToDevice();
 
         QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 10000);
