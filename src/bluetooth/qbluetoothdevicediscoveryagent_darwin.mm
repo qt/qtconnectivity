@@ -24,6 +24,7 @@
 #include "qbluetoothuuid.h"
 
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>

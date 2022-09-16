@@ -17,14 +17,11 @@
 
 #include "btutility_p.h"
 
-#include "qlowenergyadvertisingparameters.h"
 #include "qlowenergyserviceprivate_p.h"
-#include "qbluetoothuuid.h"
 #include "qbluetooth.h"
 
 #include <QtCore/qsharedpointer.h>
 #include <QtCore/qbytearray.h>
-#include <QtCore/qsysinfo.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qpair.h>
 #include <QtCore/qmap.h>
@@ -41,6 +38,8 @@
 
 QT_BEGIN_NAMESPACE
 
+class QLowEnergyAdvertisingParameters;
+class QLowEnergyAdvertisingData;
 class QLowEnergyServiceData;
 
 namespace DarwinBluetooth

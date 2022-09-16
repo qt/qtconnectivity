@@ -4,6 +4,7 @@
 #include "btgcdtimer_p.h"
 #include "btutility_p.h"
 
+#include <QtCore/qelapsedtimer.h>
 #include <QtCore/qdebug.h>
 
 #include <algorithm>

@@ -19,7 +19,6 @@
 
 #include <QtCore/private/qcore_mac_p.h>
 
-#include <QtCore/qelapsedtimer.h>
 #include <QtCore/qglobal.h>
 
 #include <Foundation/Foundation.h>

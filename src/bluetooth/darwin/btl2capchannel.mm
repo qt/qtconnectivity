@@ -1,8 +1,8 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
-#include "btl2capchannel_p.h"
 #include "qbluetoothaddress.h"
+#include "btl2capchannel_p.h"
 #include "btdelegates_p.h"
 #include "btutility_p.h"
 

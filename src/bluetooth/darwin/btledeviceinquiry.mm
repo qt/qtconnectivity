@@ -10,6 +10,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qendian.h>
+#include <QtCore/qlist.h>
 
 #include <algorithm>
 

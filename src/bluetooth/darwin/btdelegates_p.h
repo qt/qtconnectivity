@@ -1,4 +1,4 @@
-// Copyright (C) 2019 The Qt Company Ltd.
+// Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef BTDELEGATES_P_H
@@ -15,24 +15,18 @@
 // We mean it.
 //
 
-#include "qbluetoothdevicediscoveryagent.h"
-#include "qlowenergycontroller.h"
-#include "qbluetooth.h"
-
-#include <QtCore/qsharedpointer.h>
 #include <QtCore/private/qglobal_p.h>
 
 #if defined(Q_OS_MACOS)
 
 #include <IOKit/IOReturn.h>
 
+#include <cstddef>
 #include <cstdint>
 
 QT_BEGIN_NAMESPACE
 
-class QLowEnergyServicePrivate;
 class QBluetoothAddress;
-class QByteArray;
 
 namespace DarwinBluetooth {
 

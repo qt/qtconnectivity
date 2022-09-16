@@ -16,7 +16,6 @@
 //
 
 #include "qlowenergycontroller.h"
-#include "qlowenergyservice.h"
 #include "qbluetoothuuid.h"
 #include "btgcdtimer_p.h"
 #include "btutility_p.h"
@@ -33,8 +32,6 @@
 #include <CoreBluetooth/CoreBluetooth.h>
 
 QT_BEGIN_NAMESPACE
-
-class QLowEnergyServicePrivate;
 
 namespace DarwinBluetooth {
 

@@ -1,6 +1,7 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
+#include "qlowenergyadvertisingparameters.h"
 #include "qlowenergycharacteristicdata.h"
 #include "qlowenergydescriptordata.h"
 #include "btperipheralmanager_p.h"
@@ -8,11 +9,15 @@
 #include "btnotifier_p.h"
 #include "qbluetooth.h"
 
+#include <QtCore/qstring.h>
 #include <QtCore/qdebug.h>
 #include <QtCore/qlist.h>
 
 #include <algorithm>
+#include <vector>
 #include <limits>
+#include <deque>
+#include <map>
 
 namespace
 {

@@ -35,6 +35,7 @@ QT_BEGIN_NAMESPACE
 class QLowEnergyCharacteristicData;
 class QBluetoothAddress;
 class QBluetoothUuid;
+class QString;
 
 namespace DarwinBluetooth {
 

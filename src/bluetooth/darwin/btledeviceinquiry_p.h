@@ -23,7 +23,6 @@
 #include <QtCore/private/qcore_mac_p.h>
 
 #include <QtCore/qglobal.h>
-#include <QtCore/qlist.h>
 
 #include <Foundation/Foundation.h>
 

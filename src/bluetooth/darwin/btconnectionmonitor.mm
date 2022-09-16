@@ -4,6 +4,8 @@
 #include "btconnectionmonitor_p.h"
 #include "btutility_p.h"
 
+#include "qbluetoothaddress.h"
+
 #include <QtCore/qdebug.h>
 
 QT_USE_NAMESPACE

@@ -11,6 +11,7 @@
 #include "darwin/uistrings_p.h"
 
 #include <QtCore/qoperatingsystemversion.h>
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qstring.h>
 #include <QtCore/qglobal.h>

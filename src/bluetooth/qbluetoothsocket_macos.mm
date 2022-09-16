@@ -17,6 +17,7 @@
 #include "qbluetoothsocket.h"
 
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/qcoreapplication.h>
 #include <QtCore/qmetaobject.h>
 
 #include <algorithm>
