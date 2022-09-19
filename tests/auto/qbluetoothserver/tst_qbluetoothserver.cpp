@@ -5,6 +5,7 @@
 
 #include <QDebug>
 
+#include "../../shared/bttestutil_p.h"
 #include <private/qtbluetoothglobal_p.h>
 #include <qbluetoothserver.h>
 #include <qbluetoothsocket.h>
@@ -34,7 +35,7 @@ private slots:
     void setHostMode(const QBluetoothAddress &localAdapter, QBluetoothLocalDevice::HostMode newHostMode);
 
 private:
-    QBluetoothLocalDevice localDevice;
+    QBluetoothLocalDevice *localDevice = nullptr;
     QBluetoothLocalDevice::HostMode initialHostMode;
 };
 
@@ -82,8 +83,12 @@ void tst_QBluetoothServer::setHostMode(const QBluetoothAddress &localAdapter,
 
 void tst_QBluetoothServer::initTestCase()
 {
+    if (androidBluetoothEmulator())
+        QSKIP("Skipping test on Android 12+ emulator, CI can timeout waiting for user input");
     qRegisterMetaType<QBluetooth::SecurityFlags>();
     qRegisterMetaType<QBluetoothServer::Error>();
+
+    localDevice = new QBluetoothLocalDevice(this);
 
     QBluetoothLocalDevice device;
     if (!device.isValid())
@@ -97,15 +102,15 @@ void tst_QBluetoothServer::initTestCase()
 
     setHostMode(device.address(), QBluetoothLocalDevice::HostConnectable);
 
-    QBluetoothLocalDevice::HostMode hostMode= localDevice.hostMode();
+    QBluetoothLocalDevice::HostMode hostMode= localDevice->hostMode();
 
     QVERIFY(hostMode != QBluetoothLocalDevice::HostPoweredOff);
 }
 
 void tst_QBluetoothServer::cleanupTestCase()
 {
-    QBluetoothLocalDevice device;
-    setHostMode(device.address(), initialHostMode);
+    if (localDevice)
+        setHostMode(localDevice->address(), initialHostMode);
 }
 
 void tst_QBluetoothServer::tst_construction()
@@ -144,11 +149,6 @@ void tst_QBluetoothServer::tst_receive()
 {
     QFETCH(QBluetoothLocalDevice::HostMode, hostmode);
 
-#ifdef ANDROID_CI_TEST_ENVIRONMENT
-    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
-        QSKIP("Skipping test on Android 12+, emulator on CI can timeout waiting for user input");
-#endif
-
     QBluetoothLocalDevice localDev;
 #ifdef Q_OS_OSX
     if (localDev.hostMode() == QBluetoothLocalDevice::HostPoweredOff)
@@ -164,10 +164,10 @@ void tst_QBluetoothServer::tst_receive()
 
         if (hostmode == QBluetoothLocalDevice::HostPoweredOff) {
 #if !defined(Q_OS_OSX) && !QT_CONFIG(winrt_bt)
-            QCOMPARE(localDevice.hostMode(), hostmode);
+            QCOMPARE(localDevice->hostMode(), hostmode);
 #endif
         } else {
-            QVERIFY(localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff);
+            QVERIFY(localDevice->hostMode() != QBluetoothLocalDevice::HostPoweredOff);
         }
     }
     QBluetoothServer server(QBluetoothServiceInfo::RfcommProtocol);
