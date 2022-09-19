@@ -2,11 +2,6 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 if(TARGET Qt::Bluetooth)
-    if(ANDROID)
-        if("$ENV{QTEST_ENVIRONMENT}" STREQUAL "ci")
-            add_compile_definitions(ANDROID_CI_TEST_ENVIRONMENT)
-        endif()
-    endif()
     add_subdirectory(qbluetoothaddress)
     add_subdirectory(qbluetoothdevicediscoveryagent)
     add_subdirectory(qbluetoothdeviceinfo)
