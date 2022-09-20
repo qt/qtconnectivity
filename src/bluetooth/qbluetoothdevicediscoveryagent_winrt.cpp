@@ -294,6 +294,7 @@ QWinRTBluetoothDeviceDiscoveryWorker::QWinRTBluetoothDeviceDiscoveryWorker(
     qRegisterMetaType<QBluetoothDeviceInfo>();
     qRegisterMetaType<QBluetoothDeviceInfo::Fields>();
     qRegisterMetaType<ManufacturerData>();
+    qRegisterMetaType<std::shared_ptr<QWinRTBluetoothDeviceDiscoveryWorker>>();
 
     m_classicWatcher = createDeviceWatcher(ClassicDeviceSelector, ClassicWatcherId);
     // For LE scan use DeviceWatcher to handle only paired devices.
