@@ -80,14 +80,13 @@ tst_QBluetoothServiceDiscoveryAgent::tst_QBluetoothServiceDiscoveryAgent()
         return;
     // start Bluetooth if not started
 #ifndef Q_OS_OSX
-    QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
-    localDeviceAvailable = device->isValid();
+    localDeviceAvailable = bool(QBluetoothLocalDevice::allDevices().size());
     if (localDeviceAvailable) {
+        std::unique_ptr<QBluetoothLocalDevice> device = std::make_unique<QBluetoothLocalDevice>();
         device->powerOn();
         // wait for the device to switch bluetooth mode.
         QTest::qWait(1000);
     }
-    delete device;
 #else
     QBluetoothLocalDevice device;
     localDeviceAvailable = QBluetoothLocalDevice().hostMode() != QBluetoothLocalDevice::HostPoweredOff;

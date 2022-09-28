@@ -60,9 +60,12 @@ namespace winrt::impl
     auto wait_for(Async const& async, Windows::Foundation::TimeSpan const& timeout);
 }
 
+#include <QtCore/QElapsedTimer>
+#include <QtCore/QCoreApplication>
 #include <QtCore/QtGlobal>
 
 #include <wrl/client.h>
+#include <winrt/Windows.Foundation.h>
 
 namespace ABI {
     namespace Windows {
@@ -83,6 +86,27 @@ QByteArray byteArrayFromBuffer(const Microsoft::WRL::ComPtr<NativeBuffer> &buffe
 // The calls to Co(Un)init must be balanced
 void mainThreadCoInit(void* caller);
 void mainThreadCoUninit(void* caller);
+
+template <typename T>
+static bool await(winrt::Windows::Foundation::IAsyncOperation<T> &&asyncInfo, T &result,
+                  uint timeout = 0)
+{
+    using WinRtAsyncStatus = winrt::Windows::Foundation::AsyncStatus;
+    WinRtAsyncStatus status;
+    QElapsedTimer timer;
+    if (timeout)
+        timer.start();
+    do {
+        QCoreApplication::processEvents();
+        status = asyncInfo.Status();
+    } while (status == WinRtAsyncStatus::Started && (!timeout || !timer.hasExpired(timeout)));
+    if (status == WinRtAsyncStatus::Completed) {
+        result = asyncInfo.GetResults();
+        return true;
+    } else {
+        return false;
+    }
+}
 
 QT_END_NAMESPACE
 

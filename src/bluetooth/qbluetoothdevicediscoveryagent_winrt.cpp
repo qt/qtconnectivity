@@ -50,6 +50,7 @@
 #include <QtCore/QMutex>
 #include <QtCore/qendian.h>
 
+#include <winrt/Windows.Devices.Radios.h>
 #include <winrt/Windows.Devices.Bluetooth.h>
 #include <winrt/Windows.Devices.Bluetooth.Advertisement.h>
 #include <winrt/Windows.Devices.Bluetooth.Rfcomm.h>
@@ -735,6 +736,32 @@ QBluetoothDeviceDiscoveryAgent::DiscoveryMethods QBluetoothDeviceDiscoveryAgent:
 
 void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent::DiscoveryMethods methods)
 {
+    // Check the availability and power state of the bluetooth adapter.
+    // This is a check that is specific to Qt 6.2. In later versions we use
+    // QBluetoothLocalDevice which got Windows support in Qt 6.3. Note: here we only
+    // check the default adapter as specifying the adapter address is not supported in Qt 6.2
+    // See QTBUG-106874
+    BluetoothAdapter adapter{nullptr};
+    bool result = await(BluetoothAdapter::GetDefaultAsync(), adapter);
+    if (result && adapter) {
+        using namespace winrt::Windows::Devices::Radios;
+        Radio radio(nullptr);
+        result = await(adapter.GetRadioAsync(), radio);
+        if (!result || !radio || (radio.State() != RadioState::On)) {
+            qCWarning(QT_BT_WINDOWS) << "Bluetooth adapter powered off";
+            lastError = QBluetoothDeviceDiscoveryAgent::PoweredOffError;
+            errorString = QBluetoothDeviceDiscoveryAgent::tr("Device is powered off");
+            emit q_ptr->errorOccurred(lastError);
+            return;
+        }
+    } else {
+        qCWarning(QT_BT_WINDOWS) << "Cannot find Bluetooth adapter for device search";
+        lastError = QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError;
+        errorString = QBluetoothDeviceDiscoveryAgent::tr("Cannot find valid Bluetooth adapter.");
+        emit q_ptr->errorOccurred(lastError);
+        return;
+    }
+
     if (worker)
         return;
 

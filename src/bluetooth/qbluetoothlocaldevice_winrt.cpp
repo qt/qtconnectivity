@@ -60,26 +60,6 @@ using namespace Microsoft::WRL::Wrappers;
 
 QT_BEGIN_NAMESPACE
 
-template <typename T>
-static bool await(IAsyncOperation<T> &&asyncInfo, T &result, uint timeout = 0)
-{
-    using WinRtAsyncStatus = winrt::Windows::Foundation::AsyncStatus;
-    WinRtAsyncStatus status;
-    QElapsedTimer timer;
-    if (timeout)
-        timer.start();
-    do {
-        QCoreApplication::processEvents();
-        status = asyncInfo.Status();
-    } while (status == WinRtAsyncStatus::Started && (!timeout || !timer.hasExpired(timeout)));
-    if (status == WinRtAsyncStatus::Completed) {
-        result = asyncInfo.GetResults();
-        return true;
-    } else {
-        return false;
-    }
-}
-
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent),
     d_ptr(new QBluetoothLocalDevicePrivate(this, QBluetoothAddress()))
