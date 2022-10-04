@@ -3,7 +3,7 @@
 
 #include "uistrings_p.h"
 
-#include <qtranslation.h>
+#include <qttranslation.h>
 
 // Translatable messages should go into this .cpp file for them to
 // be picked up by lupdate.
