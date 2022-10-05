@@ -94,7 +94,7 @@ void tst_QNearFieldTagType1::staticMemoryModel()
 
         const QByteArray data = target->requestResponse(id).toByteArray();
 
-        QCOMPARE(data.length(), 6);
+        QCOMPARE(data.size(), 6);
 
         quint8 hr0 = data.at(0);
         //quint8 hr1 = data.at(1);
@@ -113,7 +113,7 @@ void tst_QNearFieldTagType1::staticMemoryModel()
         QVERIFY(target->waitForRequestCompleted(id));
 
         const QByteArray data = target->requestResponse(id).toByteArray();
-        QCOMPARE(data.length(), 122);
+        QCOMPARE(data.size(), 122);
 
         // verify NfcTagType1.
         QVERIFY(data.at(0) & 0x10);

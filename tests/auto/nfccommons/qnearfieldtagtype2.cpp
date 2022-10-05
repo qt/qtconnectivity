@@ -171,7 +171,7 @@ QNearFieldTarget::RequestId QNearFieldTagType2::readBlock(quint8 blockAddress)
 QNearFieldTarget::RequestId QNearFieldTagType2::writeBlock(quint8 blockAddress,
                                                            const QByteArray &data)
 {
-    if (data.length() != 4)
+    if (data.size() != 4)
         return QNearFieldTarget::RequestId();
 
     QByteArray command;

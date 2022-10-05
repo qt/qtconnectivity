@@ -260,7 +260,7 @@ void BtLocalDevice::deviceDiscovered(const QBluetoothDeviceInfo &info)
     if (info.serviceClasses() & QBluetoothDeviceInfo::InformationService)
         services += "Information|";
 
-    services.truncate(services.length()-1); //cut last '/'
+    services.truncate(services.size()-1); //cut last '/'
 
     qDebug() << "Found new device: " << info.name() << info.isValid() << info.address().toString()
                                      << info.rssi() << info.majorDeviceClass()
@@ -572,7 +572,7 @@ void BtLocalDevice::readData()
             qDebug() << ">> peer(" << socket->peerName() << socket->peerAddress()
                      << socket->peerPort() << ") local("
                      << socket->localName() << socket->localAddress() << socket->localPort()
-                     << ")>>" << QString::fromUtf8(line.constData(), line.length());
+                     << ")>>" << QString::fromUtf8(line.constData(), line.size());
         }
     }
 }
@@ -734,7 +734,7 @@ void BtLocalDevice::clientSocketReadyRead()
 
     while (socket->canReadLine()) {
         const QByteArray line = socket->readLine().trimmed();
-        QString lineString = QString::fromUtf8(line.constData(), line.length());
+        QString lineString = QString::fromUtf8(line.constData(), line.size());
         qDebug() <<  ">>(" << server->serverAddress() << server->serverPort()  <<")>>"
                  << lineString;
 

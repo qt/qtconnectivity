@@ -532,7 +532,7 @@ void tst_QNdefNfcSmartPosterRecord::tst_downcast()
     QByteArray spPayload = sprecord.payload();
 
     // Check length is longer on the base
-    QVERIFY(basePayload.length() > record.payload().length());
+    QVERIFY(basePayload.size() > record.payload().size());
 
     // Check the payloads are the same
     QCOMPARE(basePayload, spPayload);

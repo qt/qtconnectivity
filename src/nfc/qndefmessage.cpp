@@ -287,19 +287,19 @@ QByteArray QNdefMessage::toByteArray() const
 
         // cf (chunked records) not supported yet
 
-        if (record.payload().length() < 255)
+        if (record.payload().size() < 255)
             flags |= 0x10;
 
         if (!record.id().isEmpty())
             flags |= 0x08;
 
         m.append(flags);
-        m.append(record.type().length());
+        m.append(record.type().size());
 
         if (flags & 0x10) {
-            m.append(quint8(record.payload().length()));
+            m.append(quint8(record.payload().size()));
         } else {
-            quint32 length = record.payload().length();
+            quint32 length = record.payload().size();
             m.append(length >> 24);
             m.append(length >> 16);
             m.append(length >> 8);
@@ -307,7 +307,7 @@ QByteArray QNdefMessage::toByteArray() const
         }
 
         if (flags & 0x08)
-            m.append(record.id().length());
+            m.append(record.id().size());
 
         if (!record.type().isEmpty())
             m.append(record.type());

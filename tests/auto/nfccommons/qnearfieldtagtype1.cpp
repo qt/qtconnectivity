@@ -335,7 +335,7 @@ static QVariant decodeResponse(const QByteArray &command, const QByteArray &resp
         if (writeBlockAddress != blockAddress)
             return false;
 
-        for (int i = 0; i < writeData.length(); ++i) {
+        for (int i = 0; i < writeData.size(); ++i) {
             if ((writeData.at(i) & data.at(i)) != data.at(i))
                 return false;
         }
@@ -642,7 +642,7 @@ QNearFieldTarget::RequestId QNearFieldTagType1::writeBlock(quint8 blockAddress,
                                                            const QByteArray &data,
                                                            WriteMode mode)
 {
-    if (data.length() != 8)
+    if (data.size() != 8)
         return QNearFieldTarget::RequestId();
 
     QByteArray command;
