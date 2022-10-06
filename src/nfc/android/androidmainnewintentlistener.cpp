@@ -28,7 +28,7 @@ bool QMainNfcNewIntentListener::handleNewIntent(JNIEnv * /*env*/, jobject intent
         return false;
 
     listenersLock.lockForRead();
-    for (auto listener : qAsConst(listeners)) {
+    for (auto listener : std::as_const(listeners)) {
         listener->newIntent(QJniObject(intent));
     }
     listenersLock.unlock();

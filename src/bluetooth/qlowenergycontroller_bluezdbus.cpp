@@ -120,7 +120,7 @@ void QLowEnergyControllerPrivateBluezDBus::devicePropertiesChanged(
 
                 // Client Characteristic Notification enabled?
                 bool cccActive = false;
-                for (const QLowEnergyServicePrivate::DescData &descData : qAsConst(charData.descriptorList)) {
+                for (const QLowEnergyServicePrivate::DescData &descData : std::as_const(charData.descriptorList)) {
                     if (descData.uuid != QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration))
                         continue;
                     if (descData.value == QByteArray::fromHex("0100")
@@ -662,7 +662,7 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(
         }
 
         // descriptor data
-        for (const auto &descEntry : qAsConst(dbusChar.descriptors)) {
+        for (const auto &descEntry : std::as_const(dbusChar.descriptors)) {
             const QLowEnergyHandle descriptorHandle = runningHandle++;
             QLowEnergyServicePrivate::DescData descData;
             descData.uuid = QBluetoothUuid(descEntry->uUID());
@@ -953,7 +953,7 @@ void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
         const QLowEnergyServicePrivate::CharData &charData =
                             service->characteristicList.value(nextJob.handle);
         bool foundChar = false;
-        for (const auto &gattChar : qAsConst(dbusServiceData.characteristics)) {
+        for (const auto &gattChar : std::as_const(dbusServiceData.characteristics)) {
             if (charData.uuid != QBluetoothUuid(gattChar.characteristic->uUID()))
                 continue;
 
@@ -982,7 +982,7 @@ void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
         const QLowEnergyServicePrivate::CharData &charData =
                             service->characteristicList.value(nextJob.handle);
         bool foundChar = false;
-        for (const auto &gattChar : qAsConst(dbusServiceData.characteristics)) {
+        for (const auto &gattChar : std::as_const(dbusServiceData.characteristics)) {
             if (charData.uuid != QBluetoothUuid(gattChar.characteristic->uUID()))
                 continue;
 
@@ -1024,11 +1024,11 @@ void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
 
         const QBluetoothUuid descUuid = charData.descriptorList[nextJob.handle].uuid;
         bool foundDesc = false;
-        for (const auto &gattChar : qAsConst(dbusServiceData.characteristics)) {
+        for (const auto &gattChar : std::as_const(dbusServiceData.characteristics)) {
             if (charData.uuid != QBluetoothUuid(gattChar.characteristic->uUID()))
                 continue;
 
-            for (const auto &gattDesc : qAsConst(gattChar.descriptors)) {
+            for (const auto &gattDesc : std::as_const(gattChar.descriptors)) {
                 if (descUuid != QBluetoothUuid(gattDesc->uUID()))
                     continue;
 
@@ -1068,11 +1068,11 @@ void QLowEnergyControllerPrivateBluezDBus::scheduleNextJob()
 
         const QBluetoothUuid descUuid = charData.descriptorList[nextJob.handle].uuid;
         bool foundDesc = false;
-        for (const auto &gattChar : qAsConst(dbusServiceData.characteristics)) {
+        for (const auto &gattChar : std::as_const(dbusServiceData.characteristics)) {
             if (charData.uuid != QBluetoothUuid(gattChar.characteristic->uUID()))
                 continue;
 
-            for (const auto &gattDesc : qAsConst(gattChar.descriptors)) {
+            for (const auto &gattDesc : std::as_const(gattChar.descriptors)) {
                 if (descUuid != QBluetoothUuid(gattDesc->uUID()))
                     continue;
 

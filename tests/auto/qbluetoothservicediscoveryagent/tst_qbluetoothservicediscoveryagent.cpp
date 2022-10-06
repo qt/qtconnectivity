@@ -257,7 +257,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery_data()
 
     // Only need to test the first 5 live devices
     int max = 5;
-    for (const QBluetoothDeviceInfo &info : qAsConst(devices)) {
+    for (const QBluetoothDeviceInfo &info : std::as_const(devices)) {
         if (info.isCached())
             continue;
         QTest::newRow("default filter") << info << QList<QBluetoothUuid>()

@@ -506,7 +506,7 @@ QList<QLowEnergyCharacteristic> QLowEnergyService::characteristics() const
     QList<QLowEnergyHandle> handles = d_ptr->characteristicList.keys();
     std::sort(handles.begin(), handles.end());
 
-    for (const QLowEnergyHandle &handle : qAsConst(handles)) {
+    for (const QLowEnergyHandle &handle : std::as_const(handles)) {
         QLowEnergyCharacteristic characteristic(d_ptr, handle);
         results.append(characteristic);
     }

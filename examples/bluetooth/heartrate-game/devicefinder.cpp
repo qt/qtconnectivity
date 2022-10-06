@@ -104,7 +104,7 @@ void DeviceFinder::connectToService(const QString &address)
     m_deviceDiscoveryAgent->stop();
 
     DeviceInfo *currentDevice = nullptr;
-    for (QObject *entry : qAsConst(m_devices)) {
+    for (QObject *entry : std::as_const(m_devices)) {
         auto device = qobject_cast<DeviceInfo *>(entry);
         if (device && device->getAddress() == address ) {
             currentDevice = device;

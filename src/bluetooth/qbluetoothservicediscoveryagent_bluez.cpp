@@ -131,7 +131,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::runExternalSdpScan(
     // No filter implies PUBLIC_BROWSE_GROUP based SDP scan
     if (!uuidFilter.isEmpty()) {
         arguments << QLatin1String("-u"); // cmd line option for list of uuids
-        for (const QBluetoothUuid& uuid : qAsConst(uuidFilter))
+        for (const QBluetoothUuid& uuid : std::as_const(uuidFilter))
             arguments << uuid.toString();
     }
 

@@ -379,7 +379,7 @@ void BtLocalDevice::serviceDiscovered(const QBluetoothServiceInfo &info)
     {
         //This is here to detect the test server for SPP testing later on
         bool alreadyKnown = false;
-        for (const QBluetoothServiceInfo& found : qAsConst(foundTestServers)) {
+        for (const QBluetoothServiceInfo& found : std::as_const(foundTestServers)) {
             if (found.device().address() == info.device().address()) {
                 alreadyKnown = true;
                 break;
@@ -433,7 +433,7 @@ void BtLocalDevice::dumpServiceDiscovery()
         }
 
         qDebug() << "###### TestServer offered by:";
-        for (const QBluetoothServiceInfo& found : qAsConst(foundTestServers)) {
+        for (const QBluetoothServiceInfo& found : std::as_const(foundTestServers)) {
             qDebug() << found.device().name() << found.device().address().toString();
         }
     }
@@ -769,7 +769,7 @@ void BtLocalDevice::dumpServerInformation()
 
         //server->setSecurityFlags(secFlag);
 
-        for (const QBluetoothSocket *client : qAsConst(serverSockets)) {
+        for (const QBluetoothSocket *client : std::as_const(serverSockets)) {
             qDebug() << "##" << client->localAddress().toString()
                      << client->localName() << client->localPort();
             qDebug() << "##" << client->peerAddress().toString()

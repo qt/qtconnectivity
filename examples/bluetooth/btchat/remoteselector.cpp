@@ -68,7 +68,7 @@ void RemoteSelector::serviceDiscovered(const QBluetoothServiceInfo &serviceInfo)
     qDebug() << "\tRFCOMM server channel:" << serviceInfo.serverChannel();
 #endif
     const QBluetoothAddress address = serviceInfo.device().address();
-    for (const QBluetoothServiceInfo &info : qAsConst(m_discoveredServices)) {
+    for (const QBluetoothServiceInfo &info : std::as_const(m_discoveredServices)) {
         if (info.device().address() == address)
             return;
     }

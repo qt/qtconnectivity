@@ -86,7 +86,7 @@ void tst_QLowEnergyDescriptor::initTestCase()
 
     // find first service with descriptor
     QLowEnergyController *controller = nullptr;
-    for (const QBluetoothDeviceInfo& remoteDeviceInfo : qAsConst(remoteLeDeviceInfos)) {
+    for (const QBluetoothDeviceInfo& remoteDeviceInfo : std::as_const(remoteLeDeviceInfos)) {
         controller = QLowEnergyController::createCentral(remoteDeviceInfo, this);
         qDebug() << "Connecting to" << remoteDeviceInfo.address();
         controller->connectToDevice();
