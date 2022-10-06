@@ -14,8 +14,10 @@ qt_internal_add_jar(Qt${QtConnectivity_VERSION_MAJOR}AndroidNfc
     OUTPUT_DIR "${QT_BUILD_DIR}/jar"
 )
 
+qt_path_join(destination ${INSTALL_DATADIR} "jar")
+
 install_jar(Qt${QtConnectivity_VERSION_MAJOR}AndroidNfc
-    DESTINATION jar
+    DESTINATION ${destination}
     COMPONENT Devel
 )
 
