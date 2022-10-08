@@ -353,7 +353,7 @@ bool QTlvWriter::process(bool all)
 
     if (m_tagMemorySize == -1) {
         if (m_rawData)
-            m_tagMemorySize = m_rawData->length();
+            m_tagMemorySize = m_rawData->size();
         else if (QNearFieldTagType1 *tag = qobject_cast<QNearFieldTagType1 *>(m_target)) {
             if (m_requestId.isValid()) {
                 m_tagMemorySize = 8 * (tag->requestResponse(m_requestId).toUInt() + 1);
