@@ -1121,6 +1121,13 @@ void BtLocalDevice::centralCreate()
                      [](QLowEnergyController::Error error) {
         qDebug() << "QLowEnergyController central errorOccurred:" << error;
     });
+    QObject::connect(leCentralController.get(), &QLowEnergyController::discoveryFinished, []() {
+        qDebug() << "QLowEnergyController central service discovery finished";
+    });
+    QObject::connect(leCentralController.get(), &QLowEnergyController::serviceDiscovered,
+                     [](const QBluetoothUuid &newService){
+        qDebug() << "QLowEnergyController central service discovered:" << newService;
+    });
     QObject::connect(leCentralController.get(), &QLowEnergyController::stateChanged,
                      [this](QLowEnergyController::ControllerState state) {
         qDebug() << "QLowEnergyController central stateChanged:" << state;

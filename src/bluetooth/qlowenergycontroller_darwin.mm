@@ -666,10 +666,13 @@ void QLowEnergyControllerPrivateDarwin::_q_CBManagerError(QLowEnergyController::
     setError(errorCode);
 
     if (state == QLowEnergyController::ConnectingState
-            || state == QLowEnergyController::AdvertisingState)
+            || state == QLowEnergyController::AdvertisingState) {
         setState(QLowEnergyController::UnconnectedState);
-    else if (state == QLowEnergyController::DiscoveringState)
+    } else if (state == QLowEnergyController::DiscoveringState) {
+        // An error occurred during service discovery, finish the discovery.
         setState(QLowEnergyController::ConnectedState);
+        emit q_ptr->discoveryFinished();
+    }
 
     // In any other case we stay in Discovered, it's
     // a service/characteristic - related error.

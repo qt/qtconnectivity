@@ -1374,8 +1374,10 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
     if (error) {
         NSLog(@"%s failed with error %@", Q_FUNC_INFO, error);
         // TODO: better error mapping required.
+        // Emit an error which also causes the service discovery finished() signal
         if (notifier)
             emit notifier->CBManagerError(QLowEnergyController::UnknownError);
+        return;
     }
 
     [self discoverIncludedServices];
