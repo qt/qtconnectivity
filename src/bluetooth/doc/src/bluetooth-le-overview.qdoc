@@ -263,13 +263,10 @@ Low Energy devices.
     In general characteristic and descriptor value updates on the peripheral device use the same
     methods as connecting Bluetooth Low Energy devices.
 
-    \note To use QtBluetooth (in both central and peripheral roles) on iOS, you have to provide an Info.plist
-    file containing the usage description. According to the CoreBluetooth's documentation:
-
-    "Important
-
-    Your app will crash if its Info.plist doesn’t include usage description keys for the types of data
-    it needs to access. To access Core Bluetooth APIs on apps linked on or after iOS 13, include the
-    NSBluetoothAlwaysUsageDescription key. In iOS 12 and earlier, include NSBluetoothPeripheralUsageDescription
-    to access Bluetooth peripheral data."
+    \note To use QtBluetooth (in both central and peripheral roles) on iOS, you have to provide
+    an Info.plist file containing the usage description. According to the CoreBluetooth's
+    documentation: \e {Your app will crash if its Info.plist doesn’t include usage description
+    keys for the types of data it needs to access. To access Core Bluetooth APIs on apps linked
+    on or after iOS 13, include the NSBluetoothAlwaysUsageDescription key. In iOS 12 and earlier,
+    include NSBluetoothPeripheralUsageDescription to access Bluetooth peripheral data.}
 */
