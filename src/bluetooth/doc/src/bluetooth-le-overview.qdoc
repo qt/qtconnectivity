@@ -122,7 +122,7 @@ Low Energy devices.
     The example above uses the UUIDs \c 0x2A08 (Date Time) and \c 0x2A37 (Heart Rate Measurement).
     Each of the above UUIDs is defined by the \l {https://bluetooth.org}{Bluetooth Special Interest Group}.
     and can be found in the
-    \l{https://developer.bluetooth.org/gatt/Pages/default.aspx}{GATT specification}. While it
+    \l{https://www.bluetooth.com/specifications/assigned-numbers}{GATT specifications}. While it
     is advisable to use pre-defined UUIDs where available it is entirely possible to use new and not
     yet used UUIDs for characteristic and service types.
 
