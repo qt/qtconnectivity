@@ -10,7 +10,7 @@ QtBluetooth and user code linking to it is not considered a derivative work, and
 have to be released under GPL too.",
     "Description": "SDP Search via BlueZ",
     "Homepage": "http://www.bluez.org/",
-    "LicenseId": "GPL-2.0",
+    "LicenseId": "GPL-2.0-only",
     "License": "GNU General Public License v2.0 only (This does not force user code to be GPL'ed. For more info see details.)",
     "Copyright": "Copyright (C) 2000-2016 BlueZ Project."
 }
