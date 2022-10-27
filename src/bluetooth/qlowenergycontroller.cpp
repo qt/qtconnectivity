@@ -301,30 +301,51 @@ void registerQLowEnergyControllerMetaType()
     }
 }
 
-static QLowEnergyControllerPrivate *privateController(QLowEnergyController::Role role)
+static QLowEnergyControllerPrivate *privateController(
+        QLowEnergyController::Role role,
+        const QBluetoothAddress& localDevice = QBluetoothAddress{})
 {
 #if QT_CONFIG(bluez) && !defined(QT_BLUEZ_NO_BTLE)
-    // The new DBUS implementation only supports Central role for now
-    // For Peripheral role support see QTBUG-66909
+    // Central role
+    // The minimum Bluez DBus version for central role is 5.42, otherwise we
+    // fall back to kernel ATT backend. Application can also force the choice
+    // with an environment variable (see bluetoothdVersion())
+    //
+    // Peripheral role
+    // For the dbus peripheral backend we check the presence of the required DBus APIs, and in
+    // addition the application needs to opt-in to the DBus peripheral role by setting the
+    // environment variable. Otherwise we fall back to the kernel ATT backend
+    //
+    // ### Qt 7 consider removing the non-dbus bluez (kernel ATT) support
     if (role == QLowEnergyController::CentralRole
             && bluetoothdVersion() >= QVersionNumber(5, 42)) {
-        qCWarning(QT_BT) << "Using BlueZ LE DBus API";
+        qCDebug(QT_BT) << "Using BlueZ LE DBus API for central";
+        return new QLowEnergyControllerPrivateBluezDBus();
+    } else if (role == QLowEnergyController::PeripheralRole
+               && qEnvironmentVariableIsSet("BLUETOOTH_USE_DBUS_PERIPHERAL")
+               && peripheralInterfaceAvailable(localDevice)) {
+        qCDebug(QT_BT) << "Using BlueZ LE DBus API for peripheral";
         return new QLowEnergyControllerPrivateBluezDBus();
     } else {
-        qCWarning(QT_BT) << "Using BlueZ kernel ATT interface";
+        qCDebug(QT_BT) << "Using BlueZ kernel ATT interface for"
+                       << (role == QLowEnergyController::CentralRole ? "central" : "peripheral");
         return new QLowEnergyControllerPrivateBluez();
     }
 #elif defined(QT_ANDROID_BLUETOOTH)
     Q_UNUSED(role);
+    Q_UNUSED(localDevice);
     return new QLowEnergyControllerPrivateAndroid();
 #elif defined(QT_WINRT_BLUETOOTH)
     Q_UNUSED(role);
+    Q_UNUSED(localDevice);
     return new QLowEnergyControllerPrivateWinRT();
 #elif defined(Q_OS_DARWIN)
     Q_UNUSED(role);
+    Q_UNUSED(localDevice);
     return new QLowEnergyControllerPrivateDarwin();
 #else
     Q_UNUSED(role);
+    Q_UNUSED(localDevice);
     return new QLowEnergyControllerPrivateCommon();
 #endif
 }
@@ -450,7 +471,7 @@ QLowEnergyController *QLowEnergyController::createPeripheral(const QBluetoothAdd
 QLowEnergyController::QLowEnergyController(const QBluetoothAddress &localDevice, QObject *parent)
     : QObject(parent)
 {
-    d_ptr = privateController(PeripheralRole);
+    d_ptr = privateController(PeripheralRole, localDevice);
 
     Q_D(QLowEnergyController);
     d->q_ptr = this;

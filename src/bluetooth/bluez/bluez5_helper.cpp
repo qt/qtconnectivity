@@ -512,6 +512,41 @@ QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok =
 }
 
 /*
+
+  Checks the presence of peripheral interface
+
+*/
+
+bool peripheralInterfaceAvailable(const QBluetoothAddress &localAddress)
+{
+    // First find the object path to the desired adapter
+    bool ok = false;
+    const QString hostAdapterPath = findAdapterForAddress(localAddress, &ok);
+    if (!ok || hostAdapterPath.isEmpty())
+        return false;
+
+    // Then check if that adapter provides peripheral dbus interface
+    OrgFreedesktopDBusObjectManagerInterface manager(QStringLiteral("org.bluez"),
+                                                     QStringLiteral("/"),
+                                                     QDBusConnection::systemBus());
+    QDBusPendingReply<ManagedObjectList> reply = manager.GetManagedObjects();
+    reply.waitForFinished();
+    if (reply.isError())
+        return false;
+
+    using namespace Qt::StringLiterals;
+    // For example /org/bluez/hci0 contains org.bluezLEAdvertisingManager1
+    const bool peripheralSupported = reply.value()
+                   .value(QDBusObjectPath(hostAdapterPath))
+                   .contains("org.bluez.LEAdvertisingManager1"_L1);
+
+    qCDebug(QT_BT_BLUEZ) << "Peripheral role"
+                         << (peripheralSupported ? "" : "not")
+                         << "supported on" << hostAdapterPath;
+    return peripheralSupported;
+}
+
+/*
     Removes every character that cannot be used in QDbusObjectPath
 
     See QDbusUtil::isValidObjectPath(QString) for more details.
