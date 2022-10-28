@@ -75,6 +75,9 @@ if(QT_FEATURE_bluez)
             bluez/properties.cpp bluez/properties_p.h
             bluez/remotedevicemanager.cpp bluez/remotedevicemanager_p.h
             bluez/servicemap.cpp bluez/servicemap_p.h
+            bluez/gattmanager1.cpp bluez/gattmanager1_p.h
+            bluez/leadvertisement1.cpp bluez/leadvertisement1_p.h
+            bluez/leadvertisingmanager1.cpp bluez/leadvertisingmanager1_p.h
             qbluetoothdevicediscoveryagent_bluez.cpp
             qbluetoothlocaldevice_bluez.cpp
             qbluetoothserver_bluez.cpp

@@ -27,3 +27,5 @@ process gattdesc1        org.bluez.GattDescriptor1.xml
 process gattservice1     org.bluez.GattService1.xml
 process battery1         org.bluez.Battery1.xml
 
+process gattmanager1     org.bluez.GattManager1.xml
+process leadvertisingmanager1 org.bluez.LEAdvertisingManager1.xml
