@@ -323,7 +323,7 @@ static QLowEnergyControllerPrivate *privateController(
         return new QLowEnergyControllerPrivateBluezDBus();
     } else if (role == QLowEnergyController::PeripheralRole
                && qEnvironmentVariableIsSet("BLUETOOTH_USE_DBUS_PERIPHERAL")
-               && peripheralInterfaceAvailable(localDevice)) {
+               && !adapterWithDBusPeripheralInterface(localDevice).isEmpty()) {
         qCDebug(QT_BT) << "Using BlueZ LE DBus API for peripheral";
         return new QLowEnergyControllerPrivateBluezDBus();
     } else {

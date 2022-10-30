@@ -955,6 +955,12 @@ void BtLocalDevice::peripheralStartAdvertising()
         leAdvertisingData.setDiscoverability(QLowEnergyAdvertisingData::DiscoverabilityGeneral);
         leAdvertisingData.setIncludePowerLevel(true);
         leAdvertisingData.setLocalName(leRemotePeriphreralDeviceName);
+
+        leAdvertisingData.setManufacturerData(0xCAFE, "maker");
+        // Here we use short unrelated UUID so we can fit both service UUID and manufacturer data
+        // into the advertisement. This is for testing purposes
+        leAdvertisingData.setServices(
+                    {QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::AlertNotificationService)});
         // Results in too big advertisement data, can be useful for testing such scenario
         // leAdvertisingData.setServices(QList{leServiceData.uuid()});
     }
@@ -990,8 +996,13 @@ void BtLocalDevice::peripheralStartAdvertising()
     });
 
     // Start advertising
-    lePeripheralController->startAdvertising(QLowEnergyAdvertisingParameters{},
+    QLowEnergyAdvertisingParameters advertisingParameters;
+    advertisingParameters.setInterval(30, 60);
+
+    lePeripheralController->startAdvertising(advertisingParameters,
                                              leAdvertisingData, leAdvertisingData);
+    //lePeripheralController->startAdvertising(QLowEnergyAdvertisingParameters{},
+    //                                         leAdvertisingData, leAdvertisingData);
 }
 
 void BtLocalDevice::peripheralStopAdvertising()

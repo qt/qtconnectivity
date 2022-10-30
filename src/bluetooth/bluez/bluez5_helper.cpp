@@ -513,17 +513,17 @@ QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok =
 
 /*
 
-  Checks the presence of peripheral interface
+  Checks the presence of peripheral interface and returns path to the adapter
 
 */
 
-bool peripheralInterfaceAvailable(const QBluetoothAddress &localAddress)
+QString adapterWithDBusPeripheralInterface(const QBluetoothAddress &localAddress)
 {
     // First find the object path to the desired adapter
     bool ok = false;
     const QString hostAdapterPath = findAdapterForAddress(localAddress, &ok);
     if (!ok || hostAdapterPath.isEmpty())
-        return false;
+        return {};
 
     // Then check if that adapter provides peripheral dbus interface
     OrgFreedesktopDBusObjectManagerInterface manager(QStringLiteral("org.bluez"),
@@ -532,7 +532,7 @@ bool peripheralInterfaceAvailable(const QBluetoothAddress &localAddress)
     QDBusPendingReply<ManagedObjectList> reply = manager.GetManagedObjects();
     reply.waitForFinished();
     if (reply.isError())
-        return false;
+        return {};
 
     using namespace Qt::StringLiterals;
     // For example /org/bluez/hci0 contains org.bluezLEAdvertisingManager1
@@ -543,7 +543,7 @@ bool peripheralInterfaceAvailable(const QBluetoothAddress &localAddress)
     qCDebug(QT_BT_BLUEZ) << "Peripheral role"
                          << (peripheralSupported ? "" : "not")
                          << "supported on" << hostAdapterPath;
-    return peripheralSupported;
+    return peripheralSupported ? hostAdapterPath : QString{};
 }
 
 /*

@@ -12,17 +12,18 @@
         </property>
         <!-- SolicitUUIDs -->
         <!-- ServiceData -->
-        <!-- Data -->
-        <!-- Discoverable -->
-        <!-- DiscoverableTimeout -->
+        <!-- Data experimental -->
+        <property name="Discoverable" type="b" access="readwrite"/>
+        <!-- DiscoverableTimeout experimental -->
         <property name="Includes" type="as" access="readwrite"/>
         <property name="LocalName" type="s" access="readwrite"/>
         <!-- Appearance -->
         <!-- Duration -->
         <!-- Timeout -->
-        <!-- SecondaryChannel -->
-        <!-- MinInterval -->
-        <!-- MaxInterval -->
-        <!-- TxPower -->
+        <!-- SecondaryChannel experimental -->
+        <!-- min max intervals are experimental -->
+        <property name="MinInterval" type="u" access="readwrite"/>
+        <property name="MaxInterval" type="u" access="readwrite"/>
+        <!-- TxPower experimental -->
     </interface>
 </node>

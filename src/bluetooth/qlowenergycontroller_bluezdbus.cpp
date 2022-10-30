@@ -25,7 +25,8 @@ QLowEnergyControllerPrivateBluezDBus::QLowEnergyControllerPrivateBluezDBus()
 QLowEnergyControllerPrivateBluezDBus::~QLowEnergyControllerPrivateBluezDBus()
 {
     if (state != QLowEnergyController::UnconnectedState) {
-        qCWarning(QT_BT_BLUEZ) << "Low Energy Controller deleted while connected.";
+        qCWarning(QT_BT_BLUEZ) << "Low Energy Controller is not Unconnected when deleted."
+                               << "Deleted in state:" << state;
     }
 }
 
@@ -212,6 +213,11 @@ void QLowEnergyControllerPrivateBluezDBus::resetController()
     if (deviceMonitor) {
         delete deviceMonitor;
         deviceMonitor = nullptr;
+    }
+
+    if (advertiser) {
+        delete advertiser;
+        advertiser = nullptr;
     }
 
     dbusServices.clear();
@@ -1282,14 +1288,57 @@ void QLowEnergyControllerPrivateBluezDBus::writeDescriptor(
 }
 
 void QLowEnergyControllerPrivateBluezDBus::startAdvertising(
-                    const QLowEnergyAdvertisingParameters &/* params */,
-                    const QLowEnergyAdvertisingData &/* advertisingData */,
-                    const QLowEnergyAdvertisingData &/* scanResponseData */)
+                    const QLowEnergyAdvertisingParameters &params,
+                    const QLowEnergyAdvertisingData &advertisingData,
+                    const QLowEnergyAdvertisingData &scanResponseData)
 {
+    error = QLowEnergyController::NoError;
+    errorString.clear();
+
+    if (advertiser) {
+        // Clear any previous advertiser to start anew
+        advertiser->stopAdvertising();
+        delete advertiser;
+        advertiser = nullptr;
+    }
+
+    const QString hostAdapterPath = adapterWithDBusPeripheralInterface(localAdapter);
+    if (hostAdapterPath.isEmpty()) {
+        qCWarning(QT_BT_BLUEZ) << "Cannot find suitable bluetooth adapter";
+        setError(QLowEnergyController::InvalidBluetoothAdapterError);
+        return;
+    }
+
+    advertiser = new QLeDBusAdvertiser(params, advertisingData, scanResponseData,
+                                       hostAdapterPath, this);
+    connect(advertiser, &QLeDBusAdvertiser::errorOccurred,
+            this, &QLowEnergyControllerPrivateBluezDBus::handleAdvertisingError);
+    connect(advertiser, &QLeDBusAdvertiser::advertisingStopped,
+            this, &QLowEnergyControllerPrivateBluezDBus::handleAdvertisingStopped);
+
+    setState(QLowEnergyController::AdvertisingState);
+    advertiser->startAdvertising();
 }
 
 void QLowEnergyControllerPrivateBluezDBus::stopAdvertising()
 {
+    if (advertiser)
+        advertiser->stopAdvertising();
+}
+
+
+void QLowEnergyControllerPrivateBluezDBus::handleAdvertisingError()
+{
+    qCWarning(QT_BT_BLUEZ) << "An advertising error occurred";
+    setError(QLowEnergyController::AdvertisingError);
+    setState(QLowEnergyController::UnconnectedState);
+}
+
+void QLowEnergyControllerPrivateBluezDBus::handleAdvertisingStopped()
+{
+    qCDebug(QT_BT_BLUEZ) << "Advertising stopped";
+    if (state == QLowEnergyController::AdvertisingState)
+        setState(QLowEnergyController::UnconnectedState);
 }
 
 void QLowEnergyControllerPrivateBluezDBus::requestConnectionUpdate(
@@ -1301,18 +1350,13 @@ void QLowEnergyControllerPrivateBluezDBus::addToGenericAttributeList(
                     const QLowEnergyServiceData &/* service */,
                     QLowEnergyHandle /* startHandle */)
 {
+    // TODO create services
 }
 
 int QLowEnergyControllerPrivateBluezDBus::mtu() const
 {
     // currently not supported
     return -1;
-}
-
-QLowEnergyService *QLowEnergyControllerPrivateBluezDBus::addServiceHelper(
-                    const QLowEnergyServiceData &/*service*/)
-{
-    return nullptr;
 }
 
 QT_END_NAMESPACE

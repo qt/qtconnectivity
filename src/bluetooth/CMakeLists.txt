@@ -94,6 +94,7 @@ if(QT_FEATURE_bluez)
             SOURCES
                 lecmaccalculator.cpp
                 qleadvertiser_bluez.cpp qleadvertiser_bluez_p.h
+                qleadvertiser_bluezdbus.cpp qleadvertiser_bluezdbus_p.h
                 qlowenergycontroller_bluez.cpp qlowenergycontroller_bluez_p.h
                 qlowenergycontroller_bluezdbus.cpp qlowenergycontroller_bluezdbus_p.h
         )

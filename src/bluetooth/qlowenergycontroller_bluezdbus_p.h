@@ -18,6 +18,7 @@
 
 #include "qlowenergycontroller.h"
 #include "qlowenergycontrollerbase_p.h"
+#include "qleadvertiser_bluezdbus_p.h"
 
 #include <QtDBus/QDBusObjectPath>
 
@@ -82,9 +83,6 @@ public:
 
     int mtu() const override;
 
-    QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service) override;
-
-
 private:
     void connectToDeviceHelper();
     void resetController();
@@ -108,6 +106,10 @@ private:
     OrgBluezDevice1Interface* device{};
     OrgFreedesktopDBusObjectManagerInterface* managerBluez{};
     OrgFreedesktopDBusPropertiesInterface* deviceMonitor{};
+
+    QLeDBusAdvertiser *advertiser{};
+    void handleAdvertisingError();
+    void handleAdvertisingStopped();
 
     bool pendingConnect = false;
     bool disconnectSignalRequired = false;
