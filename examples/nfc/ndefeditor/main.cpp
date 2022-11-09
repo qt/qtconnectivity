@@ -1,15 +1,22 @@
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-#include <QApplication>
-#include "mainwindow.h"
+#include <QGuiApplication>
+#include <QIcon>
+#include <QQmlApplicationEngine>
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
-    MainWindow w;
+    QGuiApplication app(argc, argv);
 
-    w.show();
+    QIcon::setThemeName("ndefeditor");
 
-    return a.exec();
+    QQmlApplicationEngine engine;
+
+    QObject::connect(
+            &engine, &QQmlApplicationEngine::objectCreationFailed, &app,
+            []() { QCoreApplication::exit(1); }, Qt::QueuedConnection);
+    engine.loadFromModule("NdefEditor", "Main");
+
+    return app.exec();
 }
