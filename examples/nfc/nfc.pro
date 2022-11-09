@@ -1,6 +1,7 @@
 TEMPLATE = subdirs
 qtHaveModule(widgets) {
-    SUBDIRS += \
-        annotatedurl \
-        ndefeditor
+    SUBDIRS += annotatedurl
+}
+qtHaveModule(quickcontrols2) {
+     SUBDIRS += ndefeditor
 }

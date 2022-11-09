@@ -8,78 +8,9 @@
 
 The NDEF Editor example reads and writes NFC Data Exchange Format
 (NDEF) messages to NFC Forum Tags. NDEF messages can be composed by
-adding records of supported types. Additionally, NDEF messages can be
-loaded/saved from/into a file located in the file system of the
-device where the application is running.
+adding text and URI records. Records can be deleted by swiping them to the left.
 
 \image ndefeditor.png
-
-\section1 NFC Tag detection
-
-The \c MainWindow class is able to detect if an NFC Tag is in the range
-for read/write operations. It can also detect if the connection has been
-lost. This is achieved by connecting the \c MainWindow class private
-handlers to the \l QNearFieldManager::targetDetected and
-\l QNearFieldManager::targetLost signals.
-
-\snippet ndefeditor/mainwindow.cpp QNearFieldManager init
-
-When \e Read or \e Write button is pressed, the detection of NFC tags is started
-by calling the \l QNearFieldManager::startTargetDetection method.
-
-\snippet ndefeditor/mainwindow.cpp QNearFieldManager start detection
-
-Once the target is detected, the \c MainWindow connects the following
-signals to its internal private slots:
-\l QNearFieldTarget::ndefMessageRead, \l QNearFieldTarget::NdefReadError,
-\l QNearFieldTarget::requestCompleted,
-\l QNearFieldTarget::NdefWriteError and \l {QNearFieldTarget::error}.
-
-\snippet ndefeditor/mainwindow.cpp QNearFieldTarget detected
-
-If during the process of reading or writing to an NFC Tag the
-connection is lost, the \c MainWindow reacts to this event by
-scheduling the target deletion (using \l QObject::deleteLater).
-
-\snippet ndefeditor/mainwindow.cpp QNearFieldTarget lost
-
-\section1 Record creation
-
-The main window of the NDEF Editor example manages the composition and
-creation of NFC records. The UI contains a \l QScrollArea, which is used to
-dynamically add the record editors. The following methods of the \c MainWindow
-class provide an interface towards each of the record editing classes managing
-the different types of records.
-
-\snippet ndefeditor/mainwindow.h 0
-
-The following sections explain each of the record editing classes.
-
-\section1 Record editing classes
-
-\section2 TextRecordEditor
-
-The \c TextRecordEditor is a \l QWidget that allows to edit the contents of the
-NDEF Text record. A new instance of this class is created for each text record.
-
-\snippet ndefeditor/textrecordeditor.h 0
-
-\section2 UriRecordEditor
-
-The \c UriRecordEditor is a \l QWidget that allows to edit the contents of the
-NDEF Uri record. A new instance of this class is created for each uri record.
-
-\snippet ndefeditor/urirecordeditor.h 0
-
-\section2 MimeImageRecordEditor
-
-The \c MimeImageRecordEditor is a \l QWidget that allows to edit the contents of
-the NDEF MIME record. In this example MIME record can be used to store an icon.
-A new instance of this class is created for each MIME record.
-
-\snippet ndefeditor/mimeimagerecordeditor.h 0
-
-\include examples-run.qdocinc
 
 \sa {Qt NFC}
 */
