@@ -52,6 +52,7 @@ import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
 import android.content.IntentFilter.MalformedMimeTypeException;
 import android.os.Bundle;
+import android.os.Build;
 import android.util.Log;
 import android.content.BroadcastReceiver;
 import android.content.pm.PackageManager;
@@ -82,11 +83,16 @@ public class QtNfc
             return;
         }
 
+        // Since Android 12 (API level 31) it's mandatory to specify mutability
+        // of PendingIntent. We need a mutable intent, which was a default
+        // option earlier.
+        int flags = (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) ? PendingIntent.FLAG_MUTABLE
+                                                                     : 0;
         m_pendingIntent = PendingIntent.getActivity(
             m_activity,
             0,
             new Intent(m_activity, m_activity.getClass()).addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP),
-            0);
+            flags);
 
         //Log.d(TAG, "Pending intent:" + m_pendingIntent);
 

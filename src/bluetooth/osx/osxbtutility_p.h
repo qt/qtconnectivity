@@ -307,6 +307,12 @@ dispatch_queue_t qt_LE_queue();
 extern const int defaultLEScanTimeoutMS;
 extern const int maxValueLength;
 
+// Add more keys if needed, for now this one is enough:
+extern NSString *const bluetoothUsageKey;
+
+bool qt_appNeedsBluetoothUsageDescription();
+bool qt_appPlistContainsDescription(NSString *key);
+
 } // namespace OSXBluetooth
 
 // Logging category for both OS X and iOS.

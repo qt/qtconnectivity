@@ -711,8 +711,8 @@ void QLowEnergyControllerPrivateWinRTNew::connectToDevice()
     connect(this, &QLowEnergyControllerPrivateWinRTNew::abortConnection, worker,
             &QWinRTLowEnergyConnectionHandler::handleDeviceDisconnectRequest);
     connect(thread, &QThread::started, worker, &QWinRTLowEnergyConnectionHandler::connectToDevice);
-    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
+    connect(worker, &QObject::destroyed, thread, &QObject::deleteLater);
     connect(worker, &QWinRTLowEnergyConnectionHandler::errorOccurred, this,
             [this](const QString &msg) { handleConnectionError(msg.toUtf8().constData()); });
     connect(worker, &QWinRTLowEnergyConnectionHandler::deviceConnected, this,
@@ -1166,12 +1166,12 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(const QBluetoot
     QThread *thread = new QThread;
     worker->moveToThread(thread);
     connect(thread, &QThread::started, worker, &QWinRTLowEnergyServiceHandlerNew::obtainCharList);
-    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
+    connect(worker, &QObject::destroyed, thread, &QObject::deleteLater);
     connect(worker, &QWinRTLowEnergyServiceHandlerNew::errorOccured,
             this, &QLowEnergyControllerPrivateWinRTNew::handleServiceHandlerError);
-    connect(worker, &QWinRTLowEnergyServiceHandlerNew::charListObtained,
-            [this, reactOnDiscoveryError, thread](const QBluetoothUuid &service, QHash<QLowEnergyHandle,
+    connect(worker, &QWinRTLowEnergyServiceHandlerNew::charListObtained, this,
+            [this, reactOnDiscoveryError](const QBluetoothUuid &service, QHash<QLowEnergyHandle,
             QLowEnergyServicePrivate::CharData> charList, QVector<QBluetoothUuid> indicateChars,
             QLowEnergyHandle startHandle, QLowEnergyHandle endHandle) {
         if (!serviceList.contains(service)) {
@@ -1194,12 +1194,10 @@ void QLowEnergyControllerPrivateWinRTNew::discoverServiceDetails(const QBluetoot
         if (FAILED(hr)) {
             reactOnDiscoveryError(pointer,
                              QStringLiteral("Could not register for value changes in Xaml thread: %1").arg(hr));
-            thread->exit(0);
             return;
         }
 
         pointer->setState(QLowEnergyService::ServiceDiscovered);
-        thread->exit(0);
     });
     thread->start();
 }

@@ -108,7 +108,10 @@ public:
                           const QLowEnergyAdvertisingData &scanResponseData) override;
     void stopAdvertising()override;
     QLowEnergyService *addServiceHelper(const QLowEnergyServiceData &service) override;
-    bool isValid() const; // QT6 - delete this logic.
+
+    // Valid - a central or peripheral instance was allocated, and this may also
+    // mean a proper usage description was provided/found:
+    bool isValid() const;
 
 private Q_SLOTS:
     void _q_connected();
