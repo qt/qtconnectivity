@@ -323,7 +323,7 @@ void tst_QLowEnergyController::tst_connect()
             listing.append(v.value<QBluetoothUuid>());
         }
 
-        for (const QBluetoothUuid &uuid : qAsConst(foundServices)) {
+        for (const QBluetoothUuid &uuid : std::as_const(foundServices)) {
             QVERIFY2(listing.contains(uuid),
                      uuid.toString().toLatin1());
 
@@ -342,7 +342,7 @@ void tst_QLowEnergyController::tst_connect()
                 QBluetoothUuid(QBluetoothUuid::CharacteristicType::DeviceName)));
 
         // initiate characteristic discovery
-        for (QLowEnergyService *service : qAsConst(savedReferences)) {
+        for (QLowEnergyService *service : std::as_const(savedReferences)) {
             qDebug() << "Discovering" << service->serviceUuid();
             QSignalSpy stateSpy(service,
                                 SIGNAL(stateChanged(QLowEnergyService::ServiceState)));
@@ -359,7 +359,7 @@ void tst_QLowEnergyController::tst_connect()
         }
 
         // ensure that related service objects share same state
-        for (QLowEnergyService* originalService : qAsConst(savedReferences)) {
+        for (QLowEnergyService* originalService : std::as_const(savedReferences)) {
             QLowEnergyService *newService = control->createServiceObject(
                         originalService->serviceUuid());
             QVERIFY(newService);
@@ -379,7 +379,7 @@ void tst_QLowEnergyController::tst_connect()
     } else {
         QCOMPARE(disconnectedSpy.size(), 1);
         // after disconnect all service references must be invalid
-        for (const QLowEnergyService *entry : qAsConst(savedReferences)) {
+        for (const QLowEnergyService *entry : std::as_const(savedReferences)) {
             const QBluetoothUuid &uuid = entry->serviceUuid();
             QVERIFY2(entry->state() == QLowEnergyService::InvalidService,
                      uuid.toString().toLatin1());

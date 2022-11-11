@@ -500,7 +500,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::processFoundService(quint64 deviceA
 
     QBluetoothServiceInfo returnInfo(info);
     bool deviceFound;
-    for (const QBluetoothDeviceInfo &deviceInfo : qAsConst(discoveredDevices)) {
+    for (const QBluetoothDeviceInfo &deviceInfo : std::as_const(discoveredDevices)) {
         if (deviceInfo.address().toUInt64() == deviceAddress) {
             deviceFound = true;
             returnInfo.setDevice(deviceInfo);

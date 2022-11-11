@@ -847,7 +847,7 @@ void QLowEnergyControllerPrivateWinRT::registerForValueChanges(const QBluetoothU
 {
     qCDebug(QT_BT_WINDOWS) << "Registering characteristic" << charUuid << "in service"
                          << serviceUuid << "for value changes";
-    for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens)) {
+    for (const ValueChangedEntry &entry : std::as_const(mValueChangedTokens)) {
         GUID guuid;
         HRESULT hr;
         hr = entry.characteristic->get_Uuid(&guuid);
@@ -882,7 +882,7 @@ void QLowEnergyControllerPrivateWinRT::unregisterFromValueChanges()
 {
     qCDebug(QT_BT_WINDOWS) << "Unregistering " << mValueChangedTokens.size() << " value change tokens";
     HRESULT hr;
-    for (const ValueChangedEntry &entry : qAsConst(mValueChangedTokens)) {
+    for (const ValueChangedEntry &entry : std::as_const(mValueChangedTokens)) {
         if (!entry.characteristic) {
             qCWarning(QT_BT_WINDOWS) << "Unregistering from value changes for characteristic failed."
                                    << "Characteristic has been deleted";
@@ -1298,7 +1298,7 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetailsHelper(
         pointer->endHandle = endHandle;
         pointer->characteristicList = charList;
 
-        for (const QBluetoothUuid &indicateChar : qAsConst(indicateChars))
+        for (const QBluetoothUuid &indicateChar : std::as_const(indicateChars))
             registerForValueChanges(service, indicateChar);
 
         pointer->setState(QLowEnergyService::RemoteServiceDiscovered);

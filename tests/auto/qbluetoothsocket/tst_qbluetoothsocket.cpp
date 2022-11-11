@@ -362,7 +362,7 @@ void tst_QBluetoothSocket::tst_clientCommunication()
 
     {
         /* Send line by line with event loop */
-        for (const QString &line : qAsConst(data)) {
+        for (const QString &line : std::as_const(data)) {
             QSignalSpy readyReadSpy(&socket, SIGNAL(readyRead()));
             QSignalSpy bytesWrittenSpy(&socket, SIGNAL(bytesWritten(qint64)));
 

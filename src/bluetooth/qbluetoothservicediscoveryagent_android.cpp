@@ -400,7 +400,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::populateDiscoveredServices(const QB
         if (!uuidFilter.isEmpty()) {
             bool match = uuidFilter.contains(serviceInfo.serviceUuid());
             match |= uuidFilter.contains(QBluetoothSocketPrivateAndroid::reverseUuid(serviceInfo.serviceUuid()));
-            for (const auto &uuid : qAsConst(uuidFilter)) {
+            for (const auto &uuid : std::as_const(uuidFilter)) {
                 match |= serviceInfo.serviceClassUuids().contains(uuid);
                 match |= serviceInfo.serviceClassUuids().contains(QBluetoothSocketPrivateAndroid::reverseUuid(uuid));
             }

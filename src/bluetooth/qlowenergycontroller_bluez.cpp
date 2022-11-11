@@ -1119,7 +1119,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
                 lastHandle = parseReadByTypeIncludeDiscovery(
                             &includedServices, &data[offset], elementLength);
                 p->includedServices = includedServices;
-                for (const QBluetoothUuid &uuid : qAsConst(includedServices)) {
+                for (const QBluetoothUuid &uuid : std::as_const(includedServices)) {
                     if (serviceList.contains(uuid))
                         serviceList[uuid]->type |= QLowEnergyService::IncludedService;
                 }
@@ -2514,7 +2514,7 @@ void QLowEnergyControllerPrivateBluez::updateLocalAttributeValue(
         QLowEnergyDescriptor &descriptor)
 {
     localAttributes[handle].value = value;
-    for (const auto &service : qAsConst(localServices)) {
+    for (const auto &service : std::as_const(localServices)) {
         if (handle < service->startHandle || handle > service->endHandle)
             continue;
         for (auto charIt = service->characteristicList.begin();
@@ -2560,7 +2560,7 @@ void QLowEnergyControllerPrivateBluez::writeCharacteristicForPeripheral(
             = attribute.properties & QLowEnergyCharacteristic::Indicate;
     if (!hasNotifyProperty && !hasIndicateProperty)
         return;
-    for (const QLowEnergyServicePrivate::DescData &desc : qAsConst(charData.descriptorList)) {
+    for (const QLowEnergyServicePrivate::DescData &desc : std::as_const(charData.descriptorList)) {
         if (desc.uuid != QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration)
             continue;
 
@@ -2870,7 +2870,7 @@ void QLowEnergyControllerPrivateBluez::handleExecuteWriteRequest(const QByteArra
     QList<QLowEnergyCharacteristic> characteristics;
     QList<QLowEnergyDescriptor> descriptors;
     if (!cancel) {
-        for (const WriteRequest &request : qAsConst(requests)) {
+        for (const WriteRequest &request : std::as_const(requests)) {
             Attribute &attribute = localAttributes[request.handle];
             if (request.valueOffset > attribute.value.size()) {
                 sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)),
@@ -2901,9 +2901,9 @@ void QLowEnergyControllerPrivateBluez::handleExecuteWriteRequest(const QByteArra
     sendPacket(QByteArray(
             1, static_cast<quint8>(QBluezConst::AttCommand::ATT_OP_EXECUTE_WRITE_RESPONSE)));
 
-    for (const QLowEnergyCharacteristic &characteristic : qAsConst(characteristics))
+    for (const QLowEnergyCharacteristic &characteristic : std::as_const(characteristics))
         emit characteristic.d_ptr->characteristicChanged(characteristic, characteristic.value());
-    for (const QLowEnergyDescriptor &descriptor : qAsConst(descriptors))
+    for (const QLowEnergyDescriptor &descriptor : std::as_const(descriptors))
         emit descriptor.d_ptr->descriptorWritten(descriptor, descriptor.value());
 }
 
@@ -3084,7 +3084,7 @@ QList<QLowEnergyControllerPrivateBluez::TempClientConfigurationData>
 QLowEnergyControllerPrivateBluez::gatherClientConfigData()
 {
     QList<TempClientConfigurationData> data;
-    for (const auto &service : qAsConst(localServices)) {
+    for (const auto &service : std::as_const(localServices)) {
         for (auto charIt = service->characteristicList.begin();
              charIt != service->characteristicList.end(); ++charIt) {
             QLowEnergyServicePrivate::CharData &charData = charIt.value();
@@ -3151,7 +3151,7 @@ void QLowEnergyControllerPrivateBluez::restoreClientConfigurations()
         localAttributes[tempConfigData.configHandle].value = tempConfigData.descData->value;
     }
 
-    for (const QLowEnergyHandle handle : qAsConst(notifications))
+    for (const QLowEnergyHandle handle : std::as_const(notifications))
         sendNotification(handle);
     sendNextIndication();
 }

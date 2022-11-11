@@ -106,7 +106,7 @@ void Device::scanServices(const QString &address)
 {
     // We need the current device for service discovery.
 
-    for (auto d: qAsConst(devices)) {
+    for (auto d: std::as_const(devices)) {
         if (auto device = qobject_cast<DeviceInfo *>(d)) {
             if (device->getAddress() == address ) {
                 currentDevice.setDevice(device->getDevice());
@@ -187,7 +187,7 @@ void Device::serviceScanDone()
 void Device::connectToService(const QString &uuid)
 {
     QLowEnergyService *service = nullptr;
-    for (auto s: qAsConst(m_services)) {
+    for (auto s: std::as_const(m_services)) {
         auto serviceInfo = qobject_cast<ServiceInfo *>(s);
         if (!serviceInfo)
             continue;

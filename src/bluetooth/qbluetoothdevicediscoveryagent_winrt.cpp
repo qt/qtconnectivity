@@ -427,7 +427,7 @@ void QWinRTBluetoothDeviceDiscoveryWorker::onAdvertisementDataReceived(
                     changedFields.setFlag((QBluetoothDeviceInfo::Field::ServiceData));
             }
             bool newServiceAdded = false;
-            for (const QBluetoothUuid &uuid : qAsConst(uuids)) {
+            for (const QBluetoothUuid &uuid : std::as_const(uuids)) {
                 if (!foundServices.contains(uuid)) {
                     foundServices.append(uuid);
                     newServiceAdded = true;

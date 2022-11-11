@@ -28,7 +28,7 @@ extern "C"
     {
         QNearFieldManager::AdapterState adapterState = static_cast<QNearFieldManager::AdapterState>((int) state);
 
-        for (const auto listener : qAsConst(*broadcastListener)) {
+        for (const auto listener : std::as_const(*broadcastListener)) {
             Q_EMIT listener->adapterStateChanged(adapterState);
         }
     }

@@ -503,7 +503,7 @@ QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok =
     if (wantedAddress.isNull())
         return localAdapters.front().first; // -> return first found adapter
 
-    for (const AddressForPathType &pair : qAsConst(localAdapters)) {
+    for (const AddressForPathType &pair : std::as_const(localAdapters)) {
         if (pair.second == wantedAddress)
             return pair.first; // -> found local adapter with wanted address
     }
