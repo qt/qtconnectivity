@@ -68,7 +68,7 @@ void QNdefNfcTextRecord::setLocale(const QString &locale)
 
     quint8 codeLength = status & 0x3f;
 
-    quint8 newStatus = (status & 0xd0) | locale.length();
+    quint8 newStatus = (status & 0xd0) | locale.size();
 
     p[0] = newStatus;
     p.replace(1, codeLength, locale.toLatin1());
@@ -94,7 +94,7 @@ QString QNdefNfcTextRecord::text() const
         utf16 ? QStringDecoder::Encoding::Utf16BE : QStringDecoder::Encoding::Utf8,
         QStringDecoder::Flag::Stateless);
 
-    return toUnicode(QByteArrayView(p.constData() + 1 + codeLength, p.length() - 1 - codeLength));
+    return toUnicode(QByteArrayView(p.constData() + 1 + codeLength, p.size() - 1 - codeLength));
 }
 
 /*!

@@ -104,7 +104,7 @@ bool QTlvReader::atEnd() const
     if (m_requestId.isValid())
         return false;
 
-    return (m_index == m_tlvData.length()) || (tag() == 0xfe);
+    return (m_index == m_tlvData.size()) || (tag() == 0xfe);
 }
 
 /*!
@@ -204,8 +204,8 @@ QByteArray QTlvReader::data()
 
 bool QTlvReader::readMoreData(int sparseOffset)
 {
-    while (sparseOffset >= m_tlvData.length()) {
-        int absOffset = absoluteOffset(m_tlvData.length());
+    while (sparseOffset >= m_tlvData.size()) {
+        int absOffset = absoluteOffset(m_tlvData.size());
 
         QByteArray data;
 
@@ -236,7 +236,7 @@ bool QTlvReader::readMoreData(int sparseOffset)
             }
         }
 
-        if (data.isEmpty() && sparseOffset >= m_tlvData.length())
+        if (data.isEmpty() && sparseOffset >= m_tlvData.size())
             return false;
 
         m_tlvData.append(data);
@@ -307,7 +307,7 @@ void QTlvWriter::writeTlv(quint8 tagType, const QByteArray &data)
     m_buffer.append(tagType);
 
     if (tagType != 0x00 && tagType != 0xfe) {
-        int length = data.length();
+        int length = data.size();
         if (length < 0xff) {
             m_buffer.append(quint8(length));
         } else {
@@ -353,7 +353,7 @@ bool QTlvWriter::process(bool all)
 
     if (m_tagMemorySize == -1) {
         if (m_rawData)
-            m_tagMemorySize = m_rawData->length();
+            m_tagMemorySize = m_rawData->size();
         else if (QNearFieldTagType1 *tag = qobject_cast<QNearFieldTagType1 *>(m_target)) {
             if (m_requestId.isValid()) {
                 m_tagMemorySize = 8 * (tag->requestResponse(m_requestId).toUInt() + 1);
@@ -370,7 +370,7 @@ bool QTlvWriter::process(bool all)
         if (spaceRemaining < 1)
             return false;
 
-        int length = qMin(spaceRemaining, m_buffer.length());
+        int length = qMin(spaceRemaining, m_buffer.size());
 
         if (m_rawData) {
             m_rawData->replace(m_index, length, m_buffer);
@@ -422,8 +422,8 @@ bool QTlvWriter::process(bool all)
 
             int fillLength = qMin(nextBlockStart - m_index, spaceRemaining - bufferIndex);
 
-            if (fillLength && (all || m_buffer.length() - bufferIndex >= fillLength) &&
-                (m_buffer.length() != bufferIndex)) {
+            if (fillLength && (all || m_buffer.size() - bufferIndex >= fillLength) &&
+                (m_buffer.size() != bufferIndex)) {
                 // sufficient data available
                 if (m_requestId.isValid()) {
                     const QVariant v = tag->requestResponse(m_requestId);
@@ -431,7 +431,7 @@ bool QTlvWriter::process(bool all)
                         // read in block
                         QByteArray block = v.toByteArray();
 
-                        int fill = qMin(fillLength, m_buffer.length() - bufferIndex);
+                        int fill = qMin(fillLength, m_buffer.size() - bufferIndex);
 
                         for (int i = m_index - currentBlockStart; i < fill; ++i)
                             block[i] = m_buffer.at(bufferIndex++);
@@ -441,7 +441,7 @@ bool QTlvWriter::process(bool all)
                         return false;
                     } else if (v.typeId() == QMetaType::Bool) {
                         m_requestId = QNearFieldTarget::RequestId();
-                        int fill = qMin(fillLength, m_buffer.length() - bufferIndex);
+                        int fill = qMin(fillLength, m_buffer.size() - bufferIndex);
                         bufferIndex = fill - (m_index - currentBlockStart);
 
                         // write complete

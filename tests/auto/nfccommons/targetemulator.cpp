@@ -53,7 +53,7 @@ void NfcTagType1::load(QSettings *settings)
         qWarning("Only NFC TagType1 v1.0 behavior is supported.");
 
     quint8 tms = memory.at(10);
-    if (memory.length() != 8 * (tms + 1))
+    if (memory.size() != 8 * (tms + 1))
         qWarning("Static memory size does not match TMS value.");
 
     quint8 rwa = memory.at(11);
@@ -102,7 +102,7 @@ QByteArray NfcTagType1::processCommand(const QByteArray &command)
     bool tagType1 = (hr0 & 0xf0) == 0x10;
     bool dynamic = (hr0 & 0x0f) != 0x01;
 
-    if (command.length() == 9) {
+    if (command.size() == 9) {
         // static memory model command
         quint8 opcode = command.at(0);
         quint8 address = command.at(1);
@@ -110,7 +110,7 @@ QByteArray NfcTagType1::processCommand(const QByteArray &command)
         QByteArray uid = command.mid(3, 4);
 
         // check checksum
-        if (qChecksum(QByteArrayView(command.constData(), command.length()), Qt::ChecksumItuV41) != 0)
+        if (qChecksum(QByteArrayView(command.constData(), command.size()), Qt::ChecksumItuV41) != 0)
             return QByteArray();
 
         // check UID
@@ -171,7 +171,7 @@ QByteArray NfcTagType1::processCommand(const QByteArray &command)
             response.append(memory.left(4));
             break;
         }
-    } else if (tagType1 && dynamic && command.length() == 16) {
+    } else if (tagType1 && dynamic && command.size() == 16) {
         // dynamic memory model command
         quint8 opcode = command.at(0);
         quint8 address = command.at(1);
@@ -179,7 +179,7 @@ QByteArray NfcTagType1::processCommand(const QByteArray &command)
         QByteArray uid = command.mid(10, 4);
 
         // check checksum
-        if (qChecksum(QByteArrayView(command.constData(), command.length()), Qt::ChecksumItuV41) != 0)
+        if (qChecksum(QByteArrayView(command.constData(), command.size()), Qt::ChecksumItuV41) != 0)
             return QByteArray();
 
         // check UID
@@ -233,7 +233,7 @@ QByteArray NfcTagType1::processCommand(const QByteArray &command)
     }
 
     if (!response.isEmpty()) {
-        quint16 crc = qChecksum(QByteArrayView(response.constData(), response.length()), Qt::ChecksumItuV41);
+        quint16 crc = qChecksum(QByteArrayView(response.constData(), response.size()), Qt::ChecksumItuV41);
         response.append(quint8(crc & 0xff));
         response.append(quint8(crc >> 8));
     }
@@ -277,13 +277,13 @@ QByteArray NfcTagType2::processCommand(const QByteArray &command)
     QByteArray response;
 
     // check checksum
-    if (qChecksum(QByteArrayView(command.constData(), command.length()), Qt::ChecksumItuV41) != 0)
+    if (qChecksum(QByteArrayView(command.constData(), command.size()), Qt::ChecksumItuV41) != 0)
         return QByteArray();
 
     if (expectPacket2) {
         expectPacket2 = false;
         quint8 sector = command.at(0);
-        if (sector * 1024 > memory.length())
+        if (sector * 1024 > memory.size())
             return NACK;
         else {
             currentSector = sector;
@@ -299,8 +299,8 @@ QByteArray NfcTagType2::processCommand(const QByteArray &command)
         int absoluteBlock = currentSector * 256 + block;
 
         response.append(memory.mid(absoluteBlock * 4, 16));
-        if (response.length() != 16)
-            response.append(QByteArray(16 - response.length(), '\0'));
+        if (response.size() != 16)
+            response.append(QByteArray(16 - response.size(), '\0'));
 
         break;
     }
@@ -319,7 +319,7 @@ QByteArray NfcTagType2::processCommand(const QByteArray &command)
         return ACK;
     }
     case 0xc2:  // SECTOR SELECT - Packet 1
-        if (memory.length() > 1024) {
+        if (memory.size() > 1024) {
             expectPacket2 = true;
             return ACK;
         }
@@ -334,7 +334,7 @@ QByteArray NfcTagType2::processCommand(const QByteArray &command)
     }
 
     if (!response.isEmpty()) {
-        quint16 crc = qChecksum(QByteArrayView(response.constData(), response.length()), Qt::ChecksumItuV41);
+        quint16 crc = qChecksum(QByteArrayView(response.constData(), response.size()), Qt::ChecksumItuV41);
         response.append(quint8(crc & 0xff));
         response.append(quint8(crc >> 8));
     }
