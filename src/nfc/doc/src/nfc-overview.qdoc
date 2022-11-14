@@ -49,19 +49,32 @@ a tag comes into or leaves the range. The passed \l QNearFieldTarget parameter a
 as primary interaction point for each detected tag. The detection does not actually start though until
 \l QNearFieldManager::startTargetDetection() has been called.
 
-\snippet ndefeditor/mainwindow.cpp QNearFieldManager init
-\snippet ndefeditor/mainwindow.cpp QNearFieldManager start detection
+\code
+m_manager = new QNearFieldManager(this);
+connect(m_manager, &QNearFieldManager::targetDetected,
+        this, &MainWindow::targetDetected);
+connect(m_manager, &QNearFieldManager::targetLost,
+        this, &MainWindow::targetLost);
+m_manager->startTargetDetection(QNearFieldTarget::NdefAccess);
+\endcode
 
 Finally the detection can be stopped:
 
-\snippet ndefeditor/mainwindow.cpp QNearFieldManager stop detection
+\code
+m_manager->stopTargetDetection();
+\endcode
 
 Although each \l QNearFieldTarget instance is owned by its related \l QNearFieldManager
 instance it can be beneficial to manually delete each instance. Otherwise they would continue to
 exist until the \l QNearFieldManager instance is deleted. The best way to do that would be in response
 to the \l QNearFieldManager::targetLost() signal:
 
-\snippet ndefeditor/mainwindow.cpp QNearFieldTarget lost
+\code
+void MainWindow::targetLost(QNearFieldTarget *target)
+{
+    target->deleteLater();
+}
+\endcode
 
 \note The target object should only be deleted via deleteLater() if it is deleted inside the slot.
 
@@ -83,7 +96,31 @@ The \l QNearFieldTarget instance returned by \l QNearFieldManager::targetDetecte
 is used to interact with the tag. Reading and writing a message is an asynchronous operation.
 The \l QNearFieldTarget::RequestId class associates individual operations and their results.
 
-\snippet ndefeditor/mainwindow.cpp QNearFieldTarget detected
+\code
+void MainWindow::targetDetected(QNearFieldTarget *target)
+{
+    switch (m_touchAction) {
+    case NoAction:
+        break;
+    case ReadNdef:
+        connect(target, &QNearFieldTarget::ndefMessageRead, this, &MainWindow::ndefMessageRead);
+        connect(target, &QNearFieldTarget::error, this, &MainWindow::targetError);
+
+        m_request = target->readNdefMessages();
+        if (!m_request.isValid()) // cannot read messages
+            targetError(QNearFieldTarget::NdefReadError, m_request);
+        break;
+    case WriteNdef:
+        connect(target, &QNearFieldTarget::requestCompleted, this, &MainWindow::ndefMessageWritten);
+        connect(target, &QNearFieldTarget::error, this, &MainWindow::targetError);
+
+        m_request = target->writeNdefMessages(QList<QNdefMessage>() << ndefMessage());
+        if (!m_request.isValid()) // cannot write messages
+            targetError(QNearFieldTarget::NdefWriteError, m_request);
+        break;
+    }
+}
+\endcode
 
 Once the \l QNearFieldTarget::readNdefMessages() request was successfully processed, the
 \l QNearFieldTarget::ndefMessageRead() signal is emitted. Each returned \l QNdefMessage
