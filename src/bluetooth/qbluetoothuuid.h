@@ -14,10 +14,12 @@
 
 QT_BEGIN_NAMESPACE
 
+#if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
 struct quint128
 {
-    quint8 data[16];
+    QUuid::Id128Bytes d;
 };
+#endif
 
 class Q_BLUETOOTH_EXPORT QBluetoothUuid : public QUuid
 {
@@ -345,7 +347,6 @@ public:
     explicit constexpr QBluetoothUuid(quint32 uuid) noexcept
         : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
 
-    explicit QBluetoothUuid(quint128 uuid);
     explicit QBluetoothUuid(const QString &uuid);
     QBluetoothUuid(const QBluetoothUuid &uuid) = default;
     QBluetoothUuid(const QUuid &uuid);
@@ -369,7 +370,11 @@ public:
 
     quint16 toUInt16(bool *ok = nullptr) const;
     quint32 toUInt32(bool *ok = nullptr) const;
+
+#if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
+    explicit QBluetoothUuid(quint128 uuid);
     quint128 toUInt128() const;
+#endif
 
     static QString serviceClassToString(ServiceClassUuid uuid);
     static QString protocolToString(ProtocolUuid uuid);

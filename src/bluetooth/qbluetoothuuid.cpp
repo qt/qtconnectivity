@@ -525,23 +525,6 @@ Q_CONSTRUCTOR_FUNCTION(registerQBluetoothUuid)
 */
 
 /*!
-    Constructs a new Bluetooth UUID from the 128 bit \a uuid.
-
-    Note that \a uuid must be in big endian order.
-*/
-QBluetoothUuid::QBluetoothUuid(quint128 uuid)
-{
-QT_WARNING_PUSH
-QT_WARNING_DISABLE_GCC("-Wstrict-aliasing")
-    data1 = qFromBigEndian<quint32>(*reinterpret_cast<quint32 *>(&uuid.data[0]));
-    data2 = qFromBigEndian<quint16>(*reinterpret_cast<quint16 *>(&uuid.data[4]));
-    data3 = qFromBigEndian<quint16>(*reinterpret_cast<quint16 *>(&uuid.data[6]));
-QT_WARNING_POP
-
-    memcpy(data4, &uuid.data[8], 8);
-}
-
-/*!
     Creates a QBluetoothUuid object from the string \a uuid,
     which must be formatted as five hex fields separated by '-',
     e.g., "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}" where 'x' is a hex digit.
@@ -566,7 +549,7 @@ QBluetoothUuid::QBluetoothUuid(const QUuid &uuid)
     Returns the minimum size in bytes that this UUID can be represented in.  For non-null UUIDs 2,
     4 or 16 is returned.  0 is returned for null UUIDs.
 
-    \sa isNull(), toUInt16(), toUInt32(), toUInt128()
+    \sa isNull(), toUInt16(), toUInt32()
 */
 int QBluetoothUuid::minimumSize() const
 {
@@ -625,27 +608,6 @@ quint32 QBluetoothUuid::toUInt32(bool *ok) const
         *ok = true;
 
     return data1;
-}
-
-/*!
-    Returns the 128 bit representation of this UUID.
-*/
-quint128 QBluetoothUuid::toUInt128() const
-{
-    quint128 uuid;
-
-    quint32 tmp32 = qToBigEndian<quint32>(data1);
-    memcpy(&uuid.data[0], &tmp32, 4);
-
-    quint16 tmp16 = qToBigEndian<quint16>(data2);
-    memcpy(&uuid.data[4], &tmp16, 2);
-
-    tmp16 = qToBigEndian<quint16>(data3);
-    memcpy(&uuid.data[6], &tmp16, 2);
-
-    memcpy(&uuid.data[8], data4, 8);
-
-    return uuid;
 }
 
 /*!

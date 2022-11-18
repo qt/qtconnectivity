@@ -8,6 +8,7 @@
 qt_internal_add_module(Bluetooth
     SOURCES
         lecmaccalculator_p.h
+        removed_api.cpp
         qbluetooth.cpp qbluetooth.h
         qbluetoothaddress.cpp qbluetoothaddress.h
         qbluetoothdevicediscoveryagent.cpp qbluetoothdevicediscoveryagent.h qbluetoothdevicediscoveryagent_p.h
@@ -258,6 +259,7 @@ else()
             qlowenergycontroller_dummy.cpp qlowenergycontroller_dummy_p.h
     )
 endif()
+qt_update_ignore_pch_source(Bluetooth removed_api.cpp)
 
 qt_internal_add_docs(Bluetooth
     doc/qtbluetooth.qdocconf

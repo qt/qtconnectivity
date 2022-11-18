@@ -32,7 +32,6 @@ private slots:
     void tst_conversion();
     void tst_comparison_data();
     void tst_comparison();
-    void tst_quint128ToUuid();
 };
 
 tst_QBluetoothUuid::tst_QBluetoothUuid()
@@ -342,17 +341,6 @@ void tst_QBluetoothUuid::tst_comparison()
     }
 }
 
-void tst_QBluetoothUuid::tst_quint128ToUuid()
-{
-    QBluetoothUuid temp(QString("{67C8770B-44F1-410A-AB9A-F9B5446F13EE}"));
-    QUuid::Id128Bytes array = temp.toBytes();
-    QBluetoothUuid u(array);
-    QVERIFY(temp == u);
-
-    QBENCHMARK {
-        QBluetoothUuid u(array);
-    }
-}
 QTEST_MAIN(tst_QBluetoothUuid)
 
 #include "tst_qbluetoothuuid.moc"
