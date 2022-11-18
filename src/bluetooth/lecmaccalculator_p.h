@@ -15,10 +15,9 @@
 //
 
 #include <QtCore/private/qglobal_p.h>
+#include <QtCore/quuid.h>
 
 QT_BEGIN_NAMESPACE
-
-struct quint128;
 
 class Q_AUTOTEST_EXPORT LeCmacCalculator
 {
@@ -28,10 +27,10 @@ public:
 
     static QByteArray createFullMessage(const QByteArray &message, quint32 signCounter);
 
-    quint64 calculateMac(const QByteArray &message, const quint128 &csrk) const;
+    quint64 calculateMac(const QByteArray &message, QUuid::Id128Bytes csrk) const;
 
     // Convenience function.
-    bool verify(const QByteArray &message, const quint128 &csrk, quint64 expectedMac) const;
+    bool verify(const QByteArray &message, QUuid::Id128Bytes csrk, quint64 expectedMac) const;
 
 private:
     int m_baseSocket = -1;

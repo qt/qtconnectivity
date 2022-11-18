@@ -25,7 +25,7 @@ QBluetoothUuid qt_uuid(NSUUID *nsUuid)
 
     uuid_t uuidData = {};
     [nsUuid getUUIDBytes:uuidData];
-    quint128 qtUuidData = {};
+    QUuid::Id128Bytes qtUuidData = {};
     std::copy(uuidData, uuidData + 16, qtUuidData.data);
     return QBluetoothUuid(qtUuidData);
 }

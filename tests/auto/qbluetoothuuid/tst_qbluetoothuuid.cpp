@@ -15,8 +15,6 @@
 
 QT_USE_NAMESPACE
 
-Q_DECLARE_METATYPE(quint128)
-
 class tst_QBluetoothUuid : public QObject
 {
     Q_OBJECT
@@ -39,7 +37,6 @@ private slots:
 
 tst_QBluetoothUuid::tst_QBluetoothUuid()
 {
-    qRegisterMetaType<quint128>();
 }
 
 tst_QBluetoothUuid::~tst_QBluetoothUuid()
@@ -155,11 +152,11 @@ void tst_QBluetoothUuid::tst_conversion_data()
     QTest::addColumn<bool>("constructUuid32");
     QTest::addColumn<quint32>("uuid32");
     QTest::addColumn<bool>("constructUuid128");
-    QTest::addColumn<quint128>("uuid128");
+    QTest::addColumn<QUuid::Id128Bytes>("uuid128");
     QTest::addColumn<QString>("uuidS");
 
     static const auto uuid128_32 = [](quint8 a, quint8 b, quint8 c, quint8 d) {
-        quint128 x = {
+        QUuid::Id128Bytes x = {
             {
                 a, b, c, d,
                 0x00, 0x00,
@@ -201,7 +198,7 @@ void tst_QBluetoothUuid::tst_conversion_data()
     newRow32("0xffffffff", 0xff, 0xff, 0xff, 0xff, "FFFFFFFF" BASEUUID);
 
     {
-        quint128 uuid128 = {
+        QUuid::Id128Bytes uuid128 = {
             {
                 0x00, 0x11, 0x22, 0x33,
                 0x44, 0x55,
@@ -224,7 +221,7 @@ void tst_QBluetoothUuid::tst_conversion()
     QFETCH(bool, constructUuid32);
     QFETCH(quint32, uuid32);
     QFETCH(bool, constructUuid128);
-    QFETCH(quint128, uuid128);
+    QFETCH(QUuid::Id128Bytes, uuid128);
     QFETCH(QString, uuidS);
 
     int minimumSize = 16;
@@ -244,7 +241,7 @@ void tst_QBluetoothUuid::tst_conversion()
         QCOMPARE(uuid.toUInt32(&ok), uuid32);
         QVERIFY(ok);
 
-        QVERIFY(memcmp(uuid.toUInt128().data, uuid128.data, 16) == 0);
+        QVERIFY(memcmp(uuid.toBytes().data, uuid128.data, 16) == 0);
 
         QCOMPARE(uuid.toString().toUpper(), uuidS.toUpper());
 
@@ -265,7 +262,7 @@ void tst_QBluetoothUuid::tst_conversion()
         QCOMPARE(uuid.toUInt32(&ok), uuid32);
         QVERIFY(ok);
 
-        QVERIFY(memcmp(uuid.toUInt128().data, uuid128.data, 16) == 0);
+        QVERIFY(memcmp(uuid.toBytes().data, uuid128.data, 16) == 0);
 
         QCOMPARE(uuid.toString().toUpper(), uuidS.toUpper());
 
@@ -287,7 +284,7 @@ void tst_QBluetoothUuid::tst_conversion()
         if (ok)
             QCOMPARE(tmpUuid32, uuid32);
 
-        QVERIFY(memcmp(uuid.toUInt128().data, uuid128.data, 16) == 0);
+        QVERIFY(memcmp(uuid.toBytes().data, uuid128.data, 16) == 0);
 
         QCOMPARE(uuid.toString().toUpper(), uuidS.toUpper());
 
@@ -307,7 +304,7 @@ void tst_QBluetoothUuid::tst_comparison()
     QFETCH(bool, constructUuid32);
     QFETCH(quint32, uuid32);
     QFETCH(bool, constructUuid128);
-    QFETCH(quint128, uuid128);
+    QFETCH(QUuid::Id128Bytes, uuid128);
 
     QVERIFY(QBluetoothUuid() == QBluetoothUuid());
 
@@ -340,7 +337,7 @@ void tst_QBluetoothUuid::tst_comparison()
         QBluetoothUuid quuid128(uuid128);
 
         for (int var = 0; var < 16; ++var) {
-            QVERIFY(quuid128.toUInt128().data[var] == uuid128.data[var]);
+            QVERIFY(quuid128.toBytes().data[var] == uuid128.data[var]);
         }
     }
 }
@@ -348,7 +345,7 @@ void tst_QBluetoothUuid::tst_comparison()
 void tst_QBluetoothUuid::tst_quint128ToUuid()
 {
     QBluetoothUuid temp(QString("{67C8770B-44F1-410A-AB9A-F9B5446F13EE}"));
-    quint128 array = temp.toUInt128();
+    QUuid::Id128Bytes array = temp.toBytes();
     QBluetoothUuid u(array);
     QVERIFY(temp == u);
 

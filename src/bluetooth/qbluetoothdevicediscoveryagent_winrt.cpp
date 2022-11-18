@@ -38,10 +38,10 @@ QT_IMPL_METATYPE_EXTERN(ServiceData)
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
-// Endianness conversion for quint128 doesn't exist in qtendian.h
-inline quint128 qbswap(const quint128 src)
+// Endianness conversion for QUuid::Id128Bytes doesn't exist in qtendian.h
+inline QUuid::Id128Bytes qbswap(const QUuid::Id128Bytes src)
 {
-    quint128 dst;
+    QUuid::Id128Bytes dst;
     for (int i = 0; i < 16; i++)
         dst.data[i] = src.data[15 - i];
     return dst;
@@ -89,8 +89,8 @@ static ServiceData extractServiceData(const BluetoothLEAdvertisement &ad)
                            bufferData + 4);
             } else if (dataType == 0x21) {
                 Q_ASSERT(bufferData.size() >= 16);
-                ret.insert(QBluetoothUuid(qToBigEndian<quint128>(
-                                   qFromLittleEndian<quint128>(bufferData.constData()))),
+                ret.insert(QBluetoothUuid(qToBigEndian<QUuid::Id128Bytes>(
+                                   qFromLittleEndian<QUuid::Id128Bytes>(bufferData.constData()))),
                            bufferData + 16);
             }
         }

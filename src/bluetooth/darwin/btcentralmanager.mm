@@ -341,7 +341,7 @@ using DiscoveryMode = QLowEnergyService::DiscoveryMode;
     }
 
 
-    const quint128 qtUuidData(deviceUuid.toUInt128());
+    const QUuid::Id128Bytes qtUuidData(deviceUuid.toBytes());
     uuid_t uuidData = {};
     std::copy(qtUuidData.data, qtUuidData.data + 16, uuidData);
     const ObjCScopedPointer<NSUUID> nsUuid([[NSUUID alloc] initWithUUIDBytes:uuidData], RetainPolicy::noInitialRetain);

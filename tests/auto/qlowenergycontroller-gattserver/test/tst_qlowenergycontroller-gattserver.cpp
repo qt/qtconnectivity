@@ -53,7 +53,7 @@ private:
     QScopedPointer<QLowEnergyController> m_leController;
 
 #if defined(CHECK_CMAC_SUPPORT)
-    bool checkCmacSupport(const quint128& csrkMsb);
+    bool checkCmacSupport(const QUuid::Id128Bytes& csrkMsb);
 #endif
 };
 
@@ -142,7 +142,7 @@ void TestQLowEnergyControllerGattServer::cmacVerifier()
 {
 #if defined(CONFIG_LINUX_CRYPTO_API) && defined(QT_BUILD_INTERNAL) && defined(CONFIG_BLUEZ_LE)
     // Test data comes from spec v4.2, Vol 3, Part H, Appendix D.1
-    const quint128 csrk = {
+    const QUuid::Id128Bytes csrk = {
         { 0x3c, 0x4f, 0xcf, 0x09, 0x88, 0x15, 0xf7, 0xab,
           0xa6, 0xd2, 0xae, 0x28, 0x16, 0x15, 0x7e, 0x2b }
     };
@@ -168,11 +168,11 @@ void TestQLowEnergyControllerGattServer::cmacVerifier()
 #include <linux/if_alg.h>
 #include <unistd.h>
 
-bool TestQLowEnergyControllerGattServer::checkCmacSupport(const quint128& csrk)
+bool TestQLowEnergyControllerGattServer::checkCmacSupport(const QUuid::Id128Bytes& csrk)
 {
     bool retval = false;
 #if defined(CONFIG_LINUX_CRYPTO_API) && defined(QT_BUILD_INTERNAL) && defined(CONFIG_BLUEZ_LE)
-    quint128 csrkMsb;
+    QUuid::Id128Bytes csrkMsb;
     std::reverse_copy(std::begin(csrk.data), std::end(csrk.data), std::begin(csrkMsb.data));
 
     int testSocket = socket(AF_ALG, SOCK_SEQPACKET, 0);

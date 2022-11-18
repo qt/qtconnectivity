@@ -60,12 +60,12 @@ QByteArray LeCmacCalculator::createFullMessage(const QByteArray &message, quint3
     return fullMessage;
 }
 
-quint64 LeCmacCalculator::calculateMac(const QByteArray &message, const quint128 &csrk) const
+quint64 LeCmacCalculator::calculateMac(const QByteArray &message, QUuid::Id128Bytes csrk) const
 {
 #ifdef CONFIG_LINUX_CRYPTO_API
     if (m_baseSocket == -1)
         return false;
-    quint128 csrkMsb;
+    QUuid::Id128Bytes csrkMsb;
     std::reverse_copy(std::begin(csrk.data), std::end(csrk.data), std::begin(csrkMsb.data));
     qCDebug(QT_BT_BLUEZ) << "CSRK (MSB):" << QByteArray(reinterpret_cast<char *>(csrkMsb.data),
                                                         sizeof csrkMsb).toHex();
@@ -127,7 +127,7 @@ quint64 LeCmacCalculator::calculateMac(const QByteArray &message, const quint128
 #endif
 }
 
-bool LeCmacCalculator::verify(const QByteArray &message, const quint128 &csrk,
+bool LeCmacCalculator::verify(const QByteArray &message, QUuid::Id128Bytes csrk,
                            quint64 expectedMac) const
 {
 #ifdef CONFIG_LINUX_CRYPTO_API

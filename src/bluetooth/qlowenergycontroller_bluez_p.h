@@ -151,10 +151,10 @@ private:
 
     struct SigningData {
         SigningData() = default;
-        SigningData(const quint128 &csrk, quint32 signCounter = quint32(-1))
+        SigningData(BluezUint128 csrk, quint32 signCounter = quint32(-1))
             : key(csrk), counter(signCounter) {}
 
-        quint128 key;
+        BluezUint128 key;
         quint32 counter = quint32(-1);
     };
     QHash<quint64, SigningData> signingData;
@@ -280,7 +280,7 @@ private:
     QBluezConst::AttError checkReadPermissions(const Attribute &attr);
     QBluezConst::AttError checkReadPermissions(QList<Attribute> &attributes);
 
-    bool verifyMac(const QByteArray &message, const quint128 &csrk, quint32 signCounter,
+    bool verifyMac(const QByteArray &message, BluezUint128 csrk, quint32 signCounter,
                    quint64 expectedMac);
 
     void updateLocalAttributeValue(

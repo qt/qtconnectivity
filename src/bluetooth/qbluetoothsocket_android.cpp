@@ -784,8 +784,8 @@ QBluetoothUuid QBluetoothSocketPrivateAndroid::reverseUuid(const QBluetoothUuid 
     if (isBaseUuid)
         return serviceUuid;
 
-    const quint128 original = serviceUuid.toUInt128();
-    quint128 reversed;
+    const QUuid::Id128Bytes original = serviceUuid.toBytes();
+    QUuid::Id128Bytes reversed;
     for (int i = 0; i < 16; i++)
         reversed.data[15-i] = original.data[i];
     return QBluetoothUuid{reversed};

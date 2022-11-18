@@ -179,7 +179,7 @@ signals:
     void commandCompleted(quint16 opCode, quint8 status, const QByteArray &data);
     void connectionComplete(quint16 handle);
     void connectionUpdate(quint16 handle, const QLowEnergyConnectionParameters &parameters);
-    void signatureResolvingKeyReceived(quint16 connHandle, bool remoteKey, const quint128 &csrk);
+    void signatureResolvingKeyReceived(quint16 connHandle, bool remoteKey, BluezUint128 csrk);
 
 private slots:
     void _q_readNotify();

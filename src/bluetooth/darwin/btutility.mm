@@ -83,7 +83,7 @@ BluetoothDeviceAddress iobluetooth_address(const QBluetoothAddress &qAddress)
 ObjCStrongReference<IOBluetoothSDPUUID> iobluetooth_uuid(const QBluetoothUuid &uuid)
 {
     const unsigned nBytes = 128 / std::numeric_limits<unsigned char>::digits;
-    const quint128 intVal(uuid.toUInt128());
+    const QUuid::Id128Bytes intVal(uuid.toBytes());
 
     const ObjCStrongReference<IOBluetoothSDPUUID> iobtUUID([IOBluetoothSDPUUID uuidWithBytes:intVal.data
                                                            length:nBytes], RetainPolicy::doInitialRetain);
@@ -97,7 +97,7 @@ QBluetoothUuid qt_uuid(IOBluetoothSDPUUID *uuid)
         return qtUuid;
 
     // TODO: ensure the correct byte-order!!!
-    quint128 uuidVal = {};
+    QUuid::Id128Bytes uuidVal = {};
     const quint8 *const source = static_cast<const quint8 *>([uuid bytes]);
     std::copy(source, source + 16, uuidVal.data);
     return QBluetoothUuid(uuidVal);
@@ -161,7 +161,7 @@ QBluetoothUuid qt_uuid(CBUUID *uuid)
         const uchar *const src = static_cast<const uchar *>(uuid.data.bytes);
         return QBluetoothUuid(qFromBigEndian<quint32>(src));
     } else if (uuid.data.length == 16) {
-        quint128 qtUuidData = {};
+        QUuid::Id128Bytes qtUuidData = {};
         const quint8 *const source = static_cast<const quint8 *>(uuid.data.bytes);
         std::copy(source, source + 16, qtUuidData.data);
 
@@ -177,7 +177,7 @@ ObjCStrongReference<CBUUID> cb_uuid(const QBluetoothUuid &qtUuid)
 {
     bool ok = false;
     const auto asUInt16 = qToBigEndian(qtUuid.toUInt16(&ok));
-    const auto asUInt128 = qtUuid.toUInt128();
+    const auto asUInt128 = qtUuid.toBytes();
 
     const NSUInteger length = ok ? sizeof asUInt16 : sizeof asUInt128;
     const void *bytes = &asUInt128;

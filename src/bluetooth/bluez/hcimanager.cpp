@@ -516,7 +516,7 @@ void HciManager::handleHciAclPacket(const quint8 *data, int size)
         qCWarning(QT_BT_BLUEZ) << "Unexpected key size" << size << "in Signing Information packet";
         return;
     }
-    quint128 csrk;
+    BluezUint128 csrk;
     memcpy(&csrk, data + 1, sizeof csrk);
     const bool isRemoteKey = aclData->pbFlag == 2;
     emit signatureResolvingKeyReceived(aclData->handle, isRemoteKey, csrk);

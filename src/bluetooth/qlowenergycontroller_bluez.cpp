@@ -64,9 +64,9 @@ using namespace QBluetooth;
 
 const int maxPrepareQueueSize = 1024;
 
-static inline QBluetoothUuid convert_uuid128(const quint128 *p)
+static inline QBluetoothUuid convert_uuid128(const QUuid::Id128Bytes *p)
 {
-    quint128 dst_hostOrder, dst_bigEndian;
+    QUuid::Id128Bytes dst_hostOrder, dst_bigEndian;
 
     // Bluetooth LE data comes as little endian
     // uuids are constructed using high endian
@@ -74,8 +74,7 @@ static inline QBluetoothUuid convert_uuid128(const quint128 *p)
     hton128(&dst_hostOrder, &dst_bigEndian);
 
     // convert to Qt's own data type
-    quint128 qtdst;
-    memcpy(&qtdst, &dst_bigEndian, sizeof(quint128));
+    QUuid::Id128Bytes qtdst = dst_bigEndian;
 
     return QBluetoothUuid(qtdst);
 }
@@ -160,8 +159,8 @@ template<> void putDataAndIncrement(const QBluetoothUuid &uuid, char *&dst)
     if (uuidSize == 2) {
         putBtData(uuid.toUInt16(), dst);
     } else {
-        quint128 hostOrder;
-        quint128 qtUuidOrder = uuid.toUInt128();
+        QUuid::Id128Bytes hostOrder;
+        QUuid::Id128Bytes qtUuidOrder = uuid.toBytes();
         ntoh128(&qtUuidOrder, &hostOrder);
         putBtData(hostOrder, dst);
     }
@@ -211,7 +210,7 @@ void QLowEnergyControllerPrivateBluez::init()
             }
     );
     connect(hciManager.get(), &HciManager::signatureResolvingKeyReceived,
-            [this](quint16 handle, bool remoteKey, const quint128 &csrk) {
+            [this](quint16 handle, bool remoteKey, const QUuid::Id128Bytes &csrk) {
                 if (handle != connectionHandle)
                     return;
                 if ((remoteKey && role == QLowEnergyController::CentralRole)
@@ -928,7 +927,7 @@ QLowEnergyHandle parseReadByTypeCharDiscovery(
     if (elementLength == 7) // 16 bit uuid
         charData->uuid = QBluetoothUuid(bt_get_le16(&data[5]));
     else
-        charData->uuid = convert_uuid128((quint128 *)&data[5]);
+        charData->uuid = convert_uuid128((QUuid::Id128Bytes *)&data[5]);
 
     qCDebug(QT_BT_BLUEZ) << "Found handle:" << Qt::hex << attributeHandle
              << "properties:" << charData->properties
@@ -956,7 +955,7 @@ QLowEnergyHandle parseReadByTypeIncludeDiscovery(
     if (elementLength == 8) //16 bit uuid
         foundServices->append(QBluetoothUuid(bt_get_le16(&data[6])));
     else
-        foundServices->append(convert_uuid128((quint128 *) &data[6]));
+        foundServices->append(convert_uuid128((QUuid::Id128Bytes *) &data[6]));
 
     qCDebug(QT_BT_BLUEZ) << "Found included service: " << Qt::hex
                          << attributeHandle << "uuid:" << *foundServices;
@@ -1028,7 +1027,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
             if (elementLength == 6) //16 bit uuid
                 uuid = QBluetoothUuid(bt_get_le16(&data[offset+4]));
             else if (elementLength == 20) //128 bit uuid
-                uuid = convert_uuid128((quint128 *)&data[offset+4]);
+                uuid = convert_uuid128((QUuid::Id128Bytes *)&data[offset+4]);
             //else -> do nothing
 
             offset += elementLength;
@@ -1324,7 +1323,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
             if (format == 0x01)
                 uuid = QBluetoothUuid(bt_get_le16(&data[offset+2]));
             else if (format == 0x02)
-                uuid = convert_uuid128((quint128 *)&data[offset+2]);
+                uuid = convert_uuid128((QUuid::Id128Bytes *)&data[offset+2]);
 
             offset += elementLength;
 
@@ -2289,7 +2288,7 @@ void QLowEnergyControllerPrivateBluez::handleReadByTypeRequest(const QByteArray 
     if (is16BitUuid) {
         type = QBluetoothUuid(bt_get_le16(typeStart));
     } else if (is128BitUuid) {
-        type = QBluetoothUuid(convert_uuid128(reinterpret_cast<const quint128 *>(typeStart)));
+        type = QBluetoothUuid(convert_uuid128(reinterpret_cast<const QUuid::Id128Bytes *>(typeStart)));
     } else {
         qCWarning(QT_BT_BLUEZ) << "read by type request has invalid packet size" << packet.size();
         sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), 0,
@@ -2457,7 +2456,7 @@ void QLowEnergyControllerPrivateBluez::handleReadByGroupTypeRequest(const QByteA
     if (is16BitUuid) {
         type = QBluetoothUuid(bt_get_le16(typeStart));
     } else if (is128BitUuid) {
-        type = QBluetoothUuid(convert_uuid128(reinterpret_cast<const quint128 *>(typeStart)));
+        type = QBluetoothUuid(convert_uuid128(reinterpret_cast<const QUuid::Id128Bytes *>(typeStart)));
     } else {
         qCWarning(QT_BT_BLUEZ) << "read by group type request has invalid packet size"
                                << packet.size();
@@ -3175,15 +3174,15 @@ void QLowEnergyControllerPrivateBluez::loadSigningDataIfNecessary(SigningKeyType
         return;
     }
     const QByteArray keyData = QByteArray::fromHex(keyString);
-    if (keyData.size() != qsizetype(sizeof(quint128))) {
+    if (keyData.size() != qsizetype(sizeof(BluezUint128))) {
         qCWarning(QT_BT_BLUEZ) << "Signing key in settings file has invalid size"
                                << keyString.size();
         return;
     }
     qCDebug(QT_BT_BLUEZ) << "CSRK of peer device is" << keyString;
     const quint32 counter = settings.value(QLatin1String("Counter"), 0).toUInt();
-    quint128 csrk;
     using namespace std;
+    BluezUint128 csrk;
     memcpy(csrk.data, keyData.constData(), keyData.size());
     signingData.insert(remoteDevice.toUInt64(), SigningData(csrk, counter - 1));
 }
@@ -3228,8 +3227,8 @@ static QByteArray uuidToByteArray(const QBluetoothUuid &uuid)
         putBtData(uuid.toUInt16(), ba.data());
     } else {
         ba.resize(16);
-        quint128 hostOrder;
-        quint128 qtUuidOrder = uuid.toUInt128();
+        QUuid::Id128Bytes hostOrder;
+        QUuid::Id128Bytes qtUuidOrder = uuid.toBytes();
         ntoh128(&qtUuidOrder, &hostOrder);
         putBtData(hostOrder, ba.data());
     }
@@ -3466,7 +3465,7 @@ QLowEnergyControllerPrivateBluez::checkReadPermissions(QList<Attribute> &attribu
     return QBluezConst::AttError::ATT_ERROR_NO_ERROR;
 }
 
-bool QLowEnergyControllerPrivateBluez::verifyMac(const QByteArray &message, const quint128 &csrk,
+bool QLowEnergyControllerPrivateBluez::verifyMac(const QByteArray &message, BluezUint128 csrk,
                                              quint32 signCounter, quint64 expectedMac)
 {
     if (!cmacCalculator)
