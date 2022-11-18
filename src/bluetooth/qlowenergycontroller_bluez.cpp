@@ -155,16 +155,16 @@ template<typename T> static void putDataAndIncrement(const T &src, char *&dst)
 }
 template<> void putDataAndIncrement(const QBluetoothUuid &uuid, char *&dst)
 {
-    const int uuidSize = getUuidSize(uuid);
-    if (uuidSize == 2) {
-        putBtData(uuid.toUInt16(), dst);
+    bool ok;
+    quint16 uuid16 = uuid.toUInt16(&ok);
+    if (ok) {
+        putBtData(uuid16, dst);
+        dst += sizeof(uuid16);
     } else {
-        QUuid::Id128Bytes hostOrder;
-        QUuid::Id128Bytes qtUuidOrder = uuid.toBytes();
-        ntoh128(&qtUuidOrder, &hostOrder);
-        putBtData(hostOrder, dst);
+        QUuid::Id128Bytes btOrder = uuid.toBytes(QSysInfo::LittleEndian);
+        memcpy(dst, btOrder.data, sizeof(btOrder));
+        dst += sizeof(btOrder);
     }
-    dst += uuidSize;
 }
 template<> void putDataAndIncrement(const QByteArray &value, char *&dst)
 {
@@ -3221,17 +3221,10 @@ QString QLowEnergyControllerPrivateBluez::keySettingsFilePath() const
 
 static QByteArray uuidToByteArray(const QBluetoothUuid &uuid)
 {
-    QByteArray ba;
-    if (uuid.minimumSize() == 2) {
-        ba.resize(2);
-        putBtData(uuid.toUInt16(), ba.data());
-    } else {
-        ba.resize(16);
-        QUuid::Id128Bytes hostOrder;
-        QUuid::Id128Bytes qtUuidOrder = uuid.toBytes();
-        ntoh128(&qtUuidOrder, &hostOrder);
-        putBtData(hostOrder, ba.data());
-    }
+    QByteArray ba(sizeof(uuid), Qt::Uninitialized);
+    char *ptr = ba.data();
+    putDataAndIncrement(uuid, ptr);
+    ba.resize(ptr - ba.constData());
     return ba;
 }
 
