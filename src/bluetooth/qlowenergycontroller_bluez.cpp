@@ -64,21 +64,6 @@ using namespace QBluetooth;
 
 const int maxPrepareQueueSize = 1024;
 
-static inline QBluetoothUuid convert_uuid128(const QUuid::Id128Bytes *p)
-{
-    QUuid::Id128Bytes dst_hostOrder, dst_bigEndian;
-
-    // Bluetooth LE data comes as little endian
-    // uuids are constructed using high endian
-    btoh128(p, &dst_hostOrder);
-    hton128(&dst_hostOrder, &dst_bigEndian);
-
-    // convert to Qt's own data type
-    QUuid::Id128Bytes qtdst = dst_bigEndian;
-
-    return QBluetoothUuid(qtdst);
-}
-
 static void dumpErrorInformation(const QByteArray &response)
 {
     const char *data = response.constData();
@@ -924,10 +909,11 @@ QLowEnergyHandle parseReadByTypeCharDiscovery(
             (QLowEnergyCharacteristic::PropertyTypes)(data[2] & 0xff);
     charData->valueHandle = bt_get_le16(&data[3]);
 
+    // Bluetooth LE data comes as little endian
     if (elementLength == 7) // 16 bit uuid
         charData->uuid = QBluetoothUuid(bt_get_le16(&data[5]));
     else
-        charData->uuid = convert_uuid128((QUuid::Id128Bytes *)&data[5]);
+        charData->uuid = QUuid::fromBytes(&data[5], QSysInfo::LittleEndian);
 
     qCDebug(QT_BT_BLUEZ) << "Found handle:" << Qt::hex << attributeHandle
              << "properties:" << charData->properties
@@ -955,7 +941,7 @@ QLowEnergyHandle parseReadByTypeIncludeDiscovery(
     if (elementLength == 8) //16 bit uuid
         foundServices->append(QBluetoothUuid(bt_get_le16(&data[6])));
     else
-        foundServices->append(convert_uuid128((QUuid::Id128Bytes *) &data[6]));
+        foundServices->append(QUuid::fromBytes(&data[6], QSysInfo::LittleEndian));
 
     qCDebug(QT_BT_BLUEZ) << "Found included service: " << Qt::hex
                          << attributeHandle << "uuid:" << *foundServices;
@@ -1027,7 +1013,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
             if (elementLength == 6) //16 bit uuid
                 uuid = QBluetoothUuid(bt_get_le16(&data[offset+4]));
             else if (elementLength == 20) //128 bit uuid
-                uuid = convert_uuid128((QUuid::Id128Bytes *)&data[offset+4]);
+                uuid = QUuid::fromBytes(&data[offset+4], QSysInfo::LittleEndian);
             //else -> do nothing
 
             offset += elementLength;
@@ -1323,7 +1309,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
             if (format == 0x01)
                 uuid = QBluetoothUuid(bt_get_le16(&data[offset+2]));
             else if (format == 0x02)
-                uuid = convert_uuid128((QUuid::Id128Bytes *)&data[offset+2]);
+                uuid = QUuid::fromBytes(&data[offset+2], QSysInfo::LittleEndian);
 
             offset += elementLength;
 
@@ -2288,7 +2274,7 @@ void QLowEnergyControllerPrivateBluez::handleReadByTypeRequest(const QByteArray 
     if (is16BitUuid) {
         type = QBluetoothUuid(bt_get_le16(typeStart));
     } else if (is128BitUuid) {
-        type = QBluetoothUuid(convert_uuid128(reinterpret_cast<const QUuid::Id128Bytes *>(typeStart)));
+        type = QUuid::fromBytes(typeStart, QSysInfo::LittleEndian);
     } else {
         qCWarning(QT_BT_BLUEZ) << "read by type request has invalid packet size" << packet.size();
         sendErrorResponse(static_cast<QBluezConst::AttCommand>(packet.at(0)), 0,
@@ -2456,7 +2442,7 @@ void QLowEnergyControllerPrivateBluez::handleReadByGroupTypeRequest(const QByteA
     if (is16BitUuid) {
         type = QBluetoothUuid(bt_get_le16(typeStart));
     } else if (is128BitUuid) {
-        type = QBluetoothUuid(convert_uuid128(reinterpret_cast<const QUuid::Id128Bytes *>(typeStart)));
+        type = QUuid::fromBytes(typeStart, QSysInfo::LittleEndian);
     } else {
         qCWarning(QT_BT_BLUEZ) << "read by group type request has invalid packet size"
                                << packet.size();

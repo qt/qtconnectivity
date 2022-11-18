@@ -260,12 +260,8 @@ void QLeAdvertiserBluez::setServicesData(const QLowEnergyAdvertisingData &src, A
             continue;
         }
 
-        // QUuid::toBytes() is always Big-Endian; convert it to host order
-        QUuid::Id128Bytes hostOrder, btOrder;
-        QUuid::Id128Bytes qtUuidOrder = service.toBytes();
-        ntoh128(&qtUuidOrder, &hostOrder);
-        btoh128(&hostOrder, &btOrder);
-        services128 << btOrder;
+        // QUuid::toBytes() is defaults to Big-Endian
+        services128 << service.toBytes(QSysInfo::LittleEndian);
     }
     addServicesData(dest, services16);
     addServicesData(dest, services32);

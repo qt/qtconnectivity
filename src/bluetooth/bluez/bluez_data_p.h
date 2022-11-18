@@ -120,39 +120,6 @@ struct sockaddr_rc {
 
 // Bt Low Energy related
 
-#if __BYTE_ORDER == __LITTLE_ENDIAN
-
-static inline void btoh128(const QUuid::Id128Bytes *src, QUuid::Id128Bytes *dst)
-{
-    *dst = *src;
-}
-
-static inline void ntoh128(const QUuid::Id128Bytes *src, QUuid::Id128Bytes *dst)
-{
-    int i;
-
-    for (i = 0; i < 16; i++)
-        dst->data[15 - i] = src->data[i];
-}
-
-#elif __BYTE_ORDER == __BIG_ENDIAN
-
-static inline void btoh128(const QUuid::Id128Bytes *src, QUuid::Id128Bytes *dst)
-{
-    int i;
-
-    for (i = 0; i < 16; i++)
-        dst->data[15 - i] = src->data[i];
-}
-
-static inline void ntoh128(const QUuid::Id128Bytes *src, QUuid::Id128Bytes *dst)
-{
-    *dst = *src;
-}
-#else
-#error "Unknown byte order"
-#endif
-
 template<typename T> inline T getBtData(const void *ptr)
 {
     return qFromLittleEndian<T>(reinterpret_cast<const uchar *>(ptr));
@@ -167,12 +134,6 @@ template<typename T> inline void putBtData(T src, void *dst)
 {
     qToLittleEndian(src, reinterpret_cast<uchar *>(dst));
 }
-template<> inline void putBtData(QUuid::Id128Bytes src, void *dst)
-{
-    btoh128(&src, reinterpret_cast<QUuid::Id128Bytes *>(dst));
-}
-
-#define hton128(x, y) ntoh128(x, y)
 
 // HCI related
 
