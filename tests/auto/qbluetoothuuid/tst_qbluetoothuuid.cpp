@@ -148,42 +148,6 @@ void tst_QBluetoothUuid::tst_assignment()
 
 #define BASEUUID "-0000-1000-8000-00805F9B34FB"
 
-#define UUID128_32(x, a, b, c, d) \
-    quint128 x = { \
-        { \
-            a, b, c, d, \
-            0x00, 0x00, \
-            0x10, 0x00, \
-            0x80, 0x00, \
-            0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB \
-        } \
-    }
-
-#define UUID128_16(x, a, b) UUID128_32(x, 0, 0, a, b)
-
-#define NEWROW16(text, a, b, s) \
-do { \
-    UUID128_16(uuid128, a, b); \
-    quint32 uuid32 = a << 8 | b; \
-    quint16 uuid16 = a << 8 | b; \
-    QTest::newRow(text) << true << uuid16 << true << uuid32 << true << uuid128 \
-                        << (QLatin1Char('{') + QLatin1String(s) + QLatin1Char('}')); \
-} while (0)
-
-#define NEWROW32(text, a, b, c, d, s) \
-do { \
-    UUID128_32(uuid128, a, b, c, d); \
-    quint32 uuid32 = a << 24 | b << 16 | c << 8 | d; \
-    quint16 uuid16; \
-    bool constructUuid16 = (a == 0) && (b == 0); \
-    if (constructUuid16) \
-        uuid16 = c << 8 | d; \
-    else \
-        uuid16 = 0; \
-    QTest::newRow(text) << constructUuid16 << uuid16 << true << uuid32 << true << uuid128 \
-                        << (QLatin1Char('{') + QLatin1String(s) + QLatin1Char('}')); \
-} while (0)
-
 void tst_QBluetoothUuid::tst_conversion_data()
 {
     QTest::addColumn<bool>("constructUuid16");
@@ -194,13 +158,47 @@ void tst_QBluetoothUuid::tst_conversion_data()
     QTest::addColumn<quint128>("uuid128");
     QTest::addColumn<QString>("uuidS");
 
-    NEWROW32("base uuid", 0x00, 0x00, 0x00, 0x00, "00000000" BASEUUID);
-    NEWROW16("0x0001", 0x00, 0x01, "00000001" BASEUUID);
-    NEWROW16("0xffff", 0xff, 0xff, "0000FFFF" BASEUUID);
-    NEWROW32("0x00010000", 0x00, 0x01, 0x00, 0x00, "00010000" BASEUUID);
-    NEWROW32("0x0001ffff", 0x00, 0x01, 0xff, 0xff, "0001FFFF" BASEUUID);
-    NEWROW32("0xffff0000", 0xff, 0xff, 0x00, 0x00, "FFFF0000" BASEUUID);
-    NEWROW32("0xffffffff", 0xff, 0xff, 0xff, 0xff, "FFFFFFFF" BASEUUID);
+    static const auto uuid128_32 = [](quint8 a, quint8 b, quint8 c, quint8 d) {
+        quint128 x = {
+            {
+                a, b, c, d,
+                0x00, 0x00,
+                0x10, 0x00,
+                0x80, 0x00,
+                0x00, 0x80, 0x5F, 0x9B, 0x34, 0xFB
+            }
+        };
+        return x;
+    };
+
+    auto newRow32 = [](const char *name, quint8 a, quint8 b, quint8 c, quint8 d, const char *s) {
+        auto uuid128 = uuid128_32(a, b, c, d);
+        quint32 uuid32 = a << 24 | b << 16 | c << 8 | d;
+        quint16 uuid16; \
+        bool constructUuid16 = (a == 0) && (b == 0);
+        if (constructUuid16)
+            uuid16 = c << 8 | d;
+        else
+            uuid16 = 0;
+        QTest::newRow(name) << constructUuid16 << uuid16 << true << uuid32 << true << uuid128
+                            << (QLatin1Char('{') + QLatin1String(s) + QLatin1Char('}'));
+    };
+
+    auto newRow16 = [](const char *name, quint8 a, quint8 b, const char *s) {
+        auto uuid128 = uuid128_32(0, 0, a, b);
+        quint32 uuid32 = a << 8 | b;
+        quint16 uuid16 = a << 8 | b;
+        QTest::newRow(name) << true << uuid16 << true << uuid32 << true << uuid128
+                            << (QLatin1Char('{') + QLatin1String(s) + QLatin1Char('}'));
+    };
+
+    newRow32("base uuid", 0x00, 0x00, 0x00, 0x00, "00000000" BASEUUID);
+    newRow16("0x0001", 0x00, 0x01, "00000001" BASEUUID);
+    newRow16("0xffff", 0xff, 0xff, "0000FFFF" BASEUUID);
+    newRow32("0x00010000", 0x00, 0x01, 0x00, 0x00, "00010000" BASEUUID);
+    newRow32("0x0001ffff", 0x00, 0x01, 0xff, 0xff, "0001FFFF" BASEUUID);
+    newRow32("0xffff0000", 0xff, 0xff, 0x00, 0x00, "FFFF0000" BASEUUID);
+    newRow32("0xffffffff", 0xff, 0xff, 0xff, 0xff, "FFFFFFFF" BASEUUID);
 
     {
         quint128 uuid128 = {
