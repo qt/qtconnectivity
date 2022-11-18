@@ -207,7 +207,7 @@ static void dumpAttributeVariant(const QVariant &var, const QString indent)
             qDebug("%suuid %08x", indent.toLocal8Bit().constData(), uuid.toUInt32());
             break;
         case 16: {
-            qDebug("%suuid %s", indent.toLocal8Bit().constData(), QByteArray(reinterpret_cast<const char *>(uuid.toUInt128().data), 16).toHex().constData());
+            qDebug("%suuid %s", indent.toLocal8Bit().constData(), uuid.toByteArray(QUuid::Id128).constData());
             break;
         }
         default:

@@ -584,7 +584,7 @@ static void dumpAttributeVariant(QDebug dbg, const QVariant &var, const QString&
             case 16:
                 dbg << QString::asprintf("%suuid %s\n",
                             indent.toUtf8().constData(),
-                            QByteArray(reinterpret_cast<const char *>(uuid.toUInt128().data), 16).toHex().constData());
+                            uuid.toByteArray(QUuid::Id128).constData());
                 break;
             default:
                 dbg << QString::asprintf("%suuid ???\n", indent.toUtf8().constData());
