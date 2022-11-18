@@ -236,7 +236,7 @@ static void addServicesData(AdvData &data, const QList<T> &services)
     data.data[data.length++] = 1 + maxServices * sizeofT;
     data.data[data.length++] = servicesType<T>(dataComplete);
     for (qsizetype i = 0; i < maxServices; ++i) {
-        putBtData(services.at(i), data.data + data.length);
+        memcpy(data.data + data.length, &services.at(i), sizeofT);
         data.length += sizeofT;
     }
 }
@@ -251,20 +251,21 @@ void QLeAdvertiserBluez::setServicesData(const QLowEnergyAdvertisingData &src, A
         bool ok;
         const quint16 service16 = service.toUInt16(&ok);
         if (ok) {
-            services16 << service16;
+            services16 << qToLittleEndian(service16);
             continue;
         }
         const quint32 service32 = service.toUInt32(&ok);
         if (ok) {
-            services32 << service32;
+            services32 << qToLittleEndian(service32);
             continue;
         }
 
         // QUuid::toBytes() is always Big-Endian; convert it to host order
-        QUuid::Id128Bytes hostOrder;
+        QUuid::Id128Bytes hostOrder, btOrder;
         QUuid::Id128Bytes qtUuidOrder = service.toBytes();
         ntoh128(&qtUuidOrder, &hostOrder);
-        services128 << hostOrder;
+        btoh128(&hostOrder, &btOrder);
+        services128 << btOrder;
     }
     addServicesData(dest, services16);
     addServicesData(dest, services32);
