@@ -170,6 +170,8 @@ QLowEnergyAdvertisingParameters::Mode QLowEnergyAdvertisingParameters::mode() co
    Sets the white list that is potentially used for filtering scan and connection requests.
    The \a whiteList parameter is the list of addresses to use for filtering, and \a policy
    specifies how exactly to use \a whiteList.
+
+   Whitelists are not supported on the BlueZ DBus backend as they are not supported by BlueZ.
  */
 void QLowEnergyAdvertisingParameters::setWhiteList(const QList<AddressInfo> &whiteList,
                                                    FilterPolicy policy)
@@ -204,6 +206,10 @@ QLowEnergyAdvertisingParameters::FilterPolicy QLowEnergyAdvertisingParameters::f
    \note There are limits for the minimum and maximum interval; the exact values depend on
          the mode. If they are exceeded, the lowest or highest possible value will be used,
          respectively.
+
+   Setting the advertising interval is supported on BlueZ DBus backend if its experimental
+   status is changed in later versions of BlueZ (or run in experimental mode).
+
  */
 void QLowEnergyAdvertisingParameters::setInterval(quint16 minimum, quint16 maximum)
 {

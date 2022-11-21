@@ -519,6 +519,8 @@ QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok =
 
 QString adapterWithDBusPeripheralInterface(const QBluetoothAddress &localAddress)
 {
+    initializeBluez5();
+
     // First find the object path to the desired adapter
     bool ok = false;
     const QString hostAdapterPath = findAdapterForAddress(localAddress, &ok);

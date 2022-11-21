@@ -22,7 +22,6 @@ static constexpr auto bluezErrorFailed{"org.bluez.Error.Failed"_L1};
 
 // From bluez API documentation
 static constexpr auto advDataTXPower{"tx-power"_L1};
-static constexpr auto advDataLocalName{"local-name"_L1};
 static constexpr auto advDataTypePeripheral{"peripheral"_L1};
 static constexpr auto advDataTypeBroadcast{"broadcast"_L1};
 static constexpr quint16 advDataMinIntervalMs{20};
@@ -102,20 +101,22 @@ void QLeDBusAdvertiser::setAdvertisingParamsForDBus()
     }
 
     // Advertisement interval (min max in milliseconds). Ensure the values fit the range bluez
-    // allows. The max >= min is guaranteed by QLowEnergyAdvertisingParameters::setInterval()
-    m_advDataDBus->setMinInterval(qBound(
-                                      advDataMinIntervalMs, quint16(m_advParams.minimumInterval()),
-                                      advDataMaxIntervalMs));
-    m_advDataDBus->setMaxInterval(qBound(
-                                      advDataMinIntervalMs, quint16(m_advParams.maximumInterval()),
-                                      advDataMaxIntervalMs));
+    // allows. The max >= min is guaranteed by QLowEnergyAdvertisingParameters::setInterval().
+    // Note: Bluez reads these values but at the time of this writing it marks this feature
+    // as 'experimental'
+    m_advDataDBus->setMinInterval(qBound(advDataMinIntervalMs,
+                                         quint16(m_advParams.minimumInterval()),
+                                         advDataMaxIntervalMs));
+    m_advDataDBus->setMaxInterval(qBound(advDataMinIntervalMs,
+                                         quint16(m_advParams.maximumInterval()),
+                                         advDataMaxIntervalMs));
 }
 
 void QLeDBusAdvertiser::setAdvertisementDataForDBus()
 {
     // We don't calculate the advertisement length to guard for too long advertisements.
     // There isn't adequate control and visibility on the advertisement for that.
-    // - We don't know the max length (legacy or extended avertising)
+    // - We don't know the max length (legacy or extended advertising)
     // - Bluez may truncate some of the fields on its own, making calculus here imprecise
     // - Scan response may or may not be used to offload some of the data
 
@@ -145,7 +146,7 @@ void QLeDBusAdvertiser::setAdvertisementDataForDBus()
                         {m_advData.manufacturerId(), QDBusVariant(m_advData.manufacturerData())}});
     }
 
-    // Discoverability. Bluez dbus doesn't seem to provide a match for Qt API semantics
+    // Discoverability
     if (m_advDataDBus->type() == advDataTypePeripheral) {
         m_advDataDBus->setDiscoverable(m_advData.discoverability()
                                    != QLowEnergyAdvertisingData::DiscoverabilityNone);
@@ -160,7 +161,7 @@ void QLeDBusAdvertiser::setAdvertisementDataForDBus()
 
 void QLeDBusAdvertiser::startAdvertising()
 {
-    qCDebug(QT_BT_BLUEZ) << "Start advertising" << m_advObjectPath << m_advManager->path();
+    qCDebug(QT_BT_BLUEZ) << "Start advertising" << m_advObjectPath << "on" << m_advManager->path();
     if (m_advertising) {
         qCWarning(QT_BT_BLUEZ) << "Start tried while already advertising";
         return;
@@ -209,7 +210,6 @@ void QLeDBusAdvertiser::stopAdvertising()
     else
         qCDebug(QT_BT_BLUEZ) << "Advertisement unregistered successfully";
     QDBusConnection::systemBus().unregisterObject(m_advObjectPath);
-    emit advertisingStopped();
 }
 
 // Called by Bluez when the advertisement has been removed (org.bluez.LEAdvertisement1.Release)

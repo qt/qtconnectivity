@@ -42,6 +42,9 @@ public:
           bytes. If the variable-length data set via this class exceeds that limit, it will
           be left out of the packet or truncated, depending on the type.
           On Android, advertising will fail if advertising data is larger than 31 bytes.
+          On Bluez DBus backend the advertising length limit and the behavior when it is exceeded
+          is up to BlueZ; it may for example support extended advertising. For the most
+          predictable behavior keep the advertising data short.
 
     \sa QLowEnergyAdvertisingParameters
     \sa QLowEnergyController::startAdvertising()
@@ -208,6 +211,9 @@ QList<QBluetoothUuid> QLowEnergyAdvertisingData::services() const
   This can be used to send non-standard data.
   \note If \a data is longer than 31 bytes, it will be truncated. It is the caller's responsibility
         to ensure that \a data is well-formed.
+
+  Providing the raw advertising data is not supported on BlueZ DBus backend as BlueZ does not
+  support it. This may change in a future release.
  */
 void QLowEnergyAdvertisingData::setRawData(const QByteArray &data)
 {

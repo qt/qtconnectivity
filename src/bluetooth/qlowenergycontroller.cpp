@@ -197,7 +197,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
     \l PeripheralRole. On iOS and macOS the controller only guesses that some central
     connected to our peripheral as soon as this central tries to write/read a
     characteristic/descriptor. On Android the controller monitors all connected GATT
-    devices.
+    devices. On Linux BlueZ DBus peripheral backend the remote is considered connected
+    when it first reads/writes a characteristic or a descriptor.
 */
 
 /*!
@@ -230,7 +231,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
     This signal is emitted when the controller disconnects from the remote
     Low Energy device or vice versa. On iOS and macOS this signal is unreliable
     if the controller is in the \l PeripheralRole. On Android the signal is emitted
-    when the last connected device is disconnected.
+    when the last connected device is disconnected. On BlueZ DBus backend the controller
+    is considered disconnected when last client which has accessed the attributes has
+    disconnected.
 */
 
 /*!
@@ -312,20 +315,27 @@ static QLowEnergyControllerPrivate *privateController(
     // with an environment variable (see bluetoothdVersion())
     //
     // Peripheral role
-    // For the dbus peripheral backend we check the presence of the required DBus APIs, and in
-    // addition the application needs to opt-in to the DBus peripheral role by setting the
-    // environment variable. Otherwise we fall back to the kernel ATT backend
+    // For the dbus peripheral backend we check the presence of the required DBus APIs,
+    // bluez version, and in addition the application needs to opt-in to the DBus peripheral
+    // role by setting the environment variable. Otherwise we fall back to the kernel ATT
+    // backend
     //
     // ### Qt 7 consider removing the non-dbus bluez (kernel ATT) support
+
+    QString adapterPathWithPeripheralSupport;
+    if (role == QLowEnergyController::PeripheralRole
+            && bluetoothdVersion() >= QVersionNumber(5, 56)
+            && qEnvironmentVariableIsSet("QT_BLUETOOTH_USE_DBUS_PERIPHERAL")) {
+        adapterPathWithPeripheralSupport = adapterWithDBusPeripheralInterface(localDevice);
+    }
+
     if (role == QLowEnergyController::CentralRole
             && bluetoothdVersion() >= QVersionNumber(5, 42)) {
         qCDebug(QT_BT) << "Using BlueZ LE DBus API for central";
         return new QLowEnergyControllerPrivateBluezDBus();
-    } else if (role == QLowEnergyController::PeripheralRole
-               && qEnvironmentVariableIsSet("BLUETOOTH_USE_DBUS_PERIPHERAL")
-               && !adapterWithDBusPeripheralInterface(localDevice).isEmpty()) {
+    } else if (!adapterPathWithPeripheralSupport.isEmpty()) {
         qCDebug(QT_BT) << "Using BlueZ LE DBus API for peripheral";
-        return new QLowEnergyControllerPrivateBluezDBus();
+        return new QLowEnergyControllerPrivateBluezDBus(adapterPathWithPeripheralSupport);
     } else {
         qCDebug(QT_BT) << "Using BlueZ kernel ATT interface for"
                        << (role == QLowEnergyController::CentralRole ? "central" : "peripheral");
@@ -754,6 +764,10 @@ QLowEnergyService *QLowEnergyController::createServiceObject(
    the advertised packets may not contain all uuids. The existing limit may have caused the truncation
    of uuids. In such cases \a scanResponseData may be used for additional information.
 
+   On BlueZ DBus backend BlueZ decides if, and which data, to use in a scan response. Therefore
+   all advertisement data is recommended to set in the main \a advertisingData parameter. If both
+   advertisement and scan response data is set, the scan response data is given precedence.
+
    If this object is currently not in the \l UnconnectedState, nothing happens.
 
    \since 5.7
@@ -857,7 +871,7 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
   an acknowledged Android bug. Due to this bug Android does not emit the \l connectionUpdated()
   signal.
 
-  \note Currently, this functionality is only implemented on Linux and Android.
+  \note Currently, this functionality is only implemented on Linux kernel backend and Android.
 
   \sa connectionUpdated()
   \since 5.7

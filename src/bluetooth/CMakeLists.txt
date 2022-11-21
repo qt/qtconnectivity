@@ -78,6 +78,14 @@ if(QT_FEATURE_bluez)
             bluez/gattmanager1.cpp bluez/gattmanager1_p.h
             bluez/leadvertisement1.cpp bluez/leadvertisement1_p.h
             bluez/leadvertisingmanager1.cpp bluez/leadvertisingmanager1_p.h
+            bluez/objectmanageradaptor.cpp bluez/objectmanageradaptor_p.h
+            bluez/propertiesadaptor.cpp bluez/propertiesadaptor_p.h
+            bluez/gattcharacteristic1adaptor.cpp bluez/gattcharacteristic1adaptor_p.h
+            bluez/gattdescriptor1adaptor.cpp bluez/gattdescriptor1adaptor_p.h
+            bluez/gattservice1adaptor.cpp bluez/gattservice1adaptor_p.h
+            bluez/bluezperipheralapplication.cpp bluez/bluezperipheralapplication_p.h
+            bluez/bluezperipheralobjects.cpp bluez/bluezperipheralobjects_p.h
+            bluez/bluezperipheralconnectionmanager.cpp bluez/bluezperipheralconnectionmanager_p.h
             qbluetoothdevicediscoveryagent_bluez.cpp
             qbluetoothlocaldevice_bluez.cpp
             qbluetoothserver_bluez.cpp

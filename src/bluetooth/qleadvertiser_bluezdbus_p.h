@@ -22,10 +22,10 @@ QT_REQUIRE_CONFIG(bluez);
 
 #include <QtCore/QObject>
 
-QT_BEGIN_NAMESPACE
-
 class OrgBluezLEAdvertisement1Adaptor;
 class OrgBluezLEAdvertisingManager1Interface;
+
+QT_BEGIN_NAMESPACE
 
 class QLeDBusAdvertiser : public QObject
 {
@@ -46,7 +46,6 @@ public:
 
 signals:
     void errorOccurred();
-    void advertisingStopped();
 
 private:
     void setDataForDBus();

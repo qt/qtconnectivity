@@ -134,4 +134,3 @@ void OrgBluezLEAdvertisement1Adaptor::Release()
     // handle method call org.bluez.LEAdvertisement1.Release
     QMetaObject::invokeMethod(parent(), "Release");
 }
-

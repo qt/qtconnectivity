@@ -33,13 +33,15 @@ class OrgFreedesktopDBusPropertiesInterface;
 
 QT_BEGIN_NAMESPACE
 
+class QtBluezPeripheralApplication;
+class QtBluezPeripheralConnectionManager;
 class QDBusPendingCallWatcher;
 
 class QLowEnergyControllerPrivateBluezDBus final : public QLowEnergyControllerPrivate
 {
     Q_OBJECT
 public:
-    QLowEnergyControllerPrivateBluezDBus();
+    QLowEnergyControllerPrivateBluezDBus(const QString& adapterPathWithPeripheralSupport = {});
     ~QLowEnergyControllerPrivateBluezDBus() override;
 
     void init() override;
@@ -102,15 +104,29 @@ private slots:
     void onCharWriteFinished(QDBusPendingCallWatcher *call);
     void onDescWriteFinished(QDBusPendingCallWatcher *call);
 private:
+
     OrgBluezAdapter1Interface* adapter{};
     OrgBluezDevice1Interface* device{};
     OrgFreedesktopDBusObjectManagerInterface* managerBluez{};
     OrgFreedesktopDBusPropertiesInterface* deviceMonitor{};
+    QString adapterPathWithPeripheralSupport;
 
+    int remoteMtu{-1};
+    QtBluezPeripheralApplication* peripheralApplication{};
+    QtBluezPeripheralConnectionManager* peripheralConnectionManager{};
     QLeDBusAdvertiser *advertiser{};
     void handleAdvertisingError();
-    void handleAdvertisingStopped();
-
+    void handlePeripheralApplicationError();
+    void handlePeripheralApplicationRegistered();
+    void handlePeripheralConnectivityChanged(bool connected);
+    void handlePeripheralCharacteristicValueUpdate(QLowEnergyHandle handle,
+                                                   const QByteArray& value);
+    void handlePeripheralDescriptorValueUpdate(QLowEnergyHandle characteristicHandle,
+                                               QLowEnergyHandle descriptorHandle,
+                                               const QByteArray& value);
+    void handlePeripheralRemoteDeviceChanged(const QBluetoothAddress& address,
+                                             const QString& name,
+                                             quint16 mtu);
     bool pendingConnect = false;
     bool disconnectSignalRequired = false;
 

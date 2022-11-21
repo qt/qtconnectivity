@@ -11,14 +11,17 @@
 #include "bluez/battery1_p.h"
 #include "bluez/objectmanager_p.h"
 #include "bluez/properties_p.h"
-
+#include "bluez/bluezperipheralapplication_p.h"
+#include "bluez/bluezperipheralconnectionmanager_p.h"
 
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
-QLowEnergyControllerPrivateBluezDBus::QLowEnergyControllerPrivateBluezDBus()
-    : QLowEnergyControllerPrivate()
+QLowEnergyControllerPrivateBluezDBus::QLowEnergyControllerPrivateBluezDBus(
+        const QString &adapterPathWithPeripheralSupport)
+    : QLowEnergyControllerPrivate(),
+      adapterPathWithPeripheralSupport(adapterPathWithPeripheralSupport)
 {
 }
 
@@ -32,6 +35,42 @@ QLowEnergyControllerPrivateBluezDBus::~QLowEnergyControllerPrivateBluezDBus()
 
 void QLowEnergyControllerPrivateBluezDBus::init()
 {
+    if (role == QLowEnergyController::PeripheralRole) {
+        Q_ASSERT(!adapterPathWithPeripheralSupport.isEmpty());
+
+        peripheralApplication = new QtBluezPeripheralApplication(adapterPathWithPeripheralSupport,
+                                                                 this);
+
+        QObject::connect(peripheralApplication, &QtBluezPeripheralApplication::errorOccurred, this,
+                         &QLowEnergyControllerPrivateBluezDBus::handlePeripheralApplicationError);
+
+        QObject::connect(peripheralApplication, &QtBluezPeripheralApplication::registered, this,
+                     &QLowEnergyControllerPrivateBluezDBus::handlePeripheralApplicationRegistered);
+
+        QObject::connect(peripheralApplication,
+                 &QtBluezPeripheralApplication::characteristicValueUpdatedByRemote, this,
+                 &QLowEnergyControllerPrivateBluezDBus::handlePeripheralCharacteristicValueUpdate);
+
+        QObject::connect(peripheralApplication,
+                 &QtBluezPeripheralApplication::descriptorValueUpdatedByRemote, this,
+                 &QLowEnergyControllerPrivateBluezDBus::handlePeripheralDescriptorValueUpdate);
+
+        peripheralConnectionManager =
+                new QtBluezPeripheralConnectionManager(localAdapter, this);
+
+        QObject::connect(peripheralApplication,
+                         &QtBluezPeripheralApplication::remoteDeviceAccessEvent,
+                         peripheralConnectionManager,
+                         &QtBluezPeripheralConnectionManager::remoteDeviceAccessEvent);
+
+        QObject::connect(peripheralConnectionManager,
+                       &QtBluezPeripheralConnectionManager::connectivityStateChanged, this,
+                       &QLowEnergyControllerPrivateBluezDBus::handlePeripheralConnectivityChanged);
+
+        QObject::connect(peripheralConnectionManager,
+                       &QtBluezPeripheralConnectionManager::remoteDeviceChanged, this,
+                       &QLowEnergyControllerPrivateBluezDBus::handlePeripheralRemoteDeviceChanged);
+    }
 }
 
 void QLowEnergyControllerPrivateBluezDBus::devicePropertiesChanged(
@@ -220,6 +259,16 @@ void QLowEnergyControllerPrivateBluezDBus::resetController()
         advertiser = nullptr;
     }
 
+    if (peripheralApplication)
+        peripheralApplication->reset();
+
+    if (peripheralConnectionManager)
+        peripheralConnectionManager->reset();
+
+    remoteName.clear();
+    remoteDevice.clear();
+    remoteMtu = -1;
+
     dbusServices.clear();
     jobs.clear();
     invalidateServices();
@@ -347,26 +396,36 @@ void QLowEnergyControllerPrivateBluezDBus::connectToDevice()
 
 void QLowEnergyControllerPrivateBluezDBus::disconnectFromDevice()
 {
-    if (!device)
-        return;
+    if (role == QLowEnergyController::CentralRole) {
+        if (!device)
+            return;
 
-    setState(QLowEnergyController::ClosingState);
+        setState(QLowEnergyController::ClosingState);
 
-    QDBusPendingReply<> reply = device->Disconnect();
-    QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(reply, this);
-    connect(watcher, &QDBusPendingCallWatcher::finished, this,
-            [this](QDBusPendingCallWatcher* call) {
-        QDBusPendingReply<> reply = *call;
-        if (reply.isError()) {
-            qCDebug(QT_BT_BLUEZ) << "BTLE_DBUS::disconnect() failed"
-                                 << reply.reply().errorName()
-                                 << reply.reply().errorMessage();
-            executeClose(QLowEnergyController::UnknownError);
-        } else {
-            executeClose(QLowEnergyController::NoError);
-        }
-        call->deleteLater();
-    });
+        QDBusPendingReply<> reply = device->Disconnect();
+        QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(reply, this);
+        connect(watcher, &QDBusPendingCallWatcher::finished, this,
+                [this](QDBusPendingCallWatcher* call) {
+            QDBusPendingReply<> reply = *call;
+            if (reply.isError()) {
+                qCDebug(QT_BT_BLUEZ) << "BTLE_DBUS::disconnect() failed"
+                                     << reply.reply().errorName()
+                                     << reply.reply().errorMessage();
+                executeClose(QLowEnergyController::UnknownError);
+            } else {
+                executeClose(QLowEnergyController::NoError);
+            }
+            call->deleteLater();
+        });
+    } else {
+        Q_Q(QLowEnergyController);
+        peripheralConnectionManager->disconnectDevices();
+        resetController();
+        const auto emitDisconnected = (state == QLowEnergyController::ConnectedState);
+        setState(QLowEnergyController::UnconnectedState);
+        if (emitDisconnected)
+            emit q->disconnected();
+    }
 }
 
 void QLowEnergyControllerPrivateBluezDBus::discoverServices()
@@ -1233,8 +1292,16 @@ void QLowEnergyControllerPrivateBluezDBus::writeCharacteristic(
 
         scheduleNextJob();
     } else {
-        qWarning(QT_BT_BLUEZ) << "writeCharacteristic() not implemented for DBus Bluez GATT";
-        service->setError(QLowEnergyService::CharacteristicWriteError);
+        // Peripheral role
+        Q_ASSERT(peripheralApplication);
+        if (!peripheralApplication->localCharacteristicWrite(charHandle, newValue)) {
+            qCWarning(QT_BT_BLUEZ) << "Characteristic write failed"
+                                   << characteristicForHandle(charHandle).uuid();
+            service->setError(QLowEnergyService::CharacteristicWriteError);
+            return;
+        }
+        QLowEnergyServicePrivate::CharData &charData = service->characteristicList[charHandle];
+        charData.value = newValue;
     }
 }
 
@@ -1282,8 +1349,20 @@ void QLowEnergyControllerPrivateBluezDBus::writeDescriptor(
 
         scheduleNextJob();
     } else {
-        qWarning(QT_BT_BLUEZ) << "writeDescriptor() peripheral not implemented for DBus Bluez GATT";
-        service->setError(QLowEnergyService::CharacteristicWriteError);
+        // Peripheral role
+        Q_ASSERT(peripheralApplication);
+
+        auto desc = descriptorForHandle(descriptorHandle);
+        if (desc.uuid() == QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration) {
+            qCWarning(QT_BT_BLUEZ) << "CCCD write not supported in peripheral role";
+            service->setError(QLowEnergyService::DescriptorWriteError);
+            return;
+        } else if (!peripheralApplication->localDescriptorWrite(descriptorHandle, newValue)) {
+            qCWarning(QT_BT_BLUEZ) << "Descriptor write failed" << desc.uuid();
+            service->setError(QLowEnergyService::DescriptorWriteError);
+            return;
+        }
+        service->characteristicList[charHandle].descriptorList[descriptorHandle].value = newValue;
     }
 }
 
@@ -1295,68 +1374,140 @@ void QLowEnergyControllerPrivateBluezDBus::startAdvertising(
     error = QLowEnergyController::NoError;
     errorString.clear();
 
+    Q_ASSERT(peripheralApplication);
+    Q_ASSERT(!adapterPathWithPeripheralSupport.isEmpty());
+
     if (advertiser) {
-        // Clear any previous advertiser to start anew
-        advertiser->stopAdvertising();
+        // Clear any previous advertiser in case advertising data has changed.
+        // For clarity: this function is called only in 'Unconnected' state
         delete advertiser;
         advertiser = nullptr;
     }
-
-    const QString hostAdapterPath = adapterWithDBusPeripheralInterface(localAdapter);
-    if (hostAdapterPath.isEmpty()) {
-        qCWarning(QT_BT_BLUEZ) << "Cannot find suitable bluetooth adapter";
-        setError(QLowEnergyController::InvalidBluetoothAdapterError);
-        return;
-    }
-
     advertiser = new QLeDBusAdvertiser(params, advertisingData, scanResponseData,
-                                       hostAdapterPath, this);
+                                       adapterPathWithPeripheralSupport, this);
     connect(advertiser, &QLeDBusAdvertiser::errorOccurred,
             this, &QLowEnergyControllerPrivateBluezDBus::handleAdvertisingError);
-    connect(advertiser, &QLeDBusAdvertiser::advertisingStopped,
-            this, &QLowEnergyControllerPrivateBluezDBus::handleAdvertisingStopped);
 
     setState(QLowEnergyController::AdvertisingState);
-    advertiser->startAdvertising();
+
+    // First register the application to bluez if needed, and then start the advertisement.
+    // The application registration may fail and is asynchronous => serialize the steps.
+    // For clarity: advertisements can be used without any services, but registering such
+    // application to Bluez would fail
+    if (peripheralApplication->registrationNeeded())
+        peripheralApplication->registerApplication();
+    else
+        advertiser->startAdvertising();
 }
 
 void QLowEnergyControllerPrivateBluezDBus::stopAdvertising()
 {
-    if (advertiser)
+    // This function is called only in Advertising state
+    setState(QLowEnergyController::UnconnectedState);
+    if (advertiser) {
         advertiser->stopAdvertising();
+        delete advertiser;
+        advertiser = nullptr;
+    }
 }
 
+void QLowEnergyControllerPrivateBluezDBus::handlePeripheralApplicationRegistered()
+{
+    // Start the actual advertising now that the application is registered.
+    // Check the state first in case user has called stopAdvertising() during
+    // application registration
+    if (advertiser && state == QLowEnergyController::AdvertisingState)
+        advertiser->startAdvertising();
+    else
+        peripheralApplication->unregisterApplication();
+}
+
+void QLowEnergyControllerPrivateBluezDBus::handlePeripheralCharacteristicValueUpdate(
+        QLowEnergyHandle handle, const QByteArray& value)
+{
+    const auto characteristic = characteristicForHandle(handle);
+    if (characteristic.d_ptr
+            && updateValueOfCharacteristic(handle, value, false) == value.size()) {
+        emit characteristic.d_ptr->characteristicChanged(characteristic, value);
+    } else {
+        qCWarning(QT_BT_BLUEZ) << "Remote characteristic write failed";
+    }
+}
+
+void QLowEnergyControllerPrivateBluezDBus::handlePeripheralDescriptorValueUpdate(
+        QLowEnergyHandle characteristicHandle,
+        QLowEnergyHandle descriptorHandle,
+        const QByteArray& value)
+{
+    const auto descriptor = descriptorForHandle(descriptorHandle);
+    if (descriptor.d_ptr && updateValueOfDescriptor(
+                characteristicHandle, descriptorHandle, value, false) == value.size()) {
+        emit descriptor.d_ptr->descriptorWritten(descriptor, value);
+    } else {
+        qCWarning(QT_BT_BLUEZ) << "Remote descriptor write failed";
+    }
+}
+
+void QLowEnergyControllerPrivateBluezDBus::handlePeripheralRemoteDeviceChanged(
+        const QBluetoothAddress& address,
+        const QString& name,
+        quint16 mtu)
+{
+    remoteDevice = address;
+    remoteName = name;
+    remoteMtu = mtu;
+}
 
 void QLowEnergyControllerPrivateBluezDBus::handleAdvertisingError()
 {
+    Q_ASSERT(peripheralApplication);
     qCWarning(QT_BT_BLUEZ) << "An advertising error occurred";
     setError(QLowEnergyController::AdvertisingError);
     setState(QLowEnergyController::UnconnectedState);
+    peripheralApplication->unregisterApplication();
 }
 
-void QLowEnergyControllerPrivateBluezDBus::handleAdvertisingStopped()
+void QLowEnergyControllerPrivateBluezDBus::handlePeripheralApplicationError()
 {
-    qCDebug(QT_BT_BLUEZ) << "Advertising stopped";
-    if (state == QLowEnergyController::AdvertisingState)
+    qCWarning(QT_BT_BLUEZ) << "A Bluez peripheral application error occurred";
+    setError(QLowEnergyController::UnknownError);
+    setState(QLowEnergyController::UnconnectedState);
+}
+
+void QLowEnergyControllerPrivateBluezDBus::handlePeripheralConnectivityChanged(bool connected)
+{
+    Q_Q(QLowEnergyController);
+    qCDebug(QT_BT_BLUEZ) << "Peripheral application connected change to:" << connected;
+    if (connected) {
+        setState(QLowEnergyController::ConnectedState);
+    } else {
+        resetController();
         setState(QLowEnergyController::UnconnectedState);
+        emit q->disconnected();
+    }
 }
 
 void QLowEnergyControllerPrivateBluezDBus::requestConnectionUpdate(
                     const QLowEnergyConnectionParameters & /* params */)
 {
+    qCWarning(QT_BT_BLUEZ) << "Connection udpate requests not supported on Bluez DBus";
 }
 
 void QLowEnergyControllerPrivateBluezDBus::addToGenericAttributeList(
-                    const QLowEnergyServiceData &/* service */,
-                    QLowEnergyHandle /* startHandle */)
+                    const QLowEnergyServiceData &serviceData,
+                    QLowEnergyHandle startHandle)
 {
-    // TODO create services
+    Q_ASSERT(peripheralApplication);
+    QSharedPointer<QLowEnergyServicePrivate> servicePrivate = serviceForHandle(startHandle);
+    if (servicePrivate.isNull())
+        return;
+    peripheralApplication->addService(serviceData, servicePrivate, startHandle);
 }
 
 int QLowEnergyControllerPrivateBluezDBus::mtu() const
 {
-    // currently not supported
-    return -1;
+    // currently only supported on peripheral role
+    return remoteMtu;
 }
 
 QT_END_NAMESPACE
