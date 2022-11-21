@@ -21,8 +21,10 @@
 
 #include <thread>
 
-static const QLatin1String largeCharacteristicServiceUuid("1f85e37c-ac16-11eb-ae5c-93d3a763feed");
-static const QLatin1String largeCharacteristicCharUuid("40e4f68e-ac16-11eb-9956-cfe55a8c370c");
+static const QLatin1String largeAttributeServiceUuid("1f85e37c-ac16-11eb-ae5c-93d3a763feed");
+static const QLatin1String largeAttributeCharUuid("40e4f68e-ac16-11eb-9956-cfe55a8c370c");
+static const QLatin1String largeAttributeDescUuid("44e4f68e-ac16-11eb-9956-cfe55a8c370c");
+static constexpr qsizetype largeAttributeSize{508}; // Size for char and desc values
 
 static const QLatin1String platformIdentifierServiceUuid("4a92cb7f-5031-4a09-8304-3e89413f458d");
 static const QLatin1String platformIdentifierCharUuid("6b0ecf7c-5f09-4c87-aaab-bb49d5d383aa");
@@ -119,26 +121,36 @@ int main(int argc, char *argv[])
         serviceDefinitions << serviceData;
     }
     {
-        // large characteristic service
+        // large attribute service
         //
-        // This is just a service offering a 512 bytes large characteristic which can
-        // be read and written. It is used to test reading and writing at MTU sizes smaller
-        // than the size of the characteristic.
+        // This is a service offering a large characteristic and descriptor which can
+        // be read and written to
         QLowEnergyServiceData serviceData;
         serviceData.setType(QLowEnergyServiceData::ServiceTypePrimary);
-        serviceData.setUuid(QBluetoothUuid(largeCharacteristicServiceUuid));
+        serviceData.setUuid(QBluetoothUuid(largeAttributeServiceUuid));
 
         QLowEnergyCharacteristicData charData;
-        charData.setUuid(QBluetoothUuid(largeCharacteristicCharUuid));
-        QByteArray initialValue(512, 0);
+        charData.setUuid(QBluetoothUuid(largeAttributeCharUuid));
+        QByteArray initialValue(largeAttributeSize, 0);
         initialValue[0] = 0x0b;
         charData.setValue(initialValue);
-        charData.setValueLength(512, 512);
+        charData.setValueLength(largeAttributeSize, largeAttributeSize);
         charData.setProperties(QLowEnergyCharacteristic::PropertyType::Read
                                | QLowEnergyCharacteristic::PropertyType::Write);
 
-        serviceData.addCharacteristic(charData);
 
+        QByteArray descInitialValue(largeAttributeSize, 0);
+        descInitialValue[0] = 0xdd;
+        QLowEnergyDescriptorData descData(
+                    QBluetoothUuid{largeAttributeDescUuid},
+                    descInitialValue
+        );
+        descData.setWritePermissions(true);
+        descData.setReadPermissions(true);
+
+        charData.addDescriptor(descData);
+
+        serviceData.addCharacteristic(charData);
         serviceDefinitions << serviceData;
     }
 

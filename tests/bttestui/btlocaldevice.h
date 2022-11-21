@@ -109,10 +109,13 @@ public slots:
     void centralConnect();
     void centralStartServiceDiscovery();
     void centralDiscoverServiceDetails();
-    void centralWrite();
-    void centralRead();
+    void centralCharacteristicWrite();
+    void centralCharacteristicRead();
+    void centralDescriptorWrite();
+    void centralDescriptorRead();
     void centralSubscribeUnsubscribe();
     void centralDelete();
+    void centralDisconnect();
     bool centralExists() const;
     bool centralSubscribed() const;
     QByteArray centralState() const;
@@ -124,11 +127,15 @@ public slots:
 
     //QLowEnergyController peripheral
     void peripheralCreate();
+    void peripheralAddServices();
     void peripheralStartAdvertising();
     void peripheralStopAdvertising();
-    void peripheralWrite();
-    void peripheralRead();
+    void peripheralCharacteristicRead();
+    void peripheralCharacteristicWrite();
+    void peripheralDescriptorRead();
+    void peripheralDescriptorWrite();
     void peripheralDelete();
+    void peripheralDisconnect();
     bool peripheralExists() const;
     QByteArray peripheralState() const;
     QByteArray peripheralServiceState() const;
@@ -154,10 +161,10 @@ private:
 
     std::unique_ptr<QLowEnergyController> leCentralController;
     std::unique_ptr<QLowEnergyController> lePeripheralController;
-    std::unique_ptr<QLowEnergyService> lePeripheralService;
     std::unique_ptr<QLowEnergyService> leCentralService;
     QLowEnergyAdvertisingData leAdvertisingData;
-    QLowEnergyServiceData leServiceData;
+    QList<QLowEnergyServiceData> lePeripheralServiceData;
+    QList<QSharedPointer<QLowEnergyService>> lePeripheralServices;
     QBluetoothDeviceInfo leRemotePeripheralDevice;
     QByteArray latestRSSI = "N/A";
 };

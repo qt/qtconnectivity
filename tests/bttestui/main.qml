@@ -262,11 +262,19 @@ Flickable {
                 }
                 Button {
                     buttonText: "CharacteristicRead"
-                    onClicked: device.centralRead()
+                    onClicked: device.centralCharacteristicRead()
                 }
                 Button {
                     buttonText: "CharacteristicWrite"
-                    onClicked: device.centralWrite()
+                    onClicked: device.centralCharacteristicWrite()
+                }
+                Button {
+                    buttonText: "DescriptorRead"
+                    onClicked: device.centralDescriptorRead()
+                }
+                Button {
+                    buttonText: "DescriptorWrite"
+                    onClicked: device.centralDescriptorWrite()
                 }
                 Button {
                     buttonText: "Sub/Unsubscribe"
@@ -275,6 +283,10 @@ Flickable {
                 Button {
                     buttonText: "DeleteController"
                     onClicked: device.centralDelete()
+                }
+                Button {
+                    buttonText: "Disconnect"
+                    onClicked: device.centralDisconnect()
                 }
                 Button {
                     buttonText: "ReadRSSI"
@@ -306,13 +318,15 @@ Flickable {
                     }
                 }
                 Button {
-                    id: peripheralBtn
                     buttonText: "1 CreatePeripheral"
                     onClicked: device.peripheralCreate()
                 }
                 Button {
-                    id: advertiseBtn
-                    buttonText: "2 StartAdvertise"
+                    buttonText: "2 AddServices"
+                    onClicked: device.peripheralAddServices()
+                }
+                Button {
+                    buttonText: "3 StartAdvertise"
                     onClicked: device.peripheralStartAdvertising()
                 }
                 Button {
@@ -321,15 +335,27 @@ Flickable {
                 }
                 Button {
                     buttonText: "CharacteristicRead"
-                    onClicked: device.peripheralRead()
+                    onClicked: device.peripheralCharacteristicRead()
                 }
                 Button {
                     buttonText: "CharacteristicWrite"
-                    onClicked: device.peripheralWrite()
+                    onClicked: device.peripheralCharacteristicWrite()
+                }
+                Button {
+                    buttonText: "DescriptorRead"
+                    onClicked: device.peripheralDescriptorRead()
+                }
+                Button {
+                    buttonText: "DescriptorWrite"
+                    onClicked: device.peripheralDescriptorWrite()
                 }
                 Button {
                     buttonText: "DeleteController"
                     onClicked: device.peripheralDelete()
+                }
+                Button {
+                    buttonText: "Disconnect"
+                    onClicked: device.peripheralDisconnect()
                 }
             }
             Column {
