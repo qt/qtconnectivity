@@ -16,10 +16,12 @@ RemoteSelector::RemoteSelector(const QBluetoothAddress &localAdapter, QWidget *p
 
     m_discoveryAgent = new QBluetoothServiceDiscoveryAgent(localAdapter);
 
-    connect(m_discoveryAgent, SIGNAL(serviceDiscovered(QBluetoothServiceInfo)),
-            this, SLOT(serviceDiscovered(QBluetoothServiceInfo)));
-    connect(m_discoveryAgent, SIGNAL(finished()), this, SLOT(discoveryFinished()));
-    connect(m_discoveryAgent, SIGNAL(canceled()), this, SLOT(discoveryFinished()));
+    connect(m_discoveryAgent, &QBluetoothServiceDiscoveryAgent::serviceDiscovered,
+            this, &RemoteSelector::serviceDiscovered);
+    connect(m_discoveryAgent, &QBluetoothServiceDiscoveryAgent::finished,
+            this, &RemoteSelector::discoveryFinished);
+    connect(m_discoveryAgent, &QBluetoothServiceDiscoveryAgent::canceled,
+            this, &RemoteSelector::discoveryFinished);
 }
 
 RemoteSelector::~RemoteSelector()

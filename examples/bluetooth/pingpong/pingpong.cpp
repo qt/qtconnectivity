@@ -205,7 +205,7 @@ void PingPong::checkResult()
         setMessage("Game over. You lose! Next game starts in 10s");
     }
     m_timer->stop();
-    QTimer::singleShot(10000, this, SLOT(startGame()));
+    QTimer::singleShot(10000, this, &PingPong::startGame);
 }
 
 void PingPong::startServer()
@@ -279,7 +279,7 @@ void PingPong::clientConnected()
 
     //! [Initiating server socket]
     setMessage(QStringLiteral("Client connected. Get ready!"));
-    QTimer::singleShot(3000, this, SLOT(startGame()));
+    QTimer::singleShot(3000, this, &PingPong::startGame);
 }
 
 void PingPong::clientDisconnected()
@@ -344,7 +344,7 @@ QString PingPong::message() const
 void PingPong::serverConnected()
 {
     setMessage("Server Connected. Get ready!");
-    QTimer::singleShot(3000, this, SLOT(startGame()));
+    QTimer::singleShot(3000, this, &PingPong::startGame);
 }
 
 void PingPong::serverDisconnected()
