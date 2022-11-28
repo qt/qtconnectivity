@@ -280,11 +280,24 @@ void QtBluezPeripheralCharacteristic::initializeFlags(const QLowEnergyCharacteri
         m_flags.append("indicate"_L1);
     if (data.properties() & QLowEnergyCharacteristic::PropertyType::WriteSigned)
         m_flags.append("authenticated-signed-writes"_L1);
-    // TODO how to interpet ExtendedProperty? (reliable-write and writable-auxiliaries?)
-    // (Note: Bluez will generate any needed special descriptors). Also: check
-    // the secure-read and secure-write flags
-    if (data.properties() & QLowEnergyCharacteristic::PropertyType::ExtendedProperty)
-        m_flags.append("extended-properties"_L1);
+    if (data.properties() & QLowEnergyCharacteristic::PropertyType::ExtendedProperty) {
+        // If extended properties property is set, check if we have the descriptor
+        // describing them. Bluez will generate the actual descriptor based on these
+        // flags. For clarity: the 'extended-properties' token mentioned in the Bluez
+        // API is implied by these flags.
+        for (const auto& descriptor : data.descriptors()) {
+            // Core Bluetooth v5.3 Vol 3, Part G, 3.3.3.1
+            if (descriptor.uuid()
+                    == QBluetoothUuid::DescriptorType::CharacteristicExtendedProperties
+                    && descriptor.value().size() == 2) {
+                const auto properties = descriptor.value().at(0);
+                if (properties & 0x01)
+                    m_flags.append("reliable-write"_L1);
+                if (properties & 0x02)
+                    m_flags.append("writable-auxiliaries"_L1);
+            }
+        }
+    }
 
     if (data.readConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired)
         m_flags.append("encrypt-read"_L1);

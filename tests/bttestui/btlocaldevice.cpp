@@ -957,7 +957,8 @@ void BtLocalDevice::peripheralAddServices()
             charData.setValueLength(leCharacteristicSize, leCharacteristicSize);
             charData.setProperties(QLowEnergyCharacteristic::PropertyType::Read
                                    | QLowEnergyCharacteristic::PropertyType::Write
-                                   | QLowEnergyCharacteristic::PropertyType::Notify);
+                                   | QLowEnergyCharacteristic::PropertyType::Notify
+                                   | QLowEnergyCharacteristic::ExtendedProperty);
 
             const QLowEnergyDescriptorData clientConfig(
                     QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration,
@@ -968,6 +969,14 @@ void BtLocalDevice::peripheralAddServices()
                         QBluetoothUuid::DescriptorType::CharacteristicUserDescription,
                         leDescriptorValue);
             charData.addDescriptor(userDescription);
+
+            const QLowEnergyDescriptorData extendedProperties(
+                        QBluetoothUuid::DescriptorType::CharacteristicExtendedProperties,
+                        // From bluetooth specs: length 2 bytes
+                        // bit 0: reliable write, bit 1: writable auxiliaries
+                        QByteArray::fromHex("0300"));
+            charData.addDescriptor(extendedProperties);
+
             sd.addCharacteristic(charData);
 
             // Set another characteristic without notifications
