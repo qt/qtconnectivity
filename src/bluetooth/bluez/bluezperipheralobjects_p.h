@@ -49,7 +49,7 @@ public:
 public:
     // DBus object path
     QString objectPath;
-    // UUID or the gatt object
+    // UUID of the gatt object
     QString uuid;
     // QtBluetooth internal handle and reference to the application
     // to read and write values towards the Qt API
@@ -80,12 +80,12 @@ public:
     InterfaceList properties() const final;
 
     // org.bluez.GattDescriptor1
-    // This function is invoked when remote device reads the value
-    Q_INVOKABLE QByteArray ReadValue(const QVariantMap &options);
+    // This function is invoked when remote device reads the value. Sets error if any
+    Q_INVOKABLE QByteArray ReadValue(const QVariantMap &options, QString &error);
 
     // org.bluez.GattDescriptor1
-    // This function is invoked when remote device writes a value
-    Q_INVOKABLE void WriteValue(const QByteArray &value, const QVariantMap &options);
+    // This function is invoked when remote device writes a value. Returns Bluez DBus error if any
+    Q_INVOKABLE QString WriteValue(const QByteArray &value, const QVariantMap &options);
 
     // Call this function when value has been updated locally (server/user application side)
     bool localValueUpdate(const QByteArray& value);
@@ -117,12 +117,12 @@ public:
     InterfaceList properties() const final;
 
     // org.bluez.GattCharacteristic1
-    // This function is invoked when remote device reads the value
-    Q_INVOKABLE QByteArray ReadValue(const QVariantMap &options);
+    // This function is invoked when remote device reads the value. Sets error if any
+    Q_INVOKABLE QByteArray ReadValue(const QVariantMap &options, QString& error);
 
     // org.bluez.GattCharacteristic1
-    // This function is invoked when remote device writes a value
-    Q_INVOKABLE void WriteValue(const QByteArray &value, const QVariantMap &options);
+    // This function is invoked when remote device writes a value. Returns Bluez DBus error if any
+    Q_INVOKABLE QString WriteValue(const QByteArray &value, const QVariantMap &options);
 
     // org.bluez.GattCharacteristic1
     // These are called when remote client enables or disables NTF/IND

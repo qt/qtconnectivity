@@ -63,11 +63,19 @@ QByteArray OrgBluezGattCharacteristic1Adaptor::value() const
     return qvariant_cast< QByteArray >(parent()->property("Value"));
 }
 
-QByteArray OrgBluezGattCharacteristic1Adaptor::ReadValue(const QVariantMap &options)
+QByteArray OrgBluezGattCharacteristic1Adaptor::ReadValue(const QVariantMap &options,
+                                                         const QDBusMessage& msg)
 {
     // handle method call org.bluez.GattCharacteristic1.ReadValue
     QByteArray value;
-    QMetaObject::invokeMethod(parent(), "ReadValue", Q_RETURN_ARG(QByteArray, value), Q_ARG(QVariantMap, options));
+    QString error;
+    QMetaObject::invokeMethod(parent(), "ReadValue", Q_RETURN_ARG(QByteArray, value),
+                              Q_ARG(QVariantMap, options), Q_ARG(QString&, error));
+    if (!error.isEmpty()) {
+        // Reply with error if needed
+        auto reply = msg.createErrorReply(error, {});
+        QDBusConnection::systemBus().send(reply);
+    }
     return value;
 }
 
@@ -83,8 +91,18 @@ void OrgBluezGattCharacteristic1Adaptor::StopNotify()
     QMetaObject::invokeMethod(parent(), "StopNotify");
 }
 
-void OrgBluezGattCharacteristic1Adaptor::WriteValue(const QByteArray &value, const QVariantMap &options)
+void OrgBluezGattCharacteristic1Adaptor::WriteValue(const QByteArray &value,
+                                                    const QVariantMap &options,
+                                                    const QDBusMessage& msg)
 {
     // handle method call org.bluez.GattCharacteristic1.WriteValue
-    QMetaObject::invokeMethod(parent(), "WriteValue", Q_ARG(QByteArray, value), Q_ARG(QVariantMap, options));
+    QString error;
+    QMetaObject::invokeMethod(parent(), "WriteValue", Q_RETURN_ARG(QString, error),
+                              Q_ARG(QByteArray, value), Q_ARG(QVariantMap, options));
+
+    if (!error.isEmpty()) {
+        // Reply with error if needed
+        auto reply = msg.createErrorReply(error, {});
+        QDBusConnection::systemBus().send(reply);
+    }
 }

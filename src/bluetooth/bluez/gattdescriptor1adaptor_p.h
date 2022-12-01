@@ -67,8 +67,8 @@ public: // PROPERTIES
     QByteArray value() const;
 
 public Q_SLOTS: // METHODS
-    QByteArray ReadValue(const QVariantMap &options);
-    void WriteValue(const QByteArray &value, const QVariantMap &options);
+    QByteArray ReadValue(const QVariantMap &options, const QDBusMessage &msg);
+    void WriteValue(const QByteArray &value, const QVariantMap &options, const QDBusMessage& msg);
 Q_SIGNALS: // SIGNALS
 };
 

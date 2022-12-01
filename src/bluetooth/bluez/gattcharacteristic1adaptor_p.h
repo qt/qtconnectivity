@@ -77,10 +77,10 @@ public: // PROPERTIES
     QByteArray value() const;
 
 public Q_SLOTS: // METHODS
-    QByteArray ReadValue(const QVariantMap &options);
+    QByteArray ReadValue(const QVariantMap &options, const QDBusMessage &msg);
     void StartNotify();
     void StopNotify();
-    void WriteValue(const QByteArray &value, const QVariantMap &options);
+    void WriteValue(const QByteArray &value, const QVariantMap &options, const QDBusMessage& msg);
 Q_SIGNALS: // SIGNALS
 };
 

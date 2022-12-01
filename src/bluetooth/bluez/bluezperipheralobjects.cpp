@@ -17,13 +17,18 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 using namespace Qt::StringLiterals;
 
-static constexpr QLatin1String characteristicPathTemplate{"%1/char%2"};
-static constexpr QLatin1String descriptorPathTemplate{"%1/desc%2"};
-static constexpr QLatin1String servicePathTemplate{"%1/service%2"};
+static constexpr auto characteristicPathTemplate{"%1/char%2"_L1};
+static constexpr auto descriptorPathTemplate{"%1/desc%2"_L1};
+static constexpr auto servicePathTemplate{"%1/service%2"_L1};
 
-static constexpr QLatin1String bluezServiceInterface("org.bluez.GattService1");
-static constexpr QLatin1String bluezCharacteristicInterface("org.bluez.GattCharacteristic1");
-static constexpr QLatin1String bluezDescriptorInterface("org.bluez.GattDescriptor1");
+static constexpr auto bluezServiceInterface{"org.bluez.GattService1"_L1};
+static constexpr auto bluezCharacteristicInterface{"org.bluez.GattCharacteristic1"_L1};
+static constexpr auto bluezDescriptorInterface{"org.bluez.GattDescriptor1"_L1};
+
+static constexpr auto bluezErrorInvalidValueLength("org.bluez.Error.InvalidValueLength"_L1);
+// Bluetooth Core v5.3, 3.2.9, Vol 3, Part F
+static constexpr int maximumAttributeLength{512};
+
 
 QtBluezPeripheralGattObject::QtBluezPeripheralGattObject(const QString& objectPath,
            const QString& uuid, QLowEnergyHandle handle, QObject* parent)
@@ -77,9 +82,15 @@ QtBluezPeripheralDescriptor::QtBluezPeripheralDescriptor(
                  descriptorData.uuid().toString(QUuid::WithoutBraces), handle, parent),
       m_adaptor(new OrgBluezGattDescriptor1Adaptor(this)),
       m_characteristicPath(characteristicPath),
-      m_value(descriptorData.value()),
       m_characteristicHandle(characteristicHandle)
 {
+    if (descriptorData.value().size() > maximumAttributeLength) {
+        qCWarning(QT_BT_BLUEZ) << "Descriptor value is too large, cropping it to"
+                               << maximumAttributeLength;
+        m_value = descriptorData.value().sliced(0, maximumAttributeLength);
+    } else {
+        m_value = descriptorData.value();
+    }
     initializeFlags(descriptorData);
 }
 
@@ -97,7 +108,7 @@ InterfaceList QtBluezPeripheralDescriptor::properties() const
 
 // org.bluez.GattDescriptor1
 // This function is invoked when remote device reads the value
-QByteArray QtBluezPeripheralDescriptor::ReadValue(const QVariantMap &options)
+QByteArray QtBluezPeripheralDescriptor::ReadValue(const QVariantMap &options, QString& error)
 {
     accessEvent(options);
     // Offset is set by Bluez when the value size is more than MTU size.
@@ -107,6 +118,12 @@ QByteArray QtBluezPeripheralDescriptor::ReadValue(const QVariantMap &options)
     const quint16 offset = options.value("offset"_L1).toUInt();
     const quint16 mtu = options.value("mtu"_L1).toUInt();
 
+    if (offset > m_value.length() - 1) {
+        qCWarning(QT_BT_BLUEZ) << "Invalid offset" << offset << ", value len:" << m_value.length();
+        error = bluezErrorInvalidValueLength;
+        return {};
+    }
+
     if (offset > 0)
         return m_value.mid(offset, mtu);
     else
@@ -115,17 +132,27 @@ QByteArray QtBluezPeripheralDescriptor::ReadValue(const QVariantMap &options)
 
 // org.bluez.GattDescriptor1
 // This function is invoked when remote device writes a value
-void QtBluezPeripheralDescriptor::WriteValue(const QByteArray &value, const QVariantMap &options)
+QString QtBluezPeripheralDescriptor::WriteValue(const QByteArray &value,
+                                                const QVariantMap &options)
 {
     accessEvent(options);
 
+    if (value.size() > maximumAttributeLength) {
+        qCWarning(QT_BT_BLUEZ) << "Descriptor value is too large:" << value.size();
+        return bluezErrorInvalidValueLength;
+    }
     m_value = value;
     emit valueUpdatedByRemote(m_characteristicHandle, handle, value);
+    return {};
 }
 
 // This function is called when the value has been updated locally (server-side)
 bool QtBluezPeripheralDescriptor::localValueUpdate(const QByteArray& value)
 {
+    if (value.size() > maximumAttributeLength) {
+        qCWarning(QT_BT_BLUEZ) << "Descriptor value is too large:" << value.size();
+        return false;
+    }
     m_value = value;
     return true;
 }
@@ -165,8 +192,10 @@ QtBluezPeripheralCharacteristic::QtBluezPeripheralCharacteristic(
                  characteristicData.uuid().toString(QUuid::WithoutBraces), handle, parent),
       m_adaptor(new OrgBluezGattCharacteristic1Adaptor(this)),
       m_servicePath(servicePath),
-      m_minimumValueLength(characteristicData.minimumValueLength()),
-      m_maximumValueLength(characteristicData.maximumValueLength())
+      m_minimumValueLength(std::min(characteristicData.minimumValueLength(),
+                                    maximumAttributeLength)),
+      m_maximumValueLength(std::min(characteristicData.maximumValueLength(),
+                                    maximumAttributeLength))
 {
     initializeFlags(characteristicData);
     initializeValue(characteristicData.value());
@@ -186,7 +215,7 @@ InterfaceList QtBluezPeripheralCharacteristic::properties() const
 
 // org.bluez.GattCharacteristic1
 // This function is invoked when remote device reads the value
-QByteArray QtBluezPeripheralCharacteristic::ReadValue(const QVariantMap &options)
+QByteArray QtBluezPeripheralCharacteristic::ReadValue(const QVariantMap &options, QString& error)
 {
     accessEvent(options);
     // Offset is set by Bluez when the value size is more than MTU size.
@@ -196,6 +225,12 @@ QByteArray QtBluezPeripheralCharacteristic::ReadValue(const QVariantMap &options
     const quint16 offset = options.value("offset"_L1).toUInt();
     const quint16 mtu = options.value("mtu"_L1).toUInt();
 
+    if (offset > m_value.length() - 1) {
+        qCWarning(QT_BT_BLUEZ) << "Invalid offset" << offset << ", value len:" << m_value.length();
+        error = bluezErrorInvalidValueLength;
+        return {};
+    }
+
     if (offset > 0)
         return m_value.mid(offset, mtu);
     else
@@ -204,7 +239,8 @@ QByteArray QtBluezPeripheralCharacteristic::ReadValue(const QVariantMap &options
 
 // org.bluez.GattCharacteristic1
 // This function is invoked when remote device writes a value
-void QtBluezPeripheralCharacteristic::WriteValue(const QByteArray &value, const QVariantMap &options)
+QString QtBluezPeripheralCharacteristic::WriteValue(const QByteArray &value,
+                                                    const QVariantMap &options)
 {
     accessEvent(options);
 
@@ -212,10 +248,11 @@ void QtBluezPeripheralCharacteristic::WriteValue(const QByteArray &value, const 
         qCWarning(QT_BT_BLUEZ) << "Characteristic value has invalid length" << value.size()
                                << "min:" << m_minimumValueLength
                                << "max:" << m_maximumValueLength;
-        return;
+        return bluezErrorInvalidValueLength;
     }
     m_value = value;
     emit valueUpdatedByRemote(handle, value);
+    return {};
 }
 
 // This function is called when the value has been updated locally (server-side)
