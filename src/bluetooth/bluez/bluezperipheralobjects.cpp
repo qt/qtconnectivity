@@ -21,11 +21,14 @@ static constexpr auto characteristicPathTemplate{"%1/char%2"_L1};
 static constexpr auto descriptorPathTemplate{"%1/desc%2"_L1};
 static constexpr auto servicePathTemplate{"%1/service%2"_L1};
 
+// The interface names and error values are from BlueZ "gatt-api" documentation
 static constexpr auto bluezServiceInterface{"org.bluez.GattService1"_L1};
 static constexpr auto bluezCharacteristicInterface{"org.bluez.GattCharacteristic1"_L1};
 static constexpr auto bluezDescriptorInterface{"org.bluez.GattDescriptor1"_L1};
 
-static constexpr auto bluezErrorInvalidValueLength("org.bluez.Error.InvalidValueLength"_L1);
+static constexpr auto bluezErrorInvalidValueLength{"org.bluez.Error.InvalidValueLength"_L1};
+static constexpr auto bluezErrorInvalidOffset{"org.bluez.Error.InvalidOffset"_L1};
+static constexpr auto bluezErrorNotAuthorized{"org.bluez.Error.NotAuthorized"_L1};
 // Bluetooth Core v5.3, 3.2.9, Vol 3, Part F
 static constexpr int maximumAttributeLength{512};
 
@@ -120,7 +123,7 @@ QByteArray QtBluezPeripheralDescriptor::ReadValue(const QVariantMap &options, QS
 
     if (offset > m_value.length() - 1) {
         qCWarning(QT_BT_BLUEZ) << "Invalid offset" << offset << ", value len:" << m_value.length();
-        error = bluezErrorInvalidValueLength;
+        error = bluezErrorInvalidOffset;
         return {};
     }
 
@@ -136,6 +139,13 @@ QString QtBluezPeripheralDescriptor::WriteValue(const QByteArray &value,
                                                 const QVariantMap &options)
 {
     accessEvent(options);
+
+    if (options.value("prepare-authorize"_L1).toBool()) {
+        // Qt API doesn't provide the means for application to authorize
+        qCWarning(QT_BT_BLUEZ) << "Descriptor write requires authorization."
+                               << "The client device needs to be trusted beforehand";
+        return bluezErrorNotAuthorized;
+    }
 
     if (value.size() > maximumAttributeLength) {
         qCWarning(QT_BT_BLUEZ) << "Descriptor value is too large:" << value.size();
@@ -227,7 +237,7 @@ QByteArray QtBluezPeripheralCharacteristic::ReadValue(const QVariantMap &options
 
     if (offset > m_value.length() - 1) {
         qCWarning(QT_BT_BLUEZ) << "Invalid offset" << offset << ", value len:" << m_value.length();
-        error = bluezErrorInvalidValueLength;
+        error = bluezErrorInvalidOffset;
         return {};
     }
 
@@ -243,6 +253,13 @@ QString QtBluezPeripheralCharacteristic::WriteValue(const QByteArray &value,
                                                     const QVariantMap &options)
 {
     accessEvent(options);
+
+    if (options.value("prepare-authorize"_L1).toBool()) {
+        // Qt API doesn't provide the means for application to authorize
+        qCWarning(QT_BT_BLUEZ) << "Characteristic write requires authorization."
+                               << "The client device needs to be trusted beforehand";
+        return bluezErrorNotAuthorized;
+    }
 
     if (value.size() < m_minimumValueLength || value.size() > m_maximumValueLength) {
         qCWarning(QT_BT_BLUEZ) << "Characteristic value has invalid length" << value.size()
