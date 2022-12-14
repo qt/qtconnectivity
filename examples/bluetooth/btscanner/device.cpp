@@ -24,6 +24,9 @@ DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent) :
     localDevice(new QBluetoothLocalDevice),
     ui(new Ui_DeviceDiscovery)
 {
+#ifdef Q_OS_ANDROID
+    this->setWindowState(Qt::WindowMaximized);
+#endif
     ui->setupUi(this);
     ui->stopScan->setVisible(false);
 
