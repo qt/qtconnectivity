@@ -102,13 +102,14 @@ static QByteArray byteArrayFromGattResult(const ComPtr<IGattReadResult> &gattRes
     return byteArrayFromBuffer(buffer, isWCharString);
 }
 
-static void closeDeviceService(ComPtr<IGattDeviceService> service)
+template <typename T>
+static void closeDeviceService(ComPtr<T> service)
 {
     ComPtr<IClosable> closableService;
     HRESULT hr = service.As(&closableService);
-    RETURN_IF_FAILED("Could not cast service to closable", return);
+    RETURN_IF_FAILED("Could not cast type to closable", return);
     hr = closableService->Close();
-    RETURN_IF_FAILED("Service Close() failed", return);
+    RETURN_IF_FAILED("Close() call failed", return);
 }
 
 class QWinRTLowEnergyServiceHandler : public QObject
@@ -125,6 +126,8 @@ public:
 
     ~QWinRTLowEnergyServiceHandler()
     {
+        if (mAbortRequested)
+            closeDeviceService(mDeviceService);
         qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
     }
 
@@ -323,7 +326,7 @@ public slots:
     }
 
 private:
-    bool checkAllCharacteristicsDiscovered();
+    void checkAllCharacteristicsDiscovered();
     void emitErrorAndQuitThread(HRESULT hr);
     void emitErrorAndQuitThread(const QString &error);
 
@@ -346,18 +349,13 @@ signals:
     void errorOccured(const QString &error);
 };
 
-bool QWinRTLowEnergyServiceHandler::checkAllCharacteristicsDiscovered()
+void QWinRTLowEnergyServiceHandler::checkAllCharacteristicsDiscovered()
 {
-    if (mCharacteristicsCountToBeDiscovered == 0) {
+    if (!mAbortRequested && (mCharacteristicsCountToBeDiscovered == 0)) {
         emit charListObtained(mService, mCharacteristicList, mIndicateChars,
                               mStartHandle, mEndHandle);
-        QThread::currentThread()->quit();
-        return true;
-    } else if (mAbortRequested) {
-        QThread::currentThread()->quit();
     }
-
-    return false;
+    QThread::currentThread()->quit();
 }
 
 void QWinRTLowEnergyServiceHandler::emitErrorAndQuitThread(HRESULT hr)
@@ -367,6 +365,7 @@ void QWinRTLowEnergyServiceHandler::emitErrorAndQuitThread(HRESULT hr)
 
 void QWinRTLowEnergyServiceHandler::emitErrorAndQuitThread(const QString &error)
 {
+    mAbortRequested = true; // so that the service is closed during cleanup
     emit errorOccured(error);
     QThread::currentThread()->quit();
 }
@@ -1158,6 +1157,12 @@ HRESULT QLowEnergyControllerPrivateWinRT::onServiceDiscoveryFinished(ABI::Window
 
 void QLowEnergyControllerPrivateWinRT::clearAllServices()
 {
+    // These services will be closed in the respective
+    // QWinRTLowEnergyServiceHandler workers (in background threads).
+    for (auto &uuid : m_requestDetailsServiceUuids)
+        m_openedServices.remove(uuid);
+    m_requestDetailsServiceUuids.clear();
+
     for (auto service : m_openedServices) {
         closeDeviceService(service);
     }
@@ -1295,6 +1300,7 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetailsHelper(
 
     QWinRTLowEnergyServiceHandler *worker =
             new QWinRTLowEnergyServiceHandler(service, deviceService3, mode);
+    m_requestDetailsServiceUuids.insert(service);
     QThread *thread = new QThread;
     worker->moveToThread(thread);
     connect(thread, &QThread::started, worker, &QWinRTLowEnergyServiceHandler::obtainCharList);
@@ -1313,6 +1319,7 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetailsHelper(
                     << "Discovery complete for unknown service:" << service.toString();
             return;
         }
+        m_requestDetailsServiceUuids.remove(service);
 
         QSharedPointer<QLowEnergyServicePrivate> pointer = serviceList.value(service);
         pointer->startHandle = startHandle;
