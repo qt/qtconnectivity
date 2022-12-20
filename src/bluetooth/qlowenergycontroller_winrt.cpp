@@ -167,6 +167,8 @@ public:
 public slots:
     void obtainCharList()
     {
+        auto exitCondition = [this]() { return mAbortRequested; };
+
         mIndicateChars.clear();
         qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
         ComPtr<IAsyncOperation<GattCharacteristicsResult *>> characteristicsOp;
@@ -174,7 +176,8 @@ public slots:
         HRESULT hr = mDeviceService->GetCharacteristicsAsync(&characteristicsOp);
         EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr);
         hr = QWinRTFunctions::await(characteristicsOp, characteristicsResult.GetAddressOf(),
-                                    QWinRTFunctions::ProcessMainThreadEvents, 5000);
+                                    QWinRTFunctions::ProcessMainThreadEvents, 5000,
+                                    exitCondition);
         EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr);
         GattCommunicationStatus status;
         hr = characteristicsResult->get_Status(&status);
@@ -192,7 +195,7 @@ public slots:
         EMIT_WORKER_ERROR_AND_QUIT_IF_FAILED(hr);
 
         mCharacteristicsCountToBeDiscovered = characteristicsCount;
-        for (uint i = 0; i < characteristicsCount; ++i) {
+        for (uint i = 0; !mAbortRequested && (i < characteristicsCount); ++i) {
             ComPtr<IGattCharacteristic> characteristic;
             hr = characteristics->GetAt(i, &characteristic);
             if (FAILED(hr)) {
@@ -218,7 +221,9 @@ public slots:
             DEC_CHAR_COUNT_AND_CONTINUE_IF_FAILED(hr, "Could not obtain list of descriptors")
 
             ComPtr<IGattDescriptorsResult> descResult;
-            hr = QWinRTFunctions::await(descAsyncOp, descResult.GetAddressOf());
+            hr = QWinRTFunctions::await(descAsyncOp, descResult.GetAddressOf(),
+                                        QWinRTFunctions::ProcessMainThreadEvents, 5000,
+                                        exitCondition);
             DEC_CHAR_COUNT_AND_CONTINUE_IF_FAILED(hr, "Could not obtain descriptor read result")
 
             quint16 handle;
@@ -247,7 +252,9 @@ public slots:
                                                                  &readOp);
                 DEC_CHAR_COUNT_AND_CONTINUE_IF_FAILED(hr, "Could not read characteristic")
                 ComPtr<IGattReadResult> readResult;
-                hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf());
+                hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf(),
+                                            QWinRTFunctions::ProcessMainThreadEvents, 5000,
+                                            exitCondition);
                 DEC_CHAR_COUNT_AND_CONTINUE_IF_FAILED(hr,
                                                       "Could not obtain characteristic read result")
                 if (!readResult)
@@ -273,7 +280,7 @@ public slots:
             uint descriptorCount;
             hr = descriptors->get_Size(&descriptorCount);
             DEC_CHAR_COUNT_AND_CONTINUE_IF_FAILED(hr, "Could not obtain list of descriptors' size")
-            for (uint j = 0; j < descriptorCount; ++j) {
+            for (uint j = 0; !mAbortRequested && (j < descriptorCount); ++j) {
                 QLowEnergyServicePrivate::DescData descData;
                 ComPtr<IGattDescriptor> descriptor;
                 hr = descriptors->GetAt(j, &descriptor);
@@ -293,7 +300,9 @@ public slots:
                                 &readOp);
                         WARN_AND_CONTINUE_IF_FAILED(hr, "Could not read descriptor value")
                         ComPtr<IClientCharConfigDescriptorResult> readResult;
-                        hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf());
+                        hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf(),
+                                                    QWinRTFunctions::ProcessMainThreadEvents, 5000,
+                                                    exitCondition);
                         WARN_AND_CONTINUE_IF_FAILED(hr, "Could not await descriptor read result")
                         GattClientCharacteristicConfigurationDescriptorValue value;
                         hr = readResult->get_ClientCharacteristicConfigurationDescriptor(&value);
@@ -325,8 +334,10 @@ public slots:
                                                                      &readOp);
                         WARN_AND_CONTINUE_IF_FAILED(hr, "Could not read descriptor value")
                         ComPtr<IGattReadResult> readResult;
-                        hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf());
-                        WARN_AND_CONTINUE_IF_FAILED(hr, "Could await descriptor read result")
+                        hr = QWinRTFunctions::await(readOp, readResult.GetAddressOf(),
+                                                    QWinRTFunctions::ProcessMainThreadEvents, 5000,
+                                                    exitCondition);
+                        WARN_AND_CONTINUE_IF_FAILED(hr, "Could not await descriptor read result")
                         if (descData.uuid == QBluetoothUuid::DescriptorType::CharacteristicUserDescription)
                             descData.value = byteArrayFromGattResult(readResult, true);
                         else
@@ -340,6 +351,11 @@ public slots:
             --mCharacteristicsCountToBeDiscovered;
         }
         checkAllCharacteristicsDiscovered();
+    }
+
+    void setAbortRequested()
+    {
+        mAbortRequested = true;
     }
 
 private:
@@ -356,6 +372,7 @@ public:
     quint16 mStartHandle = 0;
     quint16 mEndHandle = 0;
     QList<QBluetoothUuid> mIndicateChars;
+    bool mAbortRequested = false;
 
 signals:
     void charListObtained(const QBluetoothUuid &service,
@@ -372,6 +389,8 @@ bool QWinRTLowEnergyServiceHandler::checkAllCharacteristicsDiscovered()
                               mStartHandle, mEndHandle);
         QThread::currentThread()->quit();
         return true;
+    } else if (mAbortRequested) {
+        QThread::currentThread()->quit();
     }
 
     return false;
@@ -1317,6 +1336,8 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetailsHelper(
     connect(thread, &QThread::started, worker, &QWinRTLowEnergyServiceHandler::obtainCharList);
     connect(thread, &QThread::finished, worker, &QObject::deleteLater);
     connect(worker, &QObject::destroyed, thread, &QObject::deleteLater);
+    connect(this, &QLowEnergyControllerPrivateWinRT::abortConnection,
+            worker, &QWinRTLowEnergyServiceHandler::setAbortRequested);
     connect(worker, &QWinRTLowEnergyServiceHandler::errorOccured,
             this, &QLowEnergyControllerPrivateWinRT::handleServiceHandlerError);
     connect(worker, &QWinRTLowEnergyServiceHandler::charListObtained, this,
