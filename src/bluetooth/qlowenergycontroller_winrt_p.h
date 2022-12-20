@@ -162,6 +162,7 @@ private:
 
     using GattDeviceServiceComPtr = Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService>;
     QMap<QBluetoothUuid, GattDeviceServiceComPtr> m_openedServices;
+    QSet<QBluetoothUuid> m_requestDetailsServiceUuids;
 
     using NativeServiceCallback = std::function<void(GattDeviceServiceComPtr)>;
     HRESULT getNativeService(const QBluetoothUuid &serviceUuid, NativeServiceCallback callback);
