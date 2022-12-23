@@ -6,7 +6,7 @@
 
 #### Libraries
 
-qt_find_package(BlueZ PROVIDED_TARGETS PkgConfig::BlueZ)
+qt_find_package(BlueZ PROVIDED_TARGETS PkgConfig::BLUEZ)
 
 
 #### Tests
