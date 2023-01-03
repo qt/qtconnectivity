@@ -12,6 +12,12 @@
 #include <QLowEnergyController>
 #include <QBluetoothLocalDevice>
 
+#if QT_CONFIG(permissions)
+#include <QCoreApplication>
+#include <QPermissions>
+#include <QtCore/qnamespace.h>
+#endif
+
 QT_USE_NAMESPACE
 
 class tst_QLowEnergyDescriptor : public QObject
@@ -35,12 +41,27 @@ private:
     QList<QBluetoothDeviceInfo> remoteLeDeviceInfos;
     QLowEnergyController *globalControl;
     QLowEnergyService *globalService;
+#if QT_CONFIG(permissions)
+    Qt::PermissionStatus permissionStatus = Qt::PermissionStatus::Undetermined;
+#endif
 };
 
 tst_QLowEnergyDescriptor::tst_QLowEnergyDescriptor() :
     globalControl(nullptr), globalService(nullptr)
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+#if QT_CONFIG(permissions)
+    permissionStatus = qApp->checkPermission(QBluetoothPermission{});
+    if (permissionStatus == Qt::PermissionStatus::Undetermined) {
+        QTestEventLoop loop;
+        qApp->requestPermission(QBluetoothPermission{}, [this, &loop](const QPermission &permission){
+            permissionStatus = permission.status();
+            loop.exitLoop();
+        });
+        if (permissionStatus == Qt::PermissionStatus::Undetermined)
+            loop.enterLoopMSecs(30000);
+    }
+#endif
 }
 
 tst_QLowEnergyDescriptor::~tst_QLowEnergyDescriptor()
@@ -64,6 +85,13 @@ void tst_QLowEnergyDescriptor::initTestCase()
             return;
         }
     }
+
+#if QT_CONFIG(permissions)
+    if (permissionStatus != Qt::PermissionStatus::Granted) {
+        qWarning("Use of BLuetooth LE requires the Bluetooth permission granted");
+        return;
+    }
+#endif
 
     // find an arbitrary low energy device in vicinity
     // find an arbitrary service with descriptor

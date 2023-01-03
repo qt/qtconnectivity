@@ -415,7 +415,7 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
 
     QBluetoothLocalDevice defaultAdapter;
     if (!defaultAdapter.isValid() || defaultAdapter.address().isNull()) {
-        qCCritical(QT_BT_DARWIN) << Q_FUNC_INFO <<"no valid device found";
+        qCWarning(QT_BT_DARWIN) << Q_FUNC_INFO <<"no valid device found";
         return localDevices;
     }
 

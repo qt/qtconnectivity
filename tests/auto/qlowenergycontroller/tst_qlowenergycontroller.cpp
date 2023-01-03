@@ -14,6 +14,13 @@
 #include <QLowEnergyController>
 #include <QLowEnergyCharacteristic>
 
+#if QT_CONFIG(permissions)
+#include <QCoreApplication>
+#include <QPermissions>
+
+#include <QtCore/qnamespace.h>
+#endif
+
 #include <QDebug>
 
 /*!
@@ -59,6 +66,9 @@ private:
     QBluetoothDeviceInfo remoteDeviceInfo;
     QList<QBluetoothUuid> foundServices;
     bool isBluezDbusLE = false;
+#if QT_CONFIG(permissions)
+    Qt::PermissionStatus permissionStatus = Qt::PermissionStatus::Undetermined;
+#endif
 };
 
 tst_QLowEnergyController::tst_QLowEnergyController()
@@ -81,6 +91,24 @@ tst_QLowEnergyController::tst_QLowEnergyController()
     isBluezDbusLE = (bluetoothdVersion() >= QVersionNumber(5, 42));
     qDebug() << "isDBusBluez:" << isBluezDbusLE;
 #endif
+
+#if QT_CONFIG(permissions)
+    // FIXME: for Android, set additional parameters for scan and connect
+    // permissions.
+    permissionStatus = qApp->checkPermission(QBluetoothPermission{});
+    if (permissionStatus == Qt::PermissionStatus::Undetermined) {
+        QTestEventLoop eventLoop;
+        qApp->requestPermission(QBluetoothPermission{}, [this, &eventLoop](const QPermission &permission){
+            permissionStatus = permission.status();
+            eventLoop.exitLoop();
+        });
+        if (permissionStatus == Qt::PermissionStatus::Undetermined)
+            eventLoop.enterLoop(30000);
+    }
+    // Note: even with missing Bluetooth permission, we still can run tests on
+    // LE controller to test its logic/errors it emits, even if we cannot scan
+    // and cannot connect.
+#endif // permission
 }
 
 tst_QLowEnergyController::~tst_QLowEnergyController()
@@ -109,7 +137,6 @@ void tst_QLowEnergyController::initTestCase()
 #endif
 
     // QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
-
     devAgent = new QBluetoothDeviceDiscoveryAgent(this);
     devAgent->setLowEnergyDiscoveryTimeout(5000);
 
@@ -120,6 +147,12 @@ void tst_QLowEnergyController::initTestCase()
 
     bool deviceFound = false;
     devAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
+#if QT_CONFIG(permissions)
+    if (permissionStatus != Qt::PermissionStatus::Granted) {
+        QCOMPARE(devAgent->error(), QBluetoothDeviceDiscoveryAgent::MissingPermissionsError);
+        return;
+    }
+#endif
     QTRY_VERIFY_WITH_TIMEOUT(!finishedSpy.isEmpty(), 30000);
     const QList<QBluetoothDeviceInfo> infos = devAgent->discoveredDevices();
     for (const QBluetoothDeviceInfo &info : infos) {
@@ -223,6 +256,7 @@ void tst_QLowEnergyController::tst_emptyCtor()
 #else
         QCOMPARE(control->error(), QLowEnergyController::NoError);
 #endif
+
         control->connectToDevice();
 
         QTRY_VERIFY_WITH_TIMEOUT(!errorSpy.isEmpty(), 10000);
@@ -234,7 +268,6 @@ void tst_QLowEnergyController::tst_emptyCtor()
         QVERIFY(lastError == QLowEnergyController::UnknownRemoteDeviceError  // if local device on platform found
                 || lastError == QLowEnergyController::InvalidBluetoothAdapterError); // otherwise, e.g. fallback backend
     }
-
 }
 
 void tst_QLowEnergyController::tst_connect()

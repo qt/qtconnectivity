@@ -33,8 +33,6 @@ const int maxValueLength = 512;
 
 const int defaultMtu = 23;
 
-NSString *const bluetoothUsageKey = @"NSBluetoothAlwaysUsageDescription";
-
 QString qt_address(NSString *address)
 {
     if (address && address.length) {
@@ -291,22 +289,6 @@ ObjCStrongReference<NSMutableData> mutable_data_from_bytearray(const QByteArray 
     [result replaceBytesInRange:NSMakeRange(0, qtData.size())
                       withBytes:qtData.constData()];
     return result;
-}
-
-bool qt_appNeedsBluetoothUsageDescription()
-{
-#ifdef Q_OS_MACOS
-    return QOperatingSystemVersion::current() > QOperatingSystemVersion::MacOSBigSur;
-#endif
-    return true;
-}
-
-bool qt_appPlistContainsDescription(NSString *key)
-{
-    Q_ASSERT(key);
-
-    NSDictionary<NSString *, id> *infoDict = NSBundle.mainBundle.infoDictionary;
-    return !!infoDict[key];
 }
 
 // A small RAII class for a dispatch queue.

@@ -43,6 +43,7 @@ public:
     ~QLowEnergyControllerPrivateDarwin();
 
     void init() override;
+    bool lazyInit();
     void connectToDevice() override;
     void disconnectFromDevice() override;
     void discoverServices() override;

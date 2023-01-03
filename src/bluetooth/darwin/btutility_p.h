@@ -123,12 +123,6 @@ extern const int defaultLEScanTimeoutMS;
 extern const int maxValueLength;
 extern const int defaultMtu;
 
-// Add more keys if needed, for now this one is enough:
-extern NSString *const bluetoothUsageKey;
-
-bool qt_appNeedsBluetoothUsageDescription();
-bool qt_appPlistContainsDescription(NSString *key);
-
 } // namespace DarwinBluetooth
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_DARWIN)

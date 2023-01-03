@@ -25,6 +25,7 @@
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qcoreapplication.h>
+#include <QtCore/qpermissions.h>
 #include <QtCore/qvector.h>
 #include <QtCore/qglobal.h>
 #include <QtCore/qstring.h>
@@ -135,17 +136,17 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     // starting from Monterey.
 
     // No Classic on iOS, and Classic does not require a description on macOS:
-    if (methods.testFlag(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod)
-        && qt_appNeedsBluetoothUsageDescription()
-        && !qt_appPlistContainsDescription(bluetoothUsageKey)) {
-        // This would result in Bluetooth framework throwing an exception
-        // the moment we try to start device discovery.
-        qCWarning(QT_BT_DARWIN)
-                << "A proper Info.plist with NSBluetoothAlwaysUsageDescription "
-                   "entry is required, cannot start device discovery";
-        setError(QBluetoothDeviceDiscoveryAgent::MissingPermissionsError);
-        emit q_ptr->errorOccurred(lastError);
-        return;
+    if (methods.testFlag(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod)) {
+        const auto permissionStatus = qApp->checkPermission(QBluetoothPermission{});
+        if (permissionStatus != Qt::PermissionStatus::Granted) {
+            qCWarning(QT_BT_DARWIN,
+                      "Use of Bluetooth LE requires explicitly requested permissions.");
+            setError(QBluetoothDeviceDiscoveryAgent::MissingPermissionsError);
+            emit q_ptr->errorOccurred(lastError);
+            // Arguably, Classic scan is still possible, but let's keep the logic
+            // simple.
+            return;
+        }
     }
 
     requestedMethods = methods;

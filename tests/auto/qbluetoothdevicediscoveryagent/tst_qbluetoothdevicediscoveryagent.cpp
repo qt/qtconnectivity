@@ -14,6 +14,14 @@
 #include <qbluetoothdevicediscoveryagent.h>
 #include <qbluetoothlocaldevice.h>
 
+#if QT_CONFIG(permissions)
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qpermissions.h>
+#include <QtCore/qnamespace.h>
+#endif // permissions
+
+#include <memory>
+
 QT_USE_NAMESPACE
 
 /*
@@ -62,12 +70,28 @@ private slots:
     void tst_discoveryMethods();
 private:
     qsizetype noOfLocalDevices;
+    using DiscoveryAgentPtr = std::unique_ptr<QBluetoothDeviceDiscoveryAgent>;
+#if QT_CONFIG(permissions)
+    Qt::PermissionStatus permissionStatus = Qt::PermissionStatus::Undetermined;
+#endif
 };
 
 tst_QBluetoothDeviceDiscoveryAgent::tst_QBluetoothDeviceDiscoveryAgent()
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>();
+#if QT_CONFIG(permissions)
+    permissionStatus = qApp->checkPermission(QBluetoothPermission{});
+    if (permissionStatus == Qt::PermissionStatus::Undetermined) {
+        QTestEventLoop loop;
+        qApp->requestPermission(QBluetoothPermission{}, [this, &loop](const QPermission &permission){
+            permissionStatus = permission.status();
+            loop.exitLoop();
+        });
+        if (permissionStatus == Qt::PermissionStatus::Undetermined) // Did not return immediately?
+            loop.enterLoopMSecs(30000);
+    }
+#endif
 }
 
 tst_QBluetoothDeviceDiscoveryAgent::~tst_QBluetoothDeviceDiscoveryAgent()
@@ -105,21 +129,24 @@ void tst_QBluetoothDeviceDiscoveryAgent::initTestCase()
 
 void tst_QBluetoothDeviceDiscoveryAgent::tst_invalidBtAddress()
 {
-    QBluetoothDeviceDiscoveryAgent *discoveryAgent = new QBluetoothDeviceDiscoveryAgent(
-                QBluetoothAddress(QStringLiteral("11:11:11:11:11:11")));
+    DiscoveryAgentPtr discoveryAgent(new QBluetoothDeviceDiscoveryAgent(
+                QBluetoothAddress(QStringLiteral("11:11:11:11:11:11"))));
 
     QCOMPARE(discoveryAgent->error(), QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError);
     discoveryAgent->start();
     QCOMPARE(discoveryAgent->isActive(), false);
-    delete discoveryAgent;
 
-    discoveryAgent = new QBluetoothDeviceDiscoveryAgent(QBluetoothAddress());
+#if QT_CONFIG(permissions)
+    if (permissionStatus != Qt::PermissionStatus::Granted)
+        return;
+#endif
+
+    discoveryAgent.reset(new QBluetoothDeviceDiscoveryAgent(QBluetoothAddress()));
     QCOMPARE(discoveryAgent->error(), QBluetoothDeviceDiscoveryAgent::NoError);
     if (!QBluetoothLocalDevice::allDevices().isEmpty()) {
         discoveryAgent->start();
         QCOMPARE(discoveryAgent->isActive(), true);
     }
-    delete discoveryAgent;
 }
 
 void tst_QBluetoothDeviceDiscoveryAgent::deviceDiscoveryDebug(const QBluetoothDeviceInfo &info)
@@ -131,6 +158,7 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
 {
     if (androidBluetoothEmulator())
         QSKIP("Skipping test on Android 12+ emulator, CI can timeout waiting for user input");
+
     QBluetoothDeviceDiscoveryAgent discoveryAgent;
 
     QVERIFY(discoveryAgent.error() == discoveryAgent.NoError);
@@ -148,6 +176,14 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
     QVERIFY(errorSpy.isEmpty());
 
     discoveryAgent.start();
+#if QT_CONFIG(permissions)
+    if (permissionStatus != Qt::PermissionStatus::Granted) {
+        // If bluetooth is OFF, the permission does not get checked (e.g. on Darwin),
+        // but not to depend on the order in which errors generated, we
+        // do not compare error value with MissionPermissionsError here.
+        return;
+    }
+#endif
 
     if (errorSpy.isEmpty()) {
         QVERIFY(discoveryAgent.isActive());
@@ -327,7 +363,12 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_deviceDiscovery()
 //                this, SLOT(deviceDiscoveryDebug(QBluetoothDeviceInfo)));
 
         discoveryAgent.start();
+
         if (!errorSpy.isEmpty()) {
+#if QT_CONFIG(permissions)
+            if (permissionStatus == Qt::PermissionStatus::Granted)
+#endif
+
             QCOMPARE(noOfLocalDevices, 0);
             QVERIFY(!discoveryAgent.isActive());
             QSKIP("No local Bluetooth device available. Skipping remaining part of test.");
@@ -457,9 +498,14 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryMethods()
 
     // Start discovery, probably both Classic and LE methods:
     agent.start(supportedMethods);
+#if QT_CONFIG(permissions)
+    if (permissionStatus != Qt::PermissionStatus::Granted) {
+        QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::MissingPermissionsError);
+        QSKIP("The remaining test requires the Bluetooth permission granted");
+    }
+#endif
     QVERIFY(agent.isActive());
     QVERIFY(errorSpy.isEmpty());
-
 
 #define RUN_DISCOVERY(maxTimeout, step, condition) \
     for (int scanTime = maxTimeout; (condition) && scanTime > 0; scanTime -= step) \
