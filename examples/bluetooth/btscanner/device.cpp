@@ -12,6 +12,12 @@
 #include <QMenu>
 #include <QDebug>
 
+#if QT_CONFIG(permissions)
+#include <QMessageBox>
+#include <QApplication>
+#include <QPermission>
+#endif // QT_CONFIG(permissions)
+
 static QColor colorForPairing(QBluetoothLocalDevice::Pairing pairing)
 {
     return pairing == QBluetoothLocalDevice::Paired
@@ -80,6 +86,15 @@ void DeviceDiscoveryDialog::addDevice(const QBluetoothDeviceInfo &info)
 
 void DeviceDiscoveryDialog::startScan()
 {
+#if QT_CONFIG(permissions)
+    if (qApp->checkPermission(QBluetoothPermission{}) != Qt::PermissionStatus::Granted) {
+        QMessageBox::warning(this, tr("Missing permission"),
+                             tr("Permission is needed to use Bluetooth. "\
+                                "Please grant the permission to this "\
+                                "application in the system settings."));
+        return;
+    }
+#endif // QT_CONFIG(permissions)
     discoveryAgent->start();
     ui->scan->setVisible(false);
     ui->stopScan->setVisible(true);
