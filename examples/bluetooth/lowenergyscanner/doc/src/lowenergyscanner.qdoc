@@ -32,6 +32,12 @@
 
     \include examples-run.qdocinc
 
+    \section1 Requesting Permission to use Bluetooth
+    Before the application can start using Bluetooth, we have to check Bluetooth
+    permission, and if its status is not determined yet, request this permission:
+
+    \snippet lowenergyscanner/device.cpp les-bluetooth-permission
+
     \section1 Scanning for Devices
 
     The first step is to find all peripheral devices. The devices can be found using

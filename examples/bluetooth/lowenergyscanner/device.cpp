@@ -9,6 +9,12 @@
 #include <qbluetoothlocaldevice.h>
 #include <qbluetoothdeviceinfo.h>
 #include <qbluetoothservicediscoveryagent.h>
+
+#if QT_CONFIG(permissions)
+#include <QGuiApplication>
+#include <QPermission>
+#endif
+
 #include <QDebug>
 #include <QList>
 #include <QMetaEnum>
@@ -43,6 +49,20 @@ Device::~Device()
 
 void Device::startDeviceDiscovery()
 {
+#if QT_CONFIG(permissions)
+    //! [les-bluetooth-permission]
+    const auto permissionStatus = qApp->checkPermission(QBluetoothPermission{});
+    if (permissionStatus == Qt::PermissionStatus::Undetermined) {
+        qApp->requestPermission(QBluetoothPermission{}, this, &Device::startDeviceDiscovery);
+        return;
+    }
+    if (permissionStatus == Qt::PermissionStatus::Denied) {
+        setUpdate("Bluetooth permission required.");
+        return;
+    }
+    //! [les-bluetooth-permission]
+#endif // QT_CONFIG(permissions)
+
     qDeleteAll(devices);
     devices.clear();
     emit devicesUpdated();
