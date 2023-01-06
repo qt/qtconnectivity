@@ -33,6 +33,16 @@
     \note On Linux, advertising requires privileged access, so you need to run
           the example as root, for instance via \c sudo.
 
+    \section1 Checking Bluetooth Permission
+    Before the application can create a service and start advertising, we have to check
+    if the application has a permission to use Bluetooth.
+    \snippet heartrate-server/main.cpp Check Bluetooth Permission
+
+    \section1 Request Bluetooth Permission
+    If the Bluetooth authorization status is undetermined, we have to request a permission
+    to use Bluetooth.
+    \snippet heartrate-server/main.cpp Request Bluetooth Permission
+
     \section1 Setting up Advertising Data and Parameters
     Two classes are used to configure the advertising process: \l QLowEnergyAdvertisingData to
     specify which information is to be broadcast, and \l QLowEnergyAdvertisingParameters for

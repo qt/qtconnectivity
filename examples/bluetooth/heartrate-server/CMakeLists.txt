@@ -14,7 +14,7 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/bluetooth/heartrate-server")
 
 find_package(Qt6 REQUIRED COMPONENTS Bluetooth Core)
 
-if(ANDROID OR IOS)
+if(ANDROID OR APPLE)
     find_package(Qt6 REQUIRED COMPONENTS Gui)
 endif()
 
@@ -31,7 +31,7 @@ target_link_libraries(heartrate-server PUBLIC
     Qt::Core
 )
 
-if(ANDROID OR IOS)
+if(ANDROID OR APPLE)
     target_link_libraries(heartrate-server PUBLIC
         Qt::Gui
     )

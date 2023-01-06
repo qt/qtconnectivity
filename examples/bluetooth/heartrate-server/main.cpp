@@ -10,25 +10,52 @@
 #include <QtBluetooth/qlowenergyservice.h>
 #include <QtBluetooth/qlowenergyservicedata.h>
 #include <QtCore/qbytearray.h>
-#ifndef Q_OS_ANDROID
-#include <QtCore/qcoreapplication.h>
-#else
+#if defined(Q_OS_ANDROID) || defined(Q_OS_DARWIN)
 #include <QtGui/qguiapplication.h>
+#else
+#include <QtCore/qcoreapplication.h>
 #endif
 #include <QtCore/qlist.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qtimer.h>
+#if QT_CONFIG(permissions)
+#include <QtCore/qpermissions.h>
+#endif
 
 int main(int argc, char *argv[])
 {
     // QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
-#ifndef Q_OS_ANDROID
-    QCoreApplication app(argc, argv);
-#else
+#if defined(Q_OS_ANDROID) || defined(Q_OS_DARWIN)
     QGuiApplication app(argc, argv);
+#else
+    QCoreApplication app(argc, argv);
 #endif
 
+#if QT_CONFIG(permissions)
+    //! [Check Bluetooth Permission]
+    auto permissionStatus = app.checkPermission(QBluetoothPermission{});
+    //! [Check Bluetooth Permission]
+
+    //! [Request Bluetooth Permission]
+    if (permissionStatus == Qt::PermissionStatus::Undetermined) {
+        qInfo("Requesting Bluetooth permission ...");
+        app.requestPermission(QBluetoothPermission{}, [&permissionStatus](const QPermission &permission){
+            qApp->exit();
+            permissionStatus = permission.status();
+        });
+        // Now, wait for permission request to resolve.
+        app.exec();
+    }
+    //! [Request Bluetooth Permission]
+
+    if (permissionStatus == Qt::PermissionStatus::Denied) {
+        // Either explicitly denied by a user, or Bluetooth is off.
+        qWarning("This application cannot use Bluetooth, the permission was denied");
+        return -1;
+    }
+
+#endif
     //! [Advertising Data]
     QLowEnergyAdvertisingData advertisingData;
     advertisingData.setDiscoverability(QLowEnergyAdvertisingData::DiscoverabilityGeneral);
