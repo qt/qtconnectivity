@@ -8,10 +8,14 @@
 
 #include <QtCore/qsystemdetection.h>
 
+#if QT_CONFIG(permissions)
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qpermissions.h>
+#endif
+
 ConnectionHandler::ConnectionHandler(QObject *parent) : QObject(parent)
 {
-    connect(&m_localDevice, &QBluetoothLocalDevice::hostModeStateChanged,
-            this, &ConnectionHandler::hostModeChanged);
+    initLocalDevice();
 }
 
 bool ConnectionHandler::alive() const
@@ -23,9 +27,14 @@ bool ConnectionHandler::alive() const
 #else
     if (simulator)
         return true;
-    return m_localDevice.isValid()
-            && m_localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff;
+    return m_localDevice && m_localDevice->isValid()
+            && m_localDevice->hostMode() != QBluetoothLocalDevice::HostPoweredOff;
 #endif
+}
+
+bool ConnectionHandler::hasPermission() const
+{
+    return m_hasPermission;
 }
 
 bool ConnectionHandler::requiresAddressType() const
@@ -39,15 +48,36 @@ bool ConnectionHandler::requiresAddressType() const
 
 QString ConnectionHandler::name() const
 {
-    return m_localDevice.name();
+    return m_localDevice ? m_localDevice->name() : QString();
 }
 
 QString ConnectionHandler::address() const
 {
-    return m_localDevice.address().toString();
+    return m_localDevice ? m_localDevice->address().toString() : QString();
 }
 
 void ConnectionHandler::hostModeChanged(QBluetoothLocalDevice::HostMode /*mode*/)
 {
+    emit deviceChanged();
+}
+
+void ConnectionHandler::initLocalDevice()
+{
+#if QT_CONFIG(permissions)
+    QBluetoothPermission permission{};
+    switch (qApp->checkPermission(permission)) {
+    case Qt::PermissionStatus::Undetermined:
+        qApp->requestPermission(permission, this, &ConnectionHandler::initLocalDevice);
+        return;
+    case Qt::PermissionStatus::Denied:
+        return;
+    case Qt::PermissionStatus::Granted:
+        break; // proceed to initialization
+    }
+#endif
+    m_localDevice = new QBluetoothLocalDevice(this);
+    connect(m_localDevice, &QBluetoothLocalDevice::hostModeStateChanged,
+            this, &ConnectionHandler::hostModeChanged);
+    m_hasPermission = true;
     emit deviceChanged();
 }

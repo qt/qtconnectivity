@@ -70,7 +70,8 @@ Item {
     BluetoothAlarmDialog {
         id: btAlarmDialog
         anchors.fill: parent
-        visible: !app.connectionHandler.alive
+        visible: !app.connectionHandler.alive || permissionError
+        permissionError: !app.connectionHandler.hasPermission
     }
 
     Keys.onReleased: (event) => {

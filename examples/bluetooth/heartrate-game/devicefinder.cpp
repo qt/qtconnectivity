@@ -8,6 +8,11 @@
 
 #include <QtBluetooth/qbluetoothdeviceinfo.h>
 
+#if QT_CONFIG(permissions)
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qpermissions.h>
+#endif
+
 DeviceFinder::DeviceFinder(DeviceHandler *handler, QObject *parent):
     BluetoothBaseClass(parent),
     m_deviceHandler(handler)
@@ -43,6 +48,21 @@ DeviceFinder::~DeviceFinder()
 
 void DeviceFinder::startSearch()
 {
+#if QT_CONFIG(permissions)
+    //! [permissions]
+    QBluetoothPermission permission{};
+    switch (qApp->checkPermission(permission)) {
+    case Qt::PermissionStatus::Undetermined:
+        qApp->requestPermission(permission, this, &DeviceFinder::startSearch);
+        return;
+    case Qt::PermissionStatus::Denied:
+        setError(tr("Bluetooth permissions not granted!"));
+        return;
+    case Qt::PermissionStatus::Granted:
+        break; // proceed to search
+    }
+    //! [permissions]
+#endif // QT_CONFIG(permissions)
     clearMessages();
     m_deviceHandler->setDevice(nullptr);
     qDeleteAll(m_devices);

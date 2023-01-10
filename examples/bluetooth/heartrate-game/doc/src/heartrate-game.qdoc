@@ -45,6 +45,14 @@
 
     \include examples-run.qdocinc
 
+    \section1 Checking Bluetooth Permissions
+
+    Before the application can start using Bluetooth, we have to check that
+    appropriate permissions were granted:
+
+    \snippet heartrate-game/devicefinder.cpp permissions
+
+
     \section1 Visual Tour
 
     The application searches for all Bluetooth Low Energy peripheral devices in the vicinity.
