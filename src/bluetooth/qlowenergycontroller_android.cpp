@@ -1220,10 +1220,9 @@ void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEne
         QJniEnvironment env;
         jbyteArray jb = env->NewByteArray(charData.value().size());
         env->SetByteArrayRegion(jb, 0, charData.value().size(), (jbyte*)charData.value().data());
-        jboolean success = javaChar.callMethod<jboolean>("setValue", jb);
+        jboolean success = javaChar.callMethod<jboolean>("setLocalValue", jb);
         if (!success)
             qCWarning(QT_BT_ANDROID) << "Cannot setup initial characteristic value for " << charData.uuid();
-
         env->DeleteLocalRef(jb);
 
         const QList<QLowEnergyDescriptorData> descriptorList = charData.descriptors();
