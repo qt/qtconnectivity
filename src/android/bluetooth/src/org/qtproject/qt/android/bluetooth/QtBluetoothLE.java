@@ -17,6 +17,7 @@ import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanFilter;
 import android.bluetooth.le.ScanResult;
 import android.bluetooth.le.ScanSettings;
+import android.bluetooth.BluetoothStatusCodes;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -345,8 +346,9 @@ public class QtBluetoothLE {
     }
 
     private synchronized void handleOnCharacteristicRead(BluetoothGatt gatt,
-                                 BluetoothGattCharacteristic characteristic,
-                                 int status)
+                                BluetoothGattCharacteristic characteristic,
+                                byte[] value,
+                                int status)
     {
         int foundHandle = handleForCharacteristic(characteristic);
         if (foundHandle == -1 || foundHandle >= entries.size() ) {
@@ -380,7 +382,7 @@ public class QtBluetoothLE {
             leCharacteristicRead(qtObject,
                     characteristic.getService().getUuid().toString(),
                     foundHandle + 1, characteristic.getUuid().toString(),
-                    characteristic.getProperties(), characteristic.getValue());
+                    characteristic.getProperties(), value);
         } else {
             if (isServiceDiscoveryRun) {
                 Log.w(TAG, "onCharacteristicRead during discovery error: " + status);
@@ -389,7 +391,7 @@ public class QtBluetoothLE {
                                 " for service " + characteristic.getService().getUuid());
                 leCharacteristicRead(qtObject, characteristic.getService().getUuid().toString(),
                     foundHandle + 1, characteristic.getUuid().toString(),
-                    characteristic.getProperties(), characteristic.getValue());
+                    characteristic.getProperties(), value);
             } else {
                 // This must be in sync with QLowEnergyService::CharacteristicReadError
                 final int characteristicReadError = 5;
@@ -412,7 +414,8 @@ public class QtBluetoothLE {
     }
 
     private synchronized void handleOnCharacteristicChanged(android.bluetooth.BluetoothGatt gatt,
-                                    android.bluetooth.BluetoothGattCharacteristic characteristic)
+                                    android.bluetooth.BluetoothGattCharacteristic characteristic,
+                                    byte[] value)
     {
         int handle = handleForCharacteristic(characteristic);
         if (handle == -1) {
@@ -420,7 +423,7 @@ public class QtBluetoothLE {
             return;
         }
 
-        leCharacteristicChanged(qtObject, handle+1, characteristic.getValue());
+        leCharacteristicChanged(qtObject, handle+1, value);
     }
 
     private synchronized void handleOnCharacteristicWrite(android.bluetooth.BluetoothGatt gatt,
@@ -651,12 +654,24 @@ public class QtBluetoothLE {
 
         }
 
+        // API < 33
         public void onCharacteristicRead(android.bluetooth.BluetoothGatt gatt,
                                          android.bluetooth.BluetoothGattCharacteristic characteristic,
                                          int status)
         {
             super.onCharacteristicRead(gatt, characteristic, status);
-            handleOnCharacteristicRead(gatt, characteristic, status);
+            handleOnCharacteristicRead(gatt, characteristic, characteristic.getValue(), status);
+        }
+
+        // API >= 33
+        public void onCharacteristicRead(android.bluetooth.BluetoothGatt gatt,
+                                    android.bluetooth.BluetoothGattCharacteristic characteristic,
+                                    byte[] value,
+                                    int status)
+        {
+            // Note: here we don't call the super implementation as it calls the old "< API 33"
+            // callback, and the callback would be handled twice
+            handleOnCharacteristicRead(gatt, characteristic, value, status);
         }
 
         public void onCharacteristicWrite(android.bluetooth.BluetoothGatt gatt,
@@ -667,11 +682,22 @@ public class QtBluetoothLE {
             handleOnCharacteristicWrite(gatt, characteristic, status);
         }
 
+        // API < 33
         public void onCharacteristicChanged(android.bluetooth.BluetoothGatt gatt,
                                             android.bluetooth.BluetoothGattCharacteristic characteristic)
         {
             super.onCharacteristicChanged(gatt, characteristic);
-            handleOnCharacteristicChanged(gatt, characteristic);
+            handleOnCharacteristicChanged(gatt, characteristic, characteristic.getValue());
+        }
+
+        // API >= 33
+        public void onCharacteristicChanged(android.bluetooth.BluetoothGatt gatt,
+                                    android.bluetooth.BluetoothGattCharacteristic characteristic,
+                                    byte[] value)
+        {
+            // Note: here we don't call the super implementation as it calls the old "< API 33"
+            // callback, and the callback would be handled twice
+            handleOnCharacteristicChanged(gatt, characteristic, value);
         }
 
         public void onDescriptorRead(android.bluetooth.BluetoothGatt gatt,
@@ -1527,7 +1553,7 @@ public class QtBluetoothLE {
                                 + " for service " + entry.characteristic.getService().getUuid());
                             leCharacteristicRead(qtObject, entry.characteristic.getService().getUuid().toString(),
                                     handle + 1, entry.characteristic.getUuid().toString(),
-                                    entry.characteristic.getProperties(), entry.characteristic.getValue());
+                                    entry.characteristic.getProperties(), null);
                             break;
                         case Descriptor:
                             Log.d(TAG,
@@ -1594,6 +1620,11 @@ public class QtBluetoothLE {
         boolean result;
         switch (nextJob.entry.type) {
             case Characteristic:
+                if (Build.VERSION.SDK_INT >= 33) {
+                    int writeResult = mBluetoothGatt.writeCharacteristic(
+                       nextJob.entry.characteristic, nextJob.newValue, nextJob.requestedWriteType);
+                    return (writeResult != BluetoothStatusCodes.SUCCESS);
+                }
                 if (mHandler != null || mCharacteristicConstructor == null) {
                     if (nextJob.entry.characteristic.getWriteType() != nextJob.requestedWriteType) {
                         nextJob.entry.characteristic.setWriteType(nextJob.requestedWriteType);
