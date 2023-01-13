@@ -244,11 +244,6 @@ void tst_qlowenergycontroller_device::checkMtuNegotiation()
 {
     // service discovery, including MTU negotiation
     qDebug() << "Client-side MTU after connect" << mController->mtu();
-#if ! defined(Q_OS_DARWIN)
-    // The check below usually passes, but sometimes the BT stack gives a cached value
-    // from a previous testcase run and the below fails => avoid flakiness
-    QCOMPARE(mController->mtu(), 23);
-#endif
     QVERIFY(mController->services().isEmpty());
     mController->discoverServices();
     QTRY_COMPARE(mController->state(), QLowEnergyController::DiscoveredState);
