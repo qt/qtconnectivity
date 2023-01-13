@@ -10,6 +10,7 @@ set(java_sources
     src/org/qtproject/qt/android/bluetooth/QtBluetoothLEServer.java
     src/org/qtproject/qt/android/bluetooth/QtBluetoothSocketServer.java
     src/org/qtproject/qt/android/bluetooth/QtBluetoothGattCharacteristic.java
+    src/org/qtproject/qt/android/bluetooth/QtBluetoothGattDescriptor.java
 )
 
 qt_internal_add_jar(Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth

@@ -27,6 +27,8 @@ Q_DECLARE_JNI_CLASS(QtBtBroadcastReceiver,
                     "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver");
 Q_DECLARE_JNI_CLASS(QtBtGattCharacteristic,
                     "org/qtproject/qt/android/bluetooth/QtBluetoothGattCharacteristic");
+Q_DECLARE_JNI_CLASS(QtBtGattDescriptor,
+                    "org/qtproject/qt/android/bluetooth/QtBluetoothGattDescriptor");
 Q_DECLARE_JNI_CLASS(QtBtInputStreamThread,
                     "org/qtproject/qt/android/bluetooth/QtBluetoothInputStreamThread")
 Q_DECLARE_JNI_CLASS(QtBtSocketServer, "org/qtproject/qt/android/bluetooth/QtBluetoothSocketServer")

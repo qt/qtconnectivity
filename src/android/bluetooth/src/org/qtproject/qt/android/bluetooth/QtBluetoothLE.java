@@ -470,7 +470,7 @@ public class QtBluetoothLE {
 
     private synchronized void handleOnDescriptorRead(android.bluetooth.BluetoothGatt gatt,
                                  android.bluetooth.BluetoothGattDescriptor descriptor,
-                                 int status)
+                                 int status, byte[] newValue)
     {
         int foundHandle = handleForDescriptor(descriptor);
         if (foundHandle == -1 || foundHandle >= entries.size() ) {
@@ -504,7 +504,7 @@ public class QtBluetoothLE {
             leDescriptorRead(qtObject,
                     descriptor.getCharacteristic().getService().getUuid().toString(),
                     descriptor.getCharacteristic().getUuid().toString(), foundHandle + 1,
-                    descriptor.getUuid().toString(), descriptor.getValue());
+                    descriptor.getUuid().toString(), newValue);
         } else {
             if (isServiceDiscoveryRun) {
                 // Cannot read but still advertise the fact that we found a descriptor
@@ -516,7 +516,7 @@ public class QtBluetoothLE {
                 leDescriptorRead(qtObject,
                     descriptor.getCharacteristic().getService().getUuid().toString(),
                     descriptor.getCharacteristic().getUuid().toString(), foundHandle + 1,
-                    descriptor.getUuid().toString(), descriptor.getValue());
+                    descriptor.getUuid().toString(), newValue);
             } else {
                 // This must be in sync with QLowEnergyService::DescriptorReadError
                 final int descriptorReadError = 6;
@@ -539,7 +539,7 @@ public class QtBluetoothLE {
              * up here.
              */
             if (descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
-                byte[] bytearray = descriptor.getValue();
+                byte[] bytearray = newValue;
                 final int value = (bytearray != null && bytearray.length > 0) ? bytearray[0] : 0;
                 // notification or indication bit set?
                 if ((value & 0x03) > 0) {
@@ -585,9 +585,10 @@ public class QtBluetoothLE {
                 errorCode = 3; break; // DescriptorWriteError
         }
 
+        byte[] value = pendingJob.newValue;
         pendingJob = null;
 
-        leDescriptorWritten(qtObject, handle+1, descriptor.getValue(), errorCode);
+        leDescriptorWritten(qtObject, handle+1, value, errorCode);
         performNextIO();
     }
 
@@ -700,12 +701,24 @@ public class QtBluetoothLE {
             handleOnCharacteristicChanged(gatt, characteristic, value);
         }
 
+        // API < 33
         public void onDescriptorRead(android.bluetooth.BluetoothGatt gatt,
                                      android.bluetooth.BluetoothGattDescriptor descriptor,
                                      int status)
         {
             super.onDescriptorRead(gatt, descriptor, status);
-            handleOnDescriptorRead(gatt, descriptor, status);
+            handleOnDescriptorRead(gatt, descriptor, status, descriptor.getValue());
+        }
+
+        // API >= 33
+        public void onDescriptorRead(android.bluetooth.BluetoothGatt gatt,
+                                     android.bluetooth.BluetoothGattDescriptor descriptor,
+                                     int status,
+                                     byte[] value)
+        {
+            // Note: here we don't call the super implementation as it calls the old "< API 33"
+            // callback, and the callback would be handled twice
+            handleOnDescriptorRead(gatt, descriptor, status, value);
         }
 
         public void onDescriptorWrite(android.bluetooth.BluetoothGatt gatt,
@@ -1565,7 +1578,7 @@ public class QtBluetoothLE {
                                     entry.descriptor.getCharacteristic().getService().getUuid().toString(),
                                     entry.descriptor.getCharacteristic().getUuid().toString(),
                                     handle + 1, entry.descriptor.getUuid().toString(),
-                                    entry.descriptor.getValue());
+                                    null);
                             break;
                         case CharacteristicValue:
                             // for more details see scheduleServiceDetailDiscovery(int, boolean)
@@ -1676,9 +1689,15 @@ public class QtBluetoothLE {
                     Log.d(TAG, "Enable notifications: " + enableNotifications);
                 }
 
+                if (Build.VERSION.SDK_INT >= 33) {
+                    int writeResult = mBluetoothGatt.writeDescriptor(
+                                        nextJob.entry.descriptor, nextJob.newValue);
+                    return (writeResult != BluetoothStatusCodes.SUCCESS);
+                }
                 result = nextJob.entry.descriptor.setValue(nextJob.newValue);
                 if (!result || !mBluetoothGatt.writeDescriptor(nextJob.entry.descriptor))
                     return true;
+
                 break;
             case Service:
             case CharacteristicValue:
