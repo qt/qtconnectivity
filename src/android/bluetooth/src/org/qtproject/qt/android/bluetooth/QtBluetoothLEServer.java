@@ -468,13 +468,14 @@ public class QtBluetoothLEServer {
             return;
         }
 
-        byte[] dataArray = descriptor.getValue();
+        byte[] dataArray = ((QtBluetoothGattDescriptor)descriptor).getLocalValue();
+
         try {
             if (descriptor.getUuid().equals(CLIENT_CHARACTERISTIC_CONFIGURATION_UUID)) {
                 dataArray = clientCharacteristicManager.valueFor(
                             descriptor.getCharacteristic(), device);
                 if (dataArray == null)
-                    dataArray = descriptor.getValue();
+                    dataArray = ((QtBluetoothGattDescriptor)descriptor).getLocalValue();
             }
 
             dataArray = Arrays.copyOfRange(dataArray, offset, dataArray.length);
@@ -521,8 +522,7 @@ public class QtBluetoothLEServer {
                                                 descriptor.getCharacteristic(),
                                                 device, value);
                 }
-
-                descriptor.setValue(value);
+                ((QtBluetoothGattDescriptor)descriptor).setLocalValue(value);
                 leServerDescriptorWritten(qtObject, descriptor, value);
             } else {
                 // This should not really happen as per Bluetooth spec
@@ -564,7 +564,7 @@ public class QtBluetoothLEServer {
                 // The target can be a descriptor or a characteristic
                 byte[] currentValue = (entry.target instanceof BluetoothGattCharacteristic)
                                     ? ((QtBluetoothGattCharacteristic)entry.target).getLocalValue()
-                                    : ((BluetoothGattDescriptor)entry.target).getValue();
+                                    : ((QtBluetoothGattDescriptor)entry.target).getLocalValue();
 
                 // Iterate writes and apply them to the currentValue in received order
                 for (Pair<byte[], Integer> write : entry.writes) {
@@ -615,7 +615,7 @@ public class QtBluetoothLEServer {
                     leServerCharacteristicChanged(
                         qtObject, (BluetoothGattCharacteristic)entry.target, newValue);
                 } else {
-                    ((BluetoothGattDescriptor)entry.target).setValue(newValue);
+                    ((QtBluetoothGattDescriptor)entry.target).setLocalValue(newValue);
                     leServerDescriptorWritten(
                         qtObject, (BluetoothGattDescriptor)entry.target, newValue);
                 }
@@ -930,7 +930,7 @@ public class QtBluetoothLEServer {
         // to interpret the server's call as a change of the default value.
         synchronized (this) // a value update might be in progress
         {
-            foundDesc.setValue(newValue);
+            ((QtBluetoothGattDescriptor)foundDesc).setLocalValue(newValue);
         }
 
         return true;

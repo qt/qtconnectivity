@@ -1227,13 +1227,13 @@ void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEne
 
         const QList<QLowEnergyDescriptorData> descriptorList = charData.descriptors();
         for (const auto &descData: descriptorList) {
-            QJniObject javaDesc = QJniObject::construct<QtJniTypes::BluetoothGattDescriptor>(
+            QJniObject javaDesc = QJniObject::construct<QtJniTypes::QtBtGattDescriptor>(
                                     javaUuidfromQtUuid(descData.uuid()).object<QtJniTypes::UUID>(),
                                     setupDescPermissions(descData));
 
             jb = env->NewByteArray(descData.value().size());
             env->SetByteArrayRegion(jb, 0, descData.value().size(), (jbyte*)descData.value().data());
-            success = javaDesc.callMethod<jboolean>("setValue", jb);
+            success = javaDesc.callMethod<jboolean>("setLocalValue", jb);
             if (!success) {
                 qCWarning(QT_BT_ANDROID) << "Cannot setup initial descriptor value for "
                                          << descData.uuid() << "(char" << charData.uuid()
