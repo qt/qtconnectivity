@@ -266,7 +266,6 @@ void QLowEnergyControllerPrivateBluezDBus::resetController()
         peripheralConnectionManager->reset();
 
     remoteName.clear();
-    remoteDevice.clear();
     remoteMtu = -1;
 
     dbusServices.clear();
@@ -421,6 +420,7 @@ void QLowEnergyControllerPrivateBluezDBus::disconnectFromDevice()
         Q_Q(QLowEnergyController);
         peripheralConnectionManager->disconnectDevices();
         resetController();
+        remoteDevice.clear();
         const auto emitDisconnected = (state == QLowEnergyController::ConnectedState);
         setState(QLowEnergyController::UnconnectedState);
         if (emitDisconnected)
@@ -1482,6 +1482,7 @@ void QLowEnergyControllerPrivateBluezDBus::handlePeripheralConnectivityChanged(b
         setState(QLowEnergyController::ConnectedState);
     } else {
         resetController();
+        remoteDevice.clear();
         setState(QLowEnergyController::UnconnectedState);
         emit q->disconnected();
     }
