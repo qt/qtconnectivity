@@ -247,6 +247,8 @@ void QLowEnergyControllerPrivateAndroid::writeCharacteristic(
                             "writeCharacteristic",
                             service->androidService.object<QtJniTypes::BluetoothGattService>(),
                             charUuid.object<QtJniTypes::UUID>(), payload);
+                if (result)
+                    service->characteristicList[charHandle].value = newValue;
             }
         }
     }
@@ -292,6 +294,8 @@ void QLowEnergyControllerPrivateAndroid::writeDescriptor(
                           service->androidService.object<QtJniTypes::BluetoothGattService>(),
                           charUuid.object<QtJniTypes::UUID>(), descUuid.object<QtJniTypes::UUID>(),
                           payload);
+                if (result)
+                    service->characteristicList[charHandle].descriptorList[descHandle].value = newValue;
             }
         }
     }
