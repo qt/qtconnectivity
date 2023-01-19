@@ -22,7 +22,7 @@ qt_internal_add_test(tst_qnearfieldtagtype1
         ../nfccommons/qtlv.cpp ../nfccommons/qtlv_p.h
         tst_qnearfieldtagtype1.cpp
     DEFINES
-        SRCDIR=\\\"${CMAKE_CURRENT_SOURCE_DIR}/../nfcdata\\\"
+        SRCDIR="${CMAKE_CURRENT_SOURCE_DIR}/../nfcdata"
     INCLUDE_DIRECTORIES
         ../nfccommons
     LIBRARIES
