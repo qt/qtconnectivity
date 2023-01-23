@@ -21,6 +21,7 @@
 #include <private/qbluetoothutils_winrt_p.h>
 
 #include <winrt/base.h>
+#include <QtCore/private/qfactorycacheregistration_p.h>
 #include <winrt/Windows.Devices.Enumeration.h>
 
 QT_BEGIN_NAMESPACE

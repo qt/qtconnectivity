@@ -18,6 +18,7 @@
 // Workaround for Windows SDK bug.
 // See https://github.com/microsoft/Windows.UI.Composition-Win32-Samples/issues/47
  #include <winrt/base.h>
+#include <QtCore/private/qfactorycacheregistration_p.h>
 namespace winrt::impl
 {
     template <typename Async>
