@@ -51,7 +51,11 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
     {
         synchronized (qtContext) {
             qtObject = 0;
-            qtContext.unregisterReceiver(this);
+            try {
+                qtContext.unregisterReceiver(this);
+            } catch (Exception ex) {
+                Log.d(TAG, "Trying to unregister a BroadcastReceiver which is not yet registered");
+            }
         }
     }
 
