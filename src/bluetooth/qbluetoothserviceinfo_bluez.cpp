@@ -13,9 +13,10 @@
 
 QT_BEGIN_NAMESPACE
 
+using namespace Qt::StringLiterals;
+
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
-static const QLatin1String profilePathTemplate("/qt/profile");
 static QAtomicInt pathCounter;
 
 static void writeAttribute(QXmlStreamWriter *stream, const QVariant &attribute)
@@ -197,7 +198,7 @@ bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress & /*l
     stream.writeEndDocument();
 
     // create path
-    profilePath = profilePathTemplate;
+    profilePath = u"/qt/profile"_s;
     profilePath.append(QString::fromLatin1("/%1%2/%3")
                                .arg(sanitizeNameForDBus(QCoreApplication::applicationName()))
                                .arg(QCoreApplication::applicationPid())
