@@ -25,6 +25,10 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
     connect(this, &QNearFieldManagerPrivateImpl::didInvalidateWithError,
             this, &QNearFieldManagerPrivateImpl::onDidInvalidateWithError,
             Qt::QueuedConnection);
+
+    sessionTimer.setInterval(2000);
+    sessionTimer.setSingleShot(true);
+    connect(&sessionTimer, &QTimer::timeout, this, &QNearFieldManagerPrivateImpl::onSessionTimer);
 }
 
 QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
@@ -62,7 +66,7 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::Access
         if (@available(iOS 13, *))
             if (NFCTagReaderSession.readingAvailable) {
                 detectionRunning = true;
-                startSession();
+                scheduleSession();
                 return true;
             }
         return false;
@@ -71,16 +75,28 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::Access
 
 void QNearFieldManagerPrivateImpl::stopTargetDetection(const QString &errorMessage)
 {
-    if (detectionRunning) {
-       stopSession(errorMessage);
-       detectionRunning = false;
-       Q_EMIT targetDetectionStopped();
-    }
+    if (!detectionRunning)
+        return;
+
+    isSessionScheduled = false;
+    stopSession(errorMessage);
+    detectionRunning = false;
+    Q_EMIT targetDetectionStopped();
 }
 
+void QNearFieldManagerPrivateImpl::scheduleSession()
+{
+    if (sessionTimer.isActive()) {
+        isSessionScheduled = true;
+        return;
+    }
+
+    startSession();
+}
 
 void QNearFieldManagerPrivateImpl::startSession()
 {
+    isSessionScheduled = false;
     if (detectionRunning)
         if (@available(iOS 13, *))
             [delegate startSession];
@@ -132,22 +148,22 @@ void QNearFieldManagerPrivateImpl::onTargetLost(QNearFieldTargetPrivateImpl *tar
 void QNearFieldManagerPrivateImpl::onDidInvalidateWithError(bool doRestart)
 {
     clearTargets();
+    sessionTimer.start();
 
     if (detectionRunning && doRestart)
     {
-        if (!isRestarting) {
-            isRestarting = true;
-            using namespace std::chrono_literals;
-            QTimer::singleShot(2s, this, [this](){
-                        isRestarting = false;
-                        startSession();
-                    });
-        }
+        scheduleSession();
         return;
     }
 
     detectionRunning = false;
     Q_EMIT targetDetectionStopped();
+}
+
+void QNearFieldManagerPrivateImpl::onSessionTimer()
+{
+    if (isSessionScheduled)
+        scheduleSession();
 }
 
 QT_END_NAMESPACE
