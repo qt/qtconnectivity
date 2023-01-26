@@ -59,10 +59,12 @@ private:
     QT_MANGLE_NAMESPACE(QIosTagReaderDelegate) *delegate API_AVAILABLE(ios(13.0)) = nullptr;
     QIosNfcNdefSessionDelegate *ndefDelegate = nullptr;
     bool detectionRunning = false;
-    bool isRestarting = false;
+    bool isSessionScheduled = false;
+    QTimer sessionTimer;
     QList<QNearFieldTargetPrivateImpl *> detectedTargets;
     QNearFieldTarget::AccessMethod activeAccessMethod = QNearFieldTarget::UnknownAccess;
 
+    bool scheduleSession(QNearFieldTarget::AccessMethod accessMethod);
     void startSession();
     bool startNdefSession();
     void stopSession(const QString &error);
@@ -73,6 +75,7 @@ private Q_SLOTS:
     void onTagDiscovered(void *target);
     void onTargetLost(QNearFieldTargetPrivateImpl *target);
     void onDidInvalidateWithError(bool doRestart);
+    void onSessionTimer();
 };
 
 

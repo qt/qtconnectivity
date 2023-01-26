@@ -46,6 +46,10 @@ QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
     } else {
         qCWarning(QT_IOS_NFC, "Failed to allocate NDEF reading session's delegate");
     }
+
+    sessionTimer.setInterval(2000);
+    sessionTimer.setSingleShot(true);
+    connect(&sessionTimer, &QTimer::timeout, this, &QNearFieldManagerPrivateImpl::onSessionTimer);
 }
 
 QNearFieldManagerPrivateImpl::~QNearFieldManagerPrivateImpl()
@@ -94,15 +98,16 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::Access
     case QNearFieldTarget::TagTypeSpecificAccess:
         if (@available(iOS 13, *))
             if (NFCTagReaderSession.readingAvailable) {
-                detectionRunning = true;
-                startSession();
-                activeAccessMethod = accessMethod;
-                return true;
+                detectionRunning = scheduleSession(accessMethod);
+                if (detectionRunning)
+                    activeAccessMethod = accessMethod;
+                return detectionRunning;
             }
         return false;
     case QNearFieldTarget::NdefAccess:
         if (NFCNDEFReaderSession.readingAvailable) {
-            if (startNdefSession())
+            detectionRunning = scheduleSession(accessMethod);
+            if (detectionRunning)
                 activeAccessMethod = accessMethod;
             return detectionRunning;
         }
@@ -114,44 +119,60 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::Access
 
 void QNearFieldManagerPrivateImpl::stopTargetDetection(const QString &errorMessage)
 {
-    if (detectionRunning) {
-        if (activeAccessMethod == QNearFieldTarget::TagTypeSpecificAccess) {
-            stopSession(errorMessage);
-        } else if (activeAccessMethod == QNearFieldTarget::NdefAccess) {
-            stopNdefSession(errorMessage);
-        } else {
-            qCWarning(QT_IOS_NFC, "Unknown access method, cannot stop target detection");
-            return;
-        }
+    if (!detectionRunning)
+        return;
 
-       detectionRunning = false;
-       Q_EMIT targetDetectionStopped();
+    isSessionScheduled = false;
+
+    if (activeAccessMethod == QNearFieldTarget::TagTypeSpecificAccess) {
+        stopSession(errorMessage);
+    } else if (activeAccessMethod == QNearFieldTarget::NdefAccess) {
+        stopNdefSession(errorMessage);
+    } else {
+        qCWarning(QT_IOS_NFC, "Unknown access method, cannot stop target detection");
+        return;
     }
+
+    detectionRunning = false;
+    Q_EMIT targetDetectionStopped();
 }
 
+bool QNearFieldManagerPrivateImpl::scheduleSession(QNearFieldTarget::AccessMethod accessMethod)
+{
+    if (sessionTimer.isActive()) {
+        isSessionScheduled = true;
+        return true;
+    }
+
+    if (accessMethod == QNearFieldTarget::TagTypeSpecificAccess) {
+        startSession();
+        return true;
+    } else if (accessMethod == QNearFieldTarget::NdefAccess) {
+        return startNdefSession();
+    }
+
+    return false;
+}
 
 void QNearFieldManagerPrivateImpl::startSession()
 {
-    if (detectionRunning) {
-        if (@available(iOS 13, *)) {
-            [delegate startSession];
-        }
+    if (@available(iOS 13, *)) {
+        [delegate startSession];
     }
 }
 
 bool QNearFieldManagerPrivateImpl::startNdefSession()
 {
     if (!ndefDelegate)
-        return detectionRunning = false;
+        return false;
 
     if (auto queue = qt_Nfc_Queue()) {
-        dispatch_sync(queue, ^{
-            detectionRunning = [ndefDelegate startSession];
-        });
-        return detectionRunning;
+        __block bool startSessionSucceded = false;
+        dispatch_sync(queue, ^{ startSessionSucceded = [ndefDelegate startSession]; });
+        return startSessionSucceded;
     }
 
-    return detectionRunning = false;
+    return false;
 }
 
 void QNearFieldManagerPrivateImpl::stopSession(const QString &error)
@@ -235,25 +256,21 @@ void QNearFieldManagerPrivateImpl::onTargetLost(QNearFieldTargetPrivateImpl *tar
 void QNearFieldManagerPrivateImpl::onDidInvalidateWithError(bool doRestart)
 {
     clearTargets();
+    sessionTimer.start();
 
-    if (detectionRunning && doRestart)
-    {
-        if (!isRestarting) {
-            isRestarting = true;
-            using namespace std::chrono_literals;
-            QTimer::singleShot(2s, this, [this](){
-                        isRestarting = false;
-                        if (activeAccessMethod == QNearFieldTarget::NdefAccess)
-                            startNdefSession();
-                        else
-                            startSession();
-                    });
-        }
+    if (detectionRunning && doRestart && scheduleSession(activeAccessMethod))
         return;
-    }
 
     detectionRunning = false;
     Q_EMIT targetDetectionStopped();
+}
+
+void QNearFieldManagerPrivateImpl::onSessionTimer()
+{
+    if (isSessionScheduled && !scheduleSession(activeAccessMethod)) {
+        detectionRunning = false;
+        Q_EMIT targetDetectionStopped();
+    }
 }
 
 QT_END_NAMESPACE
