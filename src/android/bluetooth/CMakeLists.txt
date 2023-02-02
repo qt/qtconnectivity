@@ -1,8 +1,6 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
-qt_get_android_sdk_jar_for_api("android-21" android_sdk)
-
 set(java_sources
     src/org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver.java
     src/org/qtproject/qt/android/bluetooth/QtBluetoothInputStreamThread.java
@@ -13,7 +11,7 @@ set(java_sources
 )
 
 qt_internal_add_jar(Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth
-    INCLUDE_JARS ${android_sdk}
+    INCLUDE_JARS ${QT_ANDROID_JAR}
     SOURCES ${java_sources}
     OUTPUT_DIR "${QT_BUILD_DIR}/jar"
 )
