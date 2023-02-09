@@ -1,9 +1,9 @@
 {
     "Id": "ndefeditor",
     "Name": "Selected Material Icons",
-    "QDocModule": "qtconnectivity",
+    "QDocModule": "qtnfc",
     "QtUsage": "Used in NDEF Editor Example for QtNfc.",
-    "Files": "*/*.png",
+    "Files": "20x20 20x20@2 20x20@3 20x20@4",
     "Homepage": "https://fonts.google.com/icons",
     "License": "Apache License Version 2.0",
     "LicenseId": "Apache-2.0",
