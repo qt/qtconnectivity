@@ -211,9 +211,8 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
     case SDP_URL_STR8:
     case SDP_URL_STR16:
     case SDP_URL_STR32:
-        strncpy(snBuffer, data->val.str, data->unitSize - 1);
         xmlOutput.append("<url value=\"");
-        xmlOutput.append(snBuffer);
+        xmlOutput.append(data->val.str, qstrnlen(data->val.str, data->unitSize));
         xmlOutput.append("\"/>\n");
         break;
     default:
