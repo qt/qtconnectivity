@@ -9,6 +9,13 @@
 #include <QLowEnergyCharacteristicData>
 #include <QLowEnergyDescriptorData>
 
+#if QT_CONFIG(permissions)
+#include <QtTest/qtesteventloop.h>
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qpermissions.h>
+#include <QtCore/qnamespace.h>
+#endif // permissions
+
 using namespace Qt::Literals::StringLiterals;
 
 static constexpr auto leServiceUuid{"10f5e37c-ac16-11eb-ae5c-93d3a763feed"_L1};
@@ -43,6 +50,23 @@ void tst_qlowenergycontroller_peripheral::initTestCase()
     else
         mDevice = devices.back();
 #endif // Q_OS_IOS
+
+#if QT_CONFIG(permissions)
+    Qt::PermissionStatus permissionStatus = qApp->checkPermission(QBluetoothPermission{});
+    // FIXME: Android will add more specific BT permissions, fix when appropriate
+    // change is in qtbase.
+    if (qApp->checkPermission(QBluetoothPermission{}) == Qt::PermissionStatus::Undetermined) {
+        QTestEventLoop loop;
+        qApp->requestPermission(QBluetoothPermission{}, [&permissionStatus, &loop](const QPermission &permission){
+            permissionStatus = permission.status();
+            loop.exitLoop();
+        });
+        if (permissionStatus == Qt::PermissionStatus::Undetermined)
+            loop.enterLoopMSecs(30000);
+    }
+    if (permissionStatus != Qt::PermissionStatus::Granted)
+        QSKIP("This manual test requires Blutooth permissions granted.");
+#endif // permissions
 }
 
 void tst_qlowenergycontroller_peripheral::init()

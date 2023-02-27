@@ -12,6 +12,12 @@
 #include <QScopeGuard>
 #include <QBluetoothLocalDevice>
 
+#if QT_CONFIG(permissions)
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qpermissions.h>
+#include <QtCore/qnamespace.h>
+#endif
+
 static const QLatin1String largeAttributeServiceUuid("1f85e37c-ac16-11eb-ae5c-93d3a763feed");
 static const QLatin1String largeAttributeCharUuid("40e4f68e-ac16-11eb-9956-cfe55a8c370c");
 static const QLatin1String largeAttributeDescUuid("44e4f68e-ac16-11eb-9956-cfe55a8c370c");
@@ -109,6 +115,9 @@ private:
     QBluetoothDeviceInfo mRemoteDeviceInfo;
     QString mServerDeviceName;
     QByteArray mServerPlatform;
+#if QT_CONFIG(permissions)
+    Qt::PermissionStatus permissionStatus = Qt::PermissionStatus::Undetermined;
+#endif
 };
 
 // connectionCounter is used to check that the server-side connect events
@@ -120,12 +129,30 @@ int tst_qlowenergycontroller_device::connectionCounter = -1;
 tst_qlowenergycontroller_device::tst_qlowenergycontroller_device()
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+#if QT_CONFIG(permissions)
+    // FIXME: Android has more specific BT permissions, fix when appropriate
+    // change is done in qtbase
+    permissionStatus = qApp->checkPermission(QBluetoothPermission{});
+    if (qApp->checkPermission(QBluetoothPermission{}) == Qt::PermissionStatus::Undetermined) {
+        QTestEventLoop loop;
+        qApp->requestPermission(QBluetoothPermission{}, [this, &loop](const QPermission &permission){
+            permissionStatus = permission.status();
+            loop.exitLoop();
+        });
+        if (permissionStatus == Qt::PermissionStatus::Undetermined)
+            loop.enterLoopMSecs(30000);
+    }
+#endif
 }
 
 tst_qlowenergycontroller_device::~tst_qlowenergycontroller_device() { }
 
 void tst_qlowenergycontroller_device::initTestCase()
 {
+#if QT_CONFIG(permissions)
+    if (permissionStatus != Qt::PermissionStatus::Granted)
+        QSKIP("This manual test requires Blutooth permissions granted.");
+#endif
     qDebug() << "Testcase build time: " << __TIME__;
     mDevAgent.reset(new QBluetoothDeviceDiscoveryAgent(this));
     mDevAgent->setLowEnergyDiscoveryTimeout(75000);
