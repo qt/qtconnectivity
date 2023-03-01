@@ -185,8 +185,7 @@ private slots:
 
 private:
     void disconnectAndClearWorker();
-    QPointer<QWinRTBluetoothDeviceDiscoveryWorker> worker;
-    QTimer *leScanTimer = nullptr;
+    std::shared_ptr<QWinRTBluetoothDeviceDiscoveryWorker> worker = nullptr;
 #endif
 
 #ifdef Q_OS_DARWIN

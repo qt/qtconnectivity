@@ -101,6 +101,10 @@ void tst_QBluetoothLocalDevice::initTestCase()
 
 void tst_QBluetoothLocalDevice::tst_powerOn()
 {
+#ifdef ANDROID_CI_TEST_ENVIRONMENT
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
+        QSKIP("Skipping test on Android 12+, emulator on CI can timeout waiting for user input");
+#endif
 #ifdef Q_OS_OSX
     QSKIP("Not possible on OS X");
 #endif
@@ -137,6 +141,10 @@ void tst_QBluetoothLocalDevice::tst_powerOn()
 
 void tst_QBluetoothLocalDevice::tst_powerOff()
 {
+#ifdef ANDROID_CI_TEST_ENVIRONMENT
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
+        QSKIP("Skipping test on Android 12+, emulator on CI can timeout waiting for user input");
+#endif
 #ifdef Q_OS_OSX
     QSKIP("Not possible on OS X");
 #endif
@@ -191,6 +199,10 @@ void tst_QBluetoothLocalDevice::tst_hostModes_data()
 
 void tst_QBluetoothLocalDevice::tst_hostModes()
 {
+#ifdef ANDROID_CI_TEST_ENVIRONMENT
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
+        QSKIP("Skipping test on Android 12+, emulator on CI can timeout waiting for user input");
+#endif
 #ifdef Q_OS_OSX
     QSKIP("Not possible on OS X");
 #endif
@@ -383,6 +395,10 @@ void tst_QBluetoothLocalDevice::tst_pairDevice_data()
 
 void tst_QBluetoothLocalDevice::tst_pairDevice()
 {
+#ifdef ANDROID_CI_TEST_ENVIRONMENT
+    if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31)
+        QSKIP("Skipping test on Android 12+, emulator on CI can timeout waiting for user input");
+#endif
 #if defined(Q_OS_MACOS)
     QSKIP("The pair device test fails on macOS");
 #endif
