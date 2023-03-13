@@ -3,8 +3,9 @@
 
 /*!
 \example annotatedurl
-\title Annotated URL Example
-\brief An example showing reading from formatted NFC Data Exchange Format (NDEF) messages.
+\title Annotated URL
+\meta category {Connectivity}
+\brief The example shows reading from formatted NFC Data Exchange Format (NDEF) messages.
 
 The Annotated URL example displays the contents of specifically
 formatted NFC Data Exchange Format (NDEF) messages read from an NFC

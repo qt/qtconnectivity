@@ -8,7 +8,7 @@
 #include <QtNfc/qndefnfctextrecord.h>
 #include <QtNfc/qndefnfcurirecord.h>
 
-#include <QtWidgets/QApplication>
+#include <QtWidgets/qapplication.h>
 
 //! [0]
 int main(int argc, char *argv[])

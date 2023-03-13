@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(annotatedurl LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -13,6 +11,8 @@ endif()
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/nfc/annotatedurl")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Nfc Widgets)
+
+qt_standard_project_setup()
 
 qt_add_executable(annotatedurl
     MANUAL_FINALIZATION
@@ -32,7 +32,7 @@ if(IOS)
     )
 endif()
 
-target_link_libraries(annotatedurl PUBLIC
+target_link_libraries(annotatedurl PRIVATE
     Qt::Core
     Qt::Gui
     Qt::Nfc
