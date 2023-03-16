@@ -12,8 +12,6 @@
 QT_FORWARD_DECLARE_CLASS(QBluetoothServer)
 QT_FORWARD_DECLARE_CLASS(QBluetoothSocket)
 
-QT_USE_NAMESPACE
-
 //! [declaration]
 class ChatServer : public QObject
 {

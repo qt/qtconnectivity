@@ -6,8 +6,10 @@
 #include <QtBluetooth/qbluetoothserver.h>
 #include <QtBluetooth/qbluetoothsocket.h>
 
+using namespace Qt::StringLiterals;
+
 //! [Service UUID]
-static const QLatin1String serviceUuid("e8e10f95-1a70-4b27-9ccf-02010264e9c8");
+static constexpr auto serviceUuid = "e8e10f95-1a70-4b27-9ccf-02010264e9c8"_L1;
 //! [Service UUID]
 
 ChatServer::ChatServer(QObject *parent)
@@ -64,10 +66,10 @@ void ChatServer::startServer(const QBluetoothAddress& localAdapter)
     //! [Service UUID set]
 
     //! [Service Discoverability]
+    const auto groupUuid = QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::PublicBrowseGroup);
     QBluetoothServiceInfo::Sequence publicBrowse;
-    publicBrowse << QVariant::fromValue(QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::PublicBrowseGroup));
-    serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList,
-                             publicBrowse);
+    publicBrowse << QVariant::fromValue(groupUuid);
+    serviceInfo.setAttribute(QBluetoothServiceInfo::BrowseGroupList, publicBrowse);
     //! [Service Discoverability]
 
     //! [Protocol descriptor list]
@@ -122,7 +124,8 @@ void ChatServer::clientConnected()
         return;
 
     connect(socket, &QBluetoothSocket::readyRead, this, &ChatServer::readSocket);
-    connect(socket, &QBluetoothSocket::disconnected, this, QOverload<>::of(&ChatServer::clientDisconnected));
+    connect(socket, &QBluetoothSocket::disconnected,
+            this, QOverload<>::of(&ChatServer::clientDisconnected));
     clientSockets.append(socket);
     clientNames[socket] = socket->peerName();
     emit clientConnected(socket->peerName());
