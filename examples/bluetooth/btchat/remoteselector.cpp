@@ -4,15 +4,20 @@
 #include "remoteselector.h"
 #include "ui_remoteselector.h"
 
+#include <QtBluetooth/qbluetoothaddress.h>
 #include <QtBluetooth/qbluetoothlocaldevice.h>
 #include <QtBluetooth/qbluetoothservicediscoveryagent.h>
+#include <QtBluetooth/qbluetoothuuid.h>
 
-QT_USE_NAMESPACE
+#include <QtWidgets/qlistwidget.h>
 
 RemoteSelector::RemoteSelector(const QBluetoothAddress &localAdapter, QWidget *parent)
     :   QDialog(parent), ui(new Ui::RemoteSelector)
 {
     ui->setupUi(this);
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+    setWindowState(Qt::WindowMaximized);
+#endif
 
     m_discoveryAgent = new QBluetoothServiceDiscoveryAgent(localAdapter);
 
