@@ -6,12 +6,9 @@
 
 #include <QtCore/qobject.h>
 
-#include <QtBluetooth/qbluetoothserviceinfo.h>
 #include <QtBluetooth/qbluetoothsocket.h>
 
-QT_FORWARD_DECLARE_CLASS(QBluetoothSocket)
-
-QT_USE_NAMESPACE
+QT_FORWARD_DECLARE_CLASS(QBluetoothServiceInfo)
 
 //! [declaration]
 class ChatClient : public QObject

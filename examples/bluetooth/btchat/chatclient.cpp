@@ -5,6 +5,10 @@
 
 #include <QtCore/qmetaobject.h>
 
+#include <QtBluetooth/qbluetoothserviceinfo.h>
+
+using namespace  Qt::StringLiterals;
+
 ChatClient::ChatClient(QObject *parent)
     :   QObject(parent)
 {
@@ -70,8 +74,8 @@ void ChatClient::onSocketErrorOccurred(QBluetoothSocket::SocketError error)
         return;
 
     QMetaEnum metaEnum = QMetaEnum::fromType<QBluetoothSocket::SocketError>();
-    QString errorString = socket->peerName() + QLatin1Char(' ')
-            + metaEnum.valueToKey(static_cast<int>(error)) + QLatin1String(" occurred");
+    QString errorString = socket->peerName() + ' '_L1
+            + metaEnum.valueToKey(static_cast<int>(error)) + " occurred"_L1;
 
     emit socketErrorOccurred(errorString);
 }

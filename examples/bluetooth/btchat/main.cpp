@@ -3,8 +3,8 @@
 
 #include "chat.h"
 
+#include <QtCore/qloggingcategory.h>
 #include <QtWidgets/qapplication.h>
-#include <QtCore/QLoggingCategory>
 
 int main(int argc, char *argv[])
 {
@@ -14,7 +14,7 @@ int main(int argc, char *argv[])
     Chat d;
     QObject::connect(&d, &Chat::accepted, &app, &QApplication::quit);
 
-#ifdef Q_OS_ANDROID
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
     d.showMaximized();
 #else
     d.show();

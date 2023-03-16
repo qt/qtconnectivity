@@ -6,16 +6,15 @@
 
 #include <QtWidgets/qdialog.h>
 
-#include <QtBluetooth/qbluetoothaddress.h>
 #include <QtBluetooth/qbluetoothserviceinfo.h>
-#include <QtBluetooth/qbluetoothuuid.h>
-
-QT_FORWARD_DECLARE_CLASS(QBluetoothServiceDiscoveryAgent)
-QT_FORWARD_DECLARE_CLASS(QListWidgetItem)
-
-QT_USE_NAMESPACE
 
 QT_BEGIN_NAMESPACE
+
+class QBluetoothAddress;
+class QBluetoothServiceDiscoveryAgent;
+class QBluetoothUuid;
+class QListWidgetItem;
+
 namespace Ui {
     class RemoteSelector;
 }

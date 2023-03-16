@@ -2,24 +2,26 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include "chat.h"
-#include "remoteselector.h"
-#include "chatserver.h"
 #include "chatclient.h"
+#include "chatserver.h"
+#include "remoteselector.h"
+#include "ui_chat.h"
 
-#include <QCoreApplication>
 #include <QtCore/qdebug.h>
 
 #include <QtBluetooth/qbluetoothdeviceinfo.h>
 #include <QtBluetooth/qbluetoothlocaldevice.h>
 #include <QtBluetooth/qbluetoothuuid.h>
 
-static const QLatin1String serviceUuid("e8e10f95-1a70-4b27-9ccf-02010264e9c8");
+using namespace Qt::StringLiterals;
+
+static constexpr auto serviceUuid = "e8e10f95-1a70-4b27-9ccf-02010264e9c8"_L1;
 #ifdef Q_OS_ANDROID
-static const QLatin1String reverseUuid("c8e96402-0102-cf9c-274b-701a950fe1e8");
+static constexpr auto reverseUuid = "c8e96402-0102-cf9c-274b-701a950fe1e8"_L1;
 #endif
 
 Chat::Chat(QWidget *parent)
-    : QDialog(parent), ui(new Ui_Chat)
+    : QDialog(parent), ui(new Ui::Chat)
 {
     //! [Construct UI]
     ui->setupUi(this);
@@ -28,6 +30,7 @@ Chat::Chat(QWidget *parent)
     connect(ui->connectButton, &QPushButton::clicked, this, &Chat::connectClicked);
     connect(ui->sendButton, &QPushButton::clicked, this, &Chat::sendClicked);
     //! [Construct UI]
+    ui->connectButton->setFocus();
 
     localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.size() < 2) {
@@ -49,12 +52,6 @@ Chat::Chat(QWidget *parent)
         adapter.setHostMode(QBluetoothLocalDevice::HostDiscoverable);
     } else {
         qWarning("Local adapter is not found! The application might work incorrectly.");
-#ifdef Q_OS_WIN
-        // WinRT implementation does not support adapter information yet. So it
-        // will always return an empty list.
-        qWarning("If the adapter exists, make sure to pair the devices manually before launching"
-                 " the chat.");
-#endif
     }
 
     //! [Create Chat Server]
@@ -78,6 +75,7 @@ Chat::~Chat()
 {
     qDeleteAll(clients);
     delete server;
+    delete ui;
 }
 
 //! [clientConnected clientDisconnected]
@@ -162,13 +160,11 @@ void Chat::connectClicked()
     if (remoteSelector.exec() == QDialog::Accepted) {
         QBluetoothServiceInfo service = remoteSelector.service();
 
-        qDebug() << "Connecting to service 2" << service.serviceName()
+        qDebug() << "Connecting to service" << service.serviceName()
                  << "on" << service.device().name();
 
         // Create client
-        qDebug() << "Going to create client";
         ChatClient *client = new ChatClient(this);
-qDebug() << "Connecting...";
 
         connect(client, &ChatClient::messageReceived,
                 this, &Chat::showMessage);
@@ -179,7 +175,6 @@ qDebug() << "Connecting...";
         connect(client, &ChatClient::socketErrorOccurred,
                 this, &Chat::reactOnSocketError);
         connect(this, &Chat::sendMessage, client, &ChatClient::sendMessage);
-qDebug() << "Start client";
         client->startClient(service);
 
         clients.append(client);
@@ -202,7 +197,12 @@ void Chat::sendClicked()
 
     ui->sendText->setEnabled(true);
     ui->sendButton->setEnabled(true);
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+    // avoid keyboard automatically popping up again on mobile devices
+    ui->sendButton->setFocus();
+#else
     ui->sendText->setFocus();
+#endif
 }
 //! [sendClicked]
 
