@@ -3,16 +3,16 @@
 
 #include "device.h"
 
-#include <QApplication>
-#include <QtCore/QLoggingCategory>
+#include <QtCore/qloggingcategory.h>
+#include <QtWidgets/qapplication.h>
 
 int main(int argc, char *argv[])
 {
     // QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     QApplication app(argc, argv);
-
     DeviceDiscoveryDialog d;
-    d.exec();
-    return 0;
-}
 
+    d.show();
+
+    return app.exec();
+}

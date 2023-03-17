@@ -4,9 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(btscanner LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,6 +11,8 @@ endif()
 set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/bluetooth/btscanner")
 
 find_package(Qt6 REQUIRED COMPONENTS Bluetooth Core Widgets)
+
+qt_standard_project_setup()
 
 qt_add_executable(btscanner
     device.cpp device.h device.ui
@@ -33,14 +32,14 @@ if (APPLE)
         )
     else()
         # Using absolute path for shared plist files is a Ninja bug workaround
-        get_filename_component(SHARED_PLIST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../shared ABSOLUTE)
+        get_filename_component(SHARED_PLIST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../../../../examples/bluetooth/shared ABSOLUTE)
         set_target_properties(btscanner PROPERTIES
             MACOSX_BUNDLE_INFO_PLIST "${SHARED_PLIST_DIR}/Info.cmake.macos.plist"
         )
     endif()
 endif()
 
-target_link_libraries(btscanner PUBLIC
+target_link_libraries(btscanner PRIVATE
     Qt::Bluetooth
     Qt::Core
     Qt::Widgets
