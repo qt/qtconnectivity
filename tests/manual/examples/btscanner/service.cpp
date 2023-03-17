@@ -5,16 +5,16 @@
 #include "service.h"
 #include "ui_service.h"
 
-#include <qbluetoothaddress.h>
-#include <qbluetoothservicediscoveryagent.h>
-#include <qbluetoothserviceinfo.h>
-#include <qbluetoothlocaldevice.h>
-#include <qbluetoothuuid.h>
+#include <QtBluetooth/qbluetoothaddress.h>
+#include <QtBluetooth/qbluetoothlocaldevice.h>
+#include <QtBluetooth/qbluetoothservicediscoveryagent.h>
+#include <QtBluetooth/qbluetoothserviceinfo.h>
+#include <QtBluetooth/qbluetoothuuid.h>
 
 
 ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
                                                const QBluetoothAddress &address, QWidget *parent)
-:   QDialog(parent), ui(new Ui_ServiceDiscovery)
+    :   QDialog(parent), ui(new Ui::ServiceDiscovery)
 {
     ui->setupUi(this);
 
@@ -27,10 +27,9 @@ ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
     // Example code:
     //
     // QBluetoothAddress adapterAddress("XX:XX:XX:XX:XX:XX");
-    // discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
+    // discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress, this);
 
-    discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress);
-
+    discoveryAgent = new QBluetoothServiceDiscoveryAgent(adapterAddress, this);
     discoveryAgent->setRemoteAddress(address);
 
     setWindowTitle(name);
@@ -45,7 +44,6 @@ ServiceDiscoveryDialog::ServiceDiscoveryDialog(const QString &name,
 
 ServiceDiscoveryDialog::~ServiceDiscoveryDialog()
 {
-    delete discoveryAgent;
     delete ui;
 }
 

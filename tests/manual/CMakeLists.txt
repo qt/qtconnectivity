@@ -4,5 +4,6 @@
 if(TARGET Qt::Bluetooth)
     add_subdirectory(qlowenergycontroller)
     add_subdirectory(qlowenergycontroller_peripheral)
+    add_subdirectory(examples/btscanner)
 endif()
 

@@ -23,9 +23,6 @@
         \row
             \li \l{btchat}{Bluetooth Chat}
             \li Simple chat server and client via Bluetooth.
-        \row
-            \li \l{btscanner}{Bluetooth Scanner}
-            \li Scan for Bluetooth devices.
     \endtable
 
     \section2 QML Examples
