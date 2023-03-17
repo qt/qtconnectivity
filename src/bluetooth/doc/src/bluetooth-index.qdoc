@@ -168,7 +168,6 @@ quick way to enable all QtBluetooth logging is to add the following line to the
     \li C++
     \list
         \li \l {btchat}{Bluetooth Chat}
-        \li \l {btscanner}{Bluetooth Scanner}
     \endlist
 \endlist
 

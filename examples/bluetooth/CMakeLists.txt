@@ -4,7 +4,6 @@
 qt_internal_add_example(heartrate-server)
 if(TARGET Qt::Widgets)
     qt_internal_add_example(btchat)
-    qt_internal_add_example(btscanner)
 endif()
 if(TARGET Qt::Quick)
     qt_internal_add_example(pingpong)

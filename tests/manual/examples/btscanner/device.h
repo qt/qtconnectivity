@@ -4,17 +4,20 @@
 #ifndef DEVICE_H
 #define DEVICE_H
 
-#include <qbluetoothlocaldevice.h>
+#include <QtBluetooth/qbluetoothlocaldevice.h>
 
-#include <QDialog>
+#include <QtWidgets/qdialog.h>
 
-QT_FORWARD_DECLARE_CLASS(QBluetoothDeviceDiscoveryAgent)
-QT_FORWARD_DECLARE_CLASS(QBluetoothDeviceInfo)
-QT_FORWARD_DECLARE_CLASS(QListWidgetItem)
+QT_BEGIN_NAMESPACE
+class QBluetoothAddress;
+class QBluetoothDeviceDiscoveryAgent;
+class QBluetoothDeviceInfo;
+class QListWidgetItem;
 
-QT_FORWARD_DECLARE_CLASS(Ui_DeviceDiscovery)
-
-QT_USE_NAMESPACE
+namespace Ui {
+    class DeviceDiscovery;
+}
+QT_END_NAMESPACE
 
 class DeviceDiscoveryDialog : public QDialog
 {
@@ -25,22 +28,22 @@ public:
     ~DeviceDiscoveryDialog();
 
 public slots:
-    void addDevice(const QBluetoothDeviceInfo&);
+    void addDevice(const QBluetoothDeviceInfo &info);
     void on_power_clicked(bool clicked);
     void on_discoverable_clicked(bool clicked);
     void displayPairingMenu(const QPoint &pos);
-    void pairingDone(const QBluetoothAddress&, QBluetoothLocalDevice::Pairing);
+    void pairingDone(const QBluetoothAddress &address, QBluetoothLocalDevice::Pairing pairing);
 private slots:
     void startScan();
     void stopScan();
     void scanFinished();
     void itemActivated(QListWidgetItem *item);
-    void hostModeStateChanged(QBluetoothLocalDevice::HostMode);
+    void hostModeStateChanged(QBluetoothLocalDevice::HostMode mode);
 
 private:
     QBluetoothDeviceDiscoveryAgent *discoveryAgent;
     QBluetoothLocalDevice *localDevice;
-    Ui_DeviceDiscovery *ui;
+    Ui::DeviceDiscovery *ui;
 };
 
 #endif

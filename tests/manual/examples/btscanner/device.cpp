@@ -5,17 +5,16 @@
 #include "service.h"
 #include "ui_device.h"
 
-#include <qbluetoothaddress.h>
-#include <qbluetoothdevicediscoveryagent.h>
-#include <qbluetoothlocaldevice.h>
+#include <QtBluetooth/qbluetoothaddress.h>
+#include <QtBluetooth/qbluetoothdevicediscoveryagent.h>
+#include <QtBluetooth/qbluetoothlocaldevice.h>
 
-#include <QMenu>
-#include <QDebug>
+#include <QtWidgets/qmenu.h>
 
 #if QT_CONFIG(permissions)
-#include <QMessageBox>
-#include <QApplication>
-#include <QPermission>
+#include <QtCore/qpermissions.h>
+#include <QtWidgets/qmessagebox.h>
+#include <QtWidgets/qapplication.h>
 #endif // QT_CONFIG(permissions)
 
 static QColor colorForPairing(QBluetoothLocalDevice::Pairing pairing)
@@ -27,8 +26,8 @@ static QColor colorForPairing(QBluetoothLocalDevice::Pairing pairing)
 
 DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent) :
     QDialog(parent),
-    localDevice(new QBluetoothLocalDevice),
-    ui(new Ui_DeviceDiscovery)
+    localDevice(new QBluetoothLocalDevice(this)),
+    ui(new Ui::DeviceDiscovery)
 {
 #ifdef Q_OS_ANDROID
     this->setWindowState(Qt::WindowMaximized);
@@ -40,9 +39,9 @@ DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent) :
     // to be used. Example code:
     //
     // QBluetoothAddress address("XX:XX:XX:XX:XX:XX");
-    // discoveryAgent = new QBluetoothDeviceDiscoveryAgent(address);
+    // discoveryAgent = new QBluetoothDeviceDiscoveryAgent(address, this);
 
-    discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
+    discoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
 
     connect(ui->scan, &QAbstractButton::clicked, this, &DeviceDiscoveryDialog::startScan);
     connect(ui->stopScan, &QAbstractButton::clicked, this, &DeviceDiscoveryDialog::stopScan);
@@ -69,7 +68,7 @@ DeviceDiscoveryDialog::DeviceDiscoveryDialog(QWidget *parent) :
 
 DeviceDiscoveryDialog::~DeviceDiscoveryDialog()
 {
-    delete discoveryAgent;
+    delete ui;
 }
 
 void DeviceDiscoveryDialog::addDevice(const QBluetoothDeviceInfo &info)

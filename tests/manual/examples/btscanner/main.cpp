@@ -3,11 +3,11 @@
 
 #include "device.h"
 
-#include <QApplication>
-#include <QtCore/QLoggingCategory>
+#include <QtCore/qloggingcategory.h>
+#include <QtWidgets/qapplication.h>
 
 #if QT_CONFIG(permissions)
-#include <QPermissions>
+#include <QtCore/qpermissions.h>
 #endif
 
 int main(int argc, char *argv[])
