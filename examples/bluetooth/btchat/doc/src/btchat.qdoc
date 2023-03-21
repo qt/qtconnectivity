@@ -97,6 +97,34 @@
 
     \snippet btchat/chatserver.cpp stopServer
 
+    \section1 Service Discovery
+
+    Before connecting to the server, the client needs to scan the nearby
+    devices and search for the device that is advertising the chat service.
+    This is done by the \c RemoteSelector class.
+
+    To start service lookup, the \c RemoteSelector creates an instance of
+    \l QBluetoothServiceDiscoveryAgent and connects to its signals.
+
+    \snippet btchat/remoteselector.cpp createDiscoveryAgent
+
+    An UUID filter is set, so that the service discovery only shows the devices
+    that advertise the needed service. After that a
+    \l {QBluetoothServiceDiscoveryAgent::}{FullDiscovery} is started:
+
+    \snippet btchat/remoteselector.cpp startDiscovery
+
+    When a matching service is discovered, a
+    \l {QBluetoothServiceDiscoveryAgent::}{serviceDiscovered()} signal is
+    emitted with an instance of \l QBluetoothServiceInfo as a parameter. This
+    service info is used to extract the device name and the service name,
+    and add a new entry to the list of discovered remote devices:
+
+    \snippet btchat/remoteselector.cpp serviceDiscovered
+
+    Later the user can select one of the devices from the list and try to
+    connect to it.
+
     \section1 Chat Client
 
     The chat client is implemented by the \c ChatClient class.
