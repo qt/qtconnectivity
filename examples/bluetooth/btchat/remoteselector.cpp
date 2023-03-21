@@ -19,6 +19,7 @@ RemoteSelector::RemoteSelector(const QBluetoothAddress &localAdapter, QWidget *p
     setWindowState(Qt::WindowMaximized);
 #endif
 
+//! [createDiscoveryAgent]
     m_discoveryAgent = new QBluetoothServiceDiscoveryAgent(localAdapter);
 
     connect(m_discoveryAgent, &QBluetoothServiceDiscoveryAgent::serviceDiscovered,
@@ -27,6 +28,7 @@ RemoteSelector::RemoteSelector(const QBluetoothAddress &localAdapter, QWidget *p
             this, &RemoteSelector::discoveryFinished);
     connect(m_discoveryAgent, &QBluetoothServiceDiscoveryAgent::canceled,
             this, &RemoteSelector::discoveryFinished);
+//! [createDiscoveryAgent]
 }
 
 RemoteSelector::~RemoteSelector()
@@ -43,9 +45,10 @@ void RemoteSelector::startDiscovery(const QBluetoothUuid &uuid)
 
     ui->remoteDevices->clear();
 
+//! [startDiscovery]
     m_discoveryAgent->setUuidFilter(uuid);
     m_discoveryAgent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
-
+//! [startDiscovery]
 }
 
 void RemoteSelector::stopDiscovery()
@@ -80,6 +83,7 @@ void RemoteSelector::serviceDiscovered(const QBluetoothServiceInfo &serviceInfo)
             return;
     }
 
+//! [serviceDiscovered]
     QString remoteName;
     if (serviceInfo.device().name().isEmpty())
         remoteName = address.toString();
@@ -92,6 +96,7 @@ void RemoteSelector::serviceDiscovered(const QBluetoothServiceInfo &serviceInfo)
 
     m_discoveredServices.insert(item, serviceInfo);
     ui->remoteDevices->addItem(item);
+//! [serviceDiscovered]
 }
 
 void RemoteSelector::discoveryFinished()
