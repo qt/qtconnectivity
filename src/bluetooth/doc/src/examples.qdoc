@@ -31,9 +31,6 @@
             \li Example
             \li Description
         \row
-            \li \l{pingpong}{QML Bluetooth PingPong}
-            \li Ping pong game demonstrating Bluetooth socket communication between two devices.
-        \row
             \li \l{heartrate-game}{QML Bluetooth Low Energy Heart Rate Game}
             \li Connect to Bluetooth Low Energy heart rate belts and receive
             measurements such as the current pulse.
