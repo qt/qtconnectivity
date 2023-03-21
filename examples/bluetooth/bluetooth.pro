@@ -6,6 +6,5 @@ qtHaveModule(widgets) {
     SUBDIRS += btchat
 }
 
-qtHaveModule(quick): SUBDIRS += pingpong \
-                                lowenergyscanner \
+qtHaveModule(quick): SUBDIRS += lowenergyscanner \
                                 heartrate-game
