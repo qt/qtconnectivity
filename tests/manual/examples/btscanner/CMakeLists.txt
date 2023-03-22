@@ -1,31 +1,39 @@
-# Copyright (C) 2022 The Qt Company Ltd.
+# Copyright (C) 2023 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
-cmake_minimum_required(VERSION 3.16)
-project(btscanner LANGUAGES CXX)
+if (NOT QT_BUILD_STANDALONE_TESTS AND NOT QT_BUILDING_QT)
+     cmake_minimum_required(VERSION 3.16)
+     project(btscanner LANGUAGES CXX)
+     find_package(Qt6BuildInternals COMPONENTS STANDALONE_TEST)
+ endif()
 
-if(NOT DEFINED INSTALL_EXAMPLESDIR)
-    set(INSTALL_EXAMPLESDIR "examples")
-endif()
-
-set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/bluetooth/btscanner")
-
-find_package(Qt6 REQUIRED COMPONENTS Bluetooth Core Widgets)
-
-qt_standard_project_setup()
-
-qt_add_executable(btscanner
-    device.cpp device.h device.ui
-    main.cpp
-    service.cpp service.h service.ui
+qt_internal_add_manual_test(btscanner
+    GUI
+    SOURCES
+        device.cpp device.h device.ui
+        main.cpp
+        service.cpp service.h service.ui
+    LIBRARIES
+        Qt::Bluetooth
+        Qt::Core
+        Qt::Widgets
+    ENABLE_AUTOGEN_TOOLS
+        uic
 )
+
+if(MACOS)
+    # Explicitly link against the static permission plugin because tests
+    # currently don't have finalizers run for them except for iOS.
+    # TODO: Remove this when qtbase automatically runs finalizers for tests: QTBUG-112212
+    target_link_libraries(btscanner PRIVATE Qt6::QDarwinBluetoothPermissionPlugin)
+endif()
 
 set_target_properties(btscanner PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
 )
 
-if (APPLE)
+if(APPLE)
     if (IOS)
         set_target_properties(btscanner PROPERTIES
             MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.plist"
@@ -38,15 +46,3 @@ if (APPLE)
         )
     endif()
 endif()
-
-target_link_libraries(btscanner PRIVATE
-    Qt::Bluetooth
-    Qt::Core
-    Qt::Widgets
-)
-
-install(TARGETS btscanner
-    RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
-    BUNDLE DESTINATION "${INSTALL_EXAMPLEDIR}"
-    LIBRARY DESTINATION "${INSTALL_EXAMPLEDIR}"
-)
