@@ -10,6 +10,8 @@
 #include <QtCore/qobject.h>
 #include <QtCore/qstring.h>
 
+#include <QtQmlIntegration/qqmlintegration.h>
+
 class CharacteristicInfo: public QObject
 {
     Q_OBJECT
@@ -17,6 +19,8 @@ class CharacteristicInfo: public QObject
     Q_PROPERTY(QString characteristicUuid READ getUuid NOTIFY characteristicChanged)
     Q_PROPERTY(QString characteristicValue READ getValue NOTIFY characteristicChanged)
     Q_PROPERTY(QString characteristicPermission READ getPermission NOTIFY characteristicChanged)
+
+    QML_ANONYMOUS
 
 public:
     CharacteristicInfo() = default;

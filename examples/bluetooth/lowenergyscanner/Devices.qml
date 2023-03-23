@@ -1,17 +1,22 @@
 // Copyright (C) 2013 BlackBerry Limited. All rights reserved.
-// Copyright (C) 2017 The Qt Company Ltd.
+// Copyright (C) 2023 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
+pragma ComponentBehavior: Bound
 import QtQuick
 
 Rectangle {
-    id: back
+    id: devicesPage
+
+    property bool deviceState: Device.state
+    signal showServices
+
     width: 300
     height: 600
-    property bool deviceState: device.state
+
     onDeviceStateChanged: {
-        if (!device.state)
-            info.visible = false;
+        if (!Device.state)
+            info.visible = false
     }
 
     Header {
@@ -33,11 +38,12 @@ Rectangle {
 
         anchors.top: header.bottom
         anchors.bottom: connectToggle.top
-        model: device.devicesList
+        model: Device.devicesList
 
         delegate: Rectangle {
+            required property var modelData
             id: box
-            height:100
+            height: 100
             width: theListView.width
             color: "lightsteelblue"
             border.width: 2
@@ -45,29 +51,29 @@ Rectangle {
             radius: 5
 
             Component.onCompleted: {
-                info.visible = false;
-                header.headerText = "Select a device";
+                info.visible = false
+                header.headerText = "Select a device"
             }
 
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
-                    device.scanServices(modelData.deviceAddress);
-                    pageLoader.source = "Services.qml"
+                    Device.scanServices(box.modelData.deviceAddress)
+                    showServices()
                 }
             }
 
             Label {
                 id: deviceName
-                textContent: modelData.deviceName
+                textContent: box.modelData.deviceName
                 anchors.top: parent.top
                 anchors.topMargin: 5
             }
 
             Label {
                 id: deviceAddress
-                textContent: modelData.deviceAddress
-                font.pointSize: deviceName.font.pointSize*0.7
+                textContent: box.modelData.deviceAddress
+                font.pointSize: deviceName.font.pointSize * 0.7
                 anchors.bottom: box.bottom
                 anchors.bottomMargin: 5
             }
@@ -79,37 +85,30 @@ Rectangle {
 
         menuWidth: parent.width
         anchors.bottom: menu.top
-        menuText: { if (device.devicesList.length)
-                        visible = true
-                    else
-                        visible = false
-                    if (device.useRandomAddress)
-                        "Address type: Random"
-                    else
-                        "Address type: Public"
+        menuText: {
+            visible = Device.devicesList.length > 0
+            if (Device.useRandomAddress)
+                return "Address type: Random"
+            else
+                return "Address type: Public"
         }
 
-        onButtonClick: device.useRandomAddress = !device.useRandomAddress;
+        onButtonClick: Device.useRandomAddress = !Device.useRandomAddress
     }
 
     Menu {
         id: menu
         anchors.bottom: parent.bottom
         menuWidth: parent.width
-        menuHeight: (parent.height/6)
-        menuText: device.update
+        menuHeight: (parent.height / 6)
+        menuText: Device.update
         onButtonClick: {
-            device.startDeviceDiscovery();
-            // if startDeviceDiscovery() failed device.state is not set
-            if (device.state) {
-                info.dialogText = "Searching...";
-                info.visible = true;
+            Device.startDeviceDiscovery()
+            // if startDeviceDiscovery() failed Device.state is not set
+            if (Device.state) {
+                info.dialogText = "Searching..."
+                info.visible = true
             }
         }
-    }
-
-    Loader {
-        id: pageLoader
-        anchors.fill: parent
     }
 }

@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(lowenergyscanner LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,21 +12,15 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/bluetooth/lowenergyscanner")
 
 find_package(Qt6 REQUIRED COMPONENTS Bluetooth Core Gui Quick)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 qt_add_executable(lowenergyscanner
-    characteristicinfo.cpp characteristicinfo.h
-    device.cpp device.h
-    deviceinfo.cpp deviceinfo.h
     main.cpp
-    serviceinfo.cpp serviceinfo.h
 )
 
 set_target_properties(lowenergyscanner PROPERTIES
     WIN32_EXECUTABLE TRUE
     MACOSX_BUNDLE TRUE
-)
-
-target_include_directories(lowenergyscanner PUBLIC
-    .
 )
 
 target_link_libraries(lowenergyscanner PUBLIC
@@ -52,23 +44,25 @@ if (APPLE)
     endif()
 endif()
 
-# Resources:
-set(resources_resource_files
-    "assets/Characteristics.qml"
-    "assets/Dialog.qml"
-    "assets/Header.qml"
-    "assets/Label.qml"
-    "assets/Menu.qml"
-    "assets/Services.qml"
-    "assets/busy_dark.png"
-    "assets/main.qml"
-)
-
-qt6_add_resources(lowenergyscanner "resources"
-    PREFIX
-        "/"
-    FILES
-        ${resources_resource_files}
+qt_add_qml_module(lowenergyscanner
+    URI Scanner
+    VERSION 1.0
+    SOURCES
+        characteristicinfo.cpp characteristicinfo.h
+        device.cpp device.h
+        deviceinfo.cpp deviceinfo.h
+        serviceinfo.cpp serviceinfo.h
+    QML_FILES
+        Characteristics.qml
+        Devices.qml
+        Dialog.qml
+        Header.qml
+        Label.qml
+        Main.qml
+        Menu.qml
+        Services.qml
+    RESOURCES
+        assets/busy_dark.png
 )
 
 install(TARGETS lowenergyscanner
