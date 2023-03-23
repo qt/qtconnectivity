@@ -10,11 +10,16 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qobject.h>
 
+#include <QtQmlIntegration/qqmlintegration.h>
+
 class DeviceInfo: public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QString deviceName READ getName NOTIFY deviceChanged)
     Q_PROPERTY(QString deviceAddress READ getAddress NOTIFY deviceChanged)
+
+    QML_ANONYMOUS
+
 public:
     DeviceInfo() = default;
     DeviceInfo(const QBluetoothDeviceInfo &d);

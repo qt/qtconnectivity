@@ -1,19 +1,20 @@
+# Copyright (C) 2023 The Qt Company Ltd.
+# SPDX-License-Identifier: BSD-3-Clause
+
+TEMPLATE = app
 TARGET = lowenergyscanner
-INCLUDEPATH += .
 
 QT += quick bluetooth
 
-# Input
+CONFIG += qmltypes
+QML_IMPORT_NAME = Scanner
+QML_IMPORT_MAJOR_VERSION = 1
+
 SOURCES += main.cpp \
     device.cpp \
     deviceinfo.cpp \
     serviceinfo.cpp \
     characteristicinfo.cpp
-
-ios: QMAKE_INFO_PLIST = Info.plist
-macos: QMAKE_INFO_PLIST = ../shared/Info.qmake.macos.plist
-
-OTHER_FILES += assets/*.qml
 
 HEADERS += \
     device.h \
@@ -21,8 +22,24 @@ HEADERS += \
     serviceinfo.h \
     characteristicinfo.h
 
-RESOURCES += \
-    resources.qrc
+qml_resources.files = \
+    qmldir \
+    Characteristics.qml \
+    Devices.qml \
+    Dialog.qml \
+    Header.qml \
+    Label.qml \
+    Main.qml \
+    Menu.qml \
+    Services.qml \
+    assets/busy_dark.png
+
+qml_resources.prefix = /qt/qml/Scanner
+
+RESOURCES = qml_resources
+
+ios: QMAKE_INFO_PLIST = Info.plist
+macos: QMAKE_INFO_PLIST = ../shared/Info.qmake.macos.plist
 
 target.path = $$[QT_INSTALL_EXAMPLES]/bluetooth/lowenergyscanner
 INSTALLS += target
