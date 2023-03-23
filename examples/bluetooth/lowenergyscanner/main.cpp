@@ -6,20 +6,17 @@
 
 #include <QtCore/qloggingcategory.h>
 #include <QtGui/qguiapplication.h>
-#include <QtQml/qqmlcontext.h>
-#include <QtQuick/qquickview.h>
+#include <QtQml/qqmlapplicationengine.h>
 
 int main(int argc, char *argv[])
 {
     // QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
     QGuiApplication app(argc, argv);
 
-    Device d;
-    QQuickView view;
-    view.rootContext()->setContextProperty("device", &d);
+    QQmlApplicationEngine engine;
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app,
+                     []() { QCoreApplication::exit(1); }, Qt::QueuedConnection);
+    engine.loadFromModule("Scanner", "Main");
 
-    view.setSource(QUrl("qrc:/assets/main.qml"));
-    view.setResizeMode(QQuickView::SizeRootObjectToView);
-    view.show();
-    return QGuiApplication::exec();
+    return app.exec();
 }
