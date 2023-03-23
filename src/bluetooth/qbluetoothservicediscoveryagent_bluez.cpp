@@ -320,7 +320,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
             for (const QBluetoothUuid &id : serviceClassUuids) {
                 if (id.minimumSize() == 16) {
                     serviceInfo.setServiceUuid(id);
-                    serviceInfo.setServiceName(QBluetoothServiceDiscoveryAgent::tr("Custom Service"));
+                    if (serviceInfo.serviceName().isEmpty()) {
+                        serviceInfo.setServiceName(
+                                    QBluetoothServiceDiscoveryAgent::tr("Custom Service"));
+                    }
                     QBluetoothServiceInfo::Sequence modSeq =
                             serviceInfo.attribute(QBluetoothServiceInfo::ServiceClassIds).value<QBluetoothServiceInfo::Sequence>();
                     modSeq.removeOne(QVariant::fromValue(id));
@@ -334,8 +337,10 @@ void QBluetoothServiceDiscoveryAgentPrivate::_q_finishSdpScan(QBluetoothServiceD
                 qCDebug(QT_BT_BLUEZ) << "Discovered services" << discoveredDevices.at(0).address().toString()
                                      << serviceInfo.serviceName() << serviceInfo.serviceUuid()
                                      << ">>>" << serviceInfo.serviceClassUuids();
-
-                emit q->serviceDiscovered(serviceInfo);
+                // Use queued connection to allow us finish the service looping; the application
+                // might call stop() when it has detected the service-of-interest.
+                QMetaObject::invokeMethod(q, "serviceDiscovered", Qt::QueuedConnection,
+                                          Q_ARG(QBluetoothServiceInfo, serviceInfo));
             }
         }
     }

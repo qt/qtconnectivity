@@ -284,6 +284,10 @@ void QBluetoothSocketPrivateBluezDBus::connectToService(
         return;
     }
 
+    if (service.socketProtocol() != QBluetoothServiceInfo::Protocol::UnknownProtocol)
+        socketType = service.socketProtocol();
+    qCDebug(QT_BT_BLUEZ) << "Socket protocol used:" << socketType;
+
     connectToService(service.device().address(), targetService, openMode);
 }
 

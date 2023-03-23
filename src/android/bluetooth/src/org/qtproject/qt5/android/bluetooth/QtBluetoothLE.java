@@ -128,6 +128,12 @@ public class QtBluetoothLE {
         private int pendingJobHandle = -1;
     };
 
+    // The handleOn* functions in this class are callback handlers which are synchronized
+    // to "this" client object. This protects the member variables which could be
+    // concurrently accessed from Qt (JNI) thread and different Java threads *)
+    // *) The newer Android API (starting Android 8.1) synchronizes callbacks to one
+    // Java thread, but this is not true for the earlier API which we still support.
+    //
     // In case bond state has been changed due to access to a restricted handle,
     // Android never completes the operation which triggered the devices to bind
     // and thus never fires on(Characteristic|Descriptor)(Read|Write) callback,
@@ -136,49 +142,53 @@ public class QtBluetoothLE {
     // re-add the currently pending job to the queue's head and re-run it.
     // If, by some reason, bonding process has been interrupted, either
     // re-add the currently pending job to the queue's head and re-run it.
+    private synchronized void handleOnReceive(Context context, Intent intent)
+    {
+        if (mBluetoothGatt == null)
+            return;
+
+        final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        if (device == null || !device.getAddress().equals(mBluetoothGatt.getDevice().getAddress()))
+            return;
+
+        final int bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1);
+        final int previousBondState =
+                    intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1);
+
+        if (bondState == BluetoothDevice.BOND_BONDING) {
+            if (pendingJob == null || pendingJob.jobType == IoJobType.Mtu)
+                return;
+
+            timeoutHandler.removeCallbacksAndMessages(null);
+            handleForTimeout.set(HANDLE_FOR_RESET);
+        } else if (previousBondState == BluetoothDevice.BOND_BONDING &&
+            (bondState == BluetoothDevice.BOND_BONDED || bondState == BluetoothDevice.BOND_NONE)) {
+            if (pendingJob == null || pendingJob.jobType == IoJobType.Mtu)
+                return;
+
+                readWriteQueue.addFirst(pendingJob);
+                pendingJob = null;
+
+                performNextIO();
+        } else if (previousBondState == BluetoothDevice.BOND_BONDED
+                   && bondState == BluetoothDevice.BOND_NONE) {
+            // peripheral or central removed the bond information;
+            // if it was peripheral, the connection attempt would fail with PIN_OR_KEY_MISSING,
+            // which is handled by Android by broadcasting ACTION_BOND_STATE_CHANGED
+            // with new state BOND_NONE, without actually deleting the bond information :facepalm:
+            // if we get there, it is safer to delete it now, by invoking the undocumented API call
+            try {
+                device.getClass().getMethod("removeBond").invoke(device);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
+        }
+    }
+
     private class BondStateBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (mBluetoothGatt == null)
-                return;
-
-            final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-            if (device == null || !device.getAddress().equals(mBluetoothGatt.getDevice().getAddress()))
-                return;
-
-            final int bondState = intent.getIntExtra(BluetoothDevice.EXTRA_BOND_STATE, -1);
-            final int previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1);
-
-            if (bondState == BluetoothDevice.BOND_BONDING) {
-                    synchronized (readWriteQueue) {
-                        if (pendingJob == null || pendingJob.jobType == IoJobType.Mtu)
-                            return;
-                    }
-
-                    timeoutHandler.removeCallbacksAndMessages(null);
-                    handleForTimeout.set(HANDLE_FOR_RESET);
-            } else if (previousBondState == BluetoothDevice.BOND_BONDING && (bondState == BluetoothDevice.BOND_BONDED || bondState == BluetoothDevice.BOND_NONE)) {
-                    synchronized (readWriteQueue) {
-                        if (pendingJob == null || pendingJob.jobType == IoJobType.Mtu)
-                            return;
-
-                        readWriteQueue.addFirst(pendingJob);
-                        pendingJob = null;
-                    }
-
-                    performNextIO();
-            } else if (previousBondState == BluetoothDevice.BOND_BONDED && bondState == BluetoothDevice.BOND_NONE) {
-                // peripheral or central removed the bond information;
-                // if it was peripheral, the connection attempt would fail with PIN_OR_KEY_MISSING,
-                // which is handled by Android by broadcasting ACTION_BOND_STATE_CHANGED
-                // with new state BOND_NONE, without actually deleting the bond information :facepalm:
-                // if we get there, it is safer to delete it now, by invoking the undocumented API call
-                try {
-                    device.getClass().getMethod("removeBond").invoke(device);
-                } catch (Exception ex) {
-                    ex.printStackTrace();
-                }
-            }
+            handleOnReceive(context, intent);
         }
     };
     private BroadcastReceiver bondStateBroadcastReceiver = null;
@@ -203,11 +213,11 @@ public class QtBluetoothLE {
 
     /*************************************************************/
     /* Device scan                                               */
+    /* Returns true, if request was successfully completed       */
+    /* This function is called from Qt thread, but only accesses */
+    /* variables that are not accessed from Java threads         */
     /*************************************************************/
 
-    /*
-        Returns true, if request was successfully completed
-     */
     public boolean scanForLeDevice(final boolean isEnabled) {
         if (isEnabled == mLeScanRunning)
             return true;
@@ -261,6 +271,365 @@ public class QtBluetoothLE {
 
     public native void leScanResult(long qtObject, BluetoothDevice device, int rssi, byte[] scanRecord);
 
+    private synchronized void handleOnConnectionStateChange(BluetoothGatt gatt,
+                                                           int status, int newState) {
+        if (qtObject == 0)
+            return;
+
+        int qLowEnergyController_State = 0;
+        //This must be in sync with QLowEnergyController::ControllerState
+        switch (newState) {
+            case BluetoothProfile.STATE_DISCONNECTED:
+                if (bondStateBroadcastReceiver != null) {
+                    qtContext.unregisterReceiver(bondStateBroadcastReceiver);
+                    bondStateBroadcastReceiver = null;
+                }
+
+                qLowEnergyController_State = 0;
+                // we disconnected -> get rid of data from previous run
+                resetData();
+                // reset mBluetoothGatt, reusing same object is not very reliable
+                // sometimes it reconnects and sometimes it does not.
+                if (mBluetoothGatt != null) {
+                    mBluetoothGatt.close();
+                    if (mHandler != null) {
+                        mHandler.getLooper().quitSafely();
+                        mHandler = null;
+                    }
+                }
+                mBluetoothGatt = null;
+                break;
+            case BluetoothProfile.STATE_CONNECTED:
+                if (bondStateBroadcastReceiver == null) {
+                    bondStateBroadcastReceiver = new BondStateBroadcastReceiver();
+                    qtContext.registerReceiver(bondStateBroadcastReceiver,
+                                    new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+                }
+                qLowEnergyController_State = 2;
+        }
+
+        //This must be in sync with QLowEnergyController::Error
+        int errorCode;
+        switch (status) {
+            case BluetoothGatt.GATT_SUCCESS:
+                errorCode = 0; //QLowEnergyController::NoError
+                break;
+            case BluetoothGatt.GATT_FAILURE: // Android's equivalent of "do not know what error"
+                errorCode = 1; //QLowEnergyController::UnknownError
+                break;
+            case 8:  // BLE_HCI_CONNECTION_TIMEOUT
+                Log.w(TAG, "Connection Error: Try to delay connect() call after previous activity");
+                errorCode = 5; //QLowEnergyController::ConnectionError
+                break;
+            case 19: // BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION
+            case 20: // BLE_HCI_REMOTE_DEV_TERMINATION_DUE_TO_LOW_RESOURCES
+            case 21: // BLE_HCI_REMOTE_DEV_TERMINATION_DUE_TO_POWER_OFF
+                Log.w(TAG, "The remote host closed the connection");
+                errorCode = 7; //QLowEnergyController::RemoteHostClosedError
+                break;
+            case 22: // BLE_HCI_LOCAL_HOST_TERMINATED_CONNECTION
+                // Internally, Android maps PIN_OR_KEY_MISSING to GATT_CONN_TERMINATE_LOCAL_HOST
+                errorCode = 8; //QLowEnergyController::AuthorizationError
+                break;
+            default:
+                Log.w(TAG, "Unhandled error code on connectionStateChanged: "
+                            + status + " " + newState);
+                errorCode = status;
+                break; //TODO deal with all errors
+        }
+        leConnectionStateChange(qtObject, errorCode, qLowEnergyController_State);
+    }
+
+    private synchronized void handleOnServicesDiscovered(BluetoothGatt gatt, int status) {
+        //This must be in sync with QLowEnergyController::Error
+        int errorCode;
+        StringBuilder builder = new StringBuilder();
+        switch (status) {
+            case BluetoothGatt.GATT_SUCCESS:
+                errorCode = 0; //QLowEnergyController::NoError
+                final List<BluetoothGattService> services = mBluetoothGatt.getServices();
+                for (BluetoothGattService service: services) {
+                    builder.append(service.getUuid().toString()).append(" "); //space is separator
+                }
+                break;
+            default:
+                Log.w(TAG, "Unhandled error code on onServicesDiscovered: " + status);
+                errorCode = status; break; //TODO deal with all errors
+        }
+        leServicesDiscovered(qtObject, errorCode, builder.toString());
+        if (status == BluetoothGatt.GATT_SUCCESS)
+            scheduleMtuExchange();
+    }
+
+    private synchronized void handleOnCharacteristicRead(BluetoothGatt gatt,
+                                 BluetoothGattCharacteristic characteristic,
+                                 int status)
+    {
+        int foundHandle = handleForCharacteristic(characteristic);
+        if (foundHandle == -1 || foundHandle >= entries.size() ) {
+            Log.w(TAG, "Cannot find characteristic read request for read notification - handle: " +
+                        foundHandle + " size: " + entries.size());
+
+            //unlock the queue for next item
+            pendingJob = null;
+
+            performNextIO();
+            return;
+        }
+
+        boolean requestTimedOut = !handleForTimeout.compareAndSet(
+                                    modifiedReadWriteHandle(foundHandle, IoJobType.Read),
+                                    HANDLE_FOR_RESET);
+        if (requestTimedOut) {
+            Log.w(TAG, "Late char read reply after timeout was hit for handle " + foundHandle);
+            // Timeout has hit before this response -> ignore the response
+            // no need to unlock pendingJob -> the timeout has done that already
+            return;
+        }
+
+        GattEntry entry = entries.get(foundHandle);
+        final boolean isServiceDiscoveryRun = !entry.valueKnown;
+        entry.valueKnown = true;
+
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            // Qt manages handles starting at 1, in Java we use a system starting with 0
+            //TODO avoid sending service uuid -> service handle should be sufficient
+            leCharacteristicRead(qtObject,
+                    characteristic.getService().getUuid().toString(),
+                    foundHandle + 1, characteristic.getUuid().toString(),
+                    characteristic.getProperties(), characteristic.getValue());
+        } else {
+            if (isServiceDiscoveryRun) {
+                Log.w(TAG, "onCharacteristicRead during discovery error: " + status);
+
+                Log.d(TAG, "Non-readable characteristic " + characteristic.getUuid() +
+                                " for service " + characteristic.getService().getUuid());
+                leCharacteristicRead(qtObject, characteristic.getService().getUuid().toString(),
+                    foundHandle + 1, characteristic.getUuid().toString(),
+                    characteristic.getProperties(), characteristic.getValue());
+            } else {
+                // This must be in sync with QLowEnergyService::CharacteristicReadError
+                final int characteristicReadError = 5;
+                leServiceError(qtObject, foundHandle + 1, characteristicReadError);
+            }
+        }
+
+        if (isServiceDiscoveryRun) {
+
+            // last entry of pending service discovery run -> send discovery finished state update
+            GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
+            if (serviceEntry.endHandle == foundHandle)
+                finishCurrentServiceDiscovery(entry.associatedServiceHandle);
+        }
+
+        //unlock the queue for next item
+        pendingJob = null;
+
+        performNextIO();
+    }
+
+    private synchronized void handleOnCharacteristicChanged(android.bluetooth.BluetoothGatt gatt,
+                                    android.bluetooth.BluetoothGattCharacteristic characteristic)
+    {
+        int handle = handleForCharacteristic(characteristic);
+        if (handle == -1) {
+            Log.w(TAG,"onCharacteristicChanged: cannot find handle");
+            return;
+        }
+
+        leCharacteristicChanged(qtObject, handle+1, characteristic.getValue());
+    }
+
+    private synchronized void handleOnCharacteristicWrite(android.bluetooth.BluetoothGatt gatt,
+                                  android.bluetooth.BluetoothGattCharacteristic characteristic,
+                                  int status)
+    {
+        if (status != BluetoothGatt.GATT_SUCCESS)
+            Log.w(TAG, "onCharacteristicWrite: error " + status);
+
+        int handle = handleForCharacteristic(characteristic);
+        if (handle == -1) {
+            Log.w(TAG,"onCharacteristicWrite: cannot find handle");
+            return;
+        }
+
+        boolean requestTimedOut = !handleForTimeout.compareAndSet(
+                                        modifiedReadWriteHandle(handle, IoJobType.Write),
+                                        HANDLE_FOR_RESET);
+        if (requestTimedOut) {
+            Log.w(TAG, "Late char write reply after timeout was hit for handle " + handle);
+            // Timeout has hit before this response -> ignore the response
+            // no need to unlock pendingJob -> the timeout has done that already
+            return;
+        }
+
+        int errorCode;
+        //This must be in sync with QLowEnergyService::ServiceError
+        switch (status) {
+            case BluetoothGatt.GATT_SUCCESS:
+                errorCode = 0;
+                break; // NoError
+            default:
+                errorCode = 2;
+                break; // CharacteristicWriteError
+        }
+
+        byte[] value;
+        value = pendingJob.newValue;
+        pendingJob = null;
+
+        leCharacteristicWritten(qtObject, handle+1, value, errorCode);
+        performNextIO();
+    }
+
+    private synchronized void handleOnDescriptorRead(android.bluetooth.BluetoothGatt gatt,
+                                 android.bluetooth.BluetoothGattDescriptor descriptor,
+                                 int status)
+    {
+        int foundHandle = handleForDescriptor(descriptor);
+        if (foundHandle == -1 || foundHandle >= entries.size() ) {
+            Log.w(TAG, "Cannot find descriptor read request for read notification - handle: " +
+                       foundHandle + " size: " + entries.size());
+
+            //unlock the queue for next item
+            pendingJob = null;
+
+            performNextIO();
+            return;
+        }
+
+        boolean requestTimedOut = !handleForTimeout.compareAndSet(
+                                    modifiedReadWriteHandle(foundHandle, IoJobType.Read),
+                                    HANDLE_FOR_RESET);
+        if (requestTimedOut) {
+            Log.w(TAG, "Late descriptor read reply after timeout was hit for handle " +
+                       foundHandle);
+            // Timeout has hit before this response -> ignore the response
+            // no need to unlock pendingJob -> the timeout has done that already
+            return;
+        }
+
+        GattEntry entry = entries.get(foundHandle);
+        final boolean isServiceDiscoveryRun = !entry.valueKnown;
+        entry.valueKnown = true;
+
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            //TODO avoid sending service and characteristic uuid -> handles should be sufficient
+            leDescriptorRead(qtObject,
+                    descriptor.getCharacteristic().getService().getUuid().toString(),
+                    descriptor.getCharacteristic().getUuid().toString(), foundHandle + 1,
+                    descriptor.getUuid().toString(), descriptor.getValue());
+        } else {
+            if (isServiceDiscoveryRun) {
+                // Cannot read but still advertise the fact that we found a descriptor
+                // The value will be empty.
+                Log.w(TAG, "onDescriptorRead during discovery error: " + status);
+                Log.d(TAG, "Non-readable descriptor " + descriptor.getUuid() +
+                      " for characteristic "  + descriptor.getCharacteristic().getUuid() +
+                      " for service " + descriptor.getCharacteristic().getService().getUuid());
+                leDescriptorRead(qtObject,
+                    descriptor.getCharacteristic().getService().getUuid().toString(),
+                    descriptor.getCharacteristic().getUuid().toString(), foundHandle + 1,
+                    descriptor.getUuid().toString(), descriptor.getValue());
+            } else {
+                // This must be in sync with QLowEnergyService::DescriptorReadError
+                final int descriptorReadError = 6;
+                leServiceError(qtObject, foundHandle + 1, descriptorReadError);
+            }
+
+        }
+
+        if (isServiceDiscoveryRun) {
+            // last entry of pending service discovery run? ->send discovery finished state update
+            GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
+            if (serviceEntry.endHandle == foundHandle) {
+                finishCurrentServiceDiscovery(entry.associatedServiceHandle);
+            }
+
+            /* Some devices preset ClientCharacteristicConfiguration descriptors
+             * to enable notifications out of the box. However the additional
+             * BluetoothGatt.setCharacteristicNotification call prevents
+             * automatic notifications from coming through. Hence we manually set them
+             * up here.
+             */
+            if (descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
+                byte[] bytearray = descriptor.getValue();
+                final int value = (bytearray != null && bytearray.length > 0) ? bytearray[0] : 0;
+                // notification or indication bit set?
+                if ((value & 0x03) > 0) {
+                    Log.d(TAG, "Found descriptor with automatic notifications.");
+                    mBluetoothGatt.setCharacteristicNotification(
+                            descriptor.getCharacteristic(), true);
+                }
+            }
+        }
+
+        //unlock the queue for next item
+        pendingJob = null;
+
+        performNextIO();
+    }
+
+    private synchronized void handleOnDescriptorWrite(android.bluetooth.BluetoothGatt gatt,
+                                    android.bluetooth.BluetoothGattDescriptor descriptor,
+                                    int status)
+    {
+        if (status != BluetoothGatt.GATT_SUCCESS)
+            Log.w(TAG, "onDescriptorWrite: error " + status);
+
+        int handle = handleForDescriptor(descriptor);
+
+        boolean requestTimedOut = !handleForTimeout.compareAndSet(
+                                    modifiedReadWriteHandle(handle, IoJobType.Write),
+                                    HANDLE_FOR_RESET);
+        if (requestTimedOut) {
+            Log.w(TAG, "Late descriptor write reply after timeout was hit for handle " +
+                       handle);
+            // Timeout has hit before this response -> ignore the response
+            // no need to unlock pendingJob -> the timeout has done that already
+            return;
+        }
+
+        int errorCode;
+        //This must be in sync with QLowEnergyService::ServiceError
+        switch (status) {
+            case BluetoothGatt.GATT_SUCCESS:
+                errorCode = 0; break; // NoError
+            default:
+                errorCode = 3; break; // DescriptorWriteError
+        }
+
+        pendingJob = null;
+
+        leDescriptorWritten(qtObject, handle+1, descriptor.getValue(), errorCode);
+        performNextIO();
+    }
+
+    private synchronized void handleOnMtuChanged(android.bluetooth.BluetoothGatt gatt,
+                                                int mtu, int status)
+    {
+        if (status == BluetoothGatt.GATT_SUCCESS) {
+            Log.w(TAG, "MTU changed to " + mtu);
+            mSupportedMtu = mtu;
+        } else {
+            Log.w(TAG, "MTU change error " + status + ". New MTU " + mtu);
+            mSupportedMtu = DEFAULT_MTU;
+        }
+
+        boolean requestTimedOut = !handleForTimeout.compareAndSet(
+                modifiedReadWriteHandle(HANDLE_FOR_MTU_EXCHANGE, IoJobType.Mtu), HANDLE_FOR_RESET);
+        if (requestTimedOut) {
+            Log.w(TAG, "Late mtu reply after timeout was hit");
+            // Timeout has hit before this response -> ignore the response
+            // no need to unlock pendingJob -> the timeout has done that already
+            return;
+        }
+
+        pendingJob = null;
+
+        performNextIO();
+    }
+
     /*************************************************************/
     /* Service Discovery                                         */
     /*************************************************************/
@@ -268,336 +637,53 @@ public class QtBluetoothLE {
     private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
 
         public void onConnectionStateChange(BluetoothGatt gatt, int status, int newState) {
-            if (qtObject == 0)
-                return;
-
-            int qLowEnergyController_State = 0;
-            //This must be in sync with QLowEnergyController::ControllerState
-            switch (newState) {
-                case BluetoothProfile.STATE_DISCONNECTED:
-                    if (bondStateBroadcastReceiver != null) {
-                        qtContext.unregisterReceiver(bondStateBroadcastReceiver);
-                        bondStateBroadcastReceiver = null;
-                    }
-
-                    qLowEnergyController_State = 0;
-                    // we disconnected -> get rid of data from previous run
-                    resetData();
-                    // reset mBluetoothGatt, reusing same object is not very reliable
-                    // sometimes it reconnects and sometimes it does not.
-                    if (mBluetoothGatt != null) {
-                        mBluetoothGatt.close();
-                        if (mHandler != null) {
-                            mHandler.getLooper().quitSafely();
-                            mHandler = null;
-                        }
-                    }
-                    mBluetoothGatt = null;
-                    break;
-                case BluetoothProfile.STATE_CONNECTED:
-                    if (bondStateBroadcastReceiver == null) {
-                        bondStateBroadcastReceiver = new BondStateBroadcastReceiver();
-                        qtContext.registerReceiver(bondStateBroadcastReceiver, new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
-                    }
-                    qLowEnergyController_State = 2;
-            }
-
-            //This must be in sync with QLowEnergyController::Error
-            int errorCode;
-            switch (status) {
-                case BluetoothGatt.GATT_SUCCESS:
-                    errorCode = 0; break; //QLowEnergyController::NoError
-                case BluetoothGatt.GATT_FAILURE: // Android's equivalent of "do not know what error it is"
-                    errorCode = 1; break; //QLowEnergyController::UnknownError
-                case 8:  // BLE_HCI_CONNECTION_TIMEOUT
-                    Log.w(TAG, "Connection Error: Try to delay connect() call after previous activity");
-                    errorCode = 5; break; //QLowEnergyController::ConnectionError
-                case 19: // BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION
-                case 20: // BLE_HCI_REMOTE_DEV_TERMINATION_DUE_TO_LOW_RESOURCES
-                case 21: // BLE_HCI_REMOTE_DEV_TERMINATION_DUE_TO_POWER_OFF
-                    Log.w(TAG, "The remote host closed the connection");
-                    errorCode = 7; //QLowEnergyController::RemoteHostClosedError
-                    break;
-                case 22: // BLE_HCI_LOCAL_HOST_TERMINATED_CONNECTION
-                    // Internally, Android maps PIN_OR_KEY_MISSING to GATT_CONN_TERMINATE_LOCAL_HOST
-                    errorCode = 8; break; //QLowEnergyController::AuthorizationError
-                default:
-                    Log.w(TAG, "Unhandled error code on connectionStateChanged: " + status + " " + newState);
-                    errorCode = status; break; //TODO deal with all errors
-            }
-            leConnectionStateChange(qtObject, errorCode, qLowEnergyController_State);
+            super.onConnectionStateChange(gatt, status, newState);
+            handleOnConnectionStateChange(gatt, status, newState);
         }
 
         public void onServicesDiscovered(BluetoothGatt gatt, int status) {
-            //This must be in sync with QLowEnergyController::Error
-            int errorCode;
-            StringBuilder builder = new StringBuilder();
-            switch (status) {
-                case BluetoothGatt.GATT_SUCCESS:
-                    errorCode = 0; //QLowEnergyController::NoError
-                    final List<BluetoothGattService> services = mBluetoothGatt.getServices();
-                    for (BluetoothGattService service: services) {
-                        builder.append(service.getUuid().toString()).append(" "); //space is separator
-                    }
-                    break;
-                default:
-                    Log.w(TAG, "Unhandled error code on onServicesDiscovered: " + status);
-                    errorCode = status; break; //TODO deal with all errors
-            }
-            leServicesDiscovered(qtObject, errorCode, builder.toString());
+            super.onServicesDiscovered(gatt, status);
+            handleOnServicesDiscovered(gatt, status);
 
-            scheduleMtuExchange();
         }
 
         public void onCharacteristicRead(android.bluetooth.BluetoothGatt gatt,
                                          android.bluetooth.BluetoothGattCharacteristic characteristic,
                                          int status)
         {
-            int foundHandle = -1;
-            synchronized (this) {
-                foundHandle = handleForCharacteristic(characteristic);
-                if (foundHandle == -1 || foundHandle >= entries.size() ) {
-                    Log.w(TAG, "Cannot find characteristic read request for read notification - handle: " +
-                               foundHandle + " size: " + entries.size());
-
-                    //unlock the queue for next item
-                    synchronized (readWriteQueue) {
-                        pendingJob = null;
-                    }
-
-                    performNextIO();
-                    return;
-                }
-            }
-
-            boolean requestTimedOut = !handleForTimeout.compareAndSet(
-                                        modifiedReadWriteHandle(foundHandle, IoJobType.Read), HANDLE_FOR_RESET);
-            if (requestTimedOut) {
-                Log.w(TAG, "Late char read reply after timeout was hit for handle " + foundHandle);
-                // Timeout has hit before this response -> ignore the response
-                // no need to unlock pendingJob -> the timeout has done that already
-                return;
-            }
-
-            GattEntry entry = entries.get(foundHandle);
-            final boolean isServiceDiscoveryRun = !entry.valueKnown;
-            entry.valueKnown = true;
-
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                // Qt manages handles starting at 1, in Java we use a system starting with 0
-                //TODO avoid sending service uuid -> service handle should be sufficient
-                leCharacteristicRead(qtObject, characteristic.getService().getUuid().toString(),
-                        foundHandle + 1, characteristic.getUuid().toString(),
-                        characteristic.getProperties(), characteristic.getValue());
-            } else {
-                if (isServiceDiscoveryRun) {
-                    Log.w(TAG, "onCharacteristicRead during discovery error: " + status);
-
-                    Log.d(TAG, "Non-readable characteristic " + characteristic.getUuid() +
-                                    " for service " + characteristic.getService().getUuid());
-                    leCharacteristicRead(qtObject, characteristic.getService().getUuid().toString(),
-                        foundHandle + 1, characteristic.getUuid().toString(),
-                        characteristic.getProperties(), characteristic.getValue());
-                } else {
-                    // This must be in sync with QLowEnergyService::CharacteristicReadError
-                    final int characteristicReadError = 5;
-                    leServiceError(qtObject, foundHandle + 1, characteristicReadError);
-                }
-            }
-
-            if (isServiceDiscoveryRun) {
-
-                // last entry of pending service discovery run -> send discovery finished state update
-                GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
-                if (serviceEntry.endHandle == foundHandle)
-                    finishCurrentServiceDiscovery(entry.associatedServiceHandle);
-            }
-
-            //unlock the queue for next item
-            synchronized (readWriteQueue) {
-                pendingJob = null;
-            }
-
-            performNextIO();
+            super.onCharacteristicRead(gatt, characteristic, status);
+            handleOnCharacteristicRead(gatt, characteristic, status);
         }
 
         public void onCharacteristicWrite(android.bluetooth.BluetoothGatt gatt,
                                           android.bluetooth.BluetoothGattCharacteristic characteristic,
                                           int status)
         {
-            if (status != BluetoothGatt.GATT_SUCCESS)
-                Log.w(TAG, "onCharacteristicWrite: error " + status);
-
-            int handle = handleForCharacteristic(characteristic);
-            if (handle == -1) {
-                Log.w(TAG,"onCharacteristicWrite: cannot find handle");
-                return;
-            }
-
-            boolean requestTimedOut = !handleForTimeout.compareAndSet(
-                                            modifiedReadWriteHandle(handle, IoJobType.Write), HANDLE_FOR_RESET);
-            if (requestTimedOut) {
-                Log.w(TAG, "Late char write reply after timeout was hit for handle " + handle);
-                // Timeout has hit before this response -> ignore the response
-                // no need to unlock pendingJob -> the timeout has done that already
-                return;
-            }
-
-            int errorCode;
-            //This must be in sync with QLowEnergyService::ServiceError
-            switch (status) {
-                case BluetoothGatt.GATT_SUCCESS:
-                    errorCode = 0; break; // NoError
-                default:
-                    errorCode = 2; break; // CharacteristicWriteError
-            }
-
-            byte[] value;
-            synchronized (readWriteQueue) {
-                value = pendingJob.newValue;
-                pendingJob = null;
-            }
-            leCharacteristicWritten(qtObject, handle+1, value, errorCode);
-            performNextIO();
+            super.onCharacteristicWrite(gatt, characteristic, status);
+            handleOnCharacteristicWrite(gatt, characteristic, status);
         }
 
         public void onCharacteristicChanged(android.bluetooth.BluetoothGatt gatt,
                                             android.bluetooth.BluetoothGattCharacteristic characteristic)
         {
-            int handle = handleForCharacteristic(characteristic);
-            if (handle == -1) {
-                Log.w(TAG,"onCharacteristicChanged: cannot find handle");
-                return;
-            }
-
-            leCharacteristicChanged(qtObject, handle+1, characteristic.getValue());
+            super.onCharacteristicChanged(gatt, characteristic);
+            handleOnCharacteristicChanged(gatt, characteristic);
         }
 
         public void onDescriptorRead(android.bluetooth.BluetoothGatt gatt,
                                      android.bluetooth.BluetoothGattDescriptor descriptor,
                                      int status)
         {
-            int foundHandle = -1;
-            synchronized (this) {
-                foundHandle = handleForDescriptor(descriptor);
-                if (foundHandle == -1 || foundHandle >= entries.size() ) {
-                    Log.w(TAG, "Cannot find descriptor read request for read notification - handle: " +
-                               foundHandle + " size: " + entries.size());
-
-                    //unlock the queue for next item
-                    synchronized (readWriteQueue) {
-                        pendingJob = null;
-                    }
-                    performNextIO();
-                    return;
-                }
-            }
-
-            boolean requestTimedOut = !handleForTimeout.compareAndSet(
-                                        modifiedReadWriteHandle(foundHandle, IoJobType.Read), HANDLE_FOR_RESET);
-            if (requestTimedOut) {
-                Log.w(TAG, "Late descriptor read reply after timeout was hit for handle " +
-                           foundHandle);
-                // Timeout has hit before this response -> ignore the response
-                // no need to unlock pendingJob -> the timeout has done that already
-                return;
-            }
-
-            GattEntry entry = entries.get(foundHandle);
-            final boolean isServiceDiscoveryRun = !entry.valueKnown;
-            entry.valueKnown = true;
-
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                //TODO avoid sending service and characteristic uuid -> handles should be sufficient
-                leDescriptorRead(qtObject, descriptor.getCharacteristic().getService().getUuid().toString(),
-                        descriptor.getCharacteristic().getUuid().toString(), foundHandle + 1,
-                        descriptor.getUuid().toString(), descriptor.getValue());
-            } else {
-                if (isServiceDiscoveryRun) {
-                    // Cannot read but still advertise the fact that we found a descriptor
-                    // The value will be empty.
-                    Log.w(TAG, "onDescriptorRead during discovery error: " + status);
-                    Log.d(TAG, "Non-readable descriptor " + descriptor.getUuid() +
-                          " for characteristic "  + descriptor.getCharacteristic().getUuid() +
-                          " for service " + descriptor.getCharacteristic().getService().getUuid());
-                    leDescriptorRead(qtObject, descriptor.getCharacteristic().getService().getUuid().toString(),
-                        descriptor.getCharacteristic().getUuid().toString(), foundHandle + 1,
-                        descriptor.getUuid().toString(), descriptor.getValue());
-                } else {
-                    // This must be in sync with QLowEnergyService::DescriptorReadError
-                    final int descriptorReadError = 6;
-                    leServiceError(qtObject, foundHandle + 1, descriptorReadError);
-                }
-
-            }
-
-            if (isServiceDiscoveryRun) {
-                // last entry of pending service discovery run? ->send discovery finished state update
-                GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
-                if (serviceEntry.endHandle == foundHandle) {
-                    finishCurrentServiceDiscovery(entry.associatedServiceHandle);
-                }
-
-                /* Some devices preset ClientCharacteristicConfiguration descriptors
-                 * to enable notifications out of the box. However the additional
-                 * BluetoothGatt.setCharacteristicNotification call prevents
-                 * automatic notifications from coming through. Hence we manually set them
-                 * up here.
-                 */
-                if (descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
-                    byte[] bytearray = descriptor.getValue();
-                    final int value = (bytearray != null && bytearray.length > 0) ? bytearray[0] : 0;
-                    // notification or indication bit set?
-                    if ((value & 0x03) > 0) {
-                        Log.d(TAG, "Found descriptor with automatic notifications.");
-                        mBluetoothGatt.setCharacteristicNotification(
-                                descriptor.getCharacteristic(), true);
-                    }
-                }
-            }
-
-            //unlock the queue for next item
-            synchronized (readWriteQueue) {
-                pendingJob = null;
-            }
-
-            performNextIO();
+            super.onDescriptorRead(gatt, descriptor, status);
+            handleOnDescriptorRead(gatt, descriptor, status);
         }
 
         public void onDescriptorWrite(android.bluetooth.BluetoothGatt gatt,
                                       android.bluetooth.BluetoothGattDescriptor descriptor,
                                       int status)
         {
-            if (status != BluetoothGatt.GATT_SUCCESS)
-                Log.w(TAG, "onDescriptorWrite: error " + status);
-
-            int handle = handleForDescriptor(descriptor);
-
-            boolean requestTimedOut = !handleForTimeout.compareAndSet(
-                                        modifiedReadWriteHandle(handle, IoJobType.Write), HANDLE_FOR_RESET);
-            if (requestTimedOut) {
-                Log.w(TAG, "Late descriptor write reply after timeout was hit for handle " +
-                           handle);
-                // Timeout has hit before this response -> ignore the response
-                // no need to unlock pendingJob -> the timeout has done that already
-                return;
-            }
-
-            int errorCode;
-            //This must be in sync with QLowEnergyService::ServiceError
-            switch (status) {
-                case BluetoothGatt.GATT_SUCCESS:
-                    errorCode = 0; break; // NoError
-                default:
-                    errorCode = 3; break; // DescriptorWriteError
-            }
-
-            synchronized (readWriteQueue) {
-                pendingJob = null;
-            }
-
-            leDescriptorWritten(qtObject, handle+1, descriptor.getValue(), errorCode);
-            performNextIO();
+            super.onDescriptorWrite(gatt, descriptor, status);
+            handleOnDescriptorWrite(gatt, descriptor, status);
         }
         //TODO Requires Android API 21 which is not available on CI yet.
 //        public void onReliableWriteCompleted(android.bluetooth.BluetoothGatt gatt,
@@ -613,33 +699,13 @@ public class QtBluetoothLE {
         // requires Android API v21
         public void onMtuChanged(android.bluetooth.BluetoothGatt gatt, int mtu, int status)
         {
-            if (status == BluetoothGatt.GATT_SUCCESS) {
-                Log.w(TAG, "MTU changed to " + mtu);
-                mSupportedMtu = mtu;
-            } else {
-                Log.w(TAG, "MTU change error " + status + ". New MTU " + mtu);
-                mSupportedMtu = DEFAULT_MTU;
-            }
-
-            boolean requestTimedOut = !handleForTimeout.compareAndSet(
-                    modifiedReadWriteHandle(HANDLE_FOR_MTU_EXCHANGE, IoJobType.Mtu), HANDLE_FOR_RESET);
-            if (requestTimedOut) {
-                Log.w(TAG, "Late mtu reply after timeout was hit");
-                // Timeout has hit before this response -> ignore the response
-                // no need to unlock pendingJob -> the timeout has done that already
-                return;
-            }
-
-            synchronized (readWriteQueue) {
-                pendingJob = null;
-            }
-
-            performNextIO();
+            super.onMtuChanged(gatt, mtu, status);
+            handleOnMtuChanged(gatt, mtu, status);
         }
     };
 
-
-    public boolean connect() {
+    // This function is called from Qt thread
+    public synchronized boolean connect() {
         BluetoothDevice mRemoteGattDevice;
 
         try {
@@ -734,14 +800,16 @@ public class QtBluetoothLE {
         return mBluetoothGatt != null;
     }
 
-    public void disconnect() {
+    // This function is called from Qt thread
+    public synchronized void disconnect() {
         if (mBluetoothGatt == null)
             return;
 
         mBluetoothGatt.disconnect();
     }
 
-    public boolean discoverServices()
+    // This function is called from Qt thread
+    public synchronized boolean discoverServices()
     {
         return mBluetoothGatt != null && mBluetoothGatt.discoverServices();
     }
@@ -786,7 +854,6 @@ public class QtBluetoothLE {
     // index into array is equivalent to handle id
     private final ArrayList<GattEntry> entries = new ArrayList<GattEntry>(100);
     //backlog of to be discovered services
-    // TODO remove
     private final LinkedList<Integer> servicesToBeDiscovered = new LinkedList<Integer>();
 
 
@@ -875,6 +942,7 @@ public class QtBluetoothLE {
         return -1;
     }
 
+    // This function is called from Qt thread (indirectly)
     private void populateHandles()
     {
         // We introduce the notion of artificial handles. While GATT handles
@@ -938,21 +1006,18 @@ public class QtBluetoothLE {
 
     private void resetData()
     {
-        synchronized (this) {
-            uuidToEntry.clear();
-            entries.clear();
-            servicesToBeDiscovered.clear();
-        }
+        uuidToEntry.clear();
+        entries.clear();
+        servicesToBeDiscovered.clear();
 
         // kill all timeout handlers
         timeoutHandler.removeCallbacksAndMessages(null);
         handleForTimeout.set(HANDLE_FOR_RESET);
 
-        synchronized (readWriteQueue) {
-            readWriteQueue.clear();
-        }
+        readWriteQueue.clear();
     }
 
+    // This function is called from Qt thread
     public synchronized boolean discoverServiceDetails(String serviceUuid)
     {
         try {
@@ -1009,9 +1074,9 @@ public class QtBluetoothLE {
 
     /*
         Returns the uuids of the services included by the given service. Otherwise returns null.
-        Directly called from Qt.
+        This function is called from Qt thread
      */
-    public String includedServices(String serviceUuid)
+    public synchronized String includedServices(String serviceUuid)
     {
         if (mBluetoothGatt == null)
             return null;
@@ -1041,24 +1106,22 @@ public class QtBluetoothLE {
         return builder.toString();
     }
 
-    //TODO function not yet used
-    private void finishCurrentServiceDiscovery(int handleDiscoveredService)
+    private synchronized void finishCurrentServiceDiscovery(int handleDiscoveredService)
     {
         Log.w(TAG, "Finished current discovery for service handle " + handleDiscoveredService);
         GattEntry discoveredService = entries.get(handleDiscoveredService);
         discoveredService.valueKnown = true;
-        synchronized (this) {
-            try {
-                servicesToBeDiscovered.removeFirst();
-            } catch (NoSuchElementException ex) {
-                Log.w(TAG, "Expected queued service but didn't find any");
-            }
+        try {
+            servicesToBeDiscovered.removeFirst();
+        } catch (NoSuchElementException ex) {
+            Log.w(TAG, "Expected queued service but didn't find any");
         }
 
         leServiceDetailDiscoveryFinished(qtObject, discoveredService.service.getUuid().toString(),
                 handleDiscoveredService + 1, discoveredService.endHandle + 1);
     }
 
+    // Executes under "this" client mutex
     private boolean executeMtuExchange()
     {
         if (Build.VERSION.SDK_INT >= 21) {
@@ -1076,7 +1139,7 @@ public class QtBluetoothLE {
             } catch (Exception ex) {}
         }
 
-       Log.w(TAG, "Assuming default MTU value of 23 bytes");
+        Log.w(TAG, "Assuming default MTU value of 23 bytes");
 
         mSupportedMtu = DEFAULT_MTU;
         return true;
@@ -1091,9 +1154,7 @@ public class QtBluetoothLE {
         newJob.jobType = IoJobType.Mtu;
         newJob.entry = null;
 
-        synchronized (readWriteQueue) {
-            readWriteQueue.add(newJob);
-        }
+        readWriteQueue.add(newJob);
 
         performNextIO();
     }
@@ -1104,7 +1165,6 @@ public class QtBluetoothLE {
         Adds all Gatt entries for the given service to the readWriteQueue to be discovered.
         This function only ever adds read requests to the queue.
 
-        //TODO function not yet used
      */
     private void scheduleServiceDetailDiscovery(int serviceHandle)
     {
@@ -1117,47 +1177,42 @@ public class QtBluetoothLE {
             return;
         }
 
-        synchronized (readWriteQueue) {
-            // entire block inside mutex to ensure all service discovery jobs go in one after the other
-            // ensures that serviceDiscovered() signal is sent when required
+        // serviceHandle + 1 -> ignore service handle itself
+        for (int i = serviceHandle + 1; i <= endHandle; i++) {
+            GattEntry entry = entries.get(i);
 
-
-            // serviceHandle + 1 -> ignore service handle itself
-            for (int i = serviceHandle + 1; i <= endHandle; i++) {
-                GattEntry entry = entries.get(i);
-
-                switch (entry.type) {
-                    case Characteristic:
-                    case Descriptor:
-                    // we schedule CharacteristicValue for initial discovery to simplify
-                    // detection of the end of service discovery process
-                    // performNextIO() ignores CharacteristicValue GATT entries
-                    case CharacteristicValue:
-                        break;
-                    case Service:
-                        // should not really happen unless endHandle is wrong
-                        Log.w(TAG, "scheduleServiceDetailDiscovery: wrong endHandle");
-                        return;
-                }
-
-                // only descriptor and characteristic fall through to this point
-                ReadWriteJob newJob = new ReadWriteJob();
-                newJob.entry = entry;
-                newJob.jobType = IoJobType.Read;
-
-                final boolean result = readWriteQueue.add(newJob);
-                if (!result)
-                    Log.w(TAG, "Cannot add service discovery job for " + serviceEntry.service.getUuid()
-                                + " on item " + entry.type);
+            switch (entry.type) {
+                case Characteristic:
+                case Descriptor:
+                // we schedule CharacteristicValue for initial discovery to simplify
+                // detection of the end of service discovery process
+                // performNextIO() ignores CharacteristicValue GATT entries
+                case CharacteristicValue:
+                    break;
+                case Service:
+                    // should not really happen unless endHandle is wrong
+                    Log.w(TAG, "scheduleServiceDetailDiscovery: wrong endHandle");
+                    return;
             }
+
+            // only descriptor and characteristic fall through to this point
+            ReadWriteJob newJob = new ReadWriteJob();
+            newJob.entry = entry;
+            newJob.jobType = IoJobType.Read;
+
+            final boolean result = readWriteQueue.add(newJob);
+            if (!result)
+                Log.w(TAG, "Cannot add service discovery job for " + serviceEntry.service.getUuid()
+                            + " on item " + entry.type);
         }
     }
 
     /*************************************************************/
     /* Write Characteristics                                     */
+    /* This function is called from Qt thread                    */
     /*************************************************************/
 
-    public boolean writeCharacteristic(int charHandle, byte[] newValue,
+    public synchronized boolean writeCharacteristic(int charHandle, byte[] newValue,
                                        int writeMode)
     {
         if (mBluetoothGatt == null)
@@ -1190,9 +1245,7 @@ public class QtBluetoothLE {
         }
 
         boolean result;
-        synchronized (readWriteQueue) {
-            result = readWriteQueue.add(newJob);
-        }
+        result = readWriteQueue.add(newJob);
 
         if (!result) {
             Log.w(TAG, "Cannot add characteristic write request for " + charHandle + " to queue" );
@@ -1205,9 +1258,10 @@ public class QtBluetoothLE {
 
     /*************************************************************/
     /* Write Descriptors                                         */
+    /* This function is called from Qt thread                    */
     /*************************************************************/
 
-    public boolean writeDescriptor(int descHandle, byte[] newValue)
+    public synchronized boolean writeDescriptor(int descHandle, byte[] newValue)
     {
         if (mBluetoothGatt == null)
             return false;
@@ -1227,9 +1281,7 @@ public class QtBluetoothLE {
         newJob.jobType = IoJobType.Write;
 
         boolean result;
-        synchronized (readWriteQueue) {
-            result = readWriteQueue.add(newJob);
-        }
+        result = readWriteQueue.add(newJob);
 
         if (!result) {
             Log.w(TAG, "Cannot add descriptor write request for " + descHandle + " to queue" );
@@ -1242,9 +1294,10 @@ public class QtBluetoothLE {
 
     /*************************************************************/
     /* Read Characteristics                                      */
+    /* This function is called from Qt thread                    */
     /*************************************************************/
 
-    public boolean readCharacteristic(int charHandle)
+    public synchronized boolean readCharacteristic(int charHandle)
     {
         if (mBluetoothGatt == null)
             return false;
@@ -1262,9 +1315,7 @@ public class QtBluetoothLE {
         newJob.jobType = IoJobType.Read;
 
         boolean result;
-        synchronized (readWriteQueue) {
-            result = readWriteQueue.add(newJob);
-        }
+        result = readWriteQueue.add(newJob);
 
         if (!result) {
             Log.w(TAG, "Cannot add characteristic read request for " + charHandle + " to queue" );
@@ -1275,7 +1326,8 @@ public class QtBluetoothLE {
         return true;
     }
 
-    public boolean readDescriptor(int descHandle)
+    // This function is called from Qt thread
+    public synchronized boolean readDescriptor(int descHandle)
     {
         if (mBluetoothGatt == null)
             return false;
@@ -1293,9 +1345,7 @@ public class QtBluetoothLE {
         newJob.jobType = IoJobType.Read;
 
         boolean result;
-        synchronized (readWriteQueue) {
-            result = readWriteQueue.add(newJob);
-        }
+        result = readWriteQueue.add(newJob);
 
         if (!result) {
             Log.w(TAG, "Cannot add descriptor read request for " + descHandle + " to queue" );
@@ -1309,12 +1359,10 @@ public class QtBluetoothLE {
     // Called by TimeoutRunnable if the current I/O job timed out.
     // By the time we reach this point the handleForTimeout counter has already been reset
     // and the regular responses will be blocked off.
-    private void interruptCurrentIO(int handle)
+    private synchronized void interruptCurrentIO(int handle)
     {
         //unlock the queue for next item
-        synchronized (readWriteQueue) {
-            pendingJob = null;
-        }
+        pendingJob = null;
 
         performNextIOThreaded();
 
@@ -1322,19 +1370,16 @@ public class QtBluetoothLE {
             return;
 
         try {
-            synchronized (this) {
+            GattEntry entry = entries.get(handle);
+            if (entry == null)
+                return;
+            if (entry.valueKnown)
+                return;
+            entry.valueKnown = true;
 
-                GattEntry entry = entries.get(handle);
-                if (entry == null)
-                    return;
-                if (entry.valueKnown)
-                    return;
-                entry.valueKnown = true;
-
-                GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
-                if (serviceEntry != null && serviceEntry.endHandle == handle)
-                    finishCurrentServiceDiscovery(entry.associatedServiceHandle);
-            }
+            GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
+            if (serviceEntry != null && serviceEntry.endHandle == handle)
+                finishCurrentServiceDiscovery(entry.associatedServiceHandle);
         } catch (IndexOutOfBoundsException outOfBounds) {
             Log.w(TAG, "interruptCurrentIO(): Unknown gatt entry, index: "
                     + handle + " size: " + entries.size());
@@ -1364,7 +1409,7 @@ public class QtBluetoothLE {
        cannot execute at the same time. The second write must happen after the
        previous write has finished with on(Characteristic|Descriptor)Write().
     */
-    private void performNextIO()
+    private synchronized void performNextIO()
     {
         if (mBluetoothGatt == null)
             return;
@@ -1373,62 +1418,58 @@ public class QtBluetoothLE {
         final ReadWriteJob nextJob;
         int handle = HANDLE_FOR_RESET;
 
-        synchronized (readWriteQueue) {
-            if (readWriteQueue.isEmpty() || pendingJob != null)
-                return;
+        if (readWriteQueue.isEmpty() || pendingJob != null)
+            return;
 
-            nextJob = readWriteQueue.remove();
-            if (nextJob.jobType == IoJobType.Mtu) {
-                handle = HANDLE_FOR_MTU_EXCHANGE; //mtu request is special case
-            } else {
-                switch (nextJob.entry.type) {
-                    case Characteristic:
-                        handle = handleForCharacteristic(nextJob.entry.characteristic);
-                        break;
-                    case Descriptor:
-                        handle = handleForDescriptor(nextJob.entry.descriptor);
-                        break;
-                    case CharacteristicValue:
-                        handle = nextJob.entry.endHandle;
-                    default:
-                        break;
-                }
-            }
-
-            // timeout handler and handleForTimeout atomic must be setup before
-            // executing the request. Sometimes the callback is quicker than executing the
-            // remainder of this function. Therefore enable the atomic early such that
-            // callback handlers start hanging in the readWriteQueue sync block which
-            // we are still occupying here.
-            timeoutHandler.removeCallbacksAndMessages(null); // remove any timeout handlers
-            handleForTimeout.set(modifiedReadWriteHandle(handle, nextJob.jobType));
-
-            switch (nextJob.jobType) {
-                case Read:
-                    skip = executeReadJob(nextJob);
+        nextJob = readWriteQueue.remove();
+        if (nextJob.jobType == IoJobType.Mtu) {
+            handle = HANDLE_FOR_MTU_EXCHANGE; //mtu request is special case
+        } else {
+            switch (nextJob.entry.type) {
+                case Characteristic:
+                    handle = handleForCharacteristic(nextJob.entry.characteristic);
                     break;
-                case Write:
-                    skip = executeWriteJob(nextJob);
+                case Descriptor:
+                    handle = handleForDescriptor(nextJob.entry.descriptor);
                     break;
-                case Mtu:
-                    skip = executeMtuExchange();
+                case CharacteristicValue:
+                    handle = nextJob.entry.endHandle;
+                default:
                     break;
             }
+        }
 
-            if (skip) {
-                handleForTimeout.set(HANDLE_FOR_RESET); // not a pending call -> release atomic
-            } else {
-                pendingJob = nextJob;
-                timeoutHandler.postDelayed(new TimeoutRunnable(
-                        modifiedReadWriteHandle(handle, nextJob.jobType)), RUNNABLE_TIMEOUT);
-            }
+        // timeout handler and handleForTimeout atomic must be setup before
+        // executing the request. Sometimes the callback is quicker than executing the
+        // remainder of this function. Therefore enable the atomic early
+        timeoutHandler.removeCallbacksAndMessages(null); // remove any timeout handlers
+        handleForTimeout.set(modifiedReadWriteHandle(handle, nextJob.jobType));
 
-            if (nextJob.jobType != IoJobType.Mtu) {
-                Log.w(TAG, "Performing queued job, handle: " + handle + " " + nextJob.jobType + " (" +
-                        (nextJob.requestedWriteType == BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE) +
-                       ") ValueKnown: " + nextJob.entry.valueKnown + " Skipping: " + skip +
-                       " " + nextJob.entry.type);
-            }
+        switch (nextJob.jobType) {
+            case Read:
+                skip = executeReadJob(nextJob);
+                break;
+            case Write:
+                skip = executeWriteJob(nextJob);
+                break;
+            case Mtu:
+                skip = executeMtuExchange();
+                break;
+        }
+
+        if (skip) {
+            handleForTimeout.set(HANDLE_FOR_RESET); // not a pending call -> release atomic
+        } else {
+            pendingJob = nextJob;
+            timeoutHandler.postDelayed(new TimeoutRunnable(
+                    modifiedReadWriteHandle(handle, nextJob.jobType)), RUNNABLE_TIMEOUT);
+        }
+
+        if (nextJob.jobType != IoJobType.Mtu) {
+            Log.w(TAG, "Performing queued job, handle: " + handle + " " + nextJob.jobType + " (" +
+                    (nextJob.requestedWriteType == BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE) +
+                   ") ValueKnown: " + nextJob.entry.valueKnown + " Skipping: " + skip +
+                   " " + nextJob.entry.type);
         }
 
         GattEntry entry = nextJob.entry;
@@ -1477,15 +1518,13 @@ public class QtBluetoothLE {
                     }
 
                     // last entry of current discovery run?
-                    synchronized (this) {
-                        try {
-                            GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
-                            if (serviceEntry.endHandle == handle)
-                                finishCurrentServiceDiscovery(entry.associatedServiceHandle);
-                        } catch (IndexOutOfBoundsException outOfBounds) {
-                            Log.w(TAG, "performNextIO(): Unknown service for entry, index: "
-                                            + entry.associatedServiceHandle + " size: " + entries.size());
-                        }
+                    try {
+                        GattEntry serviceEntry = entries.get(entry.associatedServiceHandle);
+                        if (serviceEntry.endHandle == handle)
+                            finishCurrentServiceDiscovery(entry.associatedServiceHandle);
+                    } catch (IndexOutOfBoundsException outOfBounds) {
+                        Log.w(TAG, "performNextIO(): Unknown service for entry, index: "
+                                        + entry.associatedServiceHandle + " size: " + entries.size());
                     }
                 } else {
                     int errorCode = 0;
@@ -1517,7 +1556,6 @@ public class QtBluetoothLE {
         }
     }
 
-    // Runs inside the Mutex on readWriteQueue.
     // Returns true if nextJob should be skipped.
     private boolean executeWriteJob(ReadWriteJob nextJob)
     {
@@ -1586,7 +1624,6 @@ public class QtBluetoothLE {
         return false;
     }
 
-    // Runs inside the Mutex on readWriteQueue.
     // Returns true if nextJob should be skipped.
     private boolean executeReadJob(ReadWriteJob nextJob)
     {
@@ -1664,8 +1701,8 @@ public class QtBluetoothLE {
         return modifiedHandle;
     }
 
-    // Directly called from public Qt API
-    public boolean requestConnectionUpdatePriority(double minimalInterval)
+    // This function is called from Qt thread
+    public synchronized boolean requestConnectionUpdatePriority(double minimalInterval)
     {
         if (mBluetoothGatt == null)
             return false;
@@ -1706,4 +1743,3 @@ public class QtBluetoothLE {
     public native void leCharacteristicChanged(long qtObject, int charHandle, byte[] newData);
     public native void leServiceError(long qtObject, int attributeHandle, int errorCode);
 }
-

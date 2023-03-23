@@ -176,7 +176,8 @@ void tst_QLowEnergyController::initTestCase()
         }
     }
 
-    QVERIFY2(deviceFound, "Cannot find remote device.");
+    if (!deviceFound)
+        qWarning() << "Unable to find the TI sensor tag device, will skip most of the test";
 
     // These are the services exported by the TI SensorTag
 #ifndef Q_OS_MAC

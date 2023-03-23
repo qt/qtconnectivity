@@ -64,8 +64,7 @@ PingPong::PingPong():
 
 PingPong::~PingPong()
 {
-    delete m_timer;
-    delete m_serverInfo;
+    m_timer->stop();
     delete socket;
     delete discoveryAgent;
 }
@@ -249,7 +248,7 @@ void PingPong::startServer()
             this, &PingPong::serverError);
     const QBluetoothUuid uuid(serviceUuid);
 
-    m_serverInfo->listen(uuid, QStringLiteral("PingPong server"));
+    m_serviceInfo = m_serverInfo->listen(uuid, QStringLiteral("PingPong server"));
     //! [Starting the server]
     setMessage(QStringLiteral("Server started, waiting for the client. You are the left player."));
     // m_role is set to 1 if it is a server
@@ -344,7 +343,12 @@ void PingPong::done()
 
 void PingPong::addService(const QBluetoothServiceInfo &service)
 {
-    setMessage("Service found. Setting parameters...");
+    if (m_serviceFound)
+        return;
+    m_serviceFound = true;
+
+    setMessage("Service found. Stopping discovery and creating connection...");
+    discoveryAgent->stop();
     //! [Connecting the socket]
     socket = new QBluetoothSocket(QBluetoothServiceInfo::RfcommProtocol);
     socket->connectToService(service);
@@ -353,7 +357,6 @@ void PingPong::addService(const QBluetoothServiceInfo &service)
     connect(socket, &QBluetoothSocket::connected, this, &PingPong::serverConnected);
     connect(socket, &QBluetoothSocket::disconnected, this, &PingPong::serverDisconnected);
     //! [Connecting the socket]
-    m_serviceFound = true;
 }
 
 void PingPong::serviceScanError(QBluetoothServiceDiscoveryAgent::Error error)

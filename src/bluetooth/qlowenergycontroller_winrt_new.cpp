@@ -404,6 +404,8 @@ public:
     ~QWinRTLowEnergyConnectionHandler()
     {
         qCDebug(QT_BT_WINRT) << __FUNCTION__;
+        mDevice.Reset();
+        mGattSession.Reset();
         // To close the COM library gracefully, each successful call to
         // CoInitialize, including those that return S_FALSE, must be balanced
         // by a corresponding call to CoUninitialize.
@@ -436,7 +438,7 @@ private:
 void QWinRTLowEnergyConnectionHandler::connectToDevice()
 {
     qCDebug(QT_BT_WINRT) << __FUNCTION__;
-    mInitialized = CoInitialize(NULL);
+    mInitialized = CoInitializeEx(NULL, COINIT_MULTITHREADED);
     qCDebug(QT_BT_WINRT) << qt_error_string(mInitialized);
 
     auto earlyExit = [this]() { return mAbortConnection; };
@@ -676,10 +678,23 @@ void QWinRTLowEnergyConnectionHandler::emitConnectedAndQuitThread()
     QThread::currentThread()->quit();
 }
 
+static void registerServiceHandlerMetaTypes()
+{
+    static bool registered = false;
+    if (!registered) {
+        qRegisterMetaType<QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData>>(
+        "QHash<QLowEnergyHandle, QLowEnergyServicePrivate::CharData>");
+        qRegisterMetaType<QVector<QBluetoothUuid>>("QVector<QBluetoothUuid>");
+        qRegisterMetaType<QLowEnergyHandle>("QLowEnergyHandle");
+        registered = true;
+    }
+}
+
 QLowEnergyControllerPrivateWinRTNew::QLowEnergyControllerPrivateWinRTNew()
     : QLowEnergyControllerPrivate()
 {
     registerQLowEnergyControllerMetaType();
+    registerServiceHandlerMetaTypes();
     connect(this, &QLowEnergyControllerPrivateWinRTNew::characteristicChanged,
             this, &QLowEnergyControllerPrivateWinRTNew::handleCharacteristicChanged,
             Qt::QueuedConnection);

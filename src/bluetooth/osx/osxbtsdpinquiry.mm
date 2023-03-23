@@ -1,6 +1,6 @@
 /****************************************************************************
 **
-** Copyright (C) 2016 The Qt Company Ltd.
+** Copyright (C) 2022 The Qt Company Ltd.
 ** Contact: https://www.qt.io/licensing/
 **
 ** This file is part of the QtBluetooth module of the Qt Toolkit.
@@ -43,14 +43,20 @@
 #include "osxbtutility_p.h"
 #include "btdelegates_p.h"
 
+#include <QtCore/qoperatingsystemversion.h>
 #include <QtCore/qvariant.h>
 #include <QtCore/qstring.h>
+#include <QtCore/qtimer.h>
+
+#include <memory>
 
 QT_BEGIN_NAMESPACE
 
 namespace OSXBluetooth {
 
 namespace {
+
+const int basebandConnectTimeoutMS = 20000;
 
 QBluetoothUuid sdp_element_to_uuid(IOBluetoothSDPDataElement *element)
 {
@@ -78,11 +84,20 @@ QVector<QBluetoothUuid> extract_service_class_ID_list(IOBluetoothSDPServiceRecor
     QT_BT_MAC_AUTORELEASEPOOL;
 
     IOBluetoothSDPDataElement *const idList = [record getAttributeDataElement:kBluetoothSDPAttributeIdentifierServiceClassIDList];
-    if (!idList || [idList getTypeDescriptor] != kBluetoothSDPDataElementTypeDataElementSequence)
-        return {};
 
     QVector<QBluetoothUuid> uuids;
-    NSArray *const arr = [idList getArrayValue];
+    if (!idList)
+        return uuids;
+
+    NSArray *arr = nil;
+    if ([idList getTypeDescriptor] == kBluetoothSDPDataElementTypeDataElementSequence)
+        arr = [idList getArrayValue];
+    else if ([idList getTypeDescriptor] == kBluetoothSDPDataElementTypeUUID)
+        arr = @[idList];
+
+    if (!arr)
+        return uuids;
+
     for (IOBluetoothSDPDataElement *dataElement in arr) {
         const auto qtUuid = sdp_element_to_uuid(dataElement);
         if (!qtUuid.isNull())
@@ -200,7 +215,7 @@ QVector<QBluetoothUuid> extract_services_uuids(IOBluetoothDevice *device)
     return uuids;
 }
 
-}
+} // namespace OSXBluetooth
 
 QT_END_NAMESPACE
 
@@ -213,6 +228,9 @@ using namespace OSXBluetooth;
     QT_PREPEND_NAMESPACE(DarwinBluetooth::SDPInquiryDelegate) *delegate;
     IOBluetoothDevice *device;
     bool isActive;
+
+    // Needed to workaround a broken SDP on Monterey:
+    std::unique_ptr<QTimer> connectionWatchdog;
 }
 
 - (id)initWithDelegate:(DarwinBluetooth::SDPInquiryDelegate *)aDelegate
@@ -242,17 +260,41 @@ using namespace OSXBluetooth;
     return [self performSDPQueryWithDevice:address filters:emptyFilter];
 }
 
+- (void)interruptSDPQuery
+{
+    // To be only executed on timer.
+    Q_ASSERT(connectionWatchdog.get());
+    // If device was reset, so the timer should be, we can never be here then.
+    Q_ASSERT(device);
+
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
+    qCDebug(QT_BT_OSX) << "couldn't connect to device" << [device nameOrAddress]
+                          << ", ending SDP inquiry.";
+
+    // Stop the watchdog and close the connection as otherwise there could be
+    // later "connectionComplete" callbacks
+    connectionWatchdog->stop();
+    [device closeConnection];
+
+    delegate->SDPInquiryError(device, kIOReturnTimeout);
+    [device release];
+    device = nil;
+    isActive = false;
+}
+
 - (IOReturn)performSDPQueryWithDevice:(const QBluetoothAddress &)address
                               filters:(const QList<QBluetoothUuid> &)qtFilters
 {
     Q_ASSERT_X(!isActive, Q_FUNC_INFO, "SDP query in progress");
     Q_ASSERT_X(!address.isNull(), Q_FUNC_INFO, "invalid target device address");
+    qCDebug(QT_BT_OSX) << "Starting and SDP inquiry for address:" << address;
 
     QT_BT_MAC_AUTORELEASEPOOL;
 
     // We first try to allocate "filters":
     ObjCScopedPointer<NSMutableArray> array;
-    if (qtFilters.size()) {
+    if (QOperatingSystemVersion::current() <= QOperatingSystemVersion::MacOSBigSur
+        && qtFilters.size()) { // See the comment about filters on Monterey below.
         array.reset([[NSMutableArray alloc] init]);
         if (!array) {
             qCCritical(QT_BT_OSX) << "failed to allocate an uuid filter";
@@ -281,7 +323,65 @@ using namespace OSXBluetooth;
     ObjCScopedPointer<IOBluetoothDevice> oldDevice(device);
     device = newDevice.data();
 
+    qCDebug(QT_BT_OSX) << "Device" << [device nameOrAddress] << "connected:"
+                          << bool([device isConnected]) << "paired:" << bool([device isPaired]);
     IOReturn result = kIOReturnSuccess;
+
+    if (QOperatingSystemVersion::current() > QOperatingSystemVersion::MacOSBigSur) {
+        // SDP query on Monterey does not follow its own documented/expected behavior:
+        // - a simple performSDPQuery was previously ensuring baseband connection
+        //   to be opened, now it does not do so, instead logs a warning and returns
+        //   immediately.
+        // - a version with UUID filters simply does nothing except it immediately
+        //   returns kIOReturnSuccess.
+
+        // If the device was not yet connected, connect it first
+        if (![device isConnected]) {
+            qCDebug(QT_BT_OSX) << "Device" << [device nameOrAddress]
+                                  << "is not connected, connecting it first";
+            result = [device openConnection:self];
+            // The connection may succeed immediately. But if it didn't, start a connection timer
+            // which has two guardian roles:
+            // 1. Guard against connect attempt taking too long time
+            // 2. Sometimes on Monterey the callback indicating "connection completion" is
+            //    not received even though the connection has in fact succeeded
+            if (![device isConnected]) {
+                qCDebug(QT_BT_OSX) << "Starting connection monitor for device"
+                                      << [device nameOrAddress] << "with timeout limit of"
+                                      << basebandConnectTimeoutMS/1000 << "seconds.";
+                connectionWatchdog.reset(new QTimer);
+                connectionWatchdog->setSingleShot(false);
+                QObject::connect(connectionWatchdog.get(), &QTimer::timeout,
+                                 connectionWatchdog.get(),
+                                 [self] () {
+                    qCDebug(QT_BT_OSX) << "Connection monitor timeout for device:"
+                                          << [device nameOrAddress]
+                                          << ", connected:" << bool([device isConnected]);
+                    // Device can sometimes get properly connected without IOBluetooth
+                    // calling the connectionComplete callback, so we check the status here
+                    if ([device isConnected])
+                        [self connectionComplete:device status:kIOReturnSuccess];
+                    else
+                        [self interruptSDPQuery];
+                });
+                connectionWatchdog->start(basebandConnectTimeoutMS);
+            }
+         }
+
+        if ([device isConnected])
+            result = [device performSDPQuery:self];
+
+        if (result != kIOReturnSuccess) {
+            qCCritical(QT_BT_OSX, "failed to start an SDP query");
+            device = oldDevice.take();
+        } else {
+            newDevice.take();
+            isActive = true;
+        }
+
+        return result;
+    } // Monterey's code path.
+
     if (qtFilters.size())
         result = [device performSDPQuery:self uuids:array];
     else
@@ -291,25 +391,53 @@ using namespace OSXBluetooth;
         qCCritical(QT_BT_OSX) << "failed to start an SDP query";
         device = oldDevice.take();
     } else {
-        isActive = true;
         newDevice.take();
+        isActive = true;
     }
 
     return result;
 }
 
+- (void)connectionComplete:(IOBluetoothDevice *)aDevice status:(IOReturn)status
+{
+    qCDebug(QT_BT_OSX) << "connectionComplete for device" << [aDevice nameOrAddress]
+                          << "with status:" << status;
+    if (aDevice != device) {
+        // Connection was previously cancelled, probably, due to the timeout.
+        return;
+    }
+
+    // The connectionComplete may be invoked by either the IOBluetooth callback or our
+    // connection watchdog. In either case stop the watchdog if it exists
+    if (connectionWatchdog)
+        connectionWatchdog->stop();
+
+    if (status == kIOReturnSuccess)
+        status = [aDevice performSDPQuery:self];
+
+    if (status != kIOReturnSuccess) {
+        isActive = false;
+        qCWarning(QT_BT_OSX, "failed to open connection or start an SDP query");
+        Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
+        delegate->SDPInquiryError(aDevice, status);
+    }
+}
+
 - (void)stopSDPQuery
 {
-    // There is no API to stop it,
-    // but there is a 'stop' member-function in Qt and
-    // after it's called sdpQueryComplete must be somehow ignored.
-
+    // There is no API to stop it SDP on device, but there is a 'stop'
+    // member-function in Qt and after it's called sdpQueryComplete
+    // must be somehow ignored (device != aDevice in a callback).
     [device release];
     device = nil;
+    isActive = false;
+    connectionWatchdog.reset();
 }
 
 - (void)sdpQueryComplete:(IOBluetoothDevice *)aDevice status:(IOReturn)status
 {
+    qCDebug(QT_BT_OSX) << "sdpQueryComplete for device:" << [aDevice nameOrAddress]
+                          << "with status:" << status;
     // Can happen - there is no legal way to cancel an SDP query,
     // after the 'reset' device can never be
     // the same as the cancelled one.
@@ -320,6 +448,15 @@ using namespace OSXBluetooth;
 
     isActive = false;
 
+    // If we used the manual connection establishment, close the
+    // connection here. Otherwise the IOBluetooth may call stray
+    // connectionComplete or sdpQueryCompletes
+    if (connectionWatchdog) {
+        qCDebug(QT_BT_OSX) << "Closing the connection established for SDP inquiry.";
+        connectionWatchdog.reset();
+        [device closeConnection];
+    }
+
     if (status != kIOReturnSuccess)
         delegate->SDPInquiryError(aDevice, status);
     else
@@ -327,3 +464,4 @@ using namespace OSXBluetooth;
 }
 
 @end
+

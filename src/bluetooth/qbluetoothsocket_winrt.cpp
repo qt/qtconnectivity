@@ -50,6 +50,7 @@
 #include <QtBluetooth/qbluetoothdeviceinfo.h>
 #include <QtBluetooth/qbluetoothserviceinfo.h>
 #include <QtCore/qloggingcategory.h>
+#include <QtCore/QPointer>
 
 #include <robuffer.h>
 #include <windows.devices.bluetooth.h>
@@ -141,20 +142,6 @@ public:
     void close()
     {
         m_shuttingDown = true;
-        if (Q_UNLIKELY(m_initialReadOp)) {
-            onReadyRead(m_initialReadOp.Get(), Canceled);
-            ComPtr<IAsyncInfo> info;
-            HRESULT hr = m_initialReadOp.As(&info);
-            Q_ASSERT_SUCCEEDED(hr);
-            if (info) {
-                hr = info->Cancel();
-                Q_ASSERT_SUCCEEDED(hr);
-                hr = info->Close();
-                Q_ASSERT_SUCCEEDED(hr);
-            }
-            m_initialReadOp.Reset();
-        }
-
         if (m_readOp) {
             onReadyRead(m_readOp.Get(), Canceled);
             ComPtr<IAsyncInfo> info;
@@ -195,9 +182,16 @@ public:
             ComPtr<IInputStream> stream;
             hr = m_socket->get_InputStream(&stream);
             Q_ASSERT_SUCCEEDED(hr);
-            hr = stream->ReadAsync(buffer.Get(), READ_BUFFER_SIZE, InputStreamOptions_Partial, m_initialReadOp.GetAddressOf());
+            hr = stream->ReadAsync(buffer.Get(), READ_BUFFER_SIZE, InputStreamOptions_Partial, m_readOp.GetAddressOf());
             Q_ASSERT_SUCCEEDED(hr);
-            hr = m_initialReadOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
+            QPointer<SocketWorker> thisPtr(this);
+            hr = m_readOp->put_Completed(
+                    Callback<SocketReadCompletedHandler>([thisPtr](IAsyncBufferOperation *asyncInfo,
+                                                                AsyncStatus status) {
+                        if (thisPtr)
+                            return thisPtr->onReadyRead(asyncInfo, status);
+                        return S_OK;
+                    }).Get());
             Q_ASSERT_SUCCEEDED(hr);
             return S_OK;
         });
@@ -209,13 +203,10 @@ public:
         if (m_shuttingDown)
             return S_OK;
 
-        if (asyncInfo == m_initialReadOp.Get()) {
-            m_initialReadOp.Reset();
-        } else if (asyncInfo == m_readOp.Get()) {
+        if (asyncInfo == m_readOp.Get())
             m_readOp.Reset();
-        } else {
+        else
             Q_ASSERT(false);
-        }
 
         // A read in UnconnectedState will close the socket and return -1 and thus tell the caller,
         // that the connection was closed. The socket cannot be closed here, as the subsequent read
@@ -301,7 +292,14 @@ public:
                 emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
                 return S_OK;
             }
-            hr = m_readOp->put_Completed(Callback<SocketReadCompletedHandler>(this, &SocketWorker::onReadyRead).Get());
+            QPointer<SocketWorker> thisPtr(this);
+            hr = m_readOp->put_Completed(
+                    Callback<SocketReadCompletedHandler>([thisPtr](IAsyncBufferOperation *asyncInfo,
+                                                                AsyncStatus status) {
+                        if (thisPtr)
+                            return thisPtr->onReadyRead(asyncInfo, status);
+                        return S_OK;
+                    }).Get());
             if (FAILED(hr)) {
                 qErrnoWarning(hr, "onReadyRead(): Failed to set socket read callback.");
                 emit socketErrorOccured(QBluetoothSocket::UnknownSocketError);
@@ -323,7 +321,6 @@ private:
     // Protects pendingData/pendingDatagrams which are accessed from native callbacks
     QMutex m_mutex;
 
-    ComPtr<IAsyncOperationWithProgress<IBuffer *, UINT32>> m_initialReadOp;
     ComPtr<IAsyncOperationWithProgress<IBuffer *, UINT32>> m_readOp;
 };
 

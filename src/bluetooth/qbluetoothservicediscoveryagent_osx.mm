@@ -47,6 +47,7 @@
 #include "osx/osxbluetooth_p.h"
 #include "osx/uistrings_p.h"
 
+#include <QtCore/qoperatingsystemversion.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qscopedpointer.h>
 #include <QtCore/qstring.h>
@@ -148,15 +149,37 @@ void QBluetoothServiceDiscoveryAgentPrivate::SDPInquiryFinished(void *generic)
     QT_BT_MAC_AUTORELEASEPOOL;
 
     NSArray *const records = device.services;
+    qCDebug(QT_BT_OSX) << "SDP finished for device" << [device nameOrAddress]
+                          << ", services found:" << [records count];
     for (IOBluetoothSDPServiceRecord *record in records) {
         QBluetoothServiceInfo serviceInfo;
         Q_ASSERT_X(discoveredDevices.size() >= 1, Q_FUNC_INFO, "invalid number of devices");
 
+        qCDebug(QT_BT_OSX) << "Processing service" << [record getServiceName];
         serviceInfo.setDevice(discoveredDevices.at(0));
         OSXBluetooth::extract_service_record(record, serviceInfo);
 
-        if (!serviceInfo.isValid())
+        if (!serviceInfo.isValid()) {
+            qCDebug(QT_BT_OSX) << "Discarding invalid service";
             continue;
+        }
+
+        if (QOperatingSystemVersion::current() > QOperatingSystemVersion::MacOSBigSur
+            && uuidFilter.size()) {
+            const auto &serviceId = serviceInfo.serviceUuid();
+            bool match = !serviceId.isNull() && uuidFilter.contains(serviceId);
+            if (!match) {
+                const auto &classUuids = serviceInfo.serviceClassUuids();
+                for (const auto &uuid : classUuids) {
+                    if (uuidFilter.contains(uuid)) {
+                        match = true;
+                        break;
+                    }
+                }
+                if (!match)
+                    continue;
+            }
+        }
 
         if (!isDuplicatedService(serviceInfo)) {
             discoveredServices.append(serviceInfo);
