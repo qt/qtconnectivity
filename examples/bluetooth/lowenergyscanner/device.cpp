@@ -4,35 +4,33 @@
 
 #include "device.h"
 
-#include <qbluetoothaddress.h>
-#include <qbluetoothdevicediscoveryagent.h>
-#include <qbluetoothlocaldevice.h>
-#include <qbluetoothdeviceinfo.h>
-#include <qbluetoothservicediscoveryagent.h>
-#include <QDebug>
-#include <QList>
-#include <QMetaEnum>
-#include <QTimer>
+#include <QtBluetooth/qbluetoothdeviceinfo.h>
+#include <QtBluetooth/qbluetoothuuid.h>
+
+#include <QtCore/qdebug.h>
+#include <QtCore/qmetaobject.h>
+#include <QtCore/qtimer.h>
+
+using namespace Qt::StringLiterals;
 
 Device::Device()
 {
     //! [les-devicediscovery-1]
-    discoveryAgent = new QBluetoothDeviceDiscoveryAgent();
+    discoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
     discoveryAgent->setLowEnergyDiscoveryTimeout(25000);
     connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
             this, &Device::addDevice);
-    connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred, this,
-            &Device::deviceScanError);
-    connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished, this, &Device::deviceScanFinished);
+    connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred,
+            this, &Device::deviceScanError);
+    connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished,
+            this, &Device::deviceScanFinished);
     //! [les-devicediscovery-1]
 
-    setUpdate("Search");
+    setUpdate(u"Search"_s);
 }
 
 Device::~Device()
 {
-    delete discoveryAgent;
-    delete controller;
     qDeleteAll(devices);
     qDeleteAll(m_services);
     qDeleteAll(m_characteristics);
@@ -47,7 +45,7 @@ void Device::startDeviceDiscovery()
     devices.clear();
     emit devicesUpdated();
 
-    setUpdate("Scanning for devices ...");
+    setUpdate(u"Scanning for devices ..."_s);
     //! [les-devicediscovery-2]
     discoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
     //! [les-devicediscovery-2]
@@ -62,7 +60,7 @@ void Device::startDeviceDiscovery()
 void Device::addDevice(const QBluetoothDeviceInfo &info)
 {
     if (info.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
-        setUpdate("Last device added: " + info.name());
+        setUpdate(u"Last device added: "_s + info.name());
 }
 //! [les-devicediscovery-3]
 
@@ -77,9 +75,9 @@ void Device::deviceScanFinished()
     m_deviceScanState = false;
     emit stateChanged();
     if (devices.isEmpty())
-        setUpdate("No Low Energy devices found...");
+        setUpdate(u"No Low Energy devices found..."_s);
     else
-        setUpdate("Done! Scan Again!");
+        setUpdate(u"Done! Scan Again!"_s);
 }
 
 QVariant Device::getDevices()
@@ -108,7 +106,7 @@ void Device::scanServices(const QString &address)
 
     for (auto d: std::as_const(devices)) {
         if (auto device = qobject_cast<DeviceInfo *>(d)) {
-            if (device->getAddress() == address ) {
+            if (device->getAddress() == address) {
                 currentDevice.setDevice(device->getDevice());
                 break;
             }
@@ -127,7 +125,7 @@ void Device::scanServices(const QString &address)
     m_services.clear();
     emit servicesUpdated();
 
-    setUpdate("Back\n(Connecting to device...)");
+    setUpdate(u"Back\n(Connecting to device...)"_s);
 
     if (controller && m_previousAddress != currentDevice.getAddress()) {
         controller->disconnectFromDevice();
@@ -138,7 +136,7 @@ void Device::scanServices(const QString &address)
     //! [les-controller-1]
     if (!controller) {
         // Connecting signals and slots for connecting to LE services.
-        controller = QLowEnergyController::createCentral(currentDevice.getDevice());
+        controller = QLowEnergyController::createCentral(currentDevice.getDevice(), this);
         connect(controller, &QLowEnergyController::connected,
                 this, &Device::deviceConnected);
         connect(controller, &QLowEnergyController::errorOccurred, this, &Device::errorReceived);
@@ -178,7 +176,7 @@ void Device::addLowEnergyService(const QBluetoothUuid &serviceUuid)
 
 void Device::serviceScanDone()
 {
-    setUpdate("Back\n(Service scan done!)");
+    setUpdate(u"Back\n(Service scan done!)"_s);
     // force UI in case we didn't find anything
     if (m_services.isEmpty())
         emit servicesUpdated();
@@ -210,7 +208,7 @@ void Device::connectToService(const QString &uuid)
         connect(service, &QLowEnergyService::stateChanged,
                 this, &Device::serviceDetailsDiscovered);
         service->discoverDetails();
-        setUpdate("Back\n(Discovering details...)");
+        setUpdate(u"Back\n(Discovering details...)"_s);
         //! [les-service-3]
         return;
     }
@@ -227,7 +225,7 @@ void Device::connectToService(const QString &uuid)
 
 void Device::deviceConnected()
 {
-    setUpdate("Back\n(Discovering services...)");
+    setUpdate(u"Back\n(Discovering services...)"_s);
     connected = true;
     //! [les-service-2]
     controller->discoverServices();
@@ -237,7 +235,7 @@ void Device::deviceConnected()
 void Device::errorReceived(QLowEnergyController::Error /*error*/)
 {
     qWarning() << "Error: " << controller->errorString();
-    setUpdate(QString("Back\n(%1)").arg(controller->errorString()));
+    setUpdate(u"Back\n(%1)"_s.arg(controller->errorString()));
 }
 
 void Device::setUpdate(const QString &message)
@@ -299,13 +297,13 @@ void Device::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
 void Device::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
 {
     if (error == QBluetoothDeviceDiscoveryAgent::PoweredOffError)
-        setUpdate("The Bluetooth adaptor is powered off, power it on before doing discovery.");
+        setUpdate(u"The Bluetooth adaptor is powered off, power it on before doing discovery."_s);
     else if (error == QBluetoothDeviceDiscoveryAgent::InputOutputError)
-        setUpdate("Writing or reading from the device resulted in an error.");
+        setUpdate(u"Writing or reading from the device resulted in an error."_s);
     else {
         static QMetaEnum qme = discoveryAgent->metaObject()->enumerator(
                     discoveryAgent->metaObject()->indexOfEnumerator("Error"));
-        setUpdate("Error: " + QLatin1String(qme.valueToKey(error)));
+        setUpdate(u"Error: "_s + QLatin1StringView(qme.valueToKey(error)));
     }
 
     m_deviceScanState = false;

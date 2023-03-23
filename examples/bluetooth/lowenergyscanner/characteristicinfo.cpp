@@ -4,7 +4,10 @@
 
 #include "characteristicinfo.h"
 #include "qbluetoothuuid.h"
-#include <QByteArray>
+
+#include <QtCore/qbytearray.h>
+
+using namespace Qt::StringLiterals;
 
 CharacteristicInfo::CharacteristicInfo(const QLowEnergyCharacteristic &characteristic):
     m_characteristic(characteristic)
@@ -35,7 +38,7 @@ QString CharacteristicInfo::getName() const
     //! [les-get-descriptors]
 
     if (name.isEmpty())
-        name = "Unknown";
+        name = u"Unknown"_s;
 
     return name;
 }
@@ -46,13 +49,13 @@ QString CharacteristicInfo::getUuid() const
     bool success = false;
     quint16 result16 = uuid.toUInt16(&success);
     if (success)
-        return QStringLiteral("0x") + QString::number(result16, 16);
+        return u"0x"_s + QString::number(result16, 16);
 
     quint32 result32 = uuid.toUInt32(&success);
     if (success)
-        return QStringLiteral("0x") + QString::number(result32, 16);
+        return u"0x"_s + QString::number(result32, 16);
 
-    return uuid.toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
+    return uuid.toString().remove('{'_L1).remove('}'_L1);
 }
 
 QString CharacteristicInfo::getValue() const
@@ -61,12 +64,12 @@ QString CharacteristicInfo::getValue() const
     QByteArray a = m_characteristic.value();
     QString result;
     if (a.isEmpty()) {
-        result = QStringLiteral("<none>");
+        result = u"<none>"_s;
         return result;
     }
 
     result = a;
-    result += QLatin1Char('\n');
+    result += '\n'_L1;
     result += a.toHex();
 
     return result;
@@ -74,25 +77,25 @@ QString CharacteristicInfo::getValue() const
 
 QString CharacteristicInfo::getPermission() const
 {
-    QString properties = "( ";
+    QString properties = u"( "_s;
     uint permission = m_characteristic.properties();
     if (permission & QLowEnergyCharacteristic::Read)
-        properties += QStringLiteral(" Read");
+        properties += u" Read"_s;
     if (permission & QLowEnergyCharacteristic::Write)
-        properties += QStringLiteral(" Write");
+        properties += u" Write"_s;
     if (permission & QLowEnergyCharacteristic::Notify)
-        properties += QStringLiteral(" Notify");
+        properties += u" Notify"_s;
     if (permission & QLowEnergyCharacteristic::Indicate)
-        properties += QStringLiteral(" Indicate");
+        properties += u" Indicate"_s;
     if (permission & QLowEnergyCharacteristic::ExtendedProperty)
-        properties += QStringLiteral(" ExtendedProperty");
+        properties += u" ExtendedProperty"_s;
     if (permission & QLowEnergyCharacteristic::Broadcasting)
-        properties += QStringLiteral(" Broadcast");
+        properties += u" Broadcast"_s;
     if (permission & QLowEnergyCharacteristic::WriteNoResponse)
-        properties += QStringLiteral(" WriteNoResp");
+        properties += u" WriteNoResp"_s;
     if (permission & QLowEnergyCharacteristic::WriteSigned)
-        properties += QStringLiteral(" WriteSigned");
-    properties += " )";
+        properties += u" WriteSigned"_s;
+    properties += u" )"_s;
     return properties;
 }
 
