@@ -5,11 +5,10 @@
 #ifndef DEVICEINFO_H
 #define DEVICEINFO_H
 
-#include <QObject>
-#include <qbluetoothdeviceinfo.h>
-#include <qbluetoothaddress.h>
-#include <QList>
-#include "deviceinfo.h"
+#include <QtBluetooth/qbluetoothdeviceinfo.h>
+
+#include <QtCore/qlist.h>
+#include <QtCore/qobject.h>
 
 class DeviceInfo: public QObject
 {

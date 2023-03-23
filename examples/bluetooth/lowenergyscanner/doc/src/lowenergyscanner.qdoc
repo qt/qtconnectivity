@@ -4,7 +4,8 @@
 
 /*!
     \example lowenergyscanner
-    \title Bluetooth Low Energy Scanner Example
+    \title Bluetooth Low Energy Scanner
+    \meta category {Connectivity}
     \brief An application designed to browse the content of Bluetooth Low
     Energy peripheral devices. The example demonstrates the use of all Qt Bluetooth
     Low Energy classes.

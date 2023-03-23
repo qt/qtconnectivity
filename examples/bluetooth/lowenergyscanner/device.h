@@ -4,20 +4,22 @@
 #ifndef DEVICE_H
 #define DEVICE_H
 
-#include <qbluetoothlocaldevice.h>
-#include <QObject>
-#include <QVariant>
-#include <QList>
-#include <QBluetoothServiceDiscoveryAgent>
-#include <QBluetoothDeviceDiscoveryAgent>
-#include <QLowEnergyController>
-#include <QBluetoothServiceInfo>
+#include "characteristicinfo.h"
 #include "deviceinfo.h"
 #include "serviceinfo.h"
-#include "characteristicinfo.h"
 
-QT_FORWARD_DECLARE_CLASS (QBluetoothDeviceInfo)
-QT_FORWARD_DECLARE_CLASS (QBluetoothServiceInfo)
+#include <QtBluetooth/qbluetoothdevicediscoveryagent.h>
+#include <QtBluetooth/qlowenergycontroller.h>
+#include <QtBluetooth/qlowenergyservice.h>
+
+#include <QtCore/qlist.h>
+#include <QtCore/qobject.h>
+#include <QtCore/qvariant.h>
+
+QT_BEGIN_NAMESPACE
+class QBluetoothDeviceInfo;
+class QBluetoothUuid;
+QT_END_NAMESPACE
 
 class Device: public QObject
 {

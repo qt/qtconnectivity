@@ -4,9 +4,11 @@
 
 #ifndef CHARACTERISTICINFO_H
 #define CHARACTERISTICINFO_H
-#include <QObject>
-#include <QString>
-#include <QtBluetooth/QLowEnergyCharacteristic>
+
+#include <QtBluetooth/qlowenergycharacteristic.h>
+
+#include <QtCore/qobject.h>
+#include <QtCore/qstring.h>
 
 class CharacteristicInfo: public QObject
 {
