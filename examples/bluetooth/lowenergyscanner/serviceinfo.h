@@ -4,7 +4,12 @@
 
 #ifndef SERVICEINFO_H
 #define SERVICEINFO_H
-#include <QtBluetooth/QLowEnergyService>
+
+#include <QtCore/qobject.h>
+
+QT_BEGIN_NAMESPACE
+class QLowEnergyService;
+QT_END_NAMESPACE
 
 class ServiceInfo: public QObject
 {

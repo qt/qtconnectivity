@@ -4,6 +4,11 @@
 
 #include "serviceinfo.h"
 
+#include <QtBluetooth/qbluetoothuuid.h>
+#include <QtBluetooth/qlowenergyservice.h>
+
+using namespace Qt::StringLiterals;
+
 ServiceInfo::ServiceInfo(QLowEnergyService *service):
     m_service(service)
 {
@@ -30,14 +35,14 @@ QString ServiceInfo::getType() const
 
     QString result;
     if (m_service->type() & QLowEnergyService::PrimaryService)
-        result += QStringLiteral("primary");
+        result += u"primary"_s;
     else
-        result += QStringLiteral("secondary");
+        result += u"secondary"_s;
 
     if (m_service->type() & QLowEnergyService::IncludedService)
-        result += QStringLiteral(" included");
+        result += u" included"_s;
 
-    result.prepend('<').append('>');
+    result.prepend('<'_L1).append('>'_L1);
 
     return result;
 }
@@ -51,11 +56,11 @@ QString ServiceInfo::getUuid() const
     bool success = false;
     quint16 result16 = uuid.toUInt16(&success);
     if (success)
-        return QStringLiteral("0x") + QString::number(result16, 16);
+        return u"0x"_s + QString::number(result16, 16);
 
     quint32 result32 = uuid.toUInt32(&success);
     if (success)
-        return QStringLiteral("0x") + QString::number(result32, 16);
+        return u"0x"_s + QString::number(result32, 16);
 
-    return uuid.toString().remove(QLatin1Char('{')).remove(QLatin1Char('}'));
+    return uuid.toString().remove('{'_L1).remove('}'_L1);
 }

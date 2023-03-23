@@ -2,12 +2,12 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-#include <QtCore/QLoggingCategory>
-#include <QQmlContext>
-#include <QGuiApplication>
-#include <QQuickView>
 #include "device.h"
 
+#include <QtCore/qloggingcategory.h>
+#include <QtGui/qguiapplication.h>
+#include <QtQml/qqmlcontext.h>
+#include <QtQuick/qquickview.h>
 
 int main(int argc, char *argv[])
 {
