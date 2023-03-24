@@ -4,7 +4,7 @@ TARGET = heartrate-server
 QT = core bluetooth
 android|darwin: QT += gui
 
-CONFIG += c++11 console
+CONFIG += console
 
 SOURCES += main.cpp
 
