@@ -13,7 +13,7 @@
 #include <QtCore/qlist.h>
 #include <QtCore/qtimer.h>
 
-#include <QtQmlIntegration/qqmlintegration.h>
+#include <QtQml/qqmlregistration.h>
 
 class DeviceInfo;
 
@@ -31,8 +31,7 @@ class DeviceHandler : public BluetoothBaseClass
     Q_PROPERTY(float calories READ calories NOTIFY statsChanged)
     Q_PROPERTY(AddressType addressType READ addressType WRITE setAddressType)
 
-    QML_NAMED_ELEMENT(AddressType)
-    QML_UNCREATABLE("Enum is not a type")
+    QML_ELEMENT
 
 public:
     enum class AddressType {
