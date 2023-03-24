@@ -48,9 +48,9 @@ int main(int argc, char *argv[])
         {u"deviceHandler"_s, QVariant::fromValue(&deviceHandler)}
     });
 
-    engine.load(QUrl(u"qrc:/qml/main.qml"_s));
-    if (engine.rootObjects().isEmpty())
-        return -1;
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreationFailed, &app,
+                     []() { QCoreApplication::exit(1); }, Qt::QueuedConnection);
+    engine.loadFromModule("HeartRateGame", "Main");
 
     return app.exec();
 }

@@ -15,11 +15,6 @@ find_package(Qt6 REQUIRED COMPONENTS Bluetooth Core Gui Qml Quick)
 qt_standard_project_setup(REQUIRES 6.5)
 
 qt_add_executable(heartrate-game
-    bluetoothbaseclass.cpp bluetoothbaseclass.h
-    connectionhandler.cpp connectionhandler.h
-    devicefinder.cpp devicefinder.h
-    devicehandler.cpp devicehandler.h
-    deviceinfo.cpp deviceinfo.h
     heartrate-global.h
     main.cpp
 )
@@ -37,10 +32,37 @@ target_link_libraries(heartrate-game PRIVATE
     Qt::Quick
 )
 
+set_source_files_properties(GameSettings.qml PROPERTIES
+    QT_QML_SINGLETON_TYPE TRUE
+)
+
 qt_add_qml_module(heartrate-game
-    URI Shared
+    URI HeartRateGame
     VERSION 1.0
-    NO_RESOURCE_TARGET_PATH
+    SOURCES
+        bluetoothbaseclass.cpp bluetoothbaseclass.h
+        connectionhandler.cpp connectionhandler.h
+        devicefinder.cpp devicefinder.h
+        devicehandler.cpp devicehandler.h
+        deviceinfo.cpp deviceinfo.h
+    QML_FILES
+        App.qml
+        BluetoothAlarmDialog.qml
+        BottomLine.qml
+        Connect.qml
+        GameButton.qml
+        GamePage.qml
+        GameSettings.qml
+        Measure.qml
+        SplashScreen.qml
+        Stats.qml
+        StatsLabel.qml
+        TitleBar.qml
+        Main.qml
+    RESOURCES
+        images/bt_off_to_on.png
+        images/heart.png
+        images/logo.png
 )
 
 if (APPLE)
@@ -56,44 +78,6 @@ if (APPLE)
         )
     endif()
 endif()
-
-# Resources:
-set(qml_resource_files
-    "qml/App.qml"
-    "qml/BluetoothAlarmDialog.qml"
-    "qml/BottomLine.qml"
-    "qml/Connect.qml"
-    "qml/GameButton.qml"
-    "qml/GamePage.qml"
-    "qml/GameSettings.qml"
-    "qml/Measure.qml"
-    "qml/SplashScreen.qml"
-    "qml/Stats.qml"
-    "qml/StatsLabel.qml"
-    "qml/TitleBar.qml"
-    "qml/main.qml"
-    "qml/qmldir"
-)
-
-qt6_add_resources(heartrate-game "qml"
-    PREFIX
-        "/"
-    FILES
-        ${qml_resource_files}
-)
-
-set(images_resource_files
-    "qml/images/bt_off_to_on.png"
-    "qml/images/heart.png"
-    "qml/images/logo.png"
-)
-
-qt6_add_resources(heartrate-game "images"
-    PREFIX
-        "/"
-    FILES
-        ${images_resource_files}
-)
 
 install(TARGETS heartrate-game
     RUNTIME DESTINATION "${INSTALL_EXAMPLEDIR}"
