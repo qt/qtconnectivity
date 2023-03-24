@@ -10,23 +10,24 @@
 #include <QtBluetooth/qlowenergyservice.h>
 #include <QtBluetooth/qlowenergyservicedata.h>
 #include <QtCore/qbytearray.h>
-#ifndef Q_OS_ANDROID
-#include <QtCore/qcoreapplication.h>
-#else
+#if defined(Q_OS_ANDROID) || defined(Q_OS_DARWIN)
 #include <QtGui/qguiapplication.h>
+#else
+#include <QtCore/qcoreapplication.h>
 #endif
 #include <QtCore/qlist.h>
 #include <QtCore/qloggingcategory.h>
-#include <QtCore/qscopedpointer.h>
 #include <QtCore/qtimer.h>
+
+#include <memory>
 
 int main(int argc, char *argv[])
 {
     // QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
-#ifndef Q_OS_ANDROID
-    QCoreApplication app(argc, argv);
-#else
+#if defined(Q_OS_ANDROID) || defined(Q_OS_DARWIN)
     QGuiApplication app(argc, argv);
+#else
+    QCoreApplication app(argc, argv);
 #endif
 
     //! [Advertising Data]
@@ -54,9 +55,8 @@ int main(int argc, char *argv[])
 
     //! [Start Advertising]
     bool errorOccurred = false;
-    const QScopedPointer<QLowEnergyController> leController(QLowEnergyController::createPeripheral());
-    auto errorHandler = [&leController,&errorOccurred](QLowEnergyController::Error errorCode)
-    {
+    const std::unique_ptr<QLowEnergyController> leController(QLowEnergyController::createPeripheral());
+    auto errorHandler = [&leController, &errorOccurred](QLowEnergyController::Error errorCode) {
             qWarning().noquote().nospace() << errorCode << " occurred: "
                 << leController->errorString();
             if (errorCode != QLowEnergyController::RemoteHostClosedError) {
@@ -65,9 +65,9 @@ int main(int argc, char *argv[])
                 QCoreApplication::quit();
             }
     };
-    QObject::connect(leController.data(), &QLowEnergyController::errorOccurred, errorHandler);
+    QObject::connect(leController.get(), &QLowEnergyController::errorOccurred, errorHandler);
 
-    QScopedPointer<QLowEnergyService> service(leController->addService(serviceData));
+    std::unique_ptr<QLowEnergyService> service(leController->addService(serviceData));
     leController->startAdvertising(QLowEnergyAdvertisingParameters(), advertisingData,
                                    advertisingData);
     if (errorOccurred)
@@ -99,14 +99,14 @@ int main(int argc, char *argv[])
     heartbeatTimer.start(1000);
     //! [Provide Heartbeat]
 
-    auto reconnect = [&leController, advertisingData, &service, serviceData]()
-    {
+    auto reconnect = [&leController, advertisingData, &service, serviceData]() {
         service.reset(leController->addService(serviceData));
-        if (!service.isNull())
+        if (service) {
             leController->startAdvertising(QLowEnergyAdvertisingParameters(),
                                            advertisingData, advertisingData);
+        }
     };
-    QObject::connect(leController.data(), &QLowEnergyController::disconnected, reconnect);
+    QObject::connect(leController.get(), &QLowEnergyController::disconnected, reconnect);
 
     const int retval = QCoreApplication::exec();
     return errorOccurred ? -1 : retval;

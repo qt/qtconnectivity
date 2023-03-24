@@ -3,7 +3,8 @@
 
 /*!
     \example heartrate-server
-    \title Bluetooth Low Energy Heart Rate Server Example
+    \title Bluetooth Low Energy Heart Rate Server
+    \meta category {Connectivity}
     \brief An example demonstrating how to set up and advertise a GATT service. The example
     demonstrates the use of the Qt Bluetooth Low Energy classes related to peripheral (slave)
     functionality.
@@ -30,14 +31,25 @@
     To visualize what it is doing, you can use the \l {heartrate-game}{Heart Rate Game}
     example, which is basically the client-side counterpart to this application.
 
-    \note On Linux, advertising requires privileged access, so you need to run
-          the example as root, for instance via \c sudo.
+    \note By default on Linux a kernel socket API is used for advertising, which
+    means that a privileged access is required to start advertising. This can
+    be achieved by running the example as root, for instance via \c sudo.
+    Starting from Qt 6.5, an alternative approach is to use the BlueZ D-Bus
+    backend for advertising, which does not require root access. To enable
+    this backend, set \c QT_BLUETOOTH_USE_DBUS_PERIPHERAL environment variable.
 
     \section1 Setting up Advertising Data and Parameters
-    Two classes are used to configure the advertising process: \l QLowEnergyAdvertisingData to
-    specify which information is to be broadcast, and \l QLowEnergyAdvertisingParameters for
-    specific aspects such as setting the advertising interval or controlling which devices are
-    allowed to connect. In our example, we simply use the default parameters.
+
+    Two classes are used to configure the advertising process:
+    \list
+        \li \l QLowEnergyAdvertisingData specifies which information is to be
+            broadcasted
+        \li \l QLowEnergyAdvertisingParameters is used for specific aspects such
+            as setting the advertising interval or controlling which devices are
+            allowed to connect.
+    \endlist
+
+    In our example, we simply use the default parameters.
 
     The information contained in the \l QLowEnergyAdvertisingData will be visible to other devices
     that are currently scanning. They can use it to decide whether they want to establish a connection
@@ -50,13 +62,16 @@
     \snippet heartrate-server/main.cpp Advertising Data
 
     \section1 Setting up Service Data
-    Next we configure the kind of service we want to offer. We use the \c {Heart Rate} service as
-    defined in the Bluetooth specification in its minimal form, that is, consisting only of the
-    \c {Heart Rate Measurement} characteristic. This characteristic must support the \c Notify
-    property (and no others), and it needs to have a \c {Client Characteristic Configuration}
-    descriptor, which enables clients to register to get notified about changes to characteristic
-    values. We set the initial heart rate value to zero, as it cannot be read anyway (the only
-    way the client can get at the value is via notifications).
+    Next we configure the kind of service we want to offer. We use the
+    \l {QBluetoothUuid::ServiceClassUuid}{Heart Rate} service as defined in the
+    Bluetooth specification in its minimal form, that is, consisting only of the
+    \l {QBluetoothUuid::CharacteristicType}{Heart Rate Measurement} characteristic.
+    This characteristic must support the \l {QLowEnergyCharacteristic::}{Notify}
+    property (and no others), and it needs to have a \l {QBluetoothUuid::DescriptorType}
+    {Client Characteristic Configuration} descriptor, which enables clients to
+    register to get notified about changes to characteristic values. We set the
+    initial heart rate value to zero, as it cannot be read anyway (the only way
+    the client can get the value is via notifications).
     \snippet heartrate-server/main.cpp Service Data
 
     \section1 Advertising and Listening for Incoming Connections

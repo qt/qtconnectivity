@@ -4,8 +4,6 @@
 cmake_minimum_required(VERSION 3.16)
 project(heartrate-server LANGUAGES CXX)
 
-set(CMAKE_AUTOMOC ON)
-
 if(NOT DEFINED INSTALL_EXAMPLESDIR)
     set(INSTALL_EXAMPLESDIR "examples")
 endif()
@@ -14,7 +12,9 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/bluetooth/heartrate-server")
 
 find_package(Qt6 REQUIRED COMPONENTS Bluetooth Core)
 
-if(ANDROID OR IOS)
+qt_standard_project_setup()
+
+if(ANDROID OR APPLE)
     find_package(Qt6 REQUIRED COMPONENTS Gui)
 endif()
 
@@ -26,13 +26,13 @@ set_target_properties(heartrate-server PROPERTIES
     MACOSX_BUNDLE TRUE
 )
 
-target_link_libraries(heartrate-server PUBLIC
+target_link_libraries(heartrate-server PRIVATE
     Qt::Bluetooth
     Qt::Core
 )
 
-if(ANDROID OR IOS)
-    target_link_libraries(heartrate-server PUBLIC
+if(ANDROID OR APPLE)
+    target_link_libraries(heartrate-server PRIVATE
         Qt::Gui
     )
 endif()
