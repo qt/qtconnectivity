@@ -4,10 +4,10 @@
 #ifndef DEVICEINFO_H
 #define DEVICEINFO_H
 
-#include <QBluetoothDeviceInfo>
+#include <QtBluetooth/qbluetoothdeviceinfo.h>
 
-#include <QObject>
-#include <QString>
+#include <QtCore/qobject.h>
+#include <QtCore/qstring.h>
 
 class DeviceInfo: public QObject
 {

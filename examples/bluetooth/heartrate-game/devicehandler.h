@@ -6,14 +6,14 @@
 
 #include "bluetoothbaseclass.h"
 
-#include <QLowEnergyController>
-#include <QLowEnergyService>
+#include <QtBluetooth/qlowenergycontroller.h>
+#include <QtBluetooth/qlowenergyservice.h>
 
-#include <qqml.h>
+#include <QtCore/qdatetime.h>
+#include <QtCore/qlist.h>
+#include <QtCore/qtimer.h>
 
-#include <QDateTime>
-#include <QList>
-#include <QTimer>
+#include <QtQmlIntegration/qqmlintegration.h>
 
 class DeviceInfo;
 
@@ -78,7 +78,7 @@ private:
     void updateHeartRateValue(const QLowEnergyCharacteristic &c,
                               const QByteArray &value);
     void confirmedDescriptorWrite(const QLowEnergyDescriptor &d,
-                              const QByteArray &value);
+                                  const QByteArray &value);
 
     void updateDemoHR();
 
