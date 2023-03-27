@@ -190,6 +190,7 @@ elseif(MACOS)
             qbluetoothserviceinfo_macos.mm
             qbluetoothsocket_macos.mm qbluetoothsocket_macos_p.h
             qlowenergycontroller_darwin.mm qlowenergycontroller_darwin_p.h
+            qbluetoothuuid_darwin.mm
         DEFINES
             QT_OSX_BLUETOOTH
         LIBRARIES
@@ -216,6 +217,7 @@ elseif(IOS)
             qbluetoothsocket_dummy.cpp qbluetoothsocket_dummy_p.h
             qlowenergycontroller_darwin.mm qlowenergycontroller_darwin_p.h
             darwin/btperipheralmanager.mm darwin/btperipheralmanager_p.h
+            qbluetoothuuid_darwin.mm
         DEFINES
             QT_IOS_BLUETOOTH
         LIBRARIES

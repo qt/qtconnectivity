@@ -8,6 +8,10 @@
 
 #include <qbluetoothuuid.h>
 
+#if defined(Q_OS_DARWIN)
+#include <QtCore/private/qcore_mac_p.h>
+#endif
+
 #if defined(Q_OS_UNIX)
 #    include <arpa/inet.h>
 #    include <netinet/in.h>
@@ -229,6 +233,16 @@ void tst_QBluetoothUuid::tst_conversion()
     else if (constructUuid32)
         minimumSize = 4;
 
+#if defined(Q_OS_DARWIN)
+#define CHECK_PLATFORM_CONVERSION(qtUuid) \
+    const QMacAutoReleasePool pool; \
+    CBUUID *nativeUuid = qtUuid.toCBUUID(); \
+    QVERIFY(nativeUuid); \
+    QCOMPARE(qtUuid, QBluetoothUuid::fromCBUUID(nativeUuid));
+#else
+#define CHECK_PLATFORM_CONVERSION(qtUuid)
+#endif // Q_OS_DARWIN
+
     if (constructUuid16) {
         QBluetoothUuid uuid(uuid16);
 
@@ -245,6 +259,8 @@ void tst_QBluetoothUuid::tst_conversion()
         QCOMPARE(uuid.toString().toUpper(), uuidS.toUpper());
 
         QCOMPARE(uuid.minimumSize(), minimumSize);
+
+        CHECK_PLATFORM_CONVERSION(uuid)
     }
 
     if (constructUuid32) {
@@ -266,6 +282,8 @@ void tst_QBluetoothUuid::tst_conversion()
         QCOMPARE(uuid.toString().toUpper(), uuidS.toUpper());
 
         QCOMPARE(uuid.minimumSize(), minimumSize);
+
+        CHECK_PLATFORM_CONVERSION(uuid)
     }
 
     if (constructUuid128) {
@@ -288,7 +306,10 @@ void tst_QBluetoothUuid::tst_conversion()
         QCOMPARE(uuid.toString().toUpper(), uuidS.toUpper());
 
         QCOMPARE(uuid.minimumSize(), minimumSize);
+
+        CHECK_PLATFORM_CONVERSION(uuid)
     }
+#undef CHECK_PLATFORM_CONVERSION
 }
 
 void tst_QBluetoothUuid::tst_comparison_data()

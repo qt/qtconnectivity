@@ -12,6 +12,10 @@
 
 #include <QtCore/QDebug>
 
+#if defined(Q_OS_DARWIN) || defined(Q_QDOC)
+Q_FORWARD_DECLARE_OBJC_CLASS(CBUUID);
+#endif
+
 QT_BEGIN_NAMESPACE
 
 #if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
@@ -374,6 +378,11 @@ public:
 #if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
     explicit QBluetoothUuid(quint128 uuid);
     quint128 toUInt128() const;
+#endif
+
+#if defined(Q_OS_DARWIN) || defined(Q_QDOC)
+    static QBluetoothUuid fromCBUUID(CBUUID *cbUuid);
+    CBUUID *toCBUUID() const Q_DECL_NS_RETURNS_AUTORELEASED;
 #endif
 
     static QString serviceClassToString(ServiceClassUuid uuid);
