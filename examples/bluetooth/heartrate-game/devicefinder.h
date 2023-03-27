@@ -6,13 +6,16 @@
 
 #include "bluetoothbaseclass.h"
 
-#include <QBluetoothDeviceDiscoveryAgent>
-#include <QBluetoothDeviceInfo>
+#include <QtBluetooth/qbluetoothdevicediscoveryagent.h>
 
-#include <qqml.h>
+#include <QtCore/qtimer.h>
+#include <QtCore/qvariant.h>
 
-#include <QTimer>
-#include <QVariant>
+#include <QtQmlIntegration/qqmlintegration.h>
+
+QT_BEGIN_NAMESPACE
+class QBluetoothDeviceInfo;
+QT_END_NAMESPACE
 
 class DeviceInfo;
 class DeviceHandler;
@@ -25,6 +28,7 @@ class DeviceFinder: public BluetoothBaseClass
     Q_PROPERTY(QVariant devices READ devices NOTIFY devicesChanged)
 
     QML_ELEMENT
+    QML_UNCREATABLE("This class is not intended to be created directly")
 
 public:
     DeviceFinder(DeviceHandler *handler, QObject *parent = nullptr);
@@ -38,7 +42,7 @@ public slots:
     void connectToService(const QString &address);
 
 private slots:
-    void addDevice(const QBluetoothDeviceInfo&);
+    void addDevice(const QBluetoothDeviceInfo &device);
     void scanError(QBluetoothDeviceDiscoveryAgent::Error error);
     void scanFinished();
 

@@ -6,6 +6,8 @@
 #include "deviceinfo.h"
 #include "heartrate-global.h"
 
+#include <QtBluetooth/qbluetoothdeviceinfo.h>
+
 DeviceFinder::DeviceFinder(DeviceHandler *handler, QObject *parent):
     BluetoothBaseClass(parent),
     m_deviceHandler(handler)
@@ -14,12 +16,15 @@ DeviceFinder::DeviceFinder(DeviceHandler *handler, QObject *parent):
     m_deviceDiscoveryAgent = new QBluetoothDeviceDiscoveryAgent(this);
     m_deviceDiscoveryAgent->setLowEnergyDiscoveryTimeout(15000);
 
-    connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered, this, &DeviceFinder::addDevice);
-    connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred, this,
-            &DeviceFinder::scanError);
+    connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::deviceDiscovered,
+            this, &DeviceFinder::addDevice);
+    connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred,
+            this, &DeviceFinder::scanError);
 
-    connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished, this, &DeviceFinder::scanFinished);
-    connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::canceled, this, &DeviceFinder::scanFinished);
+    connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished,
+            this, &DeviceFinder::scanFinished);
+    connect(m_deviceDiscoveryAgent, &QBluetoothDeviceDiscoveryAgent::canceled,
+            this, &DeviceFinder::scanFinished);
     //! [devicediscovery-1]
 
 
@@ -106,7 +111,7 @@ void DeviceFinder::connectToService(const QString &address)
     DeviceInfo *currentDevice = nullptr;
     for (QObject *entry : std::as_const(m_devices)) {
         auto device = qobject_cast<DeviceInfo *>(entry);
-        if (device && device->getAddress() == address ) {
+        if (device && device->getAddress() == address) {
             currentDevice = device;
             break;
         }

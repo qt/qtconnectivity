@@ -6,38 +6,35 @@
 #include "devicehandler.h"
 #include "heartrate-global.h"
 
-#include <QQmlApplicationEngine>
-#include <QQmlContext>
+#include <QtCore/qcommandlineoption.h>
+#include <QtCore/qcommandlineparser.h>
+#include <QtCore/qloggingcategory.h>
 
-#include <QGuiApplication>
+#include <QtGui/qguiapplication.h>
 
-#include <QCommandLineParser>
-#include <QCommandLineOption>
-#include <QLoggingCategory>
+#include <QtQml/qqmlapplicationengine.h>
 
-#ifndef Q_OS_WIN
+using namespace Qt::StringLiterals;
+
 bool simulator = false;
-#else
-bool simulator = true;
-#endif
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
 
     QCommandLineParser parser;
-    parser.setApplicationDescription("Bluetooth Low Energy Heart Rate Game");
+    parser.setApplicationDescription(u"Bluetooth Low Energy Heart Rate Game"_s);
     parser.addHelpOption();
     parser.addVersionOption();
-    QCommandLineOption simulatorOption("simulator", "Simulator");
+    QCommandLineOption simulatorOption(u"simulator"_s, u"Simulator"_s);
     parser.addOption(simulatorOption);
 
-    QCommandLineOption verboseOption("verbose", "Verbose mode");
+    QCommandLineOption verboseOption(u"verbose"_s, u"Verbose mode"_s);
     parser.addOption(verboseOption);
     parser.process(app);
 
     if (parser.isSet(verboseOption))
-        QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
+        QLoggingCategory::setFilterRules(u"qt.bluetooth* = true"_s);
     simulator = parser.isSet(simulatorOption);
 
     ConnectionHandler connectionHandler;
@@ -46,12 +43,12 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
     engine.setInitialProperties({
-        {"connectionHandler", QVariant::fromValue(&connectionHandler)},
-        {"deviceFinder", QVariant::fromValue(&deviceFinder)},
-        {"deviceHandler", QVariant::fromValue(&deviceHandler)}
+        {u"connectionHandler"_s, QVariant::fromValue(&connectionHandler)},
+        {u"deviceFinder"_s, QVariant::fromValue(&deviceFinder)},
+        {u"deviceHandler"_s, QVariant::fromValue(&deviceHandler)}
     });
 
-    engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
+    engine.load(QUrl(u"qrc:/qml/main.qml"_s));
     if (engine.rootObjects().isEmpty())
         return -1;
 

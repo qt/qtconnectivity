@@ -1,9 +1,11 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-#include "heartrate-global.h"
 #include "connectionhandler.h"
+#include "heartrate-global.h"
+
 #include <QtBluetooth/qtbluetooth-config.h>
+
 #include <QtCore/qsystemdetection.h>
 
 ConnectionHandler::ConnectionHandler(QObject *parent) : QObject(parent)
@@ -21,7 +23,8 @@ bool ConnectionHandler::alive() const
 #else
     if (simulator)
         return true;
-    return m_localDevice.isValid() && m_localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff;
+    return m_localDevice.isValid()
+            && m_localDevice.hostMode() != QBluetoothLocalDevice::HostPoweredOff;
 #endif
 }
 

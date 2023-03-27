@@ -4,6 +4,7 @@
 /*!
     \example heartrate-game
     \title Bluetooth Low Energy Heart Rate Game
+    \meta category {Connectivity}
     \brief A game demonstrating the interaction with a Bluetooth Low Energy Heart Rate
     device/service.
 
@@ -33,6 +34,10 @@
     command line.
 
     The goal of the game is to increase the measured heart rate as much as possible.
+
+    A detailed explanation of the APIs used in this example is given in the
+    \l {Using Qt Bluetooth Low Energy API} section of the Qt Bluetooth module
+    documentation.
 
     The \l {lowenergyscanner}{Bluetooth Low Energy Scanner} example might be more suitable
     if a heart rate device is not available. The scanner example works with any type of Bluetooth

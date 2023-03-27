@@ -1,12 +1,12 @@
 // Copyright (C) 2022 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-#include "heartrate-global.h"
 #include "devicehandler.h"
 #include "deviceinfo.h"
+#include "heartrate-global.h"
 
-#include <QtEndian>
-#include <QRandomGenerator>
+#include <QtCore/qendian.h>
+#include <QtCore/qrandom.h>
 
 DeviceHandler::DeviceHandler(QObject *parent) :
     BluetoothBaseClass(parent)
@@ -159,7 +159,8 @@ void DeviceHandler::serviceStateChanged(QLowEnergyService::ServiceState s)
     {
         setInfo(tr("Service discovered."));
 
-        const QLowEnergyCharacteristic hrChar = m_service->characteristic(QBluetoothUuid(QBluetoothUuid::CharacteristicType::HeartRateMeasurement));
+        const QLowEnergyCharacteristic hrChar =
+                m_service->characteristic(QBluetoothUuid(QBluetoothUuid::CharacteristicType::HeartRateMeasurement));
         if (!hrChar.isValid()) {
             setError("HR Data not found.");
             break;
@@ -204,13 +205,12 @@ void DeviceHandler::updateHeartRateValue(const QLowEnergyCharacteristic &c, cons
 void DeviceHandler::updateDemoHR()
 {
     int randomValue = 0;
-    if (m_currentValue < 30) { // Initial value
+    if (m_currentValue < 30) // Initial value
         randomValue = 55 + QRandomGenerator::global()->bounded(30);
-    } else if (!m_measuring) { // Value when relax
+    else if (!m_measuring) // Value when relax
         randomValue = qBound(55, m_currentValue - 2 + QRandomGenerator::global()->bounded(5), 75);
-    } else { // Measuring
+    else // Measuring
         randomValue = m_currentValue + QRandomGenerator::global()->bounded(10) - 2;
-    }
 
     addMeasurement(randomValue);
 }
@@ -302,7 +302,8 @@ void DeviceHandler::addMeasurement(int value)
         m_max = qMax(value, m_max);
         m_sum += value;
         m_avg = (double)m_sum / m_measurements.size();
-        m_calories = ((-55.0969 + (0.6309 * m_avg) + (0.1988 * 94) + (0.2017 * 24)) / 4.184) * 60 * time()/3600;
+        m_calories = ((-55.0969 + (0.6309 * m_avg) + (0.1988 * 94) + (0.2017 * 24)) / 4.184)
+                * 60 * time() / 3600;
     }
 
     emit statsChanged();
