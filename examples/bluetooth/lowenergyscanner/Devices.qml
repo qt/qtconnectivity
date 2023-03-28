@@ -22,7 +22,15 @@ Rectangle {
     Header {
         id: header
         anchors.top: parent.top
-        headerText: "Start Discovery"
+        headerText: {
+            if (Device.state)
+                return "Discovering"
+
+            if (Device.devicesList.length > 0)
+                return "Select a device"
+
+            return "Start Discovery"
+        }
     }
 
     Dialog {
@@ -49,11 +57,6 @@ Rectangle {
             border.width: 2
             border.color: "black"
             radius: 5
-
-            Component.onCompleted: {
-                info.visible = false
-                header.headerText = "Select a device"
-            }
 
             MouseArea {
                 anchors.fill: parent
@@ -103,11 +106,15 @@ Rectangle {
         menuHeight: (parent.height / 6)
         menuText: Device.update
         onButtonClick: {
-            Device.startDeviceDiscovery()
-            // if startDeviceDiscovery() failed Device.state is not set
-            if (Device.state) {
-                info.dialogText = "Searching..."
-                info.visible = true
+            if (!Device.state) {
+                Device.startDeviceDiscovery()
+                // if startDeviceDiscovery() failed Device.state is not set
+                if (Device.state) {
+                    info.dialogText = "Searching..."
+                    info.visible = true
+                }
+            } else {
+                Device.stopDeviceDiscovery()
             }
         }
     }
