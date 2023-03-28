@@ -155,7 +155,10 @@ Low Energy devices.
 
     Since we are only interested in Low Energy devices we filter the device type within the
     receiving slot. The device type can be ascertained using the \l QBluetoothDeviceInfo::coreConfigurations()
-    flag:
+    flag. The \l {QBluetoothDeviceDiscoveryAgent::}{deviceDiscovered()} signal
+    may be emitted multiple times for the same device as more details are
+    discovered. Here we match these device discoveries so that the user only
+    sees the individual devices:
 
     \snippet heartrate-game/devicefinder.cpp devicediscovery-3
     \snippet heartrate-game/devicefinder.cpp devicediscovery-4

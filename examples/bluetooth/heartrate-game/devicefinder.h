@@ -53,7 +53,7 @@ signals:
 private:
     DeviceHandler *m_deviceHandler;
     QBluetoothDeviceDiscoveryAgent *m_deviceDiscoveryAgent;
-    QList<QObject*> m_devices;
+    QList<DeviceInfo *> m_devices;
 
     QTimer m_demoTimer;
 };
