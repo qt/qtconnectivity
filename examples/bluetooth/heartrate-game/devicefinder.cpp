@@ -67,7 +67,18 @@ void DeviceFinder::addDevice(const QBluetoothDeviceInfo &device)
 {
     // If device is LowEnergy-device, add it to the list
     if (device.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
-        m_devices.append(new DeviceInfo(device));
+        auto devInfo = new DeviceInfo(device);
+        auto it = std::find_if(m_devices.begin(), m_devices.end(),
+                               [devInfo](DeviceInfo *dev) {
+                                   return devInfo->getAddress() == dev->getAddress();
+                               });
+        if (it == m_devices.end()) {
+            m_devices.append(devInfo);
+        } else {
+            auto oldDev = *it;
+            *it = devInfo;
+            delete oldDev;
+        }
         setInfo(tr("Low Energy device found. Scanning more..."));
 //! [devicediscovery-3]
         emit devicesChanged();
