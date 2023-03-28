@@ -29,6 +29,8 @@ Device::Device()
             this, &Device::deviceScanError);
     connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished,
             this, &Device::deviceScanFinished);
+    connect(discoveryAgent, &QBluetoothDeviceDiscoveryAgent::canceled,
+            this, &Device::deviceScanFinished);
     //! [les-devicediscovery-1]
 
     setUpdate(u"Search"_s);
@@ -64,33 +66,46 @@ void Device::startDeviceDiscovery()
     devices.clear();
     emit devicesUpdated();
 
-    setUpdate(u"Scanning for devices ..."_s);
     //! [les-devicediscovery-2]
     discoveryAgent->start(QBluetoothDeviceDiscoveryAgent::LowEnergyMethod);
     //! [les-devicediscovery-2]
 
     if (discoveryAgent->isActive()) {
+        setUpdate(u"Stop"_s);
         m_deviceScanState = true;
         Q_EMIT stateChanged();
     }
 }
 
+void Device::stopDeviceDiscovery()
+{
+    if (discoveryAgent->isActive())
+        discoveryAgent->stop();
+}
+
 //! [les-devicediscovery-3]
 void Device::addDevice(const QBluetoothDeviceInfo &info)
 {
-    if (info.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
-        setUpdate(u"Last device added: "_s + info.name());
+    if (info.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration) {
+        auto devInfo = new DeviceInfo(info);
+        auto it = std::find_if(devices.begin(), devices.end(),
+                               [devInfo](DeviceInfo *dev) {
+                                   return devInfo->getAddress() == dev->getAddress();
+                               });
+        if (it == devices.end()) {
+            devices.append(devInfo);
+        } else {
+            auto oldDev = *it;
+            *it = devInfo;
+            delete oldDev;
+        }
+        emit devicesUpdated();
+    }
 }
 //! [les-devicediscovery-3]
 
 void Device::deviceScanFinished()
 {
-    const QList<QBluetoothDeviceInfo> foundDevices = discoveryAgent->discoveredDevices();
-    for (auto &nextDevice : foundDevices)
-        if (nextDevice.coreConfigurations() & QBluetoothDeviceInfo::LowEnergyCoreConfiguration)
-            devices.append(new DeviceInfo(nextDevice));
-
-    emit devicesUpdated();
     m_deviceScanState = false;
     emit stateChanged();
     if (devices.isEmpty())
@@ -315,18 +330,17 @@ void Device::serviceDetailsDiscovered(QLowEnergyService::ServiceState newState)
 
 void Device::deviceScanError(QBluetoothDeviceDiscoveryAgent::Error error)
 {
-    if (error == QBluetoothDeviceDiscoveryAgent::PoweredOffError)
+    if (error == QBluetoothDeviceDiscoveryAgent::PoweredOffError) {
         setUpdate(u"The Bluetooth adaptor is powered off, power it on before doing discovery."_s);
-    else if (error == QBluetoothDeviceDiscoveryAgent::InputOutputError)
+    } else if (error == QBluetoothDeviceDiscoveryAgent::InputOutputError) {
         setUpdate(u"Writing or reading from the device resulted in an error."_s);
-    else {
+    } else {
         static QMetaEnum qme = discoveryAgent->metaObject()->enumerator(
                     discoveryAgent->metaObject()->indexOfEnumerator("Error"));
         setUpdate(u"Error: "_s + QLatin1StringView(qme.valueToKey(error)));
     }
 
     m_deviceScanState = false;
-    emit devicesUpdated();
     emit stateChanged();
 }
 

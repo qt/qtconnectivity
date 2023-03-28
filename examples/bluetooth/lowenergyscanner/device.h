@@ -53,6 +53,7 @@ public:
 
 public slots:
     void startDeviceDiscovery();
+    void stopDeviceDiscovery();
     void scanServices(const QString &address);
 
     void connectToService(const QString &uuid);
@@ -87,9 +88,9 @@ private:
     void setUpdate(const QString &message);
     QBluetoothDeviceDiscoveryAgent *discoveryAgent;
     DeviceInfo currentDevice;
-    QList<QObject *> devices;
-    QList<QObject *> m_services;
-    QList<QObject *> m_characteristics;
+    QList<DeviceInfo *> devices;
+    QList<ServiceInfo *> m_services;
+    QList<CharacteristicInfo *> m_characteristics;
     QString m_previousAddress;
     QString m_message;
     bool connected = false;

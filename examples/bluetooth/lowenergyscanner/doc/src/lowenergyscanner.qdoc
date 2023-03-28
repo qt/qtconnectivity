@@ -53,6 +53,10 @@
     device. It filters all found devices which
     have the \l QBluetoothDeviceInfo::LowEnergyCoreConfiguration flag and adds them to a
     list which is shown to the user.
+    The \l {QBluetoothDeviceDiscoveryAgent::}{deviceDiscovered()} signal may be
+    emitted multiple times for the same device as more details are discovered.
+    Here we match these device discoveries so that the user only sees the
+    individual devices:
 
     \snippet lowenergyscanner/device.cpp les-devicediscovery-3
 
