@@ -235,6 +235,10 @@ elseif(QT_FEATURE_winrt_bt)
             qbluetoothutils_winrt.cpp qbluetoothutils_winrt_p.h
             qlowenergycontroller_winrt.cpp qlowenergycontroller_winrt_p.h
             qbluetoothdevicewatcher_winrt.cpp qbluetoothdevicewatcher_winrt_p.h
+        NO_UNITY_BUILD_SOURCES
+            qbluetoothdevicediscoveryagent_winrt.cpp
+            qbluetoothdevicewatcher_winrt.cpp
+            qbluetoothlocaldevice_winrt.cpp
         DEFINES
             QT_WINRT_BLUETOOTH
         LIBRARIES
