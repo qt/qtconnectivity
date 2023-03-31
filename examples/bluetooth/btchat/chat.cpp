@@ -13,6 +13,12 @@
 #include <QtBluetooth/qbluetoothlocaldevice.h>
 #include <QtBluetooth/qbluetoothuuid.h>
 
+#if QT_CONFIG(permissions)
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qpermissions.h>
+#include <QtWidgets/qmessagebox.h>
+#endif
+
 using namespace Qt::StringLiterals;
 
 static constexpr auto serviceUuid = "e8e10f95-1a70-4b27-9ccf-02010264e9c8"_L1;
@@ -31,6 +37,35 @@ Chat::Chat(QWidget *parent)
     connect(ui->sendButton, &QPushButton::clicked, this, &Chat::sendClicked);
     //! [Construct UI]
     ui->connectButton->setFocus();
+
+    initBluetooth();
+}
+
+Chat::~Chat()
+{
+    qDeleteAll(clients);
+    delete ui;
+}
+
+void Chat::initBluetooth()
+{
+#if QT_CONFIG(permissions)
+    QBluetoothPermission permission{};
+    switch (qApp->checkPermission(permission)) {
+    case Qt::PermissionStatus::Undetermined:
+        qApp->requestPermission(permission, this, &Chat::initBluetooth);
+        return;
+    case Qt::PermissionStatus::Denied:
+        QMessageBox::warning(this, tr("Missing permissions"),
+                             tr("Permissions are needed to use Bluetooth. "
+                                "Please grant the permissions to this "
+                                "application in the system settings."));
+        qApp->quit();
+        return;
+    case Qt::PermissionStatus::Granted:
+        break; // proceed to initialization
+    }
+#endif // QT_CONFIG(permissions)
 
     localAdapters = QBluetoothLocalDevice::allDevices();
     if (localAdapters.size() < 2) {
@@ -69,12 +104,6 @@ Chat::Chat(QWidget *parent)
     //! [Get local device name]
     localName = QBluetoothLocalDevice().name();
     //! [Get local device name]
-}
-
-Chat::~Chat()
-{
-    qDeleteAll(clients);
-    delete ui;
 }
 
 //! [clientConnected clientDisconnected]

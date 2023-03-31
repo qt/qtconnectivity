@@ -40,6 +40,8 @@ private slots:
 
     void newAdapterSelected();
 
+    void initBluetooth();
+
 private:
     int adapterFromUserSelection() const;
     int currentAdapterIndex = 0;
