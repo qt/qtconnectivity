@@ -57,6 +57,14 @@ else()
         FILES
             ${bttest_resource_files}
     )
+
+    if(MACOS)
+        # Explicitly link against the static permission plugin because tests
+        # currently don't have finalizers run for them except for iOS.
+        # TODO: Remove this when qtbase automatically runs finalizers for tests: QTBUG-112212
+        target_link_libraries(bttestui PRIVATE Qt6::QDarwinBluetoothPermissionPlugin)
+    endif()
+
 endif()
 
 set_target_properties(bttestui PROPERTIES
