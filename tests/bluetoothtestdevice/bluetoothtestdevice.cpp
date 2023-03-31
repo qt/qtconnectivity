@@ -13,11 +13,15 @@
 #include <QLowEnergyDescriptorData>
 #include <QTimer>
 
-#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_DARWIN)
 #include <QGuiApplication>
 #else
 #include <QCoreApplication>
 #endif // Q_OS_ANDROID || Q_OS_IOS
+
+#if QT_CONFIG(permissions)
+#include <QtCore/qpermissions.h>
+#endif
 
 #include <thread>
 
@@ -71,11 +75,29 @@ int main(int argc, char *argv[])
 {
     qDebug() << "build:" << __DATE__ << __TIME__;
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
-#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
+#if defined(Q_OS_ANDROID) || defined(Q_OS_DARWIN)
     QGuiApplication app(argc, argv);
 #else
     QCoreApplication app(argc, argv);
 #endif // Q_OS_ANDROID || Q_OS_IOS
+
+#if QT_CONFIG(permissions)
+    // Check Bluetooth permission and request it if the app doesn't have it
+    auto permissionStatus = app.checkPermission(QBluetoothPermission{});
+    if (permissionStatus == Qt::PermissionStatus::Undetermined) {
+        app.requestPermission(QBluetoothPermission{},
+                              [&permissionStatus](const QPermission &permission) {
+            qApp->exit(); // Exit the permission request processing started below
+            permissionStatus = permission.status();
+        });
+        // Process permission request
+        app.exec();
+    }
+    if (permissionStatus == Qt::PermissionStatus::Denied) {
+        qWarning("Bluetooth permission denied, exiting");
+        return -1;
+    }
+#endif
 
     // prepare list of services
     QList<QLowEnergyServiceData> serviceDefinitions;

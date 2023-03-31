@@ -14,7 +14,7 @@ if(NOT TARGET Qt::Bluetooth)
     set(CMAKE_AUTOMOC ON)
 
     find_package(Qt6 REQUIRED COMPONENTS Bluetooth Core)
-    if(ANDROID OR IOS)
+    if(ANDROID OR APPLE)
         find_package(Qt6 REQUIRED COMPONENTS Gui)
     endif()
 
@@ -29,6 +29,14 @@ else()
         SOURCES
             bluetoothtestdevice.cpp
     )
+
+    if(MACOS)
+        # Explicitly link against the static permission plugin because tests
+        # currently don't have finalizers run for them except for iOS.
+        # TODO: Remove this when qtbase automatically runs finalizers for tests: QTBUG-112212
+        target_link_libraries(bluetoothtestdevice PRIVATE Qt6::QDarwinBluetoothPermissionPlugin)
+    endif()
+
 endif()
 
 set_target_properties(bluetoothtestdevice PROPERTIES
@@ -57,7 +65,7 @@ target_link_libraries(
         Qt::Bluetooth
 )
 
-if(ANDROID OR IOS)
+if(ANDROID OR APPLE)
     target_link_libraries(
             bluetoothtestdevice
             PUBLIC
