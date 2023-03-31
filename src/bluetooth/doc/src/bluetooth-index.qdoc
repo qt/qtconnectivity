@@ -66,6 +66,16 @@ use cases. Further details can be found in the
 
 \include {module-use.qdocinc} {building_with_qmake} {bluetooth}
 
+\section1 Permissions
+
+Starting from Qt 6.6, the Qt Bluetooth module uses new \l QPermission API
+to handle \l {QBluetoothPermission}{Bluetooth} permissions. This means that Qt
+itself no longer queries for these permissions, so this needs to be done
+directly from the client application.
+
+Please refer to the \l {Application Permissions} page for an example of how
+to integrate the new \l QPermission API into the application.
+
 \section1 Related Information
 
 \section2 Building Qt Bluetooth

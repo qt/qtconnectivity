@@ -136,16 +136,13 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     auto precisePermission = QStringLiteral("android.permission.ACCESS_FINE_LOCATION");
     auto preciseCheckRes = QtAndroidPrivate::checkPermission(precisePermission).result();
     if (preciseCheckRes != QtAndroidPrivate::Authorized) {
-        auto preciseRequestRes = QtAndroidPrivate::requestPermission(precisePermission).result();
-        if (preciseRequestRes != QtAndroidPrivate::Authorized) {
-            qCWarning(QT_BT_ANDROID) <<
-                "Search not possible due to missing permission (ACCESS_FINE_LOCATION)";
-            errorString = QBluetoothDeviceDiscoveryAgent::tr(
-                "Missing Location permission. Search is not possible.");
-            lastError = QBluetoothDeviceDiscoveryAgent::MissingPermissionsError;
-            emit q->errorOccurred(lastError);
-            return;
-        }
+        qCWarning(QT_BT_ANDROID) <<
+            "Search not possible due to missing permission (ACCESS_FINE_LOCATION)";
+        errorString = QBluetoothDeviceDiscoveryAgent::tr(
+            "Missing Location permission. Search is not possible.");
+        lastError = QBluetoothDeviceDiscoveryAgent::MissingPermissionsError;
+        emit q->errorOccurred(lastError);
+        return;
     }
     qCDebug(QT_BT_ANDROID) << "ACCESS_FINE_LOCATION permission available";
 

@@ -36,10 +36,6 @@ bool ensureAndroidPermission(BluetoothPermission permission)
     if (QtAndroidPrivate::checkPermission(permString).result() == QtAndroidPrivate::Authorized)
         return true;
 
-    // If we didn't have the permission, request it
-    if (QtAndroidPrivate::requestPermission(permString).result() == QtAndroidPrivate::Authorized)
-        return true;
-
      qCWarning(QT_BT_ANDROID) << "Permission not authorized:" << permString;
      return false;
 }
