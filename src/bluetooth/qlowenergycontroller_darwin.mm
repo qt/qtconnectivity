@@ -319,7 +319,7 @@ void QLowEnergyControllerPrivateDarwin::readRssi()
 
 QLowEnergyService * QLowEnergyControllerPrivateDarwin::addServiceHelper(const QLowEnergyServiceData &service)
 {
-    if (!isValid()) {
+    if (!lazyInit() || !isValid()) {
         qCWarning(QT_BT_DARWIN) << "invalid peripheral";
         return nullptr;
     }
