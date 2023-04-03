@@ -277,10 +277,10 @@ void QLowEnergyControllerPrivateDarwin::requestConnectionUpdate(const QLowEnergy
 void QLowEnergyControllerPrivateDarwin::addToGenericAttributeList(const QLowEnergyServiceData &service,
                                                                   QLowEnergyHandle startHandle)
 {
+    // Darwin LE controller implements the addServiceHelper() for adding services, and thus
+    // the base class' addServiceHelper(), which calls this function, is not used
     Q_UNUSED(service);
     Q_UNUSED(startHandle);
-    // TODO: check why I don't need this (apparently it is used in addServiceHelper
-    // of the base class).
 }
 
 int QLowEnergyControllerPrivateDarwin::mtu() const
@@ -319,24 +319,8 @@ void QLowEnergyControllerPrivateDarwin::readRssi()
 
 QLowEnergyService * QLowEnergyControllerPrivateDarwin::addServiceHelper(const QLowEnergyServiceData &service)
 {
-    // Three checks below should be removed, they are done in the q_ptr's class.
     if (!isValid()) {
         qCWarning(QT_BT_DARWIN) << "invalid peripheral";
-        return nullptr;
-    }
-
-    if (role != QLowEnergyController::PeripheralRole) {
-        qCWarning(QT_BT_DARWIN) << "not in peripheral role";
-        return nullptr;
-    }
-
-    if (state != QLowEnergyController::UnconnectedState) {
-        qCWarning(QT_BT_DARWIN) << "invalid state";
-        return nullptr;
-    }
-
-    if (!service.isValid()) {
-        qCWarning(QT_BT_DARWIN) << "invalid service";
         return nullptr;
     }
 
@@ -1000,18 +984,8 @@ void QLowEnergyControllerPrivateDarwin::startAdvertising(const QLowEnergyAdverti
                                                          const QLowEnergyAdvertisingData &advertisingData,
                                                          const QLowEnergyAdvertisingData &scanResponseData)
 {
-    if (role != QLowEnergyController::PeripheralRole) {
-        qCWarning(QT_BT_DARWIN) << "controller is not a peripheral, cannot start advertising";
-        return;
-    }
-
     if (!lazyInit()) // Error was emit already.
         return;
-
-    if (state != QLowEnergyController::UnconnectedState) {
-        qCWarning(QT_BT_DARWIN) << "invalid state" << state;
-        return;
-    }
 
     auto leQueue(DarwinBluetooth::qt_LE_queue());
     Q_ASSERT_X(leQueue, Q_FUNC_INFO, "invalid LE queue (nullptr)");
