@@ -45,7 +45,7 @@ private:
     int currentAdapterIndex = 0;
     Ui::Chat *ui;
 
-    ChatServer *server;
+    ChatServer *server = nullptr;
     QList<ChatClient *> clients;
     QList<QBluetoothHostInfo> localAdapters;
 

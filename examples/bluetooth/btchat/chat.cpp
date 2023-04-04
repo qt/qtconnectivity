@@ -74,7 +74,6 @@ Chat::Chat(QWidget *parent)
 Chat::~Chat()
 {
     qDeleteAll(clients);
-    delete server;
     delete ui;
 }
 
