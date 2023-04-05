@@ -236,7 +236,7 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
 
     qCDebug(QT_BT_ANDROID) << "connectToServiceHelper()" << address.toString() << uuid.toString();
 
-    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+    if (!ensureAndroidPermission(QBluetoothPermission::Access)) {
         qCWarning(QT_BT_ANDROID) << "Bluetooth socket connect failed due to missing permissions";
         errorString = QBluetoothSocket::tr(
                 "Bluetooth socket connect failed due to missing permissions.");
@@ -543,7 +543,7 @@ void QBluetoothSocketPrivateAndroid::abort()
 
 QString QBluetoothSocketPrivateAndroid::localName() const
 {
-    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+    if (!ensureAndroidPermission(QBluetoothPermission::Access)) {
         qCWarning(QT_BT_ANDROID) << "Bluetooth socket localName() failed due to"
                                     "missing permissions";
     } else if (adapter.isValid()) {
@@ -557,7 +557,7 @@ QBluetoothAddress QBluetoothSocketPrivateAndroid::localAddress() const
 {
     QString result;
 
-    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+    if (!ensureAndroidPermission(QBluetoothPermission::Access)) {
         qCWarning(QT_BT_ANDROID) << "Bluetooth socket localAddress() failed due to"
                                     "missing permissions";
     } else if (adapter.isValid()) {

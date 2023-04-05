@@ -55,7 +55,7 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
 
 bool QBluetoothServiceInfoPrivate::registerService(const QBluetoothAddress& localAdapter)
 {
-    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+    if (!ensureAndroidPermission(QBluetoothPermission::Access)) {
         qCWarning(QT_BT_ANDROID) << "Serviceinfo registerService() failed due to"
                                     "missing permissions";
         return false;

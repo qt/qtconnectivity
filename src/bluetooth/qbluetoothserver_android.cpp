@@ -98,7 +98,7 @@ bool QBluetoothServer::listen(const QBluetoothAddress &localAdapter, quint16 por
         return false;
     }
 
-    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+    if (!ensureAndroidPermission(QBluetoothPermission::Access)) {
         qCWarning(QT_BT_ANDROID) << "Bluetooth server listen() failed due to missing permissions";
         d->m_lastError = QBluetoothServer::MissingPermissionsError;
         emit errorOccurred(d->m_lastError);

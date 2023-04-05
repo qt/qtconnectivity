@@ -17,19 +17,12 @@
 
 #include <qglobal.h>
 #include <QtCore/QJniObject>
-#include <QtCore/QString>
+#include <QtCore/QPermission>
 
 QT_BEGIN_NAMESPACE
 
-enum class BluetoothPermission {
-    Scan,
-    Advertise,
-    Connect
-};
-
-// Checks if a permssion is already authorized and requests if not.
-// Returns true if permission is successfully authorized
-bool ensureAndroidPermission(BluetoothPermission permission);
+// Checks if a permssion is already authorized or not
+bool ensureAndroidPermission(QBluetoothPermission::CommunicationModes modes);
 
 // Returns the default bluetooth adapter, or an invalid object if not available
 QJniObject getDefaultBluetoothAdapter();

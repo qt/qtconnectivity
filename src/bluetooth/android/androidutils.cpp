@@ -4,40 +4,24 @@
 #include "androidutils_p.h"
 #include "jni_android_p.h"
 
-#include <QtCore/QLoggingCategory>
+#include <QtCore/qcoreapplication.h>
+#include <QtCore/qloggingcategory.h>
 #include <QtCore/private/qandroidextras_p.h>
 
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
-static QString androidPermissionString(BluetoothPermission permission)
+bool ensureAndroidPermission(QBluetoothPermission::CommunicationModes modes)
 {
-    switch (permission) {
-    case BluetoothPermission::Scan:
-        return {QStringLiteral("android.permission.BLUETOOTH_SCAN")};
-    case BluetoothPermission::Advertise:
-        return {QStringLiteral("android.permission.BLUETOOTH_ADVERTISE")};
-    case BluetoothPermission::Connect:
-        return {QStringLiteral("android.permission.BLUETOOTH_CONNECT")};
-    }
-    return {};
-}
+    QBluetoothPermission permission;
+    permission.setCommunicationModes(modes);
 
-bool ensureAndroidPermission(BluetoothPermission permission)
-{
-    // The current set of permissions are only applicable with 31+
-    if (QNativeInterface::QAndroidApplication::sdkVersion() < 31)
+    if (qApp->checkPermission(permission) == Qt::PermissionStatus::Granted)
         return true;
 
-    const auto permString = androidPermissionString(permission);
-
-    // First check if we have the permission already
-    if (QtAndroidPrivate::checkPermission(permString).result() == QtAndroidPrivate::Authorized)
-        return true;
-
-     qCWarning(QT_BT_ANDROID) << "Permission not authorized:" << permString;
-     return false;
+    qCWarning(QT_BT_ANDROID) << "Permissions not authorized for a specified mode:" << modes;
+    return false;
 }
 
 QJniObject getDefaultBluetoothAdapter()

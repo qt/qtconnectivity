@@ -65,6 +65,7 @@ void ConnectionHandler::initLocalDevice()
 {
 #if QT_CONFIG(permissions)
     QBluetoothPermission permission{};
+    permission.setCommunicationModes(QBluetoothPermission::Access);
     switch (qApp->checkPermission(permission)) {
     case Qt::PermissionStatus::Undetermined:
         qApp->requestPermission(permission, this, &ConnectionHandler::initLocalDevice);

@@ -51,6 +51,7 @@ void DeviceFinder::startSearch()
 #if QT_CONFIG(permissions)
     //! [permissions]
     QBluetoothPermission permission{};
+    permission.setCommunicationModes(QBluetoothPermission::Access);
     switch (qApp->checkPermission(permission)) {
     case Qt::PermissionStatus::Undetermined:
         qApp->requestPermission(permission, this, &DeviceFinder::startSearch);

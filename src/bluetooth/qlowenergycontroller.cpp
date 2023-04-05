@@ -840,7 +840,7 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
     }
 
 #if defined(QT_ANDROID_BLUETOOTH)
-    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+    if (!ensureAndroidPermission(QBluetoothPermission::Access)) {
         qCWarning(QT_BT_ANDROID) << "addService() failed due to missing permissions";
         return nullptr;
     }

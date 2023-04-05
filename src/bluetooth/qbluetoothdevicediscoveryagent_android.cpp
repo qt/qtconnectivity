@@ -133,18 +133,16 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     if (setErrorIfPowerOff())
         return;
 
-    auto precisePermission = QStringLiteral("android.permission.ACCESS_FINE_LOCATION");
-    auto preciseCheckRes = QtAndroidPrivate::checkPermission(precisePermission).result();
-    if (preciseCheckRes != QtAndroidPrivate::Authorized) {
-        qCWarning(QT_BT_ANDROID) <<
-            "Search not possible due to missing permission (ACCESS_FINE_LOCATION)";
+    if (!ensureAndroidPermission(QBluetoothPermission::Access)) {
+        qCWarning(QT_BT_ANDROID)
+                << "Search not possible due to missing QBluetoothPermission::Access permission";
         errorString = QBluetoothDeviceDiscoveryAgent::tr(
-            "Missing Location permission. Search is not possible.");
+            "Failed to start device discovery due to missing permissions.");
         lastError = QBluetoothDeviceDiscoveryAgent::MissingPermissionsError;
         emit q->errorOccurred(lastError);
         return;
     }
-    qCDebug(QT_BT_ANDROID) << "ACCESS_FINE_LOCATION permission available";
+    qCDebug(QT_BT_ANDROID) << "QBluetoothPermission::Access permission available";
 
     // Double check Location service is turned on
     bool locationTurnedOn = true; // backwards compatible behavior to previous Qt versions
@@ -181,16 +179,6 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     }
 
     qCDebug(QT_BT_ANDROID) << "Location turned on";
-
-    if (!(ensureAndroidPermission(BluetoothPermission::Scan) &&
-          ensureAndroidPermission(BluetoothPermission::Connect))) {
-        qCWarning(QT_BT_ANDROID) << "Device discovery start() failed due to missing permissions";
-        errorString = QBluetoothDeviceDiscoveryAgent::tr(
-                "Failed to start device discovery due to missing permissions.");
-        lastError = QBluetoothDeviceDiscoveryAgent::MissingPermissionsError;
-        emit q->errorOccurred(lastError);
-        return;
-    }
 
     // install Java BroadcastReceiver
     if (!receiver) {

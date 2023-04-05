@@ -83,7 +83,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
 {
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
-    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+    if (!ensureAndroidPermission(QBluetoothPermission::Access)) {
         qCWarning(QT_BT_ANDROID) << "Service discovery start() failed due to missing permissions";
         error = QBluetoothServiceDiscoveryAgent::MissingPermissionsError;
         errorString = QBluetoothServiceDiscoveryAgent::tr(
