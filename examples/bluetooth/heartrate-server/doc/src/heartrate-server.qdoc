@@ -4,7 +4,7 @@
 /*!
     \example heartrate-server
     \title Bluetooth Low Energy Heart Rate Server
-    \meta category {Connectivity}
+    \examplecategory {Connectivity}
     \brief An example demonstrating how to set up and advertise a GATT service. The example
     demonstrates the use of the Qt Bluetooth Low Energy classes related to peripheral (slave)
     functionality.

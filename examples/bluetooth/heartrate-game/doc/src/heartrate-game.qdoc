@@ -4,7 +4,7 @@
 /*!
     \example heartrate-game
     \title Bluetooth Low Energy Heart Rate Game
-    \meta category {Connectivity}
+    \examplecategory {Connectivity}
     \brief A game demonstrating the interaction with a Bluetooth Low Energy Heart Rate
     device/service.
 
