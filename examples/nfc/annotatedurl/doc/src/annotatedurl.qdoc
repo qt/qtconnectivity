@@ -4,7 +4,7 @@
 /*!
 \example annotatedurl
 \title Annotated URL
-\meta category {Connectivity}
+\examplecategory {Connectivity}
 \brief The example shows reading from formatted NFC Data Exchange Format (NDEF) messages.
 
 The Annotated URL example displays the contents of specifically
