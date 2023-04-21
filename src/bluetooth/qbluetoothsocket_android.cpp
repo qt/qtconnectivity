@@ -15,9 +15,6 @@
 #include <QtCore/QTime>
 #include <QtCore/QJniEnvironment>
 
-// ### Needs to be moved to qjniobject.h in qtbase
-Q_DECLARE_METATYPE(QJniObject)
-
 QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
