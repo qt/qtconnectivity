@@ -38,6 +38,7 @@
 **
 ****************************************************************************/
 
+#include "android/androidutils_p.h"
 #include "qbluetoothdevicediscoveryagent_p.h"
 #include <QtCore/QLoggingCategory>
 #include <QtBluetooth/QBluetoothAddress>
@@ -219,6 +220,15 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     }
 
     qCDebug(QT_BT_ANDROID) << "Location turned on";
+
+    if (!(ensureAndroidPermission(BluetoothPermission::Scan) &&
+          ensureAndroidPermission(BluetoothPermission::Connect))) {
+        qCWarning(QT_BT_ANDROID) << "Device discovery start() failed due to missing permissions";
+        errorString = QBluetoothDeviceDiscoveryAgent::tr("Bluetooth adapter error");
+        lastError = QBluetoothDeviceDiscoveryAgent::UnknownError;
+        emit q->error(lastError);
+        return;
+    }
 
     // install Java BroadcastReceiver
     if (!receiver) {

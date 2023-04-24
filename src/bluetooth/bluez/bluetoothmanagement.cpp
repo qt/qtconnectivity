@@ -313,3 +313,5 @@ bool BluetoothManagement::isMonitoringEnabled() const
 
 
 QT_END_NAMESPACE
+
+#include "moc_bluetoothmanagement_p.cpp"

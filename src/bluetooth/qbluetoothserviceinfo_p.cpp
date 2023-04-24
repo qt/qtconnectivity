@@ -73,3 +73,5 @@ bool QBluetoothServiceInfoPrivate::unregisterService()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qbluetoothserviceinfo_p.cpp"

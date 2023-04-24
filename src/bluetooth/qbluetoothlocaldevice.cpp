@@ -104,6 +104,16 @@ QT_BEGIN_NAMESPACE
      be connectable and powered on, if required. This mode is is not supported on Android.
      On \macos, it is not possible to set the \l hostMode() to HostConnectable or HostPoweredOff.
 
+    \note Starting from Android 13 (API level 33) the HostPoweredOff state relies on
+    non-public Android API as the public one has been deprecated, see
+    (\l {https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#disable()}
+    {disable()}). This may change in a future version of Android.
+
+    \note At least on Android 12 the device's Bluetooth visibility setting may dictate the result
+    of setting either HostDiscoverable or HostConnectable. For example if the visibility is set
+    \e off, it may not be possible to enter the HostDiscoverable mode, but HostConnectable will be
+    used instead. This may change in future version of Android.
+
 */
 
 void registerQBluetoothLocalDeviceMetaType()
@@ -136,6 +146,13 @@ QBluetoothLocalDevice::~QBluetoothLocalDevice()
     then this instance will become invalid. An already invalid QBluetoothLocalDevice instance
     remains invalid even if the same Bluetooth adapter is returned to
     the system.
+
+//! [android-permissions-valid]
+    \note Starting from Android 12 (API level 31), the construction of this class requires
+    \l {https://developer.android.com/guide/topics/connectivity/bluetooth/permissions}
+    {bluetooth runtime permissions} (\e BLUETOOTH_SCAN and \e BLUETOOTH_CONNECT). If the
+    permissions are not granted, the device will not be valid.
+//! [android-permissions-valid]
 
     \sa allDevices()
 */
@@ -206,6 +223,9 @@ bool QBluetoothLocalDevice::isValid() const
 /*!
   \fn QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent)
     Constructs a QBluetoothLocalDevice with \a parent.
+
+  \include qbluetoothlocaldevice.cpp android-permissions-valid
+  \sa isValid()
 */
 
 /*!
@@ -324,6 +344,9 @@ bool QBluetoothLocalDevice::isValid() const
 
   Construct new QBluetoothLocalDevice for \a address. If \a address is default constructed
   the resulting local device selects the local default device.
+
+  \include qbluetoothlocaldevice.cpp android-permissions-valid
+  \sa isValid()
 */
 
 QT_END_NAMESPACE

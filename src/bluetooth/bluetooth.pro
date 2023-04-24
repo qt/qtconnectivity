@@ -46,7 +46,6 @@ HEADERS += \
     qbluetoothlocaldevice_p.h \
     qlowenergycontrollerbase_p.h \
     qlowenergyserviceprivate_p.h \
-    qleadvertiser_p.h \
     lecmaccalculator_p.h
 
 SOURCES += \
@@ -116,8 +115,10 @@ qtConfig(bluez) {
             lecmaccalculator.cpp \
             qlowenergycontroller_bluezdbus.cpp
 
-        HEADERS += qlowenergycontroller_bluezdbus_p.h \
-                           qlowenergycontroller_bluez_p.h
+        HEADERS += \
+            qleadvertiser_bluez_p.h \
+            qlowenergycontroller_bluezdbus_p.h \
+            qlowenergycontroller_bluez_p.h
 
         qtConfig(linux_crypto_api): DEFINES += CONFIG_LINUX_CRYPTO_API
     } else {
@@ -138,7 +139,10 @@ qtConfig(bluez) {
         android.permission.BLUETOOTH \
         android.permission.BLUETOOTH_ADMIN \
         android.permission.ACCESS_FINE_LOCATION \
-        android.permission.ACCESS_COARSE_LOCATION # since Android 6.0 (API lvl 23)
+        android.permission.ACCESS_COARSE_LOCATION \ # since Android 6.0 (API lvl 23)
+        android.permission.BLUETOOTH_SCAN \ # since Android 12.0 (API lvl 31)
+        android.permission.BLUETOOTH_ADVERTISE \ # since Android 12.0 (API lvl 31)
+        android.permission.BLUETOOTH_CONNECT # since Android 12.0 (API lvl 31)
     ANDROID_BUNDLED_JAR_DEPENDENCIES = \
         jar/QtAndroidBluetooth.jar:org.qtproject.qt5.android.bluetooth.QtBluetoothBroadcastReceiver
 

@@ -73,3 +73,5 @@ void QBluetoothServiceDiscoveryAgentPrivate::stop()
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qbluetoothservicediscoveryagent_p.cpp"

@@ -42,7 +42,7 @@
 #include "qlowenergycontroller_bluez_p.h"
 #include "qbluetoothsocketbase_p.h"
 #include "qbluetoothsocket_bluez_p.h"
-#include "qleadvertiser_p.h"
+#include "qleadvertiser_bluez_p.h"
 #include "bluez/bluez_data_p.h"
 #include "bluez/hcimanager_p.h"
 #include "bluez/objectmanager_p.h"
@@ -3543,3 +3543,5 @@ bool QLowEnergyControllerPrivateBluez::verifyMac(const QByteArray &message, cons
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qlowenergycontroller_bluez_p.cpp"

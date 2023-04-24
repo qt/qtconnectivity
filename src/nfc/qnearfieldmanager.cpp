@@ -440,3 +440,7 @@ QNearFieldManager::TargetAccessModes QNearFieldManager::targetAccessModes() cons
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qnearfieldmanager_p.cpp"
+
+#include "moc_qnearfieldmanager.cpp"

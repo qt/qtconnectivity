@@ -78,7 +78,7 @@ public:
 
     bool isValid() const;
 
-    void swap(QLowEnergyServiceData &other) Q_DECL_NOTHROW { qSwap(d, other.d); }
+    void swap(QLowEnergyServiceData &other) noexcept { d.swap(other.d); }
 
 private:
     QSharedDataPointer<QLowEnergyServiceDataPrivate> d;

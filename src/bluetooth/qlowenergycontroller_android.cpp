@@ -37,6 +37,7 @@
 **
 ****************************************************************************/
 
+#include "android/androidutils_p.h"
 #include "qlowenergycontroller_android_p.h"
 #include <QtCore/QLoggingCategory>
 #include <QtAndroidExtras/QAndroidJniEnvironment>
@@ -144,8 +145,17 @@ void QLowEnergyControllerPrivateAndroid::init()
 
 void QLowEnergyControllerPrivateAndroid::connectToDevice()
 {
-    if (!hub)
-        return; // Android version below v18
+    if (!hub) {
+        qCCritical(QT_BT_ANDROID) << "connectToDevice() LE controller has not been initialized";
+        return;
+    }
+
+    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+        // This is unlikely to happen as a valid local adapter is a precondition
+        setError(QLowEnergyController::AuthorizationError);
+        qCWarning(QT_BT_ANDROID) << "connectToDevice() failed due to missing permissions";
+        return;
+    }
 
     // required to pass unit test on default backend
     if (remoteDevice.isNull()) {
@@ -195,6 +205,8 @@ void QLowEnergyControllerPrivateAndroid::disconnectFromDevice()
 
 void QLowEnergyControllerPrivateAndroid::discoverServices()
 {
+    // No need to check bluetooth permissions here as 'connected' is a precondition
+
     if (hub && hub->javaObject().callMethod<jboolean>("discoverServices")) {
         qCDebug(QT_BT_ANDROID) << "Service discovery initiated";
     } else {
@@ -1013,7 +1025,15 @@ void QLowEnergyControllerPrivateAndroid::startAdvertising(const QLowEnergyAdvert
 {
     setState(QLowEnergyController::AdvertisingState);
 
-    if (!hub->javaObject().isValid()) {
+    if (!(ensureAndroidPermission(BluetoothPermission::Advertise) &&
+          ensureAndroidPermission(BluetoothPermission::Connect))) {
+        qCWarning(QT_BT_ANDROID) << "startAdvertising() failed due to missing permissions";
+        setError(QLowEnergyController::AdvertisingError);
+        setState(QLowEnergyController::UnconnectedState);
+        return;
+    }
+
+    if (!hub || !hub->javaObject().isValid()) {
         qCWarning(QT_BT_ANDROID) << "Cannot initiate QtBluetoothLEServer";
         setError(QLowEnergyController::AdvertisingError);
         setState(QLowEnergyController::UnconnectedState);

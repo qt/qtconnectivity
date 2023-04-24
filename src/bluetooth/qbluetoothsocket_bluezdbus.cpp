@@ -627,3 +627,5 @@ void QBluetoothSocketPrivateBluezDBus::clearSocket()
     profilePath.clear();
 }
 QT_END_NAMESPACE
+
+#include "moc_qbluetoothsocket_bluezdbus_p.cpp"

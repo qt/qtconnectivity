@@ -54,6 +54,7 @@
 #include "qlowenergycontroller_bluez_p.h"
 #elif defined(QT_ANDROID_BLUETOOTH)
 #include "qlowenergycontroller_android_p.h"
+#include "android/androidutils_p.h"
 #elif defined(QT_WINRT_BLUETOOTH)
 #include "qtbluetoothglobal_p.h"
 #include "qlowenergycontroller_winrt_p.h"
@@ -74,6 +75,9 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
+#if defined(QT_ANDROID_BLUETOOTH)
+Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
+#endif
 
 /*!
     \class QLowEnergyController
@@ -212,7 +216,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINRT)
    \sa QLowEnergyController::createCentral()
    \sa QLowEnergyController::createPeripheral()
    \since 5.7
-   \note The peripheral role is currently only supported on Linux. In addition, handling the
+   \note The peripheral role is not supported on Windows. In addition on Linux, handling the
          "Signed Write" ATT command on the server side requires BlueZ 5 and kernel version 3.7
          or newer.
  */
@@ -635,6 +639,7 @@ void QLowEnergyController::connectToDevice()
     }
 
     if (!d->isValidLocalAdapter()) {
+        qCWarning(QT_BT) << "connectToDevice() LE controller has invalid adapter";
         d->setError(QLowEnergyController::InvalidBluetoothAdapterError);
         return;
     }
@@ -842,6 +847,13 @@ QLowEnergyService *QLowEnergyController::addService(const QLowEnergyServiceData 
         return nullptr;
     }
 
+#if defined(QT_ANDROID_BLUETOOTH)
+    if (!ensureAndroidPermission(BluetoothPermission::Connect)) {
+        qCWarning(QT_BT_ANDROID) << "addService() failed due to missing permissions";
+        return nullptr;
+    }
+#endif
+
     Q_D(QLowEnergyController);
     QLowEnergyService *newService = d->addServiceHelper(service);
     if (newService)
@@ -916,3 +928,5 @@ QLowEnergyController::Role QLowEnergyController::role() const
 }
 
 QT_END_NAMESPACE
+
+#include "moc_qlowenergycontroller.cpp"
