@@ -84,8 +84,6 @@ static QString findRemoteDevicePath(const QBluetoothAddress &address)
     if (reply.isError())
         return QString();
 
-    QString remoteDevicePath;
-
     ManagedObjectList objectList = reply.value();
     for (ManagedObjectList::const_iterator it = objectList.constBegin();
                                            it != objectList.constEnd(); ++it) {

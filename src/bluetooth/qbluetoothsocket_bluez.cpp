@@ -456,7 +456,6 @@ QString QBluetoothSocketPrivateBluez::peerName() const
     }
 
     const QString peerAddress = QBluetoothAddress(bdaddr).toString();
-    const QString localAdapter = localAddress().toString();
 
     initializeBluez5();
     OrgFreedesktopDBusObjectManagerInterface manager(
