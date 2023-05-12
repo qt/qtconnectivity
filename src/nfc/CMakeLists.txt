@@ -20,7 +20,6 @@ qt_internal_add_module(Nfc
         QT_NO_FOREACH
     PUBLIC_LIBRARIES
         Qt::Core
-        Qt::Network
     GENERATE_CPP_EXPORTS
 )
 
