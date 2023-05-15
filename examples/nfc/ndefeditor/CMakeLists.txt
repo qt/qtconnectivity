@@ -14,6 +14,8 @@ set(INSTALL_EXAMPLEDIR "${INSTALL_EXAMPLESDIR}/nfc/ndefeditor")
 
 find_package(Qt6 REQUIRED COMPONENTS Core Nfc Quick QuickControls2)
 
+qt_standard_project_setup(REQUIRES 6.5)
+
 qt_add_executable(ndefeditor
     main.cpp
 )
@@ -33,7 +35,6 @@ qt_add_resources(ndefeditor "theme" FILES
 qt_add_qml_module(ndefeditor
     URI NdefEditor
     VERSION 1.0
-    AUTO_RESOURCE_PREFIX
     QML_FILES
         Main.qml
         MainWindow.qml
