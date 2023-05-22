@@ -2,7 +2,9 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #define QT_BLUETOOTH_BUILD_REMOVED_API
-#include <stddef.h>     // before we undef __SIZEOF_INT128__
+// before we undef __SIZEOF_INT128__
+#include <cstddef>
+#include <cstdint>
 
 #ifdef __SIZEOF_INT128__
 // ensure QtCore/qtypes.h doesn't define quint128

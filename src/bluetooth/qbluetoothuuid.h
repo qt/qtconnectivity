@@ -351,6 +351,8 @@ public:
     explicit constexpr QBluetoothUuid(quint32 uuid) noexcept
         : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
 
+    explicit QBluetoothUuid(QUuid::Id128Bytes uuid) noexcept
+        : QUuid(uuid) {};
     explicit QBluetoothUuid(const QString &uuid);
     QBluetoothUuid(const QBluetoothUuid &uuid) = default;
     QBluetoothUuid(const QUuid &uuid);

@@ -525,6 +525,13 @@ Q_CONSTRUCTOR_FUNCTION(registerQBluetoothUuid)
 */
 
 /*!
+    \fn QBluetoothUuid::QBluetoothUuid(QUuid::Id128Bytes uuid)
+
+    Constructs a new Bluetooth UUID from the 128 bit \a uuid represented
+    by \l QUuid::Id128Bytes struct.
+*/
+
+/*!
     Creates a QBluetoothUuid object from the string \a uuid,
     which must be formatted as five hex fields separated by '-',
     e.g., "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}" where 'x' is a hex digit.
