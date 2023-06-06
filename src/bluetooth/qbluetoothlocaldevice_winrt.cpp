@@ -465,15 +465,15 @@ static DeviceInformationCollection getAvailableAdapters()
 DeviceInformationPairing pairingInfoFromAddress(const QBluetoothAddress &address)
 {
     const quint64 addr64 = address.toUInt64();
-    BluetoothDevice device(nullptr);
-    bool res = await(BluetoothDevice::FromBluetoothAddressAsync(addr64), device, 5000);
-    if (res && device)
-        return device.DeviceInformation().Pairing();
-
     BluetoothLEDevice leDevice(nullptr);
-    res = await(BluetoothLEDevice::FromBluetoothAddressAsync(addr64), leDevice, 5000);
+    bool res = await(BluetoothLEDevice::FromBluetoothAddressAsync(addr64), leDevice, 5000);
     if (res && leDevice)
         return leDevice.DeviceInformation().Pairing();
+
+    BluetoothDevice device(nullptr);
+    res = await(BluetoothDevice::FromBluetoothAddressAsync(addr64), device, 5000);
+    if (res && device)
+        return device.DeviceInformation().Pairing();
 
     return nullptr;
 }
