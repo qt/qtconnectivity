@@ -54,7 +54,7 @@ tst_QBluetoothServiceDiscoveryAgent::tst_QBluetoothServiceDiscoveryAgent()
     if (androidBluetoothEmulator())
         return;
     // start Bluetooth if not started
-#ifndef Q_OS_OSX
+#ifndef Q_OS_MACOS
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
     localDeviceAvailable = device->isValid();
     if (localDeviceAvailable) {
@@ -144,7 +144,7 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscoveryStop()
 
 void tst_QBluetoothServiceDiscoveryAgent::tst_invalidBtAddress()
 {
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
     if (!localDeviceAvailable)
         QSKIP("On OS X this test requires Bluetooth adapter in powered ON state");
 #endif
