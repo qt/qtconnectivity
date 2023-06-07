@@ -100,7 +100,7 @@ void tst_QLowEnergyController::initTestCase()
         qWarning("No remote device or local adapter found.");
         return;
     }
-#elif defined(Q_OS_OSX)
+#elif defined(Q_OS_MACOS)
     // allDevices is always empty on iOS:
     if (QBluetoothLocalDevice::allDevices().isEmpty()) {
         qWarning("No local adapter found.");

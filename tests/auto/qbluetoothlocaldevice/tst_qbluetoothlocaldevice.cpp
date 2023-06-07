@@ -82,7 +82,7 @@ void tst_QBluetoothLocalDevice::tst_powerOn()
 {
     if (androidBluetoothEmulator())
         QSKIP("Skipping test on Android 12+ emulator, CI can timeout waiting for user input");
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
     QSKIP("Not possible on OS X");
 #endif
     if (numDevices == 0)
@@ -116,7 +116,7 @@ void tst_QBluetoothLocalDevice::tst_powerOff()
 {
     if (androidBluetoothEmulator())
         QSKIP("Skipping test on Android 12+ emulator, CI can timeout waiting for user input");
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
     QSKIP("Not possible on OS X");
 #endif
     if (numDevices == 0)
@@ -192,7 +192,7 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
 {
     if (androidBluetoothEmulator())
         QSKIP("Skipping test on Android 12+ emulator, CI can timeout waiting for user input");
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
     QSKIP("Not possible on OS X");
 #endif
     QFETCH(QBluetoothLocalDevice::HostMode, hostModeExpected);
