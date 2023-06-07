@@ -95,7 +95,7 @@ void tst_QBluetoothServer::initTestCase()
         return;
 
     initialHostMode = device.hostMode();
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
     if (initialHostMode == QBluetoothLocalDevice::HostPoweredOff)
         return;
 #endif
@@ -150,7 +150,7 @@ void tst_QBluetoothServer::tst_receive()
     QFETCH(QBluetoothLocalDevice::HostMode, hostmode);
 
     QBluetoothLocalDevice localDev;
-#ifdef Q_OS_OSX
+#ifdef Q_OS_MACOS
     if (localDev.hostMode() == QBluetoothLocalDevice::HostPoweredOff)
         QSKIP("On OS X this test requires Bluetooth adapter ON");
 #endif
@@ -163,7 +163,7 @@ void tst_QBluetoothServer::tst_receive()
         setHostMode(address, hostmode);
 
         if (hostmode == QBluetoothLocalDevice::HostPoweredOff) {
-#if !defined(Q_OS_OSX) && !QT_CONFIG(winrt_bt)
+#if !defined(Q_OS_MACOS) && !QT_CONFIG(winrt_bt)
             QCOMPARE(localDevice->hostMode(), hostmode);
 #endif
         } else {
