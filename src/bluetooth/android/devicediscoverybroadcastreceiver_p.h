@@ -70,6 +70,7 @@ public:
 
 signals:
     void deviceDiscovered(const QBluetoothDeviceInfo &info, bool isLeScanResult);
+    void discoveryStarted();
     void finished();
 
 private:

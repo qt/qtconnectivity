@@ -791,6 +791,9 @@ void QBluetoothSocket::close()
   Set the socket to use \a socketDescriptor with a type of \a socketType,
   which is in state, \a socketState, and mode, \a openMode.
 
+  The set socket descriptor is considered owned by the QBluetoothSocket
+  and may be e.g. closed once finished.
+
   Returns true on success
 */
 

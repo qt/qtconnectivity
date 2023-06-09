@@ -511,7 +511,7 @@ void tst_QBluetoothSocket::tst_preferredSecurityFlags()
 #elif QT_CONFIG(bluez)
     // The bluezdbus socket uses "NoSecurity" by default, whereas the non-dbus bluez
     // socket uses "Authorization" by default
-    if (bluetoothdVersion() >= QVersionNumber(5, 42))
+    if (bluetoothdVersion() >= QVersionNumber(5, 46))
         QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::NoSecurity);
     else
         QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::Authorization);
@@ -577,4 +577,3 @@ void tst_QBluetoothSocket::tst_unsupportedProtocolError()
 QTEST_MAIN(tst_QBluetoothSocket)
 
 #include "tst_qbluetoothsocket.moc"
-

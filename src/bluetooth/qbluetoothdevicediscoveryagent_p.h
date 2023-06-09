@@ -164,6 +164,8 @@ private slots:
 
 private:
     void startLowEnergyScan();
+    void classicDiscoveryStartFail();
+    bool setErrorIfPowerOff();
 
     DeviceDiscoveryBroadcastReceiver *receiver;
     QBluetoothAddress m_adapterAddress;
@@ -171,6 +173,8 @@ private:
     QAndroidJniObject adapter;
     QAndroidJniObject leScanner;
     QTimer *leScanTimeout;
+    QTimer *deviceDiscoveryStartTimeout = nullptr;
+    short deviceDiscoveryStartAttemptsLeft;
 
     bool pendingCancel, pendingStart;
 #elif QT_CONFIG(bluez)
