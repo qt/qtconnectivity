@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 pragma ComponentBehavior: Bound
+import QtCore
 import QtQuick
 
 Rectangle {
@@ -13,6 +14,19 @@ Rectangle {
 
     width: 300
     height: 600
+
+    function toggleDiscovery() {
+        if (!Device.state) {
+            Device.startDeviceDiscovery()
+            // if startDeviceDiscovery() failed Device.state is not set
+            if (Device.state) {
+                info.dialogText = "Searching..."
+                info.visible = true
+            }
+        } else {
+            Device.stopDeviceDiscovery()
+        }
+    }
 
     onDeviceStateChanged: {
         if (!Device.state)
@@ -99,23 +113,32 @@ Rectangle {
         onButtonClick: Device.useRandomAddress = !Device.useRandomAddress
     }
 
+    //! [permission-object]
+    BluetoothPermission {
+        id: permission
+        communicationModes: BluetoothPermission.Access
+        onStatusChanged: {
+            if (permission.status === Qt.PermissionStatus.Denied)
+                Device.update = "Bluetooth permission required"
+            else if (permission.status === Qt.PermissionStatus.Granted)
+                devicesPage.toggleDiscovery()
+        }
+    }
+    //! [permission-object]
+
     Menu {
         id: menu
         anchors.bottom: parent.bottom
         menuWidth: parent.width
         menuHeight: (parent.height / 6)
         menuText: Device.update
+        //! [permission-request]
         onButtonClick: {
-            if (!Device.state) {
-                Device.startDeviceDiscovery()
-                // if startDeviceDiscovery() failed Device.state is not set
-                if (Device.state) {
-                    info.dialogText = "Searching..."
-                    info.visible = true
-                }
-            } else {
-                Device.stopDeviceDiscovery()
-            }
+            if (permission.status === Qt.PermissionStatus.Undetermined)
+                permission.request()
+            else if (permission.status === Qt.PermissionStatus.Granted)
+                devicesPage.toggleDiscovery()
         }
+        //! [permission-request]
     }
 }

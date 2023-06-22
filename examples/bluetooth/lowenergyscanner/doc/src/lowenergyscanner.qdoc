@@ -34,10 +34,20 @@
     \include examples-run.qdocinc
 
     \section1 Requesting Permission to use Bluetooth
-    Before the application can start using Bluetooth, we have to check Bluetooth
-    permission, and if its status is not determined yet, request this permission:
 
-    \snippet lowenergyscanner/device.cpp les-bluetooth-permission
+    On certain platforms, it is required to explicitly grant permissions for
+    using Bluetooth. The example uses \c BluetoothPermission QML object to
+    check and request the permissions, if required:
+
+    \snippet lowenergyscanner/Devices.qml permission-object
+
+    The permission request dialog is triggered when the user tries to start
+    the device discovery, and the permission status is \c {Undetermined}:
+
+    \snippet lowenergyscanner/Devices.qml permission-request
+
+    The device discovery starts if the permission is granted by the user.
+    Otherwise the application is non-functional.
 
     \section1 Scanning for Devices
 
