@@ -48,22 +48,6 @@ Device::~Device()
 
 void Device::startDeviceDiscovery()
 {
-#if QT_CONFIG(permissions)
-    //! [les-bluetooth-permission]
-    QBluetoothPermission permission;
-    permission.setCommunicationModes(QBluetoothPermission::Access);
-    const auto permissionStatus = qApp->checkPermission(permission);
-    if (permissionStatus == Qt::PermissionStatus::Undetermined) {
-        qApp->requestPermission(permission, this, &Device::startDeviceDiscovery);
-        return;
-    }
-    if (permissionStatus == Qt::PermissionStatus::Denied) {
-        setUpdate("Bluetooth permission required.");
-        return;
-    }
-    //! [les-bluetooth-permission]
-#endif // QT_CONFIG(permissions)
-
     qDeleteAll(devices);
     devices.clear();
     emit devicesUpdated();
