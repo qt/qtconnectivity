@@ -9,6 +9,9 @@
 
 QT_BEGIN_NAMESPACE
 
+static_assert(QT6_ONLY(!)std::is_trivially_copyable_v<QBluetoothAddress>,
+              "Must stay this way until Qt 7 because of BC reasons.");
+
 QT_IMPL_METATYPE_EXTERN(QBluetoothAddress)
 
 /*!

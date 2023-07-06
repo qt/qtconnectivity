@@ -20,6 +20,7 @@ public:
     constexpr QBluetoothAddress() noexcept {};
     constexpr explicit QBluetoothAddress(quint64 address) noexcept : m_address(address) {};
     explicit QBluetoothAddress(const QString &address);
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
     QT_BLUETOOTH_INLINE_SINCE(6, 6)
     QBluetoothAddress(const QBluetoothAddress &other) noexcept;
     QT_BLUETOOTH_INLINE_SINCE(6, 6)
@@ -29,6 +30,7 @@ public:
     QBluetoothAddress &operator=(const QBluetoothAddress &other) noexcept;
     QBluetoothAddress(QBluetoothAddress &&) noexcept = default;
     QBluetoothAddress &operator=(QBluetoothAddress &&) noexcept = default;
+#endif // Qt 6
 
     QT_BLUETOOTH_INLINE_SINCE(6, 6)
     bool isNull() const noexcept;
@@ -67,9 +69,11 @@ private:
 };
 
 #if QT_BLUETOOTH_INLINE_IMPL_SINCE(6, 6)
+#if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
 QBluetoothAddress::QBluetoothAddress(const QBluetoothAddress &) noexcept = default;
 QBluetoothAddress &QBluetoothAddress::operator=(const QBluetoothAddress &) noexcept = default;
 QBluetoothAddress::~QBluetoothAddress() = default;
+#endif
 
 void QBluetoothAddress::clear() noexcept
 {
