@@ -27,6 +27,8 @@ public:
 
     QT_BLUETOOTH_INLINE_SINCE(6, 6)
     QBluetoothAddress &operator=(const QBluetoothAddress &other) noexcept;
+    QBluetoothAddress(QBluetoothAddress &&) noexcept = default;
+    QBluetoothAddress &operator=(QBluetoothAddress &&) noexcept = default;
 
     QT_BLUETOOTH_INLINE_SINCE(6, 6)
     bool isNull() const noexcept;
