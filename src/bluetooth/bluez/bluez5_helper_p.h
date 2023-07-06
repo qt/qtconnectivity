@@ -76,6 +76,11 @@ private:
     QtBluezDiscoveryManagerPrivate *d;
 };
 
+inline uint qHash(const QBluetoothAddress &address)
+{
+    return qHash(address.toUInt64());
+}
+
 QT_END_NAMESPACE
 
 #endif
