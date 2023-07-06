@@ -19,11 +19,6 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
-inline uint qHash(const QBluetoothAddress &address)
-{
-    return ::qHash(address.toUInt64());
-}
-
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent),
     d_ptr(new QBluetoothLocalDevicePrivate(this))
