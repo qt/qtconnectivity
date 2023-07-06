@@ -30,7 +30,7 @@ Q_CONSTRUCTOR_FUNCTION(registerQBluetoothAddress)
 /*!
     \fn QBluetoothAddress::QBluetoothAddress()
 
-    Constructs an null Bluetooth Address.
+    Constructs a null Bluetooth Address.
 */
 
 /*!
