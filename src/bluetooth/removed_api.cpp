@@ -16,6 +16,8 @@
 QT_USE_NAMESPACE
 
 #if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
+#include "qbluetoothaddress.h" // inlined API
+
 #include "qbluetoothuuid.h"
 
 static_assert(std::is_aggregate_v<quint128>);

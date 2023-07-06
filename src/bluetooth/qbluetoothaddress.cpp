@@ -63,31 +63,6 @@ QBluetoothAddress::QBluetoothAddress(const QString &address)
 }
 
 /*!
-    Constructs a new Bluetooth address which is a copy of \a other.
-*/
-QBluetoothAddress::QBluetoothAddress(const QBluetoothAddress &other)
-{
-    *this = other;
-}
-
-/*!
-    Destroys the QBluetoothAddress.
-*/
-QBluetoothAddress::~QBluetoothAddress()
-{
-}
-
-/*!
-    Assigns \a other to this Bluetooth address.
-*/
-QBluetoothAddress &QBluetoothAddress::operator=(const QBluetoothAddress &other)
-{
-    m_address = other.m_address;
-
-    return *this;
-}
-
-/*!
     \fn QBluetoothAddress::qHash(QBluetoothAddress key, size_t seed)
     \since 6.6
 
@@ -96,28 +71,22 @@ QBluetoothAddress &QBluetoothAddress::operator=(const QBluetoothAddress &other)
 */
 
 /*!
+    \fn void QBluetoothAddress::clear()
+
     Sets the Bluetooth address to 00:00:00:00:00:00.
 */
-void QBluetoothAddress::clear()
-{
-    m_address = 0;
-}
 
 /*!
+    \fn bool QBluetoothAddress::isNull() const
+
     Returns true if the Bluetooth address is null, otherwise returns false.
 */
-bool QBluetoothAddress::isNull() const
-{
-    return m_address == 0;
-}
 
 /*!
+    \fn quint64 QBluetoothAddress::toUInt64() const
+
     Returns this Bluetooth address as a quint64.
 */
-quint64 QBluetoothAddress::toUInt64() const
-{
-    return m_address;
-}
 
 /*!
     Returns the Bluetooth address as a string of the form, XX:XX:XX:XX:XX:XX.
