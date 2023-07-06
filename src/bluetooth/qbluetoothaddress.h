@@ -7,6 +7,7 @@
 #include <QtBluetooth/qtbluetoothglobal.h>
 
 #include <QtCore/QByteArray>
+#include <QtCore/qhashfunctions.h>
 #include <QtCore/QString>
 #include <QtCore/QMetaType>
 #include <QtCore/QDebug>
@@ -46,6 +47,8 @@ public:
 
 private:
     quint64 m_address = { 0 };
+    friend QT7_ONLY(constexpr) size_t qHash(const QBluetoothAddress &key, size_t seed = 0) noexcept
+    { return qHash(key.m_address, seed); }
 #ifndef QT_NO_DEBUG_STREAM
     friend QDebug operator<<(QDebug d, const QBluetoothAddress &a)
     {
