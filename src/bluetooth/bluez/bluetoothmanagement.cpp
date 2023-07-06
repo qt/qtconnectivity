@@ -7,6 +7,7 @@
 
 #include "bluetoothmanagement_p.h"
 #include "bluez_data_p.h"
+#include "bluez5_helper_p.h"
 #include "../qbluetoothsocketbase_p.h"
 
 #include <unistd.h>
@@ -85,11 +86,6 @@ struct capData {
 #endif
 
 const int msecInADay = 1000*60*60*24;
-
-inline uint qHash(const QBluetoothAddress& address)
-{
-    return qHash(address.toUInt64());
-}
 
 static int sysCallCapGet(capHdr *header, capData *data)
 {
