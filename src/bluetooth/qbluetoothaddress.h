@@ -14,11 +14,12 @@
 
 QT_BEGIN_NAMESPACE
 
-class Q_BLUETOOTH_EXPORT QBluetoothAddress
+class QT6_ONLY(Q_BLUETOOTH_EXPORT) QBluetoothAddress
 {
 public:
     constexpr QBluetoothAddress() noexcept {};
     constexpr explicit QBluetoothAddress(quint64 address) noexcept : m_address(address) {};
+    QT7_ONLY(Q_BLUETOOTH_EXPORT)
     explicit QBluetoothAddress(const QString &address);
 #if QT_VERSION < QT_VERSION_CHECK(7, 0, 0)
     QT_BLUETOOTH_INLINE_SINCE(6, 6)
@@ -53,6 +54,7 @@ public:
 
     QT_BLUETOOTH_INLINE_SINCE(6, 6)
     quint64 toUInt64() const noexcept;
+    QT7_ONLY(Q_BLUETOOTH_EXPORT)
     QString toString() const;
 
 private:
@@ -64,6 +66,7 @@ private:
     {
         return streamingOperator(d, a);
     }
+    QT7_ONLY(Q_BLUETOOTH_EXPORT)
     static QDebug streamingOperator(QDebug, const QBluetoothAddress &address);
 #endif
 };
