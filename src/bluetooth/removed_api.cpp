@@ -24,11 +24,14 @@ static_assert(std::is_aggregate_v<quint128>);
 static_assert(std::is_trivial_v<quint128>);
 
 QBluetoothUuid::QBluetoothUuid(quint128 uuid)
-    : QUuid(uuid.d)
+    : QUuid(fromBytes(uuid.data))
 {}
 
 quint128 QBluetoothUuid::toUInt128() const
 {
-    return { toBytes() };
+    quint128 uuid;
+    const auto bytes = toBytes();
+    memcpy(uuid.data, bytes.data, sizeof(uuid.data));
+    return uuid;
 }
 #endif // QT_BLUETOOTH_REMOVED_SINCE(6, 6)

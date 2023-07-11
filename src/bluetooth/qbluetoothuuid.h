@@ -21,7 +21,7 @@ QT_BEGIN_NAMESPACE
 #if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
 struct quint128
 {
-    QUuid::Id128Bytes d;
+    quint8 data[16];
 };
 #endif
 
