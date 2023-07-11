@@ -11,7 +11,6 @@ project(QtConnectivity
     LANGUAGES CXX C
 )
 
-set(QT_REPO_NOT_WARNINGS_CLEAN TRUE)
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Network)
 find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS
     DBus Gui Widgets Quick QuickControls2)
