@@ -13,6 +13,8 @@ qt_internal_add_app(sdpscanner
     INSTALL_DIR "${INSTALL_LIBEXECDIR}"
     SOURCES
         main.cpp
+    DEFINES
+        QT_NO_CONTEXTLESS_CONNECT
     LIBRARIES
         PkgConfig::BLUEZ
 )

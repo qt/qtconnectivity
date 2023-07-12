@@ -220,7 +220,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
                 deviceDiscoveryStartTimeout->setSingleShot(true);
                 QObject::connect(receiver, &DeviceDiscoveryBroadcastReceiver::discoveryStarted,
                                  deviceDiscoveryStartTimeout, &QTimer::stop);
-                QObject::connect(deviceDiscoveryStartTimeout, &QTimer::timeout, [this]() {
+                QObject::connect(deviceDiscoveryStartTimeout, &QTimer::timeout, this, [this]() {
                     deviceDiscoveryStartAttemptsLeft -= 1;
                     qCWarning(QT_BT_ANDROID) << "Discovery start not received, attempts left:"
                                              <<  deviceDiscoveryStartAttemptsLeft;

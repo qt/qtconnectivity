@@ -184,17 +184,17 @@ void QLowEnergyControllerPrivateBluez::init()
             this, SLOT(encryptionChangedEvent(QBluetoothAddress,bool)));
     hciManager->monitorEvent(HciManager::HciEvent::EVT_LE_META_EVENT);
     hciManager->monitorAclPackets();
-    connect(hciManager.get(), &HciManager::connectionComplete, [this](quint16 handle) {
+    connect(hciManager.get(), &HciManager::connectionComplete, this, [this](quint16 handle) {
         connectionHandle = handle;
         qCDebug(QT_BT_BLUEZ) << "received connection complete event, handle:" << handle;
     });
-    connect(hciManager.get(), &HciManager::connectionUpdate,
+    connect(hciManager.get(), &HciManager::connectionUpdate, this,
             [this](quint16 handle, const QLowEnergyConnectionParameters &params) {
                 if (handle == connectionHandle)
                     emit q_ptr->connectionUpdated(params);
             }
     );
-    connect(hciManager.get(), &HciManager::signatureResolvingKeyReceived,
+    connect(hciManager.get(), &HciManager::signatureResolvingKeyReceived, this,
             [this](quint16 handle, bool remoteKey, const QUuid::Id128Bytes &csrk) {
                 if (handle != connectionHandle)
                     return;
