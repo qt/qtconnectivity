@@ -532,6 +532,37 @@ Q_CONSTRUCTOR_FUNCTION(registerQBluetoothUuid)
 */
 
 /*!
+    \fn quint128 QBluetoothUuid::toUInt128() const
+
+    Returns the 128 bit representation of this UUID.
+
+    \note The returned value is in big endian order.
+
+    This method is only available when the platform \e {does not} support
+    native 128 bit integral values. Otherwise, the call will resolve to
+    \l QUuid::toUInt128(), which also allows to specify the desired endian
+    order of the returned value.
+*/
+
+/*!
+    \fn QBluetoothUuid::QBluetoothUuid(quint128 uuid)
+
+     Constructs a new Bluetooth UUID from a 128 bit \a uuid.
+
+     \note The \a uuid must be in big endian order.
+*/
+#ifdef QT_SUPPORTS_INT128
+// This implementation is used only when 128-bit ints are supported.
+// The old implementation which uses struct quint128 can be found in
+// removed_api.cpp. We need to keep it there, because we need to provide both
+// implementations for BC
+QBluetoothUuid::QBluetoothUuid(quint128 uuid)
+    : QUuid(uuid, QSysInfo::BigEndian)
+{
+}
+#endif
+
+/*!
     Creates a QBluetoothUuid object from the string \a uuid,
     which must be formatted as five hex fields separated by '-',
     e.g., "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}" where 'x' is a hex digit.

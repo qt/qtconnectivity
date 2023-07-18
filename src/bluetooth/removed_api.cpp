@@ -2,21 +2,18 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #define QT_BLUETOOTH_BUILD_REMOVED_API
-// before we undef __SIZEOF_INT128__
-#include <cstddef>
-#include <cstdint>
 
-#ifdef __SIZEOF_INT128__
-// ensure QtCore/qtypes.h doesn't define quint128
-#  undef __SIZEOF_INT128__
-#endif
+// Undefine Qt 128-bit int types
+#define QT_NO_INT128
 
 #include "qtbluetoothglobal.h"
 
 QT_USE_NAMESPACE
 
-#if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
-#include "qbluetoothaddress.h" // inlined API
+// This part is not typical to the removed_api.cpp, because we need to have
+// an extra condition. When adding new removed APIs for Qt 6.6, do not put them
+// into this section. Instead, add them to the section below.
+#if QT_BLUETOOTH_REMOVED_SINCE(6, 6) || !defined(QT_SUPPORTS_INT128)
 
 #include "qbluetoothuuid.h"
 
@@ -34,4 +31,12 @@ quint128 QBluetoothUuid::toUInt128() const
     memcpy(uuid.data, bytes.data, sizeof(uuid.data));
     return uuid;
 }
+
+#endif // QT_BLUETOOTH_REMOVED_SINCE(6, 6) || !defined(QT_SUPPORTS_INT128)
+
+// This is a common section for Qt 6.6 removed APIs
+#if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
+
+#include "qbluetoothaddress.h" // inlined API
+
 #endif // QT_BLUETOOTH_REMOVED_SINCE(6, 6)

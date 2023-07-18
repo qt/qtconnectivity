@@ -18,7 +18,7 @@ Q_FORWARD_DECLARE_OBJC_CLASS(CBUUID);
 
 QT_BEGIN_NAMESPACE
 
-#if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
+#if QT_BLUETOOTH_REMOVED_SINCE(6, 6) || !defined(QT_SUPPORTS_INT128)
 struct quint128
 {
     quint8 data[16];
@@ -351,6 +351,7 @@ public:
     explicit constexpr QBluetoothUuid(quint32 uuid) noexcept
         : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
 
+    explicit QBluetoothUuid(quint128 uuid);
     explicit QBluetoothUuid(QUuid::Id128Bytes uuid) noexcept
         : QUuid(uuid) {};
     explicit QBluetoothUuid(const QString &uuid);
@@ -377,8 +378,7 @@ public:
     quint16 toUInt16(bool *ok = nullptr) const;
     quint32 toUInt32(bool *ok = nullptr) const;
 
-#if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
-    explicit QBluetoothUuid(quint128 uuid);
+#if QT_BLUETOOTH_REMOVED_SINCE(6, 6) || !defined(QT_SUPPORTS_INT128)
     quint128 toUInt128() const;
 #endif
 
