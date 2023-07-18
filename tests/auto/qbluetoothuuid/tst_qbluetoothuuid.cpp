@@ -359,6 +359,23 @@ void tst_QBluetoothUuid::tst_comparison()
         for (int var = 0; var < 16; ++var) {
             QVERIFY(quuid128.toBytes().data[var] == uuid128.data[var]);
         }
+
+        // check that toUInt128() call returns the value in the same format as
+        // QUuid::Id128Bytes, no matter what version we use (it can be
+        // QUuid::toUint128() on platforms that define __SIZEOF_INT128__ or
+        // QBluetoothUuid::toUint128() on other platforms).
+        const quint128 i128 = quuid128.toUInt128();
+        static_assert(sizeof(i128) == 16); // uint128 or QUuid::Id128Bytes
+        uchar dst[16];
+        memcpy(dst, &i128, sizeof(i128));
+        for (int var = 0; var < 16; ++var)
+            QCOMPARE_EQ(dst[var], uuid128.data[var]);
+
+        // check that we always have a c-tor taking quint128
+        QBluetoothUuid other{i128};
+        const auto bytes = other.toBytes();
+        for (int var = 0; var < 16; ++var)
+            QCOMPARE_EQ(bytes.data[var], uuid128.data[var]);
     }
 }
 
