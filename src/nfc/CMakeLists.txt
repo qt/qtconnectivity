@@ -18,7 +18,6 @@ qt_internal_add_module(Nfc
         qtnfcglobal.h qtnfcglobal_p.h
     DEFINES
         QT_NO_CONTEXTLESS_CONNECT
-        QT_NO_FOREACH
     PUBLIC_LIBRARIES
         Qt::Core
     GENERATE_CPP_EXPORTS
