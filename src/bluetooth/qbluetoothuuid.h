@@ -352,8 +352,8 @@ public:
         : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
 
     explicit QBluetoothUuid(quint128 uuid);
-    explicit QBluetoothUuid(QUuid::Id128Bytes uuid) noexcept
-        : QUuid(uuid) {};
+    explicit QBluetoothUuid(Id128Bytes uuid, QSysInfo::Endian order = QSysInfo::BigEndian) noexcept
+        : QUuid(uuid, order) {};
     explicit QBluetoothUuid(const QString &uuid);
     QBluetoothUuid(const QBluetoothUuid &uuid) = default;
     QBluetoothUuid(const QUuid &uuid);
