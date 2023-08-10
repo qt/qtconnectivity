@@ -370,11 +370,10 @@ public:
     }
     friend bool operator!=(const QBluetoothUuid &a, const QBluetoothUuid &b) { return !(a == b); }
 #ifndef QT_NO_DEBUG_STREAM
-    friend QDebug operator<<(QDebug debug, const QBluetoothUuid &uuid)
-    {
-        return streamingOperator(debug, uuid);
-    }
+    friend Q_BLUETOOTH_EXPORT QDebug operator<<(QDebug debug, const QBluetoothUuid &uuid);
+#if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
     static QDebug streamingOperator(QDebug debug, const QBluetoothUuid &uuid);
+#endif
 #endif
 
     int minimumSize() const;
