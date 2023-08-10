@@ -533,35 +533,50 @@ Q_CONSTRUCTOR_FUNCTION(registerQBluetoothUuid)
 */
 
 /*!
-    \fn quint128 QBluetoothUuid::toUInt128() const
+    \fn quint128 QBluetoothUuid::toUInt128(QSysInfo::Endian order) const
 
-    Returns the 128 bit representation of this UUID.
+    Returns the 128 bit representation of this UUID in byte order \a order.
 
-    \note The returned value is in big endian order.
-
-    This method is only available when the platform \e {does not} support
-    native 128 bit integral values. Otherwise, the call will resolve to
-    \l QUuid::toUInt128(), which also allows to specify the desired endian
-    order of the returned value.
+    \note In Qt versions prior to 6.6, the \a order argument was not present,
+    and the function was hard-coded to return in big-endian order.
 */
+#ifndef QT_SUPPORTS_INT128 // otherwise falls back to QUuid::toUint128()
+quint128 QBluetoothUuid::toUInt128(QSysInfo::Endian order) const noexcept
+{
+    quint128 r;
+    const auto bytes = toBytes(order);
+    static_assert(sizeof(quint128) == sizeof(decltype(bytes)));
+    memcpy(&r, bytes.data, sizeof(quint128));
+    return r;
+}
+#endif
+
+static QUuid::Id128Bytes to_id128_bytes(quint128 v) noexcept
+{
+#ifdef QT_SUPPORTS_INT128
+    // quint128 is `unsigned __int128`:
+    return {.data128 = {v}};
+#else
+    // quint128 is our legacy struct from qbluetoothuuid.h:
+    QUuid::Id128Bytes result;
+    memcpy(result.data, v.data, sizeof(v.data));
+    return result;
+#endif
+}
 
 /*!
-    \fn QBluetoothUuid::QBluetoothUuid(quint128 uuid)
+    \fn QBluetoothUuid::QBluetoothUuid(quint128 uuid, QSysInfo::Endian order)
 
      Constructs a new Bluetooth UUID from a 128 bit \a uuid.
 
-     \note The \a uuid must be in big endian order.
+     \note In Qt versions prior to 6.6, the \a order argument was not present,
+     and the function was hard-coded to big-endian order.
 */
-#ifdef QT_SUPPORTS_INT128
-// This implementation is used only when 128-bit ints are supported.
-// The old implementation which uses struct quint128 can be found in
-// removed_api.cpp. We need to keep it there, because we need to provide both
-// implementations for BC
-QBluetoothUuid::QBluetoothUuid(quint128 uuid)
-    : QUuid(Id128Bytes{.data128 = {uuid}}, QSysInfo::BigEndian)
+
+QBluetoothUuid::QBluetoothUuid(quint128 uuid, QSysInfo::Endian order) noexcept
+    : QUuid{to_id128_bytes(uuid), order}
 {
 }
-#endif
 
 /*!
     Creates a QBluetoothUuid object from the string \a uuid,
