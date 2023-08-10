@@ -525,10 +525,11 @@ Q_CONSTRUCTOR_FUNCTION(registerQBluetoothUuid)
 */
 
 /*!
-    \fn QBluetoothUuid::QBluetoothUuid(QUuid::Id128Bytes uuid)
+    \fn QBluetoothUuid::QBluetoothUuid(QUuid::Id128Bytes uuid, QSysInfo::Endian order)
+    \since 6.6
 
     Constructs a new Bluetooth UUID from the 128 bit \a uuid represented
-    by \l QUuid::Id128Bytes struct.
+    by the integral \a uuid parameter and respecting the byte order \a order.
 */
 
 /*!
