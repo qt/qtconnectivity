@@ -558,7 +558,7 @@ Q_CONSTRUCTOR_FUNCTION(registerQBluetoothUuid)
 // removed_api.cpp. We need to keep it there, because we need to provide both
 // implementations for BC
 QBluetoothUuid::QBluetoothUuid(quint128 uuid)
-    : QUuid(uuid, QSysInfo::BigEndian)
+    : QUuid(Id128Bytes{.data128 = {uuid}}, QSysInfo::BigEndian)
 {
 }
 #endif
