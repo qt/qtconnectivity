@@ -39,4 +39,12 @@ quint128 QBluetoothUuid::toUInt128() const
     return uuid;
 }
 
+#ifndef QT_NO_DEBUG_STREAM
+QDebug QBluetoothUuid::streamingOperator(QDebug debug, const QBluetoothUuid &uuid)
+{
+    debug << uuid.toString();
+    return debug;
+}
+#endif // QT_NO_DEBUG_STREAM
+
 #endif // QT_BLUETOOTH_REMOVED_SINCE(6, 6)

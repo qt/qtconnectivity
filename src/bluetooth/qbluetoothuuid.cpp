@@ -1074,7 +1074,7 @@ QString QBluetoothUuid::descriptorToString(QBluetoothUuid::DescriptorType uuid)
 */
 
 #ifndef QT_NO_DEBUG_STREAM
-QDebug QBluetoothUuid::streamingOperator(QDebug debug, const QBluetoothUuid &uuid)
+QDebug operator<<(QDebug debug, const QBluetoothUuid &uuid)
 {
     debug << uuid.toString();
     return debug;
