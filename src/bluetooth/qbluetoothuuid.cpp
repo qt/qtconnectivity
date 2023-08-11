@@ -561,19 +561,6 @@ quint128 QBluetoothUuid::toUInt128(QSysInfo::Endian order) const noexcept
 */
 
 /*!
-    Creates a QBluetoothUuid object from the string \a uuid,
-    which must be formatted as five hex fields separated by '-',
-    e.g., "{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}" where 'x' is a hex digit.
-    The curly braces shown here are optional, but it is normal to include them.
-    If the conversion fails, a null UUID is created. See \l QUuid::toString() for an
-    explanation of how the five hex fields map to the public data members in QUuid.
-*/
-QBluetoothUuid::QBluetoothUuid(const QString &uuid)
-:   QUuid(uuid)
-{
-}
-
-/*!
     \fn QBluetoothUuid::QBluetoothUuid(const QUuid &uuid)
 
     Constructs a new Bluetooth UUID that is a copy of \a uuid.

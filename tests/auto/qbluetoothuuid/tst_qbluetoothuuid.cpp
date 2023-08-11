@@ -246,7 +246,7 @@ void tst_QBluetoothUuid::tst_conversion()
     if (constructUuid16) {
         QBluetoothUuid uuid(uuid16);
 
-        QCOMPARE(uuid, QBluetoothUuid(uuidS));
+        QCOMPARE(uuid, QBluetoothUuid(QStringView{uuidS}));
 
         bool ok;
 
@@ -268,7 +268,7 @@ void tst_QBluetoothUuid::tst_conversion()
     if (constructUuid32) {
         QBluetoothUuid uuid(uuid32);
 
-        QCOMPARE(uuid, QBluetoothUuid(uuidS));
+        QCOMPARE(uuid, QBluetoothUuid(QLatin1StringView{uuidS.toLatin1()}));
 
         bool ok;
 
@@ -293,7 +293,7 @@ void tst_QBluetoothUuid::tst_conversion()
     if (constructUuid128) {
         QBluetoothUuid uuid(uuid128);
 
-        QCOMPARE(uuid, QBluetoothUuid(uuidS));
+        QCOMPARE(uuid, QBluetoothUuid(QUtf8StringView{uuidS.toUtf8()}));
 
         bool ok;
 
