@@ -375,9 +375,6 @@ public:
     static QString protocolToString(ProtocolUuid uuid);
     static QString characteristicToString(CharacteristicType uuid);
     static QString descriptorToString(DescriptorType uuid);
-
-private:
-    static bool equals(const QBluetoothUuid &a, const QBluetoothUuid &b);
 };
 
 #ifndef QT_NO_DATASTREAM
