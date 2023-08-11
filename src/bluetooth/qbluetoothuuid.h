@@ -355,7 +355,9 @@ public:
 #if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
     explicit QBluetoothUuid(quint128 uuid);
 #endif
-    explicit QBluetoothUuid(quint128 uuid, QSysInfo::Endian order = QSysInfo::BigEndian) noexcept;
+    QT6_ONLY(QT_POST_CXX17_API_IN_EXPORTED_CLASS) // quint128 changes based on QT_SUPPORTS_INT128!
+    explicit QBluetoothUuid(quint128 uuid, QSysInfo::Endian order = QSysInfo::BigEndian) noexcept
+        : QUuid{fromBytes(&uuid, order)} {}
     explicit QBluetoothUuid(Id128Bytes uuid, QSysInfo::Endian order = QSysInfo::BigEndian) noexcept
         : QUuid(uuid, order) {};
     explicit QBluetoothUuid(const QString &uuid);
