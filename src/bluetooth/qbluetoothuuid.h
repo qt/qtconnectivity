@@ -352,15 +352,16 @@ public:
         : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
     // end of bluetooth-specific constructors; rest is essentially `using QUuid::QUuid;`
 
+    using QUuid::QUuid;
 #if QT_BLUETOOTH_REMOVED_SINCE(6, 6)
     explicit QBluetoothUuid(quint128 uuid);
 #endif
     QT6_ONLY(QT_POST_CXX17_API_IN_EXPORTED_CLASS) // quint128 changes based on QT_SUPPORTS_INT128!
     explicit QBluetoothUuid(quint128 uuid, QSysInfo::Endian order = QSysInfo::BigEndian) noexcept
         : QUuid{fromBytes(&uuid, order)} {}
-    explicit QBluetoothUuid(Id128Bytes uuid, QSysInfo::Endian order = QSysInfo::BigEndian) noexcept
-        : QUuid(uuid, order) {};
+#if QT_BLUETOOTH_REMOVED_SINCE(6, 6) // actually 6.3 (cf. QUuid)
     explicit QBluetoothUuid(const QString &uuid);
+#endif
     QBluetoothUuid(const QBluetoothUuid &uuid) = default;
     QT_BLUETOOTH_INLINE_SINCE(6, 6)
     QBluetoothUuid(QUuid QT6_ONLY(const &)uuid);
