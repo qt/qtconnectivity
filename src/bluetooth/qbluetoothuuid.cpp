@@ -592,12 +592,10 @@ QBluetoothUuid::QBluetoothUuid(const QString &uuid)
 }
 
 /*!
+    \fn QBluetoothUuid::QBluetoothUuid(const QUuid &uuid)
+
     Constructs a new Bluetooth UUID that is a copy of \a uuid.
 */
-QBluetoothUuid::QBluetoothUuid(const QUuid &uuid)
-:   QUuid(uuid)
-{
-}
 
 /*!
     Returns the minimum size in bytes that this UUID can be represented in.  For non-null UUIDs 2,

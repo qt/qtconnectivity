@@ -360,7 +360,8 @@ public:
         : QUuid(uuid, order) {};
     explicit QBluetoothUuid(const QString &uuid);
     QBluetoothUuid(const QBluetoothUuid &uuid) = default;
-    QBluetoothUuid(const QUuid &uuid);
+    QT_BLUETOOTH_INLINE_SINCE(6, 6)
+    QBluetoothUuid(QUuid QT6_ONLY(const &)uuid);
     ~QBluetoothUuid() = default;
 
     QBluetoothUuid &operator=(const QBluetoothUuid &other) = default;
@@ -398,6 +399,14 @@ public:
     static QString characteristicToString(CharacteristicType uuid);
     static QString descriptorToString(DescriptorType uuid);
 };
+
+#if QT_BLUETOOTH_INLINE_IMPL_SINCE(6, 6)
+QBluetoothUuid::QBluetoothUuid(QUuid QT6_ONLY(const &)uuid)
+    : QUuid(uuid)
+{
+}
+#endif
+
 
 #ifndef QT_NO_DATASTREAM
 inline QDataStream &operator<<(QDataStream &s, const QBluetoothUuid &uuid)
