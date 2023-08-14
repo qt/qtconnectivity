@@ -339,15 +339,15 @@ public:
 
     // values below are based on Bluetooth BASE_UUID
     constexpr QBluetoothUuid(ProtocolUuid uuid) noexcept
-        : QUuid(static_cast<uint>(uuid), 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+        : QBluetoothUuid(static_cast<quint32>(uuid)) {};
     constexpr QBluetoothUuid(ServiceClassUuid uuid) noexcept
-        : QUuid(static_cast<uint>(uuid), 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+        : QBluetoothUuid(static_cast<quint32>(uuid)) {};
     constexpr QBluetoothUuid(CharacteristicType uuid) noexcept
-        : QUuid(static_cast<uint>(uuid), 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+        : QBluetoothUuid(static_cast<quint32>(uuid)) {};
     constexpr QBluetoothUuid(DescriptorType uuid) noexcept
-        : QUuid(static_cast<uint>(uuid), 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+        : QBluetoothUuid(static_cast<quint32>(uuid)) {};
     explicit constexpr QBluetoothUuid(quint16 uuid) noexcept
-        : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
+        : QBluetoothUuid(quint32{uuid}) {};
     explicit constexpr QBluetoothUuid(quint32 uuid) noexcept
         : QUuid(uuid, 0x0, 0x1000, 0x80, 0x00, 0x00, 0x80, 0x5f, 0x9b, 0x34, 0xfb) {};
     // end of bluetooth-specific constructors; rest is essentially `using QUuid::QUuid;`
