@@ -7,7 +7,7 @@
 \title Qt NFC Overview
 \page qtnfc-overview.html
 \brief Provides access to NFC enabled devices.
-\ingroup explanation
+\ingroup explanations-networkingandconnectivity
 
 \tableofcontents
 
