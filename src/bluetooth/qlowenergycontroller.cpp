@@ -315,9 +315,9 @@ static QLowEnergyControllerPrivate *privateController(
     // with an environment variable (see bluetoothdVersion())
     //
     // Peripheral role
-    // For the dbus peripheral backend we check the presence of the required DBus APIs,
-    // bluez version, and in addition the application needs to opt-in to the DBus peripheral
-    // role by setting the environment variable. Otherwise we fall back to the kernel ATT
+    // The DBus peripheral backend is the default, and for that we check the presence of
+    // the required DBus APIs and bluez version. The application may opt-out of the DBus
+    // peripheral role by setting the environment variable. The fall-back is the kernel ATT
     // backend
     //
     // ### Qt 7 consider removing the non-dbus bluez (kernel ATT) support
@@ -325,7 +325,7 @@ static QLowEnergyControllerPrivate *privateController(
     QString adapterPathWithPeripheralSupport;
     if (role == QLowEnergyController::PeripheralRole
             && bluetoothdVersion() >= QVersionNumber(5, 56)
-            && qEnvironmentVariableIsSet("QT_BLUETOOTH_USE_DBUS_PERIPHERAL")) {
+            && !qEnvironmentVariableIsSet("QT_BLUETOOTH_USE_KERNEL_PERIPHERAL")) {
         adapterPathWithPeripheralSupport = adapterWithDBusPeripheralInterface(localDevice);
     }
 

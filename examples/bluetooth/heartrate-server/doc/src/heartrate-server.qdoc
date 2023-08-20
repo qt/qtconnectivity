@@ -31,13 +31,6 @@
     To visualize what it is doing, you can use the \l {heartrate-game}{Heart Rate Game}
     example, which is basically the client-side counterpart to this application.
 
-    \note By default on Linux a kernel socket API is used for advertising, which
-    means that a privileged access is required to start advertising. This can
-    be achieved by running the example as root, for instance via \c sudo.
-    Starting from Qt 6.5, an alternative approach is to use the BlueZ D-Bus
-    backend for advertising, which does not require root access. To enable
-    this backend, set \c QT_BLUETOOTH_USE_DBUS_PERIPHERAL environment variable.
-
     \section1 Checking Bluetooth Permission
     Before the application can create a service and start advertising, we have to check
     if the application has a permission to use Bluetooth.

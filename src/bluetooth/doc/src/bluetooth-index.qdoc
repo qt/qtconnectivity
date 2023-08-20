@@ -93,19 +93,21 @@ The usage of the dummy backend is highlighted via an appropriate warning while b
 \section3 Linux Specific
 
 Since Qt 6.5 the Linux peripheral support has two backend alternatives:
-BlueZ DBus and Bluetooth kernel API. The Bluez DBus backend introduced in Qt 6.5 is
-intended as the eventual successor of the lower abstraction level kernel backend.
+BlueZ DBus and Bluetooth Kernel API. The DBus backend is the default
+backend since Qt 6.7.
 
-The BlueZ DBus API is more limited in terms of features and is therefore not
-the default backend for compatibility reasons.
+BlueZ DBus is the newer BlueZ stack and possibly the eventual successor of the
+older Kernel API. It is a bit more limited in terms of features, but in a
+typical usage this should not matter. One notable benefit of using the DBus
+backend is that the user process no longer needs to have the
+\e CAP_NET_ADMIN capability (for example by running as \c root user).
 
-The BlueZ DBus backend can be configured to use by setting
-the \e QT_BLUETOOTH_USE_DBUS_PERIPHERAL environment variable. The QLowEnergyController
-peripheral instantiation then introspects the presence of BlueZ DBus peripheral APIs
-on the local bluetooth adapter. The minimum version requirement for BlueZ is 5.56.
+The DBus backend requires BlueZ version 5.56 or higher, and that it provides
+the needed DBus APIs. If these requirements are not met, Qt automatically
+falls back to the Bluetooth Kernel API backend.
 
-One noteworthy difference is that with BlueZ DBus peripheral backend the user process no longer
-needs to have the \e CAP_NET_ADMIN capability (eg. run as root).
+The older kernel backend can also be selected manually by setting the
+\e QT_BLUETOOTH_USE_KERNEL_PERIPHERAL environment variable.
 
 \section3 \macos Specific
 The Bluetooth API on \macos requires a certain type of event dispatcher
