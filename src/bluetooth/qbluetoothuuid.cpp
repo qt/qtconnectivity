@@ -1028,7 +1028,7 @@ QString QBluetoothUuid::characteristicToString(CharacteristicType uuid)
     case QBluetoothUuid::CharacteristicType::BodyCompositionMeasurement: return QBluetoothServiceDiscoveryAgent::tr("Body Composition Measurement");
     case QBluetoothUuid::CharacteristicType::WeightMeasurement: return QBluetoothServiceDiscoveryAgent::tr("Weight Measurement");
     case QBluetoothUuid::CharacteristicType::WeightScaleFeature:
-        return QBluetoothDeviceDiscoveryAgent::tr("Weight Scale Feature");
+        return QBluetoothServiceDiscoveryAgent::tr("Weight Scale Feature");
     case QBluetoothUuid::CharacteristicType::UserControlPoint: return QBluetoothServiceDiscoveryAgent::tr("User Control Point");
     case QBluetoothUuid::CharacteristicType::MagneticFluxDensity2D: return QBluetoothServiceDiscoveryAgent::tr("Magnetic Flux Density 2D");
     case QBluetoothUuid::CharacteristicType::MagneticFluxDensity3D: return QBluetoothServiceDiscoveryAgent::tr("Magnetic Flux Density 3D");
