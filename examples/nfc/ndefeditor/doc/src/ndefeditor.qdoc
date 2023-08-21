@@ -4,6 +4,7 @@
 /*!
 \example ndefeditor
 \title NDEF Editor Example
+\examplecategory {Connectivity}
 \brief An example of reading and writing NFC Data Exchange Format (NDEF) messages to NFC Forum Tags.
 
 The NDEF Editor example reads and writes NFC Data Exchange Format
