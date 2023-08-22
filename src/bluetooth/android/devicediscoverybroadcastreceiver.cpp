@@ -221,15 +221,6 @@ enum ADType {
     // .. more will be added when required
 };
 
-// Endianness conversion for QUuid::Id128Bytes doesn't exist in qtendian.h
-inline QUuid::Id128Bytes qbswap(const QUuid::Id128Bytes src)
-{
-    QUuid::Id128Bytes dst;
-    for (int i = 0; i < 16; i++)
-        dst.data[i] = src.data[15 - i];
-    return dst;
-}
-
 QBluetoothDeviceInfo::CoreConfigurations qtBtTypeForJavaBtType(jint javaType)
 {
     const JCachedBtTypes::iterator it = cachedBtTypes()->find(javaType);

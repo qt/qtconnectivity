@@ -38,15 +38,6 @@ QT_IMPL_METATYPE_EXTERN(ServiceData)
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 
-// Endianness conversion for QUuid::Id128Bytes doesn't exist in qtendian.h
-inline QUuid::Id128Bytes qbswap(const QUuid::Id128Bytes src)
-{
-    QUuid::Id128Bytes dst;
-    for (int i = 0; i < 16; i++)
-        dst.data[i] = src.data[15 - i];
-    return dst;
-}
-
 static QByteArray byteArrayFromBuffer(const IBuffer &buffer)
 {
     const uint8_t *data = buffer.data();
