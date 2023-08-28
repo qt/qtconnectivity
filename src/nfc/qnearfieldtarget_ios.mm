@@ -288,7 +288,16 @@ bool QNearFieldTargetPrivateImpl::connect()
 
 bool QNearFieldTargetPrivateImpl::isNdefTag() const
 {
-    return [static_cast<id>(nfcTag.get()) conformsToProtocol:@protocol(NFCNDEFTag)];
+    const id tag = static_cast<id>(nfcTag.get());
+    if ([tag conformsToProtocol:@protocol(NFCMiFareTag)])
+        return false;
+    if ([tag conformsToProtocol:@protocol(NFCFeliCaTag)])
+        return false;
+    if ([tag conformsToProtocol:@protocol(NFCISO15693Tag)])
+        return false;
+    if ([tag conformsToProtocol:@protocol(NFCISO7816Tag)])
+        return false;
+    return [tag conformsToProtocol:@protocol(NFCNDEFTag)];
 }
 
 void QNearFieldTargetPrivateImpl::onTargetCheck()
