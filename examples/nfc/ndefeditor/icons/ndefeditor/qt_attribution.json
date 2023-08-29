@@ -3,6 +3,9 @@
     "Name": "Selected Material Icons",
     "QDocModule": "qtnfc",
     "QtUsage": "Used in NDEF Editor Example for QtNfc.",
+    "QtParts": [
+        "examples"
+    ],
     "Files": "20x20 20x20@2 20x20@3 20x20@4",
     "Homepage": "https://fonts.google.com/icons",
     "License": "Apache License Version 2.0",
