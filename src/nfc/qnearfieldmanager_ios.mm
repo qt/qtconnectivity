@@ -212,13 +212,15 @@ void QNearFieldManagerPrivateImpl::clearTargets()
 
 void QNearFieldManagerPrivateImpl::setUserInformation(const QString &message)
 {
+    if (activeAccessMethod != QNearFieldTarget::NdefAccess)
+        [delegate alertMessage:message];
+
     if (detectionRunning) {
         // Too late!
-        qCWarning(QT_IOS_NFC, "User information must be set prior before the targer detection started");
+        qCWarning(QT_IOS_NFC,
+                  "User information must be set prior before the target detection started");
         return;
     }
-
-    [delegate alertMessage:message];
 
     if (auto queue = qt_Nfc_Queue()) {
         dispatch_sync(queue, ^{
