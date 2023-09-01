@@ -66,7 +66,7 @@ QBluetoothAddress::QBluetoothAddress(const QString &address)
 }
 
 /*!
-    \fn QBluetoothAddress::qHash(QBluetoothAddress key, size_t seed)
+    \fn QBluetoothAddress::qHash(const QBluetoothAddress &key, size_t seed)
     \since 6.6
 
     Returns the hash value for the \a key, using \a seed to seed the

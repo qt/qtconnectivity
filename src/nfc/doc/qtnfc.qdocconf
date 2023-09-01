@@ -43,3 +43,6 @@ imagedirs   += images
 
 navigation.landingpage = "Qt NFC"
 navigation.cppclassespage = "Qt NFC C++ Classes"
+
+# Enforce zero documentation warnings
+warninglimit = 0

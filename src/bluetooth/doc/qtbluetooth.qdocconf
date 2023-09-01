@@ -46,3 +46,6 @@ imagedirs   += images
 
 navigation.landingpage = "Qt Bluetooth"
 navigation.cppclassespage = "Qt Bluetooth C++ Classes"
+
+# Enforce zero documentation warnings
+warninglimit = 0
