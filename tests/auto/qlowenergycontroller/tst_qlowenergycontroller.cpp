@@ -96,19 +96,20 @@ tst_QLowEnergyController::tst_QLowEnergyController()
     // FIXME: for Android, set additional parameters for scan and connect
     // permissions.
     permissionStatus = qApp->checkPermission(QBluetoothPermission{});
-    if (permissionStatus == Qt::PermissionStatus::Undetermined) {
-        QTestEventLoop eventLoop;
-        qApp->requestPermission(QBluetoothPermission{}, [this, &eventLoop](const QPermission &permission){
-            permissionStatus = permission.status();
-            eventLoop.exitLoop();
-        });
-        if (permissionStatus == Qt::PermissionStatus::Undetermined)
-            eventLoop.enterLoop(30000);
-    }
     // Note: even with missing Bluetooth permission, we still can run tests on
     // LE controller to test its logic/errors it emits, even if we cannot scan
     // and cannot connect.
-#endif // permission
+    const bool ciRun = qEnvironmentVariable("QTEST_ENVIRONMENT").split(' ').contains("ci");
+    if (!ciRun && permissionStatus == Qt::PermissionStatus::Undetermined) {
+        QTestEventLoop loop;
+        qApp->requestPermission(QBluetoothPermission{}, [this, &loop](const QPermission &permission){
+            permissionStatus = permission.status();
+            loop.exitLoop();
+        });
+        if (permissionStatus == Qt::PermissionStatus::Undetermined)
+            loop.enterLoopMSecs(30000);
+    }
+#endif // QT_CONFIG(permissions)
 }
 
 tst_QLowEnergyController::~tst_QLowEnergyController()
