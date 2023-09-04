@@ -82,16 +82,18 @@ tst_QBluetoothDeviceDiscoveryAgent::tst_QBluetoothDeviceDiscoveryAgent()
     qRegisterMetaType<QBluetoothDeviceDiscoveryAgent::Error>();
 #if QT_CONFIG(permissions)
     permissionStatus = qApp->checkPermission(QBluetoothPermission{});
-    if (permissionStatus == Qt::PermissionStatus::Undetermined) {
+
+    const bool ciRun = qEnvironmentVariable("QTEST_ENVIRONMENT").split(' ').contains("ci");
+    if (!ciRun && permissionStatus == Qt::PermissionStatus::Undetermined) {
         QTestEventLoop loop;
         qApp->requestPermission(QBluetoothPermission{}, [this, &loop](const QPermission &permission){
             permissionStatus = permission.status();
             loop.exitLoop();
         });
-        if (permissionStatus == Qt::PermissionStatus::Undetermined) // Did not return immediately?
+        if (permissionStatus == Qt::PermissionStatus::Undetermined)
             loop.enterLoopMSecs(30000);
     }
-#endif
+#endif // QT_CONFIG(permissions)
 }
 
 tst_QBluetoothDeviceDiscoveryAgent::~tst_QBluetoothDeviceDiscoveryAgent()

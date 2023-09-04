@@ -52,7 +52,8 @@ tst_QLowEnergyDescriptor::tst_QLowEnergyDescriptor() :
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
 #if QT_CONFIG(permissions)
     permissionStatus = qApp->checkPermission(QBluetoothPermission{});
-    if (permissionStatus == Qt::PermissionStatus::Undetermined) {
+    const bool ciRun = qEnvironmentVariable("QTEST_ENVIRONMENT").split(' ').contains("ci");
+    if (!ciRun && permissionStatus == Qt::PermissionStatus::Undetermined) {
         QTestEventLoop loop;
         qApp->requestPermission(QBluetoothPermission{}, [this, &loop](const QPermission &permission){
             permissionStatus = permission.status();
@@ -61,7 +62,7 @@ tst_QLowEnergyDescriptor::tst_QLowEnergyDescriptor() :
         if (permissionStatus == Qt::PermissionStatus::Undetermined)
             loop.enterLoopMSecs(30000);
     }
-#endif
+#endif // QT_CONFIG(permissions)
 }
 
 tst_QLowEnergyDescriptor::~tst_QLowEnergyDescriptor()
