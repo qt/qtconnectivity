@@ -194,7 +194,7 @@ void DeviceHandler::updateHeartRateValue(const QLowEnergyCharacteristic &c, cons
     //Heart Rate
     int hrvalue = 0;
     if (flags & 0x1) // HR 16 bit? otherwise 8 bit
-        hrvalue = static_cast<int>(qFromLittleEndian<quint16>(data[1]));
+        hrvalue = static_cast<int>(qFromLittleEndian<quint16>(data + 1));
     else
         hrvalue = static_cast<int>(data[1]);
 
