@@ -67,7 +67,7 @@ Q_DECLARE_JNI_CLASS(List, "java/util/List")
 template<>
 constexpr auto QtJniTypes::typeSignature<QLowEnergyHandle>()
 {
-    return QtJniTypes::String("I");
+    return QtJniTypes::typeSignature<jint>();
 }
 
 enum JavaNames {
@@ -99,35 +99,35 @@ QJniObject valueForStaticField()
     constexpr auto className = QtJniTypes::className<Klass>();
     constexpr auto fieldName = []() -> auto {
         if constexpr (Field == JavaNames::ActionAclConnected)
-            return QtJniTypes::String("ACTION_ACL_CONNECTED");
+            return QtJniTypes::CTString("ACTION_ACL_CONNECTED");
         else if constexpr (Field == ActionAclDisconnected)
-            return QtJniTypes::String("ACTION_ACL_DISCONNECTED");
+            return QtJniTypes::CTString("ACTION_ACL_DISCONNECTED");
         else if constexpr (Field == ActionBondStateChanged)
-            return QtJniTypes::String("ACTION_BOND_STATE_CHANGED");
+            return QtJniTypes::CTString("ACTION_BOND_STATE_CHANGED");
         else if constexpr (Field == ActionDiscoveryStarted)
-            return QtJniTypes::String("ACTION_DISCOVERY_STARTED");
+            return QtJniTypes::CTString("ACTION_DISCOVERY_STARTED");
         else if constexpr (Field == ActionDiscoveryFinished)
-            return QtJniTypes::String("ACTION_DISCOVERY_FINISHED");
+            return QtJniTypes::CTString("ACTION_DISCOVERY_FINISHED");
         else if constexpr (Field == ActionFound)
-            return QtJniTypes::String("ACTION_FOUND");
+            return QtJniTypes::CTString("ACTION_FOUND");
         else if constexpr (Field == ActionScanModeChanged)
-            return QtJniTypes::String("ACTION_SCAN_MODE_CHANGED");
+            return QtJniTypes::CTString("ACTION_SCAN_MODE_CHANGED");
         else if constexpr (Field == ActionUuid)
-            return QtJniTypes::String("ACTION_UUID");
+            return QtJniTypes::CTString("ACTION_UUID");
         else if constexpr (Field == ExtraBondState)
-            return QtJniTypes::String("EXTRA_BOND_STATE");
+            return QtJniTypes::CTString("EXTRA_BOND_STATE");
         else if constexpr (Field == ExtraDevice)
-            return QtJniTypes::String("EXTRA_DEVICE");
+            return QtJniTypes::CTString("EXTRA_DEVICE");
         else if constexpr (Field == ExtraPairingKey)
-            return QtJniTypes::String("EXTRA_PAIRING_KEY");
+            return QtJniTypes::CTString("EXTRA_PAIRING_KEY");
         else if constexpr (Field == ExtraPairingVariant)
-            return QtJniTypes::String("EXTRA_PAIRING_VARIANT");
+            return QtJniTypes::CTString("EXTRA_PAIRING_VARIANT");
         else if constexpr (Field == ExtraRssi)
-            return QtJniTypes::String("EXTRA_RSSI");
+            return QtJniTypes::CTString("EXTRA_RSSI");
         else if constexpr (Field == ExtraScanMode)
-            return QtJniTypes::String("EXTRA_SCAN_MODE");
+            return QtJniTypes::CTString("EXTRA_SCAN_MODE");
         else if constexpr (Field == ExtraUuid)
-            return QtJniTypes::String("EXTRA_UUID");
+            return QtJniTypes::CTString("EXTRA_UUID");
         else
             QtJniTypes::staticAssertTypeMismatch();
     }();
