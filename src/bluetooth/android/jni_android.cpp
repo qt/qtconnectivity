@@ -94,13 +94,13 @@ Q_DECLARE_JNI_NATIVE_METHOD(QtBluetoothLE_leScanResult, leScanResult)
 static const char logTag[] = "QtBluetooth";
 static const char classErrorMsg[] = "Can't find class \"%s\"";
 
-#define FIND_AND_CHECK_CLASS(CLASS_NAME)                             \
-clazz = env.findClass<CLASS_NAME>();                                 \
-if (!clazz) {                                                        \
-    __android_log_print(ANDROID_LOG_FATAL, logTag, classErrorMsg,    \
-                        QtJniTypes::className<CLASS_NAME>().data()); \
-    return JNI_FALSE;                                                \
-}                                                                    \
+#define FIND_AND_CHECK_CLASS(CLASS_NAME)                                     \
+clazz = env.findClass<CLASS_NAME>();                                         \
+if (!clazz) {                                                                \
+    __android_log_print(ANDROID_LOG_FATAL, logTag, classErrorMsg,            \
+                        QtJniTypes::Traits<CLASS_NAME>::className().data()); \
+    return JNI_FALSE;                                                        \
+}                                                                            \
 
 #define LEHUB_SCOPED_METHOD(Method) Q_JNI_NATIVE_SCOPED_METHOD(Method, LowEnergyNotificationHub)
 

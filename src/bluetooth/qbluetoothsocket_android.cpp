@@ -178,7 +178,7 @@ bool QBluetoothSocketPrivateAndroid::fallBackReversedConnect(const QBluetoothUui
     QJniEnvironment env;
     const QJniObject inputString = QJniObject::fromString(tempUuid);
     const QJniObject uuidObject = QJniObject::callStaticMethod<QtJniTypes::UUID>(
-                QtJniTypes::className<QtJniTypes::UUID>(), "fromString",
+                QtJniTypes::Traits<QtJniTypes::UUID>::className(), "fromString",
                 inputString.object<jstring>());
 
     if (secFlags == QBluetooth::SecurityFlags(QBluetooth::Security::NoSecurity)) {
@@ -280,7 +280,7 @@ void QBluetoothSocketPrivateAndroid::connectToServiceHelper(const QBluetoothAddr
 
     inputString = QJniObject::fromString(tempUuid);
     const QJniObject uuidObject = QJniObject::callStaticMethod<QtJniTypes::UUID>(
-                            QtJniTypes::className<QtJniTypes::UUID>(), "fromString",
+                            QtJniTypes::Traits<QtJniTypes::UUID>::className(), "fromString",
                             inputString.object<jstring>());
 
     if (secFlags == QBluetooth::SecurityFlags(QBluetooth::Security::NoSecurity)) {

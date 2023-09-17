@@ -65,9 +65,9 @@ Q_DECLARE_JNI_CLASS(List, "java/util/List")
 
 // QLowEnergyHandle is a quint16, ensure it is interpreted as jint
 template<>
-constexpr auto QtJniTypes::typeSignature<QLowEnergyHandle>()
+constexpr auto QtJniTypes::Traits<QLowEnergyHandle>::signature()
 {
-    return QtJniTypes::typeSignature<jint>();
+    return QtJniTypes::Traits<jint>::signature();
 }
 
 enum JavaNames {
@@ -96,7 +96,7 @@ QJniObject valueFromStaticFieldCache(const char *key, const char *className, con
 template<typename Klass, JavaNames Field>
 QJniObject valueForStaticField()
 {
-    constexpr auto className = QtJniTypes::className<Klass>();
+    constexpr auto className = QtJniTypes::Traits<Klass>::className();
     constexpr auto fieldName = []() -> auto {
         if constexpr (Field == JavaNames::ActionAclConnected)
             return QtJniTypes::CTString("ACTION_ACL_CONNECTED");

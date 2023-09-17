@@ -25,14 +25,14 @@ LocalDeviceBroadcastReceiver::LocalDeviceBroadcastReceiver(QObject *parent) :
     //don't use the java fields directly but refer to them by name
     for (uint i = 0; i < (sizeof(hostModePreset)/sizeof(hostModePreset[0])); i++) {
         hostModePreset[i] = QJniObject::getStaticField<jint>(
-                                             QtJniTypes::className<QtJniTypes::BluetoothAdapter>(),
-                                             scanModes[i]);
+                                    QtJniTypes::Traits<QtJniTypes::BluetoothAdapter>::className(),
+                                    scanModes[i]);
     }
 
     for (uint i = 0; i < (sizeof(bondingModePreset)/sizeof(bondingModePreset[0])); i++) {
         bondingModePreset[i] = QJniObject::getStaticField<jint>(
-                                              QtJniTypes::className<QtJniTypes::BluetoothDevice>(),
-                                              bondModes[i]);
+                                    QtJniTypes::Traits<QtJniTypes::BluetoothDevice>::className(),
+                                    bondModes[i]);
     }
 }
 

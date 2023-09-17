@@ -30,7 +30,7 @@ static QJniObject javaUuidfromQtUuid(const QBluetoothUuid& uuid)
 
     QJniObject javaString = QJniObject::fromString(output);
     QJniObject javaUuid = QJniObject::callStaticMethod<QtJniTypes::UUID>(
-                QtJniTypes::className<QtJniTypes::UUID>(), "fromString",
+                QtJniTypes::Traits<QtJniTypes::UUID>::className(), "fromString",
                 javaString.object<jstring>());
 
     return javaUuid;
@@ -878,7 +878,7 @@ static QJniObject javaParcelUuidfromQtUuid(const QBluetoothUuid &uuid)
 
     QJniObject javaString = QJniObject::fromString(output);
     QJniObject parcelUuid = QJniObject::callStaticMethod<QtJniTypes::ParcelUuid>(
-                QtJniTypes::className<QtJniTypes::ParcelUuid>(), "fromString",
+                QtJniTypes::Traits<QtJniTypes::ParcelUuid>::className(), "fromString",
                 javaString.object<jstring>());
 
     return parcelUuid;
@@ -1039,21 +1039,21 @@ static int setupCharPermissions(const QLowEnergyCharacteristicData &charData)
             || (charData.readConstraints()
                 & QBluetooth::AttAccessConstraint::AttAuthorizationRequired)) {
             permission |= QJniObject::getStaticField<jint>(
-                                  QtJniTypes::className<QtJniTypes::BluetoothGattCharacteristic>(),
-                                  "PERMISSION_READ");
+                           QtJniTypes::Traits<QtJniTypes::BluetoothGattCharacteristic>::className(),
+                           "PERMISSION_READ");
         }
 
         if (charData.readConstraints()
             & QBluetooth::AttAccessConstraint::AttAuthenticationRequired) {
             permission |= QJniObject::getStaticField<jint>(
-                                  QtJniTypes::className<QtJniTypes::BluetoothGattCharacteristic>(),
-                                  "PERMISSION_READ_ENCRYPTED");
+                           QtJniTypes::Traits<QtJniTypes::BluetoothGattCharacteristic>::className(),
+                           "PERMISSION_READ_ENCRYPTED");
         }
 
         if (charData.readConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
             permission |= QJniObject::getStaticField<jint>(
-                                  QtJniTypes::className<QtJniTypes::BluetoothGattCharacteristic>(),
-                                  "PERMISSION_READ_ENCRYPTED_MITM");
+                           QtJniTypes::Traits<QtJniTypes::BluetoothGattCharacteristic>::className(),
+                           "PERMISSION_READ_ENCRYPTED_MITM");
         }
     }
 
@@ -1063,33 +1063,33 @@ static int setupCharPermissions(const QLowEnergyCharacteristicData &charData)
             || (charData.writeConstraints()
                 & QBluetooth::AttAccessConstraint::AttAuthorizationRequired)) {
             permission |= QJniObject::getStaticField<jint>(
-                                  QtJniTypes::className<QtJniTypes::BluetoothGattCharacteristic>(),
-                                  "PERMISSION_WRITE");
+                           QtJniTypes::Traits<QtJniTypes::BluetoothGattCharacteristic>::className(),
+                           "PERMISSION_WRITE");
         }
 
         if (charData.writeConstraints()
             & QBluetooth::AttAccessConstraint::AttAuthenticationRequired) {
             permission |= QJniObject::getStaticField<jint>(
-                                  QtJniTypes::className<QtJniTypes::BluetoothGattCharacteristic>(),
-                                  "PERMISSION_WRITE_ENCRYPTED");
+                           QtJniTypes::Traits<QtJniTypes::BluetoothGattCharacteristic>::className(),
+                           "PERMISSION_WRITE_ENCRYPTED");
         }
 
         if (charData.writeConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
             permission |= QJniObject::getStaticField<jint>(
-                                  QtJniTypes::className<QtJniTypes::BluetoothGattCharacteristic>(),
-                                  "PERMISSION_WRITE_ENCRYPTED_MITM");
+                           QtJniTypes::Traits<QtJniTypes::BluetoothGattCharacteristic>::className(),
+                           "PERMISSION_WRITE_ENCRYPTED_MITM");
         }
     }
 
     if (charData.properties() & QLowEnergyCharacteristic::WriteSigned) {
         if (charData.writeConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
             permission |= QJniObject::getStaticField<jint>(
-                                  QtJniTypes::className<QtJniTypes::BluetoothGattCharacteristic>(),
-                                  "PERMISSION_WRITE_SIGNED_MITM");
+                           QtJniTypes::Traits<QtJniTypes::BluetoothGattCharacteristic>::className(),
+                           "PERMISSION_WRITE_SIGNED_MITM");
         } else {
             permission |= QJniObject::getStaticField<jint>(
-                                  QtJniTypes::className<QtJniTypes::BluetoothGattCharacteristic>(),
-                                  "PERMISSION_WRITE_SIGNED");
+                           QtJniTypes::Traits<QtJniTypes::BluetoothGattCharacteristic>::className(),
+                           "PERMISSION_WRITE_SIGNED");
         }
     }
 
@@ -1108,21 +1108,21 @@ static int setupDescPermissions(const QLowEnergyDescriptorData &descData)
             || (descData.readConstraints()
                 & QBluetooth::AttAccessConstraint::AttAuthorizationRequired)) {
             permissions |= QJniObject::getStaticField<jint>(
-                                QtJniTypes::className<QtJniTypes::BluetoothGattDescriptor>(),
-                                "PERMISSION_READ");
+                               QtJniTypes::Traits<QtJniTypes::BluetoothGattDescriptor>::className(),
+                               "PERMISSION_READ");
         }
 
         if (descData.readConstraints()
             & QBluetooth::AttAccessConstraint::AttAuthenticationRequired) {
             permissions |= QJniObject::getStaticField<jint>(
-                                QtJniTypes::className<QtJniTypes::BluetoothGattDescriptor>(),
-                                "PERMISSION_READ_ENCRYPTED");
+                               QtJniTypes::Traits<QtJniTypes::BluetoothGattDescriptor>::className(),
+                               "PERMISSION_READ_ENCRYPTED");
         }
 
         if (descData.readConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
             permissions |= QJniObject::getStaticField<jint>(
-                                      QtJniTypes::className<QtJniTypes::BluetoothGattDescriptor>(),
-                                      "PERMISSION_READ_ENCRYPTED_MITM");
+                               QtJniTypes::Traits<QtJniTypes::BluetoothGattDescriptor>::className(),
+                               "PERMISSION_READ_ENCRYPTED_MITM");
         }
     }
 
@@ -1131,21 +1131,21 @@ static int setupDescPermissions(const QLowEnergyDescriptorData &descData)
             || (descData.readConstraints()
                 & QBluetooth::AttAccessConstraint::AttAuthorizationRequired)) {
             permissions |= QJniObject::getStaticField<jint>(
-                                QtJniTypes::className<QtJniTypes::BluetoothGattDescriptor>(),
-                                "PERMISSION_WRITE");
+                               QtJniTypes::Traits<QtJniTypes::BluetoothGattDescriptor>::className(),
+                               "PERMISSION_WRITE");
         }
 
         if (descData.readConstraints()
             & QBluetooth::AttAccessConstraint::AttAuthenticationRequired) {
             permissions |= QJniObject::getStaticField<jint>(
-                                QtJniTypes::className<QtJniTypes::BluetoothGattDescriptor>(),
-                                "PERMISSION_WRITE_ENCRYPTED");
+                               QtJniTypes::Traits<QtJniTypes::BluetoothGattDescriptor>::className(),
+                               "PERMISSION_WRITE_ENCRYPTED");
         }
 
         if (descData.readConstraints() & QBluetooth::AttAccessConstraint::AttEncryptionRequired) {
             permissions |= QJniObject::getStaticField<jint>(
-                                      QtJniTypes::className<QtJniTypes::BluetoothGattDescriptor>(),
-                                      "PERMISSION_WRITE_ENCRYPTED_MITM");
+                               QtJniTypes::Traits<QtJniTypes::BluetoothGattDescriptor>::className(),
+                               "PERMISSION_WRITE_ENCRYPTED_MITM");
         }
     }
 
@@ -1161,11 +1161,11 @@ void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEne
 
     // create BluetoothGattService object
     jint sType = QJniObject::getStaticField<jint>(
-                            QtJniTypes::className<QtJniTypes::BluetoothGattService>(),
+                            QtJniTypes::Traits<QtJniTypes::BluetoothGattService>::className(),
                             "SERVICE_TYPE_PRIMARY");
     if (serviceData.type() == QLowEnergyServiceData::ServiceTypeSecondary)
         sType = QJniObject::getStaticField<jint>(
-                            QtJniTypes::className<QtJniTypes::BluetoothGattService>(),
+                            QtJniTypes::Traits<QtJniTypes::BluetoothGattService>::className(),
                             "SERVICE_TYPE_SECONDARY");
 
     service->androidService = QJniObject::construct<QtJniTypes::BluetoothGattService>(

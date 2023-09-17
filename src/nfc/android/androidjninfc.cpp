@@ -9,38 +9,38 @@ namespace QtNfc {
 
 bool startDiscovery()
 {
-    return QJniObject::callStaticMethod<jboolean>(QtJniTypes::className<QtJniTypes::QtNfc>(),
-                                                  "startDiscovery");
+    return QJniObject::callStaticMethod<jboolean>(
+                            QtJniTypes::Traits<QtJniTypes::QtNfc>::className(), "startDiscovery");
 }
 
 bool isEnabled()
 {
-    return QJniObject::callStaticMethod<jboolean>(QtJniTypes::className<QtJniTypes::QtNfc>(),
-                                                  "isEnabled");
+    return QJniObject::callStaticMethod<jboolean>(
+                                QtJniTypes::Traits<QtJniTypes::QtNfc>::className(), "isEnabled");
 }
 
 bool isSupported()
 {
-    return QJniObject::callStaticMethod<jboolean>(QtJniTypes::className<QtJniTypes::QtNfc>(),
-                                                  "isSupported");
+    return QJniObject::callStaticMethod<jboolean>(
+                                QtJniTypes::Traits<QtJniTypes::QtNfc>::className(), "isSupported");
 }
 
 bool stopDiscovery()
 {
-    return QJniObject::callStaticMethod<jboolean>(QtJniTypes::className<QtJniTypes::QtNfc>(),
-                                                  "stopDiscovery");
+    return QJniObject::callStaticMethod<jboolean>(
+                            QtJniTypes::Traits<QtJniTypes::QtNfc>::className(), "stopDiscovery");
 }
 
 QJniObject getStartIntent()
 {
     return QJniObject::callStaticMethod<QtJniTypes::Intent>(
-            QtJniTypes::className<QtJniTypes::QtNfc>(), "getStartIntent");
+                            QtJniTypes::Traits<QtJniTypes::QtNfc>::className(), "getStartIntent");
 }
 
 QJniObject getTag(const QJniObject &intent)
 {
     return QJniObject::callStaticMethod<QtJniTypes::Parcellable>(
-            QtJniTypes::className<QtJniTypes::QtNfc>(), "getTag",
+            QtJniTypes::Traits<QtJniTypes::QtNfc>::className(), "getTag",
             intent.object<QtJniTypes::Intent>());
 }
 

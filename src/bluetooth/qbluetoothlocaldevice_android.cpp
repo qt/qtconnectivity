@@ -90,7 +90,7 @@ void QBluetoothLocalDevicePrivate::processHostModeChange(QBluetoothLocalDevice::
     // we can enter the targeted 'Connectable' state
     if (isValid() && newMode == QBluetoothLocalDevice::HostPoweredOff) {
         const bool success = (bool)QJniObject::callStaticMethod<jboolean>(
-                    QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(),
+                    QtJniTypes::Traits<QtJniTypes::QtBtBroadcastReceiver>::className(),
                     "setEnabled");
         if (!success) {
             qCWarning(QT_BT_ANDROID) << "Transitioning Bluetooth from OFF to ON failed";
@@ -182,7 +182,7 @@ void QBluetoothLocalDevice::powerOn()
         bool success(false);
         if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31) {
             success = (bool)QJniObject::callStaticMethod<jboolean>(
-                        QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(),
+                        QtJniTypes::Traits<QtJniTypes::QtBtBroadcastReceiver>::className(),
                         "setEnabled");
         } else {
             success = (bool)d_ptr->adapter()->callMethod<jboolean>("enable");
@@ -210,7 +210,7 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode requeste
         if (d_ptr->adapter()) {
             if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31) {
                 success = (bool)QJniObject::callStaticMethod<jboolean>(
-                            QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(),
+                            QtJniTypes::Traits<QtJniTypes::QtBtBroadcastReceiver>::className(),
                             "setDisabled");
             } else {
                 success = (bool)d_ptr->adapter()->callMethod<jboolean>("disable");
@@ -232,7 +232,7 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode requeste
             d_ptr->pendingConnectableHostModeTransition = true;
         } else {
             const bool success = (bool)QJniObject::callStaticMethod<jboolean>(
-                        QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(),
+                        QtJniTypes::Traits<QtJniTypes::QtBtBroadcastReceiver>::className(),
                         "setEnabled");
             if (!success) {
                 qCWarning(QT_BT_ANDROID) << "Unable to enable the Bluetooth";
@@ -250,7 +250,7 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode requeste
             return;
         }
         const bool success = (bool)QJniObject::callStaticMethod<jboolean>(
-                    QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(),
+                    QtJniTypes::Traits<QtJniTypes::QtBtBroadcastReceiver>::className(),
                     "setDiscoverable");
         if (!success) {
             qCWarning(QT_BT_ANDROID) << "Unable to set Bluetooth as discoverable";
@@ -336,7 +336,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
 
     QJniObject inputString = QJniObject::fromString(address.toString());
     jboolean success = QJniObject::callStaticMethod<jboolean>(
-        QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(),
+        QtJniTypes::Traits<QtJniTypes::QtBtBroadcastReceiver>::className(),
         "setPairingMode",
         inputString.object<jstring>(),
         jboolean(newPairing == Paired ? JNI_TRUE : JNI_FALSE));
@@ -389,7 +389,7 @@ QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
      * but at least it can complement our already detected connections.
      */
     QJniObject connectedDevices = QJniObject::callStaticMethod<QtJniTypes::StringArray>(
-        QtJniTypes::className<QtJniTypes::QtBtBroadcastReceiver>(), "getConnectedDevices");
+        QtJniTypes::Traits<QtJniTypes::QtBtBroadcastReceiver>::className(), "getConnectedDevices");
 
     if (!connectedDevices.isValid())
         return d_ptr->connectedDevices;
