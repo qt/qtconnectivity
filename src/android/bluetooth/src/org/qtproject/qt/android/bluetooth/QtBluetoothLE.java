@@ -257,6 +257,9 @@ public class QtBluetoothLE {
 
     private synchronized void handleOnConnectionStateChange(BluetoothGatt gatt,
                                                            int status, int newState) {
+
+        Log.d(TAG, "Connection state changes to: " + newState + ", status: " + status
+                   + ", qtObject: " + (qtObject != 0));
         if (qtObject == 0)
             return;
 
@@ -1077,11 +1080,14 @@ public class QtBluetoothLE {
         handleForTimeout.set(HANDLE_FOR_RESET);
 
         readWriteQueue.clear();
+        pendingJob = null;
     }
 
     // This function is called from Qt thread
     public synchronized boolean discoverServiceDetails(String serviceUuid, boolean fullDiscovery)
     {
+        Log.d(TAG, "Discover service details for: " + serviceUuid + ", fullDiscovery: "
+                   + fullDiscovery + ", BluetoothGatt: " + (mBluetoothGatt != null));
         try {
             if (mBluetoothGatt == null)
                 return false;
@@ -1471,6 +1477,10 @@ public class QtBluetoothLE {
     */
     private synchronized void performNextIO()
     {
+        Log.d(TAG, "Perform next BTLE IO, job queue size: " + readWriteQueue.size()
+                   + ", a job is pending: " + (pendingJob != null) + ", BluetoothGatt: "
+                   + (mBluetoothGatt != null));
+
         if (mBluetoothGatt == null)
             return;
 
@@ -1534,7 +1544,7 @@ public class QtBluetoothLE {
         }
 
         if (nextJob.jobType != IoJobType.Mtu && nextJob.jobType != IoJobType.Rssi) {
-            Log.w(TAG, "Performing queued job, handle: " + handle + " " + nextJob.jobType + " (" +
+            Log.d(TAG, "Performing queued job, handle: " + handle + " " + nextJob.jobType + " (" +
                     (nextJob.requestedWriteType == BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE) +
                    ") ValueKnown: " + nextJob.entry.valueKnown + " Skipping: " + skip +
                    " " + nextJob.entry.type);
