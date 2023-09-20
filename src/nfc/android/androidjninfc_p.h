@@ -17,6 +17,7 @@
 #include "qglobal.h"
 
 #include <QtCore/QJniObject>
+#include <QtCore/qjnitypes.h>
 
 QT_BEGIN_NAMESPACE
 
