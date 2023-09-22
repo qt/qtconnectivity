@@ -40,7 +40,10 @@ exampledirs += ../../../examples/bluetooth \
                ../
 
 manifestmeta.thumbnail.names = "QtBluetooth/Bluetooth Low Energy Heart Rate Server"
-manifestmeta.highlighted.names += "QtBluetooth/Bluetooth Low Energy Heart Rate Game"
+
+manifestmeta.highlighted.names = \
+    "QtBluetooth/Bluetooth Low Energy Heart Rate Game" \
+    "QtBluetooth/Bluetooth Low Energy Scanner"
 
 imagedirs   += images
 
