@@ -38,8 +38,10 @@ sourcedirs  += ..
 exampledirs += ../../../examples/nfc \
                snippets/
 
-
 imagedirs   += images
+
+manifestmeta.highlighted.names = \
+    "QtNfc/Annotated URL"
 
 navigation.landingpage = "Qt NFC"
 navigation.cppclassespage = "Qt NFC C++ Classes"
