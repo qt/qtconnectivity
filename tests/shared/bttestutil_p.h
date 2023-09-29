@@ -32,7 +32,7 @@ bool androidBluetoothEmulator()
     // on emulator though, not only on CI
     if (QNativeInterface::QAndroidApplication::sdkVersion() >= 31) {
         const auto property = QJniObject::fromString("ro.kernel.qemu");
-        const char sysPropsClass[] = "android.os.SystemProperties";
+        const char sysPropsClass[] = "android/os/SystemProperties";
         const auto isQemu = QJniObject::callStaticObjectMethod<jstring>(
                                         sysPropsClass, "get", property.object<jstring>());
         if (isQemu.toString() == "1")
