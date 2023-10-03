@@ -147,7 +147,6 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     using namespace DarwinBluetooth;
 
     Q_ASSERT(!isActive());
-    Q_ASSERT(lastError != QBluetoothDeviceDiscoveryAgent::InvalidBluetoothAdapterError);
     Q_ASSERT(methods & (QBluetoothDeviceDiscoveryAgent::ClassicMethod
                         | QBluetoothDeviceDiscoveryAgent::LowEnergyMethod));
 

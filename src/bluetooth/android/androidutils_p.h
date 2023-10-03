@@ -52,6 +52,7 @@
 //
 
 #include <qglobal.h>
+#include <QtCore/QJniObject>
 #include <QtCore/QString>
 
 QT_BEGIN_NAMESPACE
@@ -65,6 +66,9 @@ enum class BluetoothPermission {
 // Checks if a permssion is already authorized and requests if not.
 // Returns true if permission is successfully authorized
 bool ensureAndroidPermission(BluetoothPermission permission);
+
+// Returns the default bluetooth adapter, or an invalid object if not available
+QJniObject getDefaultBluetoothAdapter();
 
 QT_END_NAMESPACE
 

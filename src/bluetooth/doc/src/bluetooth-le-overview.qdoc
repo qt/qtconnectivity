@@ -197,8 +197,8 @@ Low Energy devices.
 
     \section2 Service Search
 
-    The above code snippet how the application initiates the service discovery once the connection has
-    been established.
+    The above code snippet shows how the application initiates the service discovery once the
+    connection has been established.
 
     The \c serviceDiscovered() slot below is triggered as a result of the
     \l {QLowEnergyController::serviceDiscovered()} signal and provides an intermittent progress report.

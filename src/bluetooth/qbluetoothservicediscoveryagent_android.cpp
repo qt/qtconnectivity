@@ -94,9 +94,8 @@ QBluetoothServiceDiscoveryAgentPrivate::QBluetoothServiceDiscoveryAgentPrivate(
     */
 
     if (createAdapter)
-        btAdapter = QJniObject::callStaticObjectMethod("android/bluetooth/BluetoothAdapter",
-                                                           "getDefaultAdapter",
-                                                           "()Landroid/bluetooth/BluetoothAdapter;");
+        btAdapter = getDefaultBluetoothAdapter();
+
     if (!btAdapter.isValid())
         qCWarning(QT_BT_ANDROID) << "Platform does not support Bluetooth";
 

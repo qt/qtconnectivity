@@ -79,4 +79,29 @@ bool ensureAndroidPermission(BluetoothPermission permission)
      return false;
 }
 
+QJniObject getDefaultBluetoothAdapter()
+{
+    QJniObject service = QJniObject::getStaticObjectField("android/content/Context",
+                                                          "BLUETOOTH_SERVICE",
+                                                          "Ljava/lang/String;");
+    QJniObject context = QNativeInterface::QAndroidApplication::context();
+    QJniObject manager = context.callObjectMethod("getSystemService",
+                                                  "(Ljava/lang/String;)Ljava/lang/Object;",
+                                                  service.object());
+    QJniObject adapter;
+    if (manager.isValid())
+        adapter = manager.callObjectMethod("getAdapter", "()Landroid/bluetooth/BluetoothAdapter;");
+
+    // ### Qt 7 check if the below double-get of the adapter can be removed.
+    // It is a workaround for QTBUG-57489, fixed in 2016. According to the bug it occurred on
+    // a certain device running Android 6.0.1 (Qt 6 supports Android 6.0 as the minimum).
+    // For completeness: the original workaround was for the deprecated getDefaultAdapter()
+    // method, and it is thus unclear if this is needed even in Qt 6 anymore. In addition the
+    // impacted device is updateable to Android 8 which may also have fixed the issue.
+    if (!adapter.isValid())
+        adapter = manager.callObjectMethod("getAdapter", "()Landroid/bluetooth/BluetoothAdapter;");
+
+    return adapter;
+}
+
 QT_END_NAMESPACE
