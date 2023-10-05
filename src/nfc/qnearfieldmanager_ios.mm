@@ -143,6 +143,7 @@ bool QNearFieldManagerPrivateImpl::scheduleSession(QNearFieldTarget::AccessMetho
         isSessionScheduled = true;
         return true;
     }
+    isSessionScheduled = false;
 
     if (accessMethod == QNearFieldTarget::TagTypeSpecificAccess) {
         startSession();
