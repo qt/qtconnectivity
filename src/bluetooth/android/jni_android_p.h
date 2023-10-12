@@ -90,11 +90,11 @@ enum JavaNames {
     ExtraUuid
 };
 
-QJniObject valueFromStaticFieldCache(const char *key, const char *className, const char *fieldName);
+QString valueFromStaticFieldCache(const char *key, const char *className, const char *fieldName);
 
 
 template<typename Klass, JavaNames Field>
-QJniObject valueForStaticField()
+QString valueForStaticField()
 {
     constexpr auto className = QtJniTypes::Traits<Klass>::className();
     constexpr auto fieldName = []() -> auto {

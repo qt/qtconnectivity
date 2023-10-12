@@ -16,7 +16,7 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
-typedef QHash<QByteArray, QJniObject> JCachedStringFields;
+typedef QHash<QByteArray, QString> JCachedStringFields;
 Q_GLOBAL_STATIC(JCachedStringFields, cachedStringFields)
 Q_GLOBAL_STATIC(QMutex, stringCacheMutex);
 
@@ -24,7 +24,7 @@ Q_GLOBAL_STATIC(QMutex, stringCacheMutex);
  * This function operates on the assumption that each
  * field is of type java/lang/String.
  */
-QJniObject valueFromStaticFieldCache(const char *key, const char *className, const char *fieldName)
+QString valueFromStaticFieldCache(const char *key, const char *className, const char *fieldName)
 {
     QMutexLocker lock(stringCacheMutex());
     JCachedStringFields::iterator it = cachedStringFields()->find(key);
@@ -33,12 +33,12 @@ QJniObject valueFromStaticFieldCache(const char *key, const char *className, con
         QJniObject fieldValue = QJniObject::getStaticObjectField(
                                             className, fieldName, "Ljava/lang/String;");
         if (!fieldValue.isValid()) {
-            cachedStringFields()->insert(key, QJniObject());
-            return QJniObject();
+            cachedStringFields()->insert(key, {});
+            return {};
         }
-
-        cachedStringFields()->insert(key, fieldValue);
-        return fieldValue;
+        const QString string = fieldValue.toString();
+        cachedStringFields()->insert(key, string);
+        return string;
     } else {
         return it.value();
     }

@@ -16,10 +16,14 @@ const char *bondModes[] = {"BOND_NONE", "BOND_BONDING", "BOND_BONDED"};
 LocalDeviceBroadcastReceiver::LocalDeviceBroadcastReceiver(QObject *parent) :
     AndroidBroadcastReceiver(parent), previousScanMode(0)
 {
-    addAction(valueForStaticField<QtJniTypes::BluetoothDevice, JavaNames::ActionBondStateChanged>());
-    addAction(valueForStaticField<QtJniTypes::BluetoothAdapter, JavaNames::ActionScanModeChanged>());
-    addAction(valueForStaticField<QtJniTypes::BluetoothDevice, JavaNames::ActionAclConnected>());
-    addAction(valueForStaticField<QtJniTypes::BluetoothDevice, JavaNames::ActionAclDisconnected>());
+    addAction(QJniObject::fromString(
+        valueForStaticField<QtJniTypes::BluetoothDevice, JavaNames::ActionBondStateChanged>()));
+    addAction(QJniObject::fromString(
+        valueForStaticField<QtJniTypes::BluetoothAdapter, JavaNames::ActionScanModeChanged>()));
+    addAction(QJniObject::fromString(
+        valueForStaticField<QtJniTypes::BluetoothDevice, JavaNames::ActionAclConnected>()));
+    addAction(QJniObject::fromString(
+        valueForStaticField<QtJniTypes::BluetoothDevice, JavaNames::ActionAclDisconnected>()));
 
     //cache integer values for host & bonding mode
     //don't use the java fields directly but refer to them by name
@@ -46,12 +50,13 @@ void LocalDeviceBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobje
     qCDebug(QT_BT_ANDROID) << QStringLiteral("LocalDeviceBroadcastReceiver::onReceive() - event: %1").arg(action);
 
     if (action == valueForStaticField<QtJniTypes::BluetoothAdapter,
-                                      JavaNames::ActionScanModeChanged>().toString()) {
+                                      JavaNames::ActionScanModeChanged>()) {
 
         const QJniObject extrasBundle =
                 intentObject.callMethod<QtJniTypes::Bundle>("getExtras");
-        const QJniObject keyExtra = valueForStaticField<QtJniTypes::BluetoothAdapter,
-                                                        JavaNames::ExtraScanMode>();
+        const QJniObject keyExtra =
+            QJniObject::fromString(valueForStaticField<QtJniTypes::BluetoothAdapter,
+                                                       JavaNames::ExtraScanMode>());
 
         int extra = extrasBundle.callMethod<jint>("getInt", keyExtra.object<jstring>());
 
@@ -68,17 +73,18 @@ void LocalDeviceBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobje
                 qCWarning(QT_BT_ANDROID) << "Unknown Host State";
         }
     } else if (action == valueForStaticField<QtJniTypes::BluetoothDevice,
-                                                        JavaNames::ActionBondStateChanged>().toString()) {
+                                                        JavaNames::ActionBondStateChanged>()) {
         //get BluetoothDevice
-        QJniObject keyExtra = valueForStaticField<QtJniTypes::BluetoothDevice,
-                                                  JavaNames::ExtraDevice>();
+        QJniObject keyExtra = QJniObject::fromString(
+                                        valueForStaticField<QtJniTypes::BluetoothDevice,
+                                        JavaNames::ExtraDevice>());
         const QJniObject bluetoothDevice =
                 intentObject.callMethod<QtJniTypes::Parcelable>("getParcelableExtra",
                                                                 keyExtra.object<jstring>());
 
         //get new bond state
-        keyExtra = valueForStaticField<QtJniTypes::BluetoothDevice,
-                                       JavaNames::ExtraBondState>();
+        keyExtra = QJniObject::fromString(valueForStaticField<QtJniTypes::BluetoothDevice,
+                                                              JavaNames::ExtraBondState>());
         const QJniObject extrasBundle =
                 intentObject.callMethod<QtJniTypes::Bundle>("getExtras");
         int bondState = extrasBundle.callMethod<jint>("getInt", keyExtra.object<jstring>());
@@ -97,18 +103,19 @@ void LocalDeviceBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobje
             qCWarning(QT_BT_ANDROID) << "Unknown BOND_STATE_CHANGED value:" << bondState;
 
     } else if (action == valueForStaticField<QtJniTypes::BluetoothDevice,
-                                             JavaNames::ActionAclConnected>().toString() ||
+                                             JavaNames::ActionAclConnected>() ||
                action == valueForStaticField<QtJniTypes::BluetoothDevice,
-                                             JavaNames::ActionAclDisconnected>().toString()) {
+                                             JavaNames::ActionAclDisconnected>()) {
 
         const QString connectEvent = valueForStaticField<QtJniTypes::BluetoothDevice,
-                                                         JavaNames::ActionAclConnected>().toString();
+                                                         JavaNames::ActionAclConnected>();
         const bool isConnectEvent =
                 action == connectEvent ? true : false;
 
         //get BluetoothDevice
-        const QJniObject keyExtra = valueForStaticField<QtJniTypes::BluetoothDevice,
-                                                        JavaNames::ExtraDevice>();
+        const QJniObject keyExtra =
+            QJniObject::fromString(valueForStaticField<QtJniTypes::BluetoothDevice,
+                                                       JavaNames::ExtraDevice>());
         QJniObject bluetoothDevice =
                 intentObject.callMethod<QtJniTypes::Parcelable>("getParcelableExtra",
                                                                 keyExtra.object<jstring>());

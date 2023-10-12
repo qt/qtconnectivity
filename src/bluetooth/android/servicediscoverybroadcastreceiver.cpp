@@ -15,7 +15,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 ServiceDiscoveryBroadcastReceiver::ServiceDiscoveryBroadcastReceiver(QObject* parent): AndroidBroadcastReceiver(parent)
 {
-    addAction(valueForStaticField<QtJniTypes::BluetoothDevice, JavaNames::ActionUuid>());
+    addAction(QJniObject::fromString(
+        valueForStaticField<QtJniTypes::BluetoothDevice, JavaNames::ActionUuid>()));
 }
 
 void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, jobject intent)
@@ -28,11 +29,10 @@ void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, 
 
     qCDebug(QT_BT_ANDROID) << "ServiceDiscoveryBroadcastReceiver::onReceive() - event:" << action;
 
-    if (action == valueForStaticField<QtJniTypes::BluetoothDevice,
-                                      JavaNames::ActionUuid>().toString()) {
+    if (action == valueForStaticField<QtJniTypes::BluetoothDevice, JavaNames::ActionUuid>()) {
 
-        QJniObject keyExtra = valueForStaticField<QtJniTypes::BluetoothDevice,
-                                                         JavaNames::ExtraUuid>();
+        QJniObject keyExtra = QJniObject::fromString(
+            valueForStaticField<QtJniTypes::BluetoothDevice, JavaNames::ExtraUuid>());
         QJniObject parcelableUuids = intentObject.callMethod<QtJniTypes::ParcelableArray>(
                                                 "getParcelableArrayExtra",
                                                 keyExtra.object<jstring>());
@@ -42,7 +42,8 @@ void ServiceDiscoveryBroadcastReceiver::onReceive(JNIEnv *env, jobject context, 
         }
         const QList<QBluetoothUuid> result = ServiceDiscoveryBroadcastReceiver::convertParcelableArray(parcelableUuids);
 
-        keyExtra = valueForStaticField<QtJniTypes::BluetoothDevice, JavaNames::ExtraDevice>();
+        keyExtra = QJniObject::fromString(
+                        valueForStaticField<QtJniTypes::BluetoothDevice, JavaNames::ExtraDevice>());
         QJniObject bluetoothDevice =
         intentObject.callMethod<QtJniTypes::Parcelable>("getParcelableExtra",
                                   keyExtra.object<jstring>());
