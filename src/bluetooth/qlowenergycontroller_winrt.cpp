@@ -14,8 +14,10 @@
 #include <QtCore/QLoggingCategory>
 #include <QtCore/private/qfunctions_winrt_p.h>
 #include <QtCore/QDeadlineTimer>
+#include <QtCore/qpointer.h>
 
 #include <functional>
+
 #include <robuffer.h>
 #include <windows.devices.enumeration.h>
 #include <windows.devices.bluetooth.h>

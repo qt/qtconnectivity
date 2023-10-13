@@ -8,6 +8,7 @@
 
 #include <QNdefMessage>
 #include <QNearFieldTarget>
+#include <QPointer>
 #include <QQmlEngine>
 
 class NfcTarget : public QObject
