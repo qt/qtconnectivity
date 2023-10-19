@@ -1,6 +1,6 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // Copyright (C) 2016 Javier S. Pedro <maemo@javispedro.com>
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 #include "lecmaccalculator_p.h"
 #include "qlowenergycontroller_bluez_p.h"
