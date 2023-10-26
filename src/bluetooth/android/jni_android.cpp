@@ -48,7 +48,7 @@ void QtBroadcastReceiver_jniOnReceive(JNIEnv *env, jobject /*javaObject*/,
                                       jlong qtObject, QtJniTypes::Context context,
                                       QtJniTypes::Intent intent)
 {
-    reinterpret_cast<AndroidBroadcastReceiver*>(qtObject)->onReceive(env, context, intent);
+    reinterpret_cast<AndroidBroadcastReceiver*>(qtObject)->onReceive(env, context.object(), intent.object());
 }
 Q_DECLARE_JNI_NATIVE_METHOD(QtBroadcastReceiver_jniOnReceive, jniOnReceive)
 
@@ -62,7 +62,7 @@ Q_DECLARE_JNI_NATIVE_METHOD(QtBluetoothSocketServer_errorOccurred, errorOccurred
 static void QtBluetoothSocketServer_newSocket(JNIEnv */*env*/, jobject /*javaObject*/,
                                               jlong qtObject, QtJniTypes::BluetoothSocket socket)
 {
-    reinterpret_cast<ServerAcceptanceThread*>(qtObject)->javaNewSocket(socket);
+    reinterpret_cast<ServerAcceptanceThread*>(qtObject)->javaNewSocket(socket.object());
 }
 Q_DECLARE_JNI_NATIVE_METHOD(QtBluetoothSocketServer_newSocket, newSocket)
 
@@ -88,7 +88,7 @@ void QtBluetoothLE_leScanResult(JNIEnv *env, jobject, jlong qtObject,
         return;
 
     reinterpret_cast<AndroidBroadcastReceiver*>(qtObject)->onReceiveLeScan(
-                                                                env, bluetoothDevice, rssi,
+                                                                env, bluetoothDevice.object(), rssi,
                                                                 scanRecord);
 }
 Q_DECLARE_JNI_NATIVE_METHOD(QtBluetoothLE_leScanResult, leScanResult)
