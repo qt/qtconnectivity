@@ -169,6 +169,7 @@ void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pai
             if (d_ptr->pairingTarget) {
                 qCDebug(QT_BT_BLUEZ) << "Cancelling pending pairing request to" << d_ptr->pairingTarget->address();
                 QDBusPendingReply<> cancelReply = d_ptr->pairingTarget->CancelPairing();
+                d_ptr->pairingRequestCanceled = true;
                 cancelReply.waitForFinished();
                 delete d_ptr->pairingTarget;
                 d_ptr->pairingTarget = nullptr;
@@ -641,11 +642,18 @@ void QBluetoothLocalDevicePrivate::pairingCompleted(QDBusPendingCallWatcher *wat
 
     if (reply.isError()) {
         qCWarning(QT_BT_BLUEZ) << "Failed to create pairing" << reply.error().name();
-        if (reply.error().name() != QStringLiteral("org.bluez.Error.AuthenticationCanceled"))
+        const bool canceledByUs =
+                (reply.error().name() == QStringLiteral("org.bluez.Error.AuthenticationCanceled"))
+                    && pairingRequestCanceled;
+        if (!canceledByUs)
             emit q->errorOccurred(QBluetoothLocalDevice::PairingError);
+
+        pairingRequestCanceled = false;
         watcher->deleteLater();
         return;
     }
+
+    pairingRequestCanceled = false;
 
     if (adapter) {
         if (!pairingTarget) {
