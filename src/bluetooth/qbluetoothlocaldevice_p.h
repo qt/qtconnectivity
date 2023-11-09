@@ -120,6 +120,7 @@ public:
     QTimer *pairingDiscoveryTimer = nullptr;
     QBluetoothLocalDevice::HostMode currentMode;
     int pendingHostModeChange;
+    bool pairingRequestCanceled = false;
 
 public slots:
     void pairingCompleted(QDBusPendingCallWatcher *);
