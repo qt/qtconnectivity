@@ -304,14 +304,14 @@ void QNearFieldTargetPrivateImpl::checkIsTargetLost()
     methodId = env.findMethod<void>(tagTech.objectClass(), "connect");
     if (methodId)
         env->CallVoidMethod(tagTech.object(), methodId);
-    if (!methodId || env.checkAndClearExceptions()) {
+    if (!methodId || env.checkAndClearExceptions(QJniEnvironment::OutputMode::Silent)) {
         handleTargetLost();
         return;
     }
     methodId = env.findMethod<void>(tagTech.objectClass(), "close");
     if (methodId)
         env->CallVoidMethod(tagTech.object(), methodId);
-    if (!methodId || env.checkAndClearExceptions())
+    if (!methodId || env.checkAndClearExceptions(QJniEnvironment::OutputMode::Silent))
         handleTargetLost();
 }
 
