@@ -66,7 +66,7 @@ QT_BEGIN_NAMESPACE
 */
 
 /*!
-    \fn bool QNdefRecord::isRecordType() const
+    \fn template <typename T> bool QNdefRecord::isRecordType() const
 
     Returns \c true if the NDEF record is of the specified record type;
     otherwise returns \c false.
