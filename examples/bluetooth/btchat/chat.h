@@ -42,6 +42,8 @@ private slots:
 
     void initBluetooth();
 
+    void updateIcons(Qt::ColorScheme scheme);
+
 private:
     int adapterFromUserSelection() const;
     int currentAdapterIndex = 0;
