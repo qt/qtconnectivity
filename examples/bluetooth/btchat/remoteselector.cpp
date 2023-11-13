@@ -9,7 +9,12 @@
 #include <QtBluetooth/qbluetoothservicediscoveryagent.h>
 #include <QtBluetooth/qbluetoothuuid.h>
 
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
+
 #include <QtWidgets/qlistwidget.h>
+
+using namespace Qt::StringLiterals;
 
 RemoteSelector::RemoteSelector(const QBluetoothAddress &localAdapter, QWidget *parent)
     :   QDialog(parent), ui(new Ui::RemoteSelector)
@@ -18,6 +23,10 @@ RemoteSelector::RemoteSelector(const QBluetoothAddress &localAdapter, QWidget *p
 #if defined(Q_OS_ANDROID) || defined(Q_OS_IOS)
     setWindowState(Qt::WindowMaximized);
 #endif
+
+    QStyleHints *styleHints = qGuiApp->styleHints();
+    updateIcon(styleHints->colorScheme());
+    connect(styleHints, &QStyleHints::colorSchemeChanged, this, &RemoteSelector::updateIcon);
 
 //! [createDiscoveryAgent]
     m_discoveryAgent = new QBluetoothServiceDiscoveryAgent(localAdapter);
@@ -104,6 +113,14 @@ void RemoteSelector::discoveryFinished()
     ui->status->setText(tr("Select the chat service to connect to."));
 }
 
+void RemoteSelector::updateIcon(Qt::ColorScheme scheme)
+{
+    const QString bluetoothIconName = (scheme == Qt::ColorScheme::Dark) ? u"bluetooth_dark"_s
+                                                                        : u"bluetooth"_s;
+    const QIcon bluetoothIcon = QIcon::fromTheme(bluetoothIconName);
+    ui->iconLabel->setPixmap(bluetoothIcon.pixmap(24, 24, QIcon::Normal, QIcon::On));
+}
+
 void RemoteSelector::on_remoteDevices_itemActivated(QListWidgetItem *item)
 {
     m_service = m_discoveredServices.value(item);
@@ -116,6 +133,7 @@ void RemoteSelector::on_remoteDevices_itemActivated(QListWidgetItem *item)
 void RemoteSelector::on_remoteDevices_itemClicked(QListWidgetItem *)
 {
     ui->connectButton->setEnabled(true);
+    ui->connectButton->setFocus();
 }
 
 void RemoteSelector::on_connectButton_clicked()

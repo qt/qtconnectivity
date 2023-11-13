@@ -13,6 +13,9 @@
 #include <QtBluetooth/qbluetoothlocaldevice.h>
 #include <QtBluetooth/qbluetoothuuid.h>
 
+#include <QtGui/qguiapplication.h>
+#include <QtGui/qstylehints.h>
+
 #if QT_CONFIG(permissions)
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qpermissions.h>
@@ -32,11 +35,14 @@ Chat::Chat(QWidget *parent)
     //! [Construct UI]
     ui->setupUi(this);
 
-    connect(ui->quitButton, &QPushButton::clicked, this, &Chat::accept);
     connect(ui->connectButton, &QPushButton::clicked, this, &Chat::connectClicked);
     connect(ui->sendButton, &QPushButton::clicked, this, &Chat::sendClicked);
     //! [Construct UI]
     ui->connectButton->setFocus();
+
+    QStyleHints *styleHints = qGuiApp->styleHints();
+    updateIcons(styleHints->colorScheme());
+    connect(styleHints, &QStyleHints::colorSchemeChanged, this, &Chat::updateIcons);
 
     initBluetooth();
 }
@@ -104,6 +110,15 @@ void Chat::initBluetooth()
     //! [Get local device name]
     localName = QBluetoothLocalDevice().name();
     //! [Get local device name]
+}
+
+void Chat::updateIcons(Qt::ColorScheme scheme)
+{
+    const QString bluetoothIconName = (scheme == Qt::ColorScheme::Dark) ? u"bluetooth_dark"_s
+                                                                        : u"bluetooth"_s;
+    const QString sendIconName = (scheme == Qt::ColorScheme::Dark) ? u"send_dark"_s : u"send"_s;
+    ui->sendButton->setIcon(QIcon::fromTheme(sendIconName));
+    ui->connectButton->setIcon(QIcon::fromTheme(bluetoothIconName));
 }
 
 //! [clientConnected clientDisconnected]
@@ -237,6 +252,7 @@ void Chat::sendClicked()
 //! [showMessage]
 void Chat::showMessage(const QString &sender, const QString &message)
 {
+    ui->chat->moveCursor(QTextCursor::End);
     ui->chat->insertPlainText(QString::fromLatin1("%1: %2\n").arg(sender, message));
     ui->chat->ensureCursorVisible();
 }

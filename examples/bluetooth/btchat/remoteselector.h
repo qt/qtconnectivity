@@ -42,6 +42,7 @@ private:
 private slots:
     void serviceDiscovered(const QBluetoothServiceInfo &serviceInfo);
     void discoveryFinished();
+    void updateIcon(Qt::ColorScheme scheme);
     void on_remoteDevices_itemActivated(QListWidgetItem *item);
     void on_remoteDevices_itemClicked(QListWidgetItem *item);
     void on_cancelButton_clicked();
