@@ -47,6 +47,7 @@ void DeviceHandler::setDevice(DeviceInfo *device)
 
     if (simulator) {
         setInfo(tr("Demo device connected."));
+        setIcon(IconBluetooth);
         return;
     }
 
@@ -75,13 +76,16 @@ void DeviceHandler::setDevice(DeviceInfo *device)
                 [this](QLowEnergyController::Error error) {
                     Q_UNUSED(error);
                     setError("Cannot connect to remote device.");
+                    setIcon(IconError);
                 });
         connect(m_control, &QLowEnergyController::connected, this, [this]() {
             setInfo("Controller connected. Search services...");
+            setIcon(IconProgress);
             m_control->discoverServices();
         });
         connect(m_control, &QLowEnergyController::disconnected, this, [this]() {
             setError("LowEnergy controller disconnected");
+            setIcon(IconError);
         });
 
         // Connect
@@ -116,6 +120,7 @@ void DeviceHandler::serviceDiscovered(const QBluetoothUuid &gatt)
 {
     if (gatt == QBluetoothUuid(QBluetoothUuid::ServiceClassUuid::HeartRate)) {
         setInfo("Heart Rate service discovered. Waiting for service scan to be done...");
+        setIcon(IconProgress);
         m_foundHeartRateService = true;
     }
 }
@@ -124,6 +129,7 @@ void DeviceHandler::serviceDiscovered(const QBluetoothUuid &gatt)
 void DeviceHandler::serviceScanDone()
 {
     setInfo("Service scan done.");
+    setIcon(IconBluetooth);
 
     // Delete old service if available
     if (m_service) {
@@ -143,6 +149,7 @@ void DeviceHandler::serviceScanDone()
         m_service->discoverDetails();
     } else {
         setError("Heart Rate Service not found.");
+        setIcon(IconError);
     }
 //! [Filter HeartRate service 2]
 }
@@ -154,15 +161,18 @@ void DeviceHandler::serviceStateChanged(QLowEnergyService::ServiceState s)
     switch (s) {
     case QLowEnergyService::RemoteServiceDiscovering:
         setInfo(tr("Discovering services..."));
+        setIcon(IconProgress);
         break;
     case QLowEnergyService::RemoteServiceDiscovered:
     {
         setInfo(tr("Service discovered."));
+        setIcon(IconBluetooth);
 
         const QLowEnergyCharacteristic hrChar =
                 m_service->characteristic(QBluetoothUuid(QBluetoothUuid::CharacteristicType::HeartRateMeasurement));
         if (!hrChar.isValid()) {
             setError("HR Data not found.");
+            setIcon(IconError);
             break;
         }
 

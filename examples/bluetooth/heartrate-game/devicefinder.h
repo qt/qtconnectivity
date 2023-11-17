@@ -51,6 +51,8 @@ signals:
     void devicesChanged();
 
 private:
+    void resetMessages();
+
     DeviceHandler *m_deviceHandler;
     QBluetoothDeviceDiscoveryAgent *m_deviceDiscoveryAgent;
     QList<DeviceInfo *> m_devices;

@@ -14,7 +14,7 @@
     characteristics and descriptors, and receiving updates from the device once the heart rate
     has changed.
 
-    \image heartgame-start.png
+    \image heartgame-start.webp
 
     The example introduces the following Qt classes:
 
@@ -60,17 +60,17 @@
     presented in a list. Note that all found Bluetooth Low Energy devices are listed even
     if they do not offer a Heart Rate service.
 
-    \image heartgame-search.png
+    \image heartgame-search.webp
 
     After the user has selected a target device, the example connects to its Heart Rate service
     if one is available. It automatically enables notification updates for the Heart Rate value
     and presents the current value on the screen.
 
-    \image heartgame-running.png
+    \image heartgame-running.webp
 
-    Once the monitoring process is canceled, a small graph presents a summary of the received
-    values.
+    Once the monitoring process is finished, a small summary of the received
+    values is presented.
 
-    \image heartgame-result.png
+    \image heartgame-result.webp
 
 */
