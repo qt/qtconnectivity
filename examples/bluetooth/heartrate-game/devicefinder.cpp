@@ -38,6 +38,8 @@ DeviceFinder::DeviceFinder(DeviceHandler *handler, QObject *parent):
         m_demoTimer.setInterval(2000);
         connect(&m_demoTimer, &QTimer::timeout, this, &DeviceFinder::scanFinished);
     }
+
+    resetMessages();
 }
 
 DeviceFinder::~DeviceFinder()
@@ -58,6 +60,7 @@ void DeviceFinder::startSearch()
         return;
     case Qt::PermissionStatus::Denied:
         setError(tr("Bluetooth permissions not granted!"));
+        setIcon(IconError);
         return;
     case Qt::PermissionStatus::Granted:
         break; // proceed to search
@@ -81,6 +84,7 @@ void DeviceFinder::startSearch()
 
     emit scanningChanged();
     setInfo(tr("Scanning for devices..."));
+    setIcon(IconProgress);
 }
 
 //! [devicediscovery-3]
@@ -101,6 +105,7 @@ void DeviceFinder::addDevice(const QBluetoothDeviceInfo &device)
             delete oldDev;
         }
         setInfo(tr("Low Energy device found. Scanning more..."));
+        setIcon(IconProgress);
 //! [devicediscovery-3]
         emit devicesChanged();
 //! [devicediscovery-4]
@@ -117,6 +122,7 @@ void DeviceFinder::scanError(QBluetoothDeviceDiscoveryAgent::Error error)
         setError(tr("Writing or reading from the device resulted in an error."));
     else
         setError(tr("An unknown error has occurred."));
+    setIcon(IconError);
 }
 
 void DeviceFinder::scanFinished()
@@ -127,13 +133,23 @@ void DeviceFinder::scanFinished()
             m_devices.append(new DeviceInfo(QBluetoothDeviceInfo()));
     }
 
-    if (m_devices.isEmpty())
+    if (m_devices.isEmpty()) {
         setError(tr("No Low Energy devices found."));
-    else
+        setIcon(IconError);
+    } else {
         setInfo(tr("Scanning done."));
+        setIcon(IconBluetooth);
+    }
 
     emit scanningChanged();
     emit devicesChanged();
+}
+
+void DeviceFinder::resetMessages()
+{
+    setError("");
+    setInfo(tr("Start search to find devices"));
+    setIcon(IconSearch);
 }
 
 void DeviceFinder::connectToService(const QString &address)
@@ -152,7 +168,7 @@ void DeviceFinder::connectToService(const QString &address)
     if (currentDevice)
         m_deviceHandler->setDevice(currentDevice);
 
-    clearMessages();
+    resetMessages();
 }
 
 bool DeviceFinder::scanning() const

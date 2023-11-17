@@ -60,9 +60,14 @@ qt_add_qml_module(heartrate-game
         TitleBar.qml
         Main.qml
     RESOURCES
+        images/alert.svg
+        images/bluetooth.svg
         images/bt_off_to_on.png
+        images/clock.svg
         images/heart.png
         images/logo.png
+        images/progress.svg
+        images/search.svg
 )
 
 if (APPLE)

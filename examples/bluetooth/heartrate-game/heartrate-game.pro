@@ -37,9 +37,14 @@ qml_resources.files = \
     StatsLabel.qml \
     TitleBar.qml \
     Main.qml \
+    images/alert.svg \
+    images/bluetooth.svg \
     images/bt_off_to_on.png \
+    images/clock.svg \
     images/heart.png \
-    images/logo.png
+    images/logo.png \
+    images/progress.svg \
+    images/search.svg
 
 qml_resources.prefix = /qt/qml/HeartRateGame
 

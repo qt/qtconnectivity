@@ -5,6 +5,7 @@
 #define BLUETOOTHBASECLASS_H
 
 #include <QtCore/qobject.h>
+#include <QtQmlIntegration/qqmlintegration.h>
 
 class BluetoothBaseClass : public QObject
 {
@@ -12,8 +13,21 @@ class BluetoothBaseClass : public QObject
 
     Q_PROPERTY(QString error READ error WRITE setError NOTIFY errorChanged)
     Q_PROPERTY(QString info READ info WRITE setInfo NOTIFY infoChanged)
+    Q_PROPERTY(IconType icon READ icon WRITE setIcon NOTIFY iconChanged)
+
+    QML_ELEMENT
+    QML_UNCREATABLE("BluetoothBaseClass is not intended to be created directly")
 
 public:
+    enum IconType : int {
+        IconNone,
+        IconBluetooth,
+        IconError,
+        IconProgress,
+        IconSearch
+    };
+    Q_ENUM(IconType)
+
     explicit BluetoothBaseClass(QObject *parent = nullptr);
 
     QString error() const;
@@ -22,15 +36,20 @@ public:
     QString info() const;
     void setInfo(const QString& info);
 
+    IconType icon() const;
+    void setIcon(IconType icon);
+
     void clearMessages();
 
 signals:
     void errorChanged();
     void infoChanged();
+    void iconChanged();
 
 private:
     QString m_error;
     QString m_info;
+    IconType m_icon = IconNone;
 };
 
 #endif // BLUETOOTHBASECLASS_H

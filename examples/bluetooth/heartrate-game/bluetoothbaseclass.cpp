@@ -33,8 +33,22 @@ void BluetoothBaseClass::setInfo(const QString &info)
     }
 }
 
+BluetoothBaseClass::IconType BluetoothBaseClass::icon() const
+{
+    return m_icon;
+}
+
+void BluetoothBaseClass::setIcon(IconType icon)
+{
+    if (m_icon != icon) {
+        m_icon = icon;
+        emit iconChanged();
+    }
+}
+
 void BluetoothBaseClass::clearMessages()
 {
     setInfo("");
     setError("");
+    setIcon(IconNone);
 }
