@@ -22,7 +22,7 @@ QBluetoothDeviceInfo DeviceInfo::getDevice() const
 QString DeviceInfo::getName() const
 {
     if (simulator)
-        return u"Demo device"_s;
+        return u"Demo BT Device"_s;
     return m_device.name();
 }
 
