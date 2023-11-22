@@ -12,14 +12,24 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_NFC_PCSC)
 
-static constexpr int StateUpdateIntervalMs = 1000;
+static constexpr auto PollIntervalEnvVar = "QT_NFC_POLL_INTERVAL_MS";
+static constexpr int DefaultPollIntervalMs = 100;
 
 QPcscManager::QPcscManager(QObject *parent) : QObject(parent)
 {
     qCDebug(QT_NFC_PCSC) << Q_FUNC_INFO;
 
+    int pollInterval = DefaultPollIntervalMs;
+    QByteArray intervalEnv = qgetenv(PollIntervalEnvVar);
+    if (!intervalEnv.isEmpty()) {
+        if (int intervalFromEnv = intervalEnv.toInt(); intervalFromEnv > 0)
+            pollInterval = intervalFromEnv;
+        else
+            qCWarning(QT_NFC_PCSC) << PollIntervalEnvVar << "set to an invalid value";
+    }
+
     m_stateUpdateTimer = new QTimer(this);
-    m_stateUpdateTimer->setInterval(StateUpdateIntervalMs);
+    m_stateUpdateTimer->setInterval(pollInterval);
     connect(m_stateUpdateTimer, &QTimer::timeout, this, &QPcscManager::onStateUpdate);
 }
 

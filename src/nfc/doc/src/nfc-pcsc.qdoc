@@ -25,5 +25,10 @@ can be used for accessing both wired and wireless smartcards and storage cards.
     a transaction that remains active until QNearFieldTarget::disconnect()
     is called. This transaction prevents other applications from accessing
     this target.
+  \li The backend is polling for new tags, that means that there
+    may be a delay up to the full polling interval before new tags are reported.
+    The default polling interval is 100 milliseconds. It can be adjusted
+    by setting environment valiable \c{QT_NFC_POLL_INTERVAL_MS} to an integer
+    value in milliseconds.
 \endlist
 */
