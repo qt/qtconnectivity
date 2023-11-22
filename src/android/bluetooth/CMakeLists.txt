@@ -1,5 +1,5 @@
 # Copyright (C) 2022 The Qt Company Ltd.
-# SPDX-License-Identifier: LicenseRef-Qt-Commercial
+# SPDX-License-Identifier: BSD-3-Clause
 
 set(java_sources
     src/org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver.java
