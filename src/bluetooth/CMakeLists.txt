@@ -47,7 +47,6 @@ qt_internal_add_module(Bluetooth
         Qt::CorePrivate
         Qt::NetworkPrivate
     GENERATE_CPP_EXPORTS
-    GENERATE_PRIVATE_CPP_EXPORTS
 )
 
 #### Keys ignored in scope 1:.:.:bluetooth.pro:<TRUE>:
