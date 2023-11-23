@@ -37,7 +37,7 @@ void initializeBluez5();
 bool isBluez5();
 
 // exported for unit test purposes
-Q_BLUETOOTH_PRIVATE_EXPORT QVersionNumber bluetoothdVersion();
+Q_BLUETOOTH_EXPORT QVersionNumber bluetoothdVersion();
 
 QString sanitizeNameForDBus(const QString& text);
 

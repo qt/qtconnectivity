@@ -19,6 +19,6 @@
 
 #include <QtBluetooth/qtbluetoothglobal.h>
 #include <QtBluetooth/private/qtbluetooth-config_p.h>
-#include <QtBluetooth/private/qtbluetoothexports_p.h>
+#include <QtBluetooth/qtbluetoothexports.h>
 
 #endif // QTBLUETOOTHGLOBAL_P_H
