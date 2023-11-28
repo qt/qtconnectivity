@@ -20,7 +20,6 @@ qt_internal_add_module(Nfc
         QT_NO_CONTEXTLESS_CONNECT
     PUBLIC_LIBRARIES
         Qt::Core
-    GENERATE_CPP_EXPORTS
 )
 
 ## Scopes:
