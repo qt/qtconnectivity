@@ -23,9 +23,6 @@ qt_internal_add_module(Nfc
     GENERATE_CPP_EXPORTS
 )
 
-#### Keys ignored in scope 1:.:.:nfc.pro:<TRUE>:
-# OTHER_FILES = "doc/src/*.qdoc"
-
 ## Scopes:
 #####################################################################
 
@@ -96,9 +93,6 @@ qt_internal_extend_target(Nfc CONDITION QT_FEATURE_pcsclite
         PkgConfig::PCSCLITE
 )
 
-#### Keys ignored in scope 2:.:.:nfc.pro:ANDROID AND NOT ANDROID_EMBEDDED:
-# NFC_BACKEND_AVAILABLE = "yes"
-
 qt_internal_extend_target(Nfc CONDITION NOT NFC_BACKEND_AVAILABLE
     SOURCES
         qnearfieldmanager_generic.cpp qnearfieldmanager_generic_p.h
@@ -106,4 +100,3 @@ qt_internal_extend_target(Nfc CONDITION NOT NFC_BACKEND_AVAILABLE
 qt_internal_add_docs(Nfc
     doc/qtnfc.qdocconf
 )
-
