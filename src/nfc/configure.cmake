@@ -4,5 +4,9 @@
 qt_find_package(PCSCLITE PROVIDED_TARGETS PkgConfig::PCSCLITE)
 
 qt_feature("pcsclite" PUBLIC
-    LABEL "PCSCLite"
+    LABEL "Use the PCSCLite library to access NFC devices"
     CONDITION PCSCLITE_FOUND)
+
+qt_feature("neard" PUBLIC
+    LABEL "Use neard to access NFC devices"
+    CONDITION LINUX AND NOT QT_FEATURE_pcsclite)

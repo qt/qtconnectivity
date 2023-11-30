@@ -10,8 +10,10 @@
 
 The NFC API provides connectivity between NFC enabled devices.
 
-Currently, the API is supported on \l{Qt for Android}{Android} and \l{Qt for
-iOS}{iOS}. This module also provides limited access to readers supporting
+Currently, the API is supported on \l{Qt for Android}{Android}, \l{Qt for
+iOS}{iOS} and \l{Qt for Linux}{Linux} using
+\l {https://github.com/linux-nfc/neard}{Neard} v0.14 or later.
+This module also provides limited access to readers supporting
 \l{PC/SC in Qt NFC}{PC/SC} specification on Linux, macOS, and Windows.
 
 NFC is a short-range (less than 20 centimeters) wireless technology
@@ -42,6 +44,20 @@ and write NDEF messages on NFC Forum Tags, and send tag-specific commands.
     \li \l {Qt NFC on Android}
     \li \l {PC/SC in Qt NFC}
 \endlist
+
+\section1 Logging Categories
+
+The \l QtNfc module exports the following
+\l {Configuring Categories}{logging categories}:
+
+\table
+\header
+    \li Logging Category
+    \li Description
+\row
+    \li qt.nfc.neard
+    \li Enables logging of the Neard/Linux implementation
+\endtable
 
 \section1 Examples
 

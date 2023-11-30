@@ -6,6 +6,8 @@
 
 #if defined(QT_SIMULATOR)
 #include "qnearfieldmanager_simulator_p.h"
+#elif defined(NEARD_NFC)
+#include "qnearfieldmanager_neard_p.h"
 #elif defined(ANDROID_NFC)
 #include "qnearfieldmanager_android_p.h"
 #elif defined(IOS_NFC)
@@ -45,6 +47,14 @@ QT_BEGIN_NAMESPACE
     must be started with the startTargetDetection() function. Target detection can be stopped with
     the stopTargetDetection() function. When the target is no longer required the target should be
     deleted as other applications may be blocked from accessing the target.
+
+    \section3 NFC on Linux
+    The \l{https://github.com/linux-nfc/neard}{Linux NFC project} provides software to support NFC
+    on Linux platforms. The neard daemon will allow access to the supported hardware via DBus
+    interfaces. QtNfc requires neard version 0.14 which can be built from source or installed via
+    the appropriate Linux package manager. Not all API features are currently supported.
+    To allow QtNfc to access the DBus interfaces the neard daemon has to be running. In case of
+    problems debug output can be enabled by enabling categorized logging for 'qt.nfc.neard'.
 */
 
 /*!

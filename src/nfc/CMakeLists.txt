@@ -93,6 +93,29 @@ qt_internal_extend_target(Nfc CONDITION QT_FEATURE_pcsclite
         PkgConfig::PCSCLITE
 )
 
+if(QT_FEATURE_neard)
+    set(NFC_BACKEND_AVAILABLE ON)
+endif()
+
+qt_internal_extend_target(Nfc CONDITION QT_FEATURE_neard
+    SOURCES
+        qnearfieldmanager_neard.cpp qnearfieldmanager_neard_p.h
+        qnearfieldtarget_neard_p.cpp qnearfieldtarget_neard_p.h
+        neard/neard_helper.cpp neard/neard_helper_p.h
+        neard/neard_dbus_types_p.h
+    DBUS_INTERFACE_SOURCES
+        neard/org.freedesktop.dbus.objectmanager.xml
+        neard/org.freedesktop.dbus.properties.xml
+        neard/org.neard.Adapter.xml
+        neard/org.neard.Tag.xml
+    DBUS_INTERFACE_FLAGS
+        -i neard/neard_dbus_types_p.h
+    DEFINES
+        NEARD_NFC
+    LIBRARIES
+        Qt::DBus
+)
+
 qt_internal_extend_target(Nfc CONDITION NOT NFC_BACKEND_AVAILABLE
     SOURCES
         qnearfieldmanager_generic.cpp qnearfieldmanager_generic_p.h
