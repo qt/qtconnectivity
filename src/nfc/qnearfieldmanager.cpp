@@ -206,15 +206,17 @@ bool QNearFieldManager::isSupported(QNearFieldTarget::AccessMethod accessMethod)
 /*!
     \fn bool QNearFieldManager::startTargetDetection(QNearFieldTarget::AccessMethod accessMethod)
 
-    Starts detecting targets and returns \c true if target detection is
-    successfully started; otherwise returns \c false. Causes the targetDetected() signal to be emitted
-    when a target is within proximity. Only tags with the given \a accessMethod will be delivered.
-    Active detection continues until \l stopTargetDetection() has been called.
+    Starts detecting targets and returns \c true if target detection started successfully;
+    otherwise returns \c false. Causes the targetDetected() signal to be emitted
+    when a target is within proximity. Only tags with the given \a accessMethod will be reported.
+    Target detection continues until \l stopTargetDetection() is called.
 
     To detect targets with a different \a accessMethod, stopTargetDetection() must be called first.
 
-    \note On iOS it is impossible to start target detection for both NdefAccess and TagTypeSpecificAccess
+    \note On iOS, it is impossible to start target detection for both NdefAccess and TagTypeSpecificAccess
     at the same time. So if AnyAccess is selected, NdefAccess will be used instead.
+
+    \note On platforms using neard, target detection will stop as soon as a tag has been detected.
 
     \sa stopTargetDetection()
 */
@@ -232,13 +234,13 @@ bool QNearFieldManager::startTargetDetection(QNearFieldTarget::AccessMethod acce
     \note On iOS, detected targets become invalid after this call (e.g. an attempt to write or
     read NDEF messages will result in an error).
 
-    If an \a errorMessage is provided, this is a hint to the system that the goal, the application
-    had, was not reached. The \a errorMessage and a matching error icon are shown to the user.
-    Calling this function with an empty \a errorMessage, implies a successful operation end;
-    otherwise an \a errorMessage should be passed to this function.
+    If an \a errorMessage is provided, it is a hint to the system that the application's goal
+    was not achieved. The \a errorMessage and a matching error icon are shown to the user.
+    Calling this function with an empty \a errorMessage implies a successful end of operation;
+    otherwise, an \a errorMessage should be passed to this function.
 
-    \note Currently, \a errorMessage only has an effect on iOS because a popup is shown by the
-    system during the scan where the \a errorMessage is visible. Other platforms will ignore this
+    \note Currently, \a errorMessage only has an effect on iOS because the system shows a popup
+    during the scan where the \a errorMessage is visible. Other platforms will ignore this
     parameter.
 
     \sa setUserInformation()
@@ -253,13 +255,13 @@ void QNearFieldManager::stopTargetDetection(const QString &errorMessage)
 /*!
     \since 6.2
 
-    Sets the message shown to the user by the system. If the target detection is running the
+    Sets the message that the system shows to the user. If target detection is running, the
     \a message will be updated immediately and can be used as a progress message. The last message
     set before a call to \l startTargetDetection() without an error message is used as a success
-    message. If the target detection is not running the \a message will be used as the initial
-    message when the next detection is started. By default no message is shown to the user.
+    message. If target detection is not running, the \a message will be used as the initial
+    message when the next detection is started. By default, no message is shown to the user.
 
-    \note Currently, this function only has an effect on iOS because a popup is shown by the system
+    \note Currently, this function only has an effect on iOS because the system shows a popup
     during the scan. On iOS, this \a message is mapped to the alert message which is shown upon
     successful completion of the scan. Other platforms will ignore \a message.
 
