@@ -129,7 +129,7 @@ QString valueForStaticField()
         else if constexpr (Field == ExtraUuid)
             return QtJniTypes::CTString("EXTRA_UUID");
         else
-            QtJniTypes::staticAssertTypeMismatch();
+            static_assert(QtPrivate::value_dependent_false<Field>());
     }();
 
     return valueFromStaticFieldCache(className + fieldName, className.data(), fieldName.data());
