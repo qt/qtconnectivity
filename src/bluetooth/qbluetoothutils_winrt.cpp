@@ -43,6 +43,7 @@ QByteArray byteArrayFromBuffer(const ComPtr<NativeBuffer> &buffer, bool isWCharS
 }
 
 static QSet<void*> successfulInits;
+static QThread *mainThread = nullptr;
 
 void mainThreadCoInit(void* caller)
 {
@@ -58,27 +59,33 @@ void mainThreadCoInit(void* caller)
         return;
     }
 
+    Q_ASSERT_X(!mainThread || mainThread == QThread::currentThread(),
+               __FUNCTION__, "QCoreApplication's thread has changed!");
+
     // This executes in main thread which may run Gui => use apartment threaded
     if (!SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED))) {
         qCWarning(QT_BT_WINDOWS) << "Unexpected COM initialization result";
         return;
     }
     successfulInits.insert(caller);
+    if (!mainThread)
+        mainThread = QThread::currentThread();
 }
 
 void mainThreadCoUninit(void* caller)
 {
     Q_ASSERT(caller);
 
-    if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
-        qCWarning(QT_BT_WINDOWS) << "Main thread COM uninit tried from another thread";
-        return;
-    }
-
     if (!successfulInits.contains(caller)) {
         qCWarning(QT_BT_WINDOWS) << "COM uninitialization without initialization";
         return;
     }
+
+    if (QThread::currentThread() != mainThread) {
+        qCWarning(QT_BT_WINDOWS) << "Main thread COM uninit tried from another thread";
+        return;
+    }
+
     CoUninitialize();
     successfulInits.remove(caller);
 
