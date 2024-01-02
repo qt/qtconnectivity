@@ -204,7 +204,6 @@ ApplicationWindow {
     }
 
     function readTag() {
-        messageModel.clearMessage()
         window.targetDetectedAction = MainWindow.ReadMessage
         nfcManager.startTargetDetection()
         communicationOverlay.title = qsTr("Read Tag")
