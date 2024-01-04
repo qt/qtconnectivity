@@ -159,7 +159,9 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
                 break;
             } else if (!isprint(text[i])) {
                 hasNonPrintableChar = true;
-                text.resize(text.indexOf('\0')); // cut trailing content
+                const auto firstNullIdx = text.indexOf('\0');
+                if (firstNullIdx > 0)
+                    text.resize(firstNullIdx); // cut trailing content
                 break;
             }
         }
@@ -211,9 +213,8 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
     case SDP_URL_STR8:
     case SDP_URL_STR16:
     case SDP_URL_STR32:
-        strncpy(snBuffer, data->val.str, data->unitSize - 1);
         xmlOutput.append("<url value=\"");
-        xmlOutput.append(snBuffer);
+        xmlOutput.append(data->val.str, qstrnlen(data->val.str, data->unitSize));
         xmlOutput.append("\"/>\n");
         break;
     default:
