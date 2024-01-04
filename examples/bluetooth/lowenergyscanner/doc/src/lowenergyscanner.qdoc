@@ -6,12 +6,13 @@
     \example lowenergyscanner
     \title Bluetooth Low Energy Scanner
     \examplecategory {Connectivity}
+    \meta tags {bluetooth, ble}
     \brief An application designed to browse the content of Bluetooth Low
-    Energy peripheral devices. The example demonstrates the use of all Qt Bluetooth
+    Energy peripheral devices. The example demonstrates the use of all \l{Qt Bluetooth}
     Low Energy classes.
 
     The Bluetooth Low Energy Scanner Example shows how to develop Bluetooth
-    Low Energy applications using the Qt Bluetooth API. The application covers
+    Low Energy applications using the \l{QtBluetooth}{Qt Bluetooth API}. The application covers
     scanning for Low Energy devices, scanning their services and reading
     the service characteristics and descriptors.
 
