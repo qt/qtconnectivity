@@ -2,7 +2,7 @@
     "Id": "ndefeditor",
     "Name": "Selected Material Icons",
     "QDocModule": "qtnfc",
-    "QtUsage": "Used in NDEF Editor Example for QtNfc.",
+    "QtUsage": "Used in NDEF Editor example for Qt NFC.",
     "QtParts": [
         "examples"
     ],
