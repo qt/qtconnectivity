@@ -5,11 +5,12 @@
     \example heartrate-game
     \title Bluetooth Low Energy Heart Rate Game
     \examplecategory {Connectivity}
+    \meta tags {bluetooth, ble, quick}
     \brief A game demonstrating the interaction with a Bluetooth Low Energy Heart Rate
     device/service.
 
     The Bluetooth Low Energy Heart Rate Game shows how to develop a Bluetooth Low Energy
-    application using the Qt Bluetooth API. The application covers the scanning for
+    application using the \l{QtBluetooth}{Qt Bluetooth API}. The application covers the scanning for
     Bluetooth Low Energy devices, connecting to a Heart Rate service on the device, writing
     characteristics and descriptors, and receiving updates from the device once the heart rate
     has changed.
@@ -36,7 +37,7 @@
     The goal of the game is to increase the measured heart rate as much as possible.
 
     A detailed explanation of the APIs used in this example is given in the
-    \l {Using Qt Bluetooth Low Energy API} section of the Qt Bluetooth module
+    \l {Using Qt Bluetooth Low Energy API} section of the \l{Qt Bluetooth} module
     documentation.
 
     The \l {lowenergyscanner}{Bluetooth Low Energy Scanner} example might be more suitable
