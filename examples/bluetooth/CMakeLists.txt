@@ -2,10 +2,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 qt_internal_add_example(heartrate-server)
-if(TARGET Qt::Widgets)
+if(TARGET Qt6::Widgets)
     qt_internal_add_example(btchat)
 endif()
-if(TARGET Qt::Quick)
+if(TARGET Qt6::Quick)
     qt_internal_add_example(lowenergyscanner)
     qt_internal_add_example(heartrate-game)
 endif()

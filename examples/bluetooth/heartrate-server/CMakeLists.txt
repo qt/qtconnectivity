@@ -27,13 +27,13 @@ set_target_properties(heartrate-server PROPERTIES
 )
 
 target_link_libraries(heartrate-server PRIVATE
-    Qt::Bluetooth
-    Qt::Core
+    Qt6::Bluetooth
+    Qt6::Core
 )
 
 if(ANDROID OR APPLE)
     target_link_libraries(heartrate-server PRIVATE
-        Qt::Gui
+        Qt6::Gui
     )
 endif()
 

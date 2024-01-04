@@ -25,11 +25,11 @@ set_target_properties(heartrate-game PROPERTIES
 )
 
 target_link_libraries(heartrate-game PRIVATE
-    Qt::Bluetooth
-    Qt::Core
-    Qt::Gui
-    Qt::Qml
-    Qt::Quick
+    Qt6::Bluetooth
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Qml
+    Qt6::Quick
 )
 
 set_source_files_properties(GameSettings.qml PROPERTIES
