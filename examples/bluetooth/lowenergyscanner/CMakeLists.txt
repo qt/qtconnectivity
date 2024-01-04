@@ -24,10 +24,10 @@ set_target_properties(lowenergyscanner PROPERTIES
 )
 
 target_link_libraries(lowenergyscanner PUBLIC
-    Qt::Bluetooth
-    Qt::Core
-    Qt::Gui
-    Qt::Quick
+    Qt6::Bluetooth
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Quick
 )
 
 if (APPLE)

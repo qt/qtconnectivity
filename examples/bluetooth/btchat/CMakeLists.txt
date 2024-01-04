@@ -40,9 +40,9 @@ set_target_properties(btchat PROPERTIES
 )
 
 target_link_libraries(btchat PRIVATE
-    Qt::Bluetooth
-    Qt::Core
-    Qt::Widgets
+    Qt6::Bluetooth
+    Qt6::Core
+    Qt6::Widgets
 )
 
 if (APPLE)
