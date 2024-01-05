@@ -3,9 +3,10 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
 #include "characteristicinfo.h"
-#include "qbluetoothuuid.h"
 
-#include <QtCore/qbytearray.h>
+#include <QBluetoothUuid>
+
+#include <QByteArray>
 
 using namespace Qt::StringLiterals;
 

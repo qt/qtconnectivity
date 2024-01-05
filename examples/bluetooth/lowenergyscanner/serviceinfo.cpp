@@ -4,8 +4,8 @@
 
 #include "serviceinfo.h"
 
-#include <QtBluetooth/qbluetoothuuid.h>
-#include <QtBluetooth/qlowenergyservice.h>
+#include <QBluetoothUuid>
+#include <QLowEnergyService>
 
 using namespace Qt::StringLiterals;
 

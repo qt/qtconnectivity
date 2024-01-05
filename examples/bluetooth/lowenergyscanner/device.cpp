@@ -4,16 +4,17 @@
 
 #include "device.h"
 
-#include <QtBluetooth/qbluetoothdeviceinfo.h>
-#include <QtBluetooth/qbluetoothuuid.h>
+#include <QBluetoothDeviceInfo>
+#include <QBluetoothUuid>
 
-#include <QtCore/qdebug.h>
-#include <QtCore/qmetaobject.h>
-#include <QtCore/qtimer.h>
+#include <QDebug>
+#include <QMetaObject>
+#include <QTimer>
 
 #if QT_CONFIG(permissions)
-#include <QtCore/qpermissions.h>
-#include <QtGui/qguiapplication.h>
+#include <QPermissions>
+
+#include <QGuiApplication>
 #endif
 
 using namespace Qt::StringLiterals;

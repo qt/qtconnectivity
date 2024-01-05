@@ -6,13 +6,13 @@
 #include "devicehandler.h"
 #include "heartrate-global.h"
 
-#include <QtCore/qcommandlineoption.h>
-#include <QtCore/qcommandlineparser.h>
-#include <QtCore/qloggingcategory.h>
+#include <QCommandLineOption>
+#include <QCommandLineParser>
+#include <QLoggingCategory>
 
-#include <QtGui/qguiapplication.h>
+#include <QGuiApplication>
 
-#include <QtQml/qqmlapplicationengine.h>
+#include <QQmlApplicationEngine>
 
 using namespace Qt::StringLiterals;
 

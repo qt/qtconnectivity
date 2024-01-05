@@ -4,9 +4,9 @@
 #ifndef CHATCLIENT_H
 #define CHATCLIENT_H
 
-#include <QtCore/qobject.h>
+#include <QObject>
 
-#include <QtBluetooth/qbluetoothsocket.h>
+#include <QBluetoothSocket>
 
 QT_FORWARD_DECLARE_CLASS(QBluetoothServiceInfo)
 

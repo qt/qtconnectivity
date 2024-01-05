@@ -3,8 +3,9 @@
 
 #include "chat.h"
 
-#include <QtCore/qloggingcategory.h>
-#include <QtWidgets/qapplication.h>
+#include <QLoggingCategory>
+
+#include <QApplication>
 
 using namespace Qt::StringLiterals;
 

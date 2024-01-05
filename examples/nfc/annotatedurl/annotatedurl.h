@@ -4,11 +4,11 @@
 #ifndef ANNOTATEDURL_H
 #define ANNOTATEDURL_H
 
-#include <QtNfc/qndeffilter.h>
-#include <QtNfc/qndefmessage.h>
-#include <QtNfc/qnearfieldmanager.h>
+#include <QNdefFilter>
+#include <QNdefMessage>
+#include <QNearFieldManager>
 
-#include <QtCore/qobject.h>
+#include <QObject>
 
 QT_FORWARD_DECLARE_CLASS(QNearFieldTarget)
 QT_FORWARD_DECLARE_CLASS(QPixmap)

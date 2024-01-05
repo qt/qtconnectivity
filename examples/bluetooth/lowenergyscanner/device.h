@@ -8,15 +8,15 @@
 #include "deviceinfo.h"
 #include "serviceinfo.h"
 
-#include <QtBluetooth/qbluetoothdevicediscoveryagent.h>
-#include <QtBluetooth/qlowenergycontroller.h>
-#include <QtBluetooth/qlowenergyservice.h>
+#include <QBluetoothDeviceDiscoveryAgent>
+#include <QLowEnergyController>
+#include <QLowEnergyService>
 
-#include <QtCore/qlist.h>
-#include <QtCore/qobject.h>
-#include <QtCore/qvariant.h>
+#include <QList>
+#include <QObject>
+#include <QVariant>
 
-#include <QtQmlIntegration/qqmlintegration.h>
+#include <QQmlEngine>
 
 QT_BEGIN_NAMESPACE
 class QBluetoothDeviceInfo;

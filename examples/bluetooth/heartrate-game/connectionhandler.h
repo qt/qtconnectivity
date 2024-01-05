@@ -4,11 +4,11 @@
 #ifndef CONNECTIONHANDLER_H
 #define CONNECTIONHANDLER_H
 
-#include <QtBluetooth/qbluetoothlocaldevice.h>
+#include <QBluetoothLocalDevice>
 
-#include <QtCore/qobject.h>
+#include <QObject>
 
-#include <QtQmlIntegration/qqmlintegration.h>
+#include <QQmlEngine>
 
 class ConnectionHandler : public QObject
 {

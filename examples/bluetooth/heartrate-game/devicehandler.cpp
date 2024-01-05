@@ -5,8 +5,8 @@
 #include "deviceinfo.h"
 #include "heartrate-global.h"
 
-#include <QtCore/qendian.h>
-#include <QtCore/qrandom.h>
+#include <QtEndian>
+#include <QRandomGenerator>
 
 DeviceHandler::DeviceHandler(QObject *parent) :
     BluetoothBaseClass(parent)

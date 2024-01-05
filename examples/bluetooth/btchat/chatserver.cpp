@@ -3,8 +3,8 @@
 
 #include "chatserver.h"
 
-#include <QtBluetooth/qbluetoothserver.h>
-#include <QtBluetooth/qbluetoothsocket.h>
+#include <QBluetoothServer>
+#include <QBluetoothSocket>
 
 using namespace Qt::StringLiterals;
 

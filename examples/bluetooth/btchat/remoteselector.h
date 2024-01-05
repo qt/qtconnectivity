@@ -4,9 +4,9 @@
 #ifndef REMOTESELECTOR_H
 #define REMOTESELECTOR_H
 
-#include <QtWidgets/qdialog.h>
+#include <QDialog>
 
-#include <QtBluetooth/qbluetoothserviceinfo.h>
+#include <QBluetoothServiceInfo>
 
 QT_BEGIN_NAMESPACE
 

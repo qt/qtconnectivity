@@ -4,13 +4,13 @@
 #include "connectionhandler.h"
 #include "heartrate-global.h"
 
-#include <QtBluetooth/qtbluetooth-config.h>
+#include <qtbluetooth-config.h>
 
-#include <QtCore/qsystemdetection.h>
+#include <QtSystemDetection>
 
 #if QT_CONFIG(permissions)
-#include <QtCore/qcoreapplication.h>
-#include <QtCore/qpermissions.h>
+#include <QCoreApplication>
+#include <QPermissions>
 #endif
 
 ConnectionHandler::ConnectionHandler(QObject *parent) : QObject(parent)

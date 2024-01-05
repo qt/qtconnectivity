@@ -4,8 +4,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtGui/qpixmap.h>
-#include <QtWidgets/qwidget.h>
+#include <QPixmap>
+
+#include <QWidget>
 
 QT_FORWARD_DECLARE_CLASS(QMouseEvent)
 QT_FORWARD_DECLARE_CLASS(QUrl)

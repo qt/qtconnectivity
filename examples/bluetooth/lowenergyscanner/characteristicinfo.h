@@ -5,12 +5,12 @@
 #ifndef CHARACTERISTICINFO_H
 #define CHARACTERISTICINFO_H
 
-#include <QtBluetooth/qlowenergycharacteristic.h>
+#include <QLowEnergyCharacteristic>
 
-#include <QtCore/qobject.h>
-#include <QtCore/qstring.h>
+#include <QObject>
+#include <QString>
 
-#include <QtQmlIntegration/qqmlintegration.h>
+#include <QQmlEngine>
 
 class CharacteristicInfo: public QObject
 {

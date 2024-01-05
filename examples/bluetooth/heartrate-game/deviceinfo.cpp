@@ -4,8 +4,8 @@
 #include "deviceinfo.h"
 #include "heartrate-global.h"
 
-#include <QtBluetooth/qbluetoothaddress.h>
-#include <QtBluetooth/qbluetoothuuid.h>
+#include <QBluetoothAddress>
+#include <QBluetoothUuid>
 
 using namespace Qt::StringLiterals;
 

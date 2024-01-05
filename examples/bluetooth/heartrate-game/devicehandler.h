@@ -6,14 +6,14 @@
 
 #include "bluetoothbaseclass.h"
 
-#include <QtBluetooth/qlowenergycontroller.h>
-#include <QtBluetooth/qlowenergyservice.h>
+#include <QLowEnergyController>
+#include <QLowEnergyService>
 
-#include <QtCore/qdatetime.h>
-#include <QtCore/qlist.h>
-#include <QtCore/qtimer.h>
+#include <QDateTime>
+#include <QList>
+#include <QTimer>
 
-#include <QtQml/qqmlregistration.h>
+#include <QQmlEngine>
 
 class DeviceInfo;
 
