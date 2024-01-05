@@ -4,8 +4,9 @@
 #ifndef BLUETOOTHBASECLASS_H
 #define BLUETOOTHBASECLASS_H
 
-#include <QtCore/qobject.h>
-#include <QtQmlIntegration/qqmlintegration.h>
+#include <QObject>
+
+#include <QQmlEngine>
 
 class BluetoothBaseClass : public QObject
 {

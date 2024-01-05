@@ -5,9 +5,9 @@
 #include "deviceinfo.h"
 
 #ifdef Q_OS_DARWIN
-#  include <QtBluetooth/qbluetoothuuid.h>
+#  include <QBluetoothUuid>
 #else
-#  include <QtBluetooth/qbluetoothaddress.h>
+#  include <QBluetoothAddress>
 #endif
 
 DeviceInfo::DeviceInfo(const QBluetoothDeviceInfo &d)

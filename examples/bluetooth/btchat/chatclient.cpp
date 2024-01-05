@@ -3,9 +3,10 @@
 
 #include "chatclient.h"
 
-#include <QtCore/qmetaobject.h>
+#include <QMetaEnum>
+#include <QMetaObject>
 
-#include <QtBluetooth/qbluetoothserviceinfo.h>
+#include <QBluetoothServiceInfo>
 
 using namespace  Qt::StringLiterals;
 

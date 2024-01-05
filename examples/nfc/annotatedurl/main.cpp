@@ -4,11 +4,11 @@
 #include "annotatedurl.h"
 #include "mainwindow.h"
 
-#include <QtNfc/qnearfieldmanager.h>
-#include <QtNfc/qndefnfctextrecord.h>
-#include <QtNfc/qndefnfcurirecord.h>
+#include <QNearFieldManager>
+#include <QNdefNfcTextRecord>
+#include <QNdefNfcUriRecord>
 
-#include <QtWidgets/qapplication.h>
+#include <QApplication>
 
 //! [0]
 int main(int argc, char *argv[])

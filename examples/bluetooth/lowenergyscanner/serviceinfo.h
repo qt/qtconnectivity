@@ -5,9 +5,9 @@
 #ifndef SERVICEINFO_H
 #define SERVICEINFO_H
 
-#include <QtCore/qobject.h>
+#include <QObject>
 
-#include <QtQmlIntegration/qqmlintegration.h>
+#include <QQmlEngine>
 
 QT_BEGIN_NAMESPACE
 class QLowEnergyService;

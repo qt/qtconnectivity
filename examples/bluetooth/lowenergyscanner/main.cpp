@@ -4,9 +4,11 @@
 
 #include "device.h"
 
-#include <QtCore/qloggingcategory.h>
-#include <QtGui/qguiapplication.h>
-#include <QtQml/qqmlapplicationengine.h>
+#include <QLoggingCategory>
+
+#include <QGuiApplication>
+
+#include <QQmlApplicationEngine>
 
 int main(int argc, char *argv[])
 {

@@ -3,11 +3,13 @@
 
 #include "mainwindow.h"
 
-#include <QtCore/qurl.h>
-#include <QtGui/qdesktopservices.h>
-#include <QtGui/qscreen.h>
-#include <QtWidgets/qlabel.h>
-#include <QtWidgets/qlayout.h>
+#include <QUrl>
+
+#include <QDesktopServices>
+#include <QScreen>
+
+#include <QLabel>
+#include <QLayout>
 
 MainWindow::MainWindow(QWidget *parent)
     : QWidget(parent),

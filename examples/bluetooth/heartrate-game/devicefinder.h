@@ -6,12 +6,12 @@
 
 #include "bluetoothbaseclass.h"
 
-#include <QtBluetooth/qbluetoothdevicediscoveryagent.h>
+#include <QBluetoothDeviceDiscoveryAgent>
 
-#include <QtCore/qtimer.h>
-#include <QtCore/qvariant.h>
+#include <QTimer>
+#include <QVariant>
 
-#include <QtQmlIntegration/qqmlintegration.h>
+#include <QQmlEngine>
 
 QT_BEGIN_NAMESPACE
 class QBluetoothDeviceInfo;

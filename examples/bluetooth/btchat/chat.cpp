@@ -7,19 +7,20 @@
 #include "remoteselector.h"
 #include "ui_chat.h"
 
-#include <QtCore/qdebug.h>
+#include <QDebug>
 
-#include <QtBluetooth/qbluetoothdeviceinfo.h>
-#include <QtBluetooth/qbluetoothlocaldevice.h>
-#include <QtBluetooth/qbluetoothuuid.h>
+#include <QBluetoothDeviceInfo>
+#include <QBluetoothLocalDevice>
+#include <QBluetoothUuid>
 
-#include <QtGui/qguiapplication.h>
-#include <QtGui/qstylehints.h>
+#include <QGuiApplication>
+#include <QStyleHints>
 
 #if QT_CONFIG(permissions)
-#include <QtCore/qcoreapplication.h>
-#include <QtCore/qpermissions.h>
-#include <QtWidgets/qmessagebox.h>
+#include <QCoreApplication>
+#include <QPermissions>
+
+#include <QMessageBox>
 #endif
 
 using namespace Qt::StringLiterals;

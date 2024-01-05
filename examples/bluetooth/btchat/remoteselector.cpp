@@ -4,15 +4,15 @@
 #include "remoteselector.h"
 #include "ui_remoteselector.h"
 
-#include <QtBluetooth/qbluetoothaddress.h>
-#include <QtBluetooth/qbluetoothlocaldevice.h>
-#include <QtBluetooth/qbluetoothservicediscoveryagent.h>
-#include <QtBluetooth/qbluetoothuuid.h>
+#include <QBluetoothAddress>
+#include <QBluetoothLocalDevice>
+#include <QBluetoothServiceDiscoveryAgent>
+#include <QBluetoothUuid>
 
-#include <QtGui/qguiapplication.h>
-#include <QtGui/qstylehints.h>
+#include <QGuiApplication>
+#include <QStyleHints>
 
-#include <QtWidgets/qlistwidget.h>
+#include <QListWidget>
 
 using namespace Qt::StringLiterals;
 

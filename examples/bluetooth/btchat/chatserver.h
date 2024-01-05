@@ -4,10 +4,10 @@
 #ifndef CHATSERVER_H
 #define CHATSERVER_H
 
-#include <QtCore/qobject.h>
+#include <QObject>
 
-#include <QtBluetooth/qbluetoothaddress.h>
-#include <QtBluetooth/qbluetoothserviceinfo.h>
+#include <QBluetoothAddress>
+#include <QBluetoothServiceInfo>
 
 QT_FORWARD_DECLARE_CLASS(QBluetoothServer)
 QT_FORWARD_DECLARE_CLASS(QBluetoothSocket)

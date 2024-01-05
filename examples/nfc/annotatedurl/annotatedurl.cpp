@@ -2,22 +2,22 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 #include "annotatedurl.h"
 
-#include <QtCore/qdebug.h>
-#include <QtCore/qlocale.h>
-#include <QtCore/qurl.h>
+#include <QDebug>
+#include <QLocale>
+#include <QUrl>
 
-#include <QtGui/qdesktopservices.h>
-#include <QtGui/qevent.h>
+#include <QDesktopServices>
+#include <QEvent>
 
-#include <QtNfc/qndefmessage.h>
-#include <QtNfc/qndefnfctextrecord.h>
-#include <QtNfc/qndefnfcurirecord.h>
-#include <QtNfc/qndefrecord.h>
-#include <QtNfc/qnearfieldmanager.h>
-#include <QtNfc/qnearfieldtarget.h>
+#include <QNdefMessage>
+#include <QNdefNfcTextRecord>
+#include <QNdefNfcUriRecord>
+#include <QNdefRecord>
+#include <QNearFieldManager>
+#include <QNearFieldTarget>
 
-#include <QtWidgets/qgridlayout.h>
-#include <QtWidgets/qlabel.h>
+#include <QGridLayout>
+#include <QLabel>
 
 AnnotatedUrl::AnnotatedUrl(QObject *parent)
     : QObject(parent),

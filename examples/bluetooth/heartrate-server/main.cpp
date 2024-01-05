@@ -1,25 +1,29 @@
 // Copyright (C) 2017 The Qt Company Ltd.
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial OR BSD-3-Clause
 
-#include <QtBluetooth/qlowenergyadvertisingdata.h>
-#include <QtBluetooth/qlowenergyadvertisingparameters.h>
-#include <QtBluetooth/qlowenergycharacteristic.h>
-#include <QtBluetooth/qlowenergycharacteristicdata.h>
-#include <QtBluetooth/qlowenergydescriptordata.h>
-#include <QtBluetooth/qlowenergycontroller.h>
-#include <QtBluetooth/qlowenergyservice.h>
-#include <QtBluetooth/qlowenergyservicedata.h>
-#include <QtCore/qbytearray.h>
+#include <QLowEnergyAdvertisingData>
+#include <QLowEnergyAdvertisingParameters>
+#include <QLowEnergyCharacteristic>
+#include <QLowEnergyCharacteristicData>
+#include <QLowEnergyDescriptorData>
+#include <QLowEnergyController>
+#include <QLowEnergyService>
+#include <QLowEnergyServiceData>
+
+#include <QByteArray>
+
 #if defined(Q_OS_ANDROID) || defined(Q_OS_DARWIN)
-#include <QtGui/qguiapplication.h>
+#include <QGuiApplication>
 #else
-#include <QtCore/qcoreapplication.h>
+#include <QCoreApplication>
 #endif
-#include <QtCore/qlist.h>
-#include <QtCore/qloggingcategory.h>
-#include <QtCore/qtimer.h>
+
+#include <QList>
+#include <QLoggingCategory>
+#include <QTimer>
+
 #if QT_CONFIG(permissions)
-#include <QtCore/qpermissions.h>
+#include <QPermissions>
 #endif
 
 #include <memory>

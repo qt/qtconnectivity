@@ -6,11 +6,11 @@
 #include "deviceinfo.h"
 #include "heartrate-global.h"
 
-#include <QtBluetooth/qbluetoothdeviceinfo.h>
+#include <QBluetoothDeviceInfo>
 
 #if QT_CONFIG(permissions)
-#include <QtCore/qcoreapplication.h>
-#include <QtCore/qpermissions.h>
+#include <QCoreApplication>
+#include <QPermissions>
 #endif
 
 DeviceFinder::DeviceFinder(DeviceHandler *handler, QObject *parent):
