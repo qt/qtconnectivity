@@ -313,7 +313,6 @@ void QNearFieldTargetPrivateImpl::handleWriteRequest()
             reportError(QNearFieldTarget::UnknownError, m_currentWriteRequestId);
         }
 
-        QMetaObject::invokeMethod(this, "ndefMessagesWritten", Qt::QueuedConnection);
         QMetaObject::invokeMethod(this, [this]() {
             Q_EMIT requestCompleted(m_currentWriteRequestId);
         }, Qt::QueuedConnection);
