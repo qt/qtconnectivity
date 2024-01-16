@@ -152,7 +152,7 @@ bool QNearFieldManagerPrivateImpl::startTargetDetection(QNearFieldTarget::Access
                                           QDBusConnection::systemBus());
 
     // possible modes: "Target", "Initiator", "Dual"
-    QDBusPendingReply<> replyPollLoop = neardAdapter.StartPollLoop(QStringLiteral("Dual"));
+    QDBusPendingReply<> replyPollLoop = neardAdapter.StartPollLoop(QStringLiteral("Initiator"));
     replyPollLoop.waitForFinished();
     if (replyPollLoop.isError()) {
         qCWarning(QT_NFC_NEARD) << "error when starting polling";
