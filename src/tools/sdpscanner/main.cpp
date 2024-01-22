@@ -39,6 +39,7 @@
 
 #include <QtCore/QByteArray>
 #include <QtCore/QDebug>
+#include <QtCore/QUrl>
 #include <stdio.h>
 #include <string>
 #include <bluetooth/bluetooth.h>
@@ -159,7 +160,9 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
                 break;
             } else if (!isprint(text[i])) {
                 hasNonPrintableChar = true;
-                text.resize(text.indexOf('\0')); // cut trailing content
+                const auto firstNullIdx = text.indexOf('\0');
+                if (firstNullIdx > 0)
+                    text.resize(firstNullIdx); // cut trailing content
                 break;
             }
         }
@@ -211,11 +214,17 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
     case SDP_URL_STR8:
     case SDP_URL_STR16:
     case SDP_URL_STR32:
-        strncpy(snBuffer, data->val.str, data->unitSize - 1);
+    {
         xmlOutput.append("<url value=\"");
-        xmlOutput.append(snBuffer);
+        const QByteArray urlData =
+                QByteArray::fromRawData(data->val.str, qstrnlen(data->val.str, data->unitSize));
+        const QUrl url = QUrl::fromEncoded(urlData);
+        // Encoded url %-encodes all of the XML special characters except '&',
+        // so we need to do that manually
+        xmlOutput.append(url.toEncoded().replace('&', "&amp;"));
         xmlOutput.append("\"/>\n");
         break;
+    }
     default:
         fprintf(stderr, "Unknown dtd type\n");
     }
