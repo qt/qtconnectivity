@@ -2672,7 +2672,7 @@ void tst_QLowEnergyController::tst_writeCharacteristicNoResponse()
     service->writeCharacteristic(imageIdentityChar, QByteArray::fromHex("1"));
     QTest::qWait(1000);
     QTRY_COMPARE_WITH_TIMEOUT(charChangedSpy.size(), 1, 5000);
-    QTRY_COMPARE_WITH_TIMEOUT(charWrittenSpy.size(), 1, 5000);;
+    QTRY_COMPARE_WITH_TIMEOUT(charWrittenSpy.size(), 1, 5000);
 
     entry = charChangedSpy[0];
     first = entry[0].value<QLowEnergyCharacteristic>();
