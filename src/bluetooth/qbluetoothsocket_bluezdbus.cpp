@@ -32,12 +32,6 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 QBluetoothSocketPrivateBluezDBus::QBluetoothSocketPrivateBluezDBus()
 {
     secFlags = QBluetooth::Security::NoSecurity;
-
-    profileManager = new OrgBluezProfileManager1Interface(
-                            QStringLiteral("org.bluez"),
-                            QStringLiteral("/org/bluez"),
-                            QDBusConnection::systemBus(),
-                            this);
 }
 
 QBluetoothSocketPrivateBluezDBus::~QBluetoothSocketPrivateBluezDBus()
@@ -122,6 +116,14 @@ void QBluetoothSocketPrivateBluezDBus::connectToServiceHelper(
     int i = 0;
     bool success = false;
     profileUuid = uuid.toString(QUuid::WithoutBraces);
+
+    if (!profileManager) {
+        profileManager = new OrgBluezProfileManager1Interface(
+                                QStringLiteral("org.bluez"),
+                                QStringLiteral("/org/bluez"),
+                                QDBusConnection::systemBus(),
+                                this);
+    }
 
     if (profileContext) {
         qCDebug(QT_BT_BLUEZ) << "Profile context still active. close socket first.";
@@ -223,6 +225,23 @@ void QBluetoothSocketPrivateBluezDBus::connectToServiceReplyHandler(
         q->setSocketError(QBluetoothSocket::SocketError::HostNotFoundError);
     }
     watcher->deleteLater();
+
+    // QTBUG-82413, unregisterProfile at profileUuid,
+    // so it can be registered for new devices connecting to the same profile UUID.
+    if (profileManager) {
+        qCDebug(QT_BT_BLUEZ) << "Unregistering client profile on" << profilePath
+                             << "in connectToServiceReplyHandler() callback.";
+
+        QDBusPendingReply<> reply = profileManager->UnregisterProfile(QDBusObjectPath(profilePath));
+        reply.waitForFinished();
+        if (reply.isError())
+            qCWarning(QT_BT_BLUEZ) << "Unregister profile:" << reply.error().message();
+
+        QDBusConnection::systemBus().unregisterObject(profilePath);
+
+        delete profileManager;
+        profileManager = nullptr;
+    }
 }
 
 void QBluetoothSocketPrivateBluezDBus::connectToService(
@@ -572,16 +591,24 @@ void QBluetoothSocketPrivateBluezDBus::clearSocket()
         }
     }
 
-    QDBusPendingReply<> reply = profileManager->UnregisterProfile(QDBusObjectPath(profilePath));
-    reply.waitForFinished();
-    if (reply.isError())
-        qCWarning(QT_BT_BLUEZ) << "Unregister profile:" << reply.error().message();
-
-    QDBusConnection::systemBus().unregisterObject(profilePath);
-
     if (profileContext) {
         delete profileContext;
         profileContext = nullptr;
+    }
+
+    if (profileManager) {
+        qCDebug(QT_BT_BLUEZ) << "Unregistering client profile on" << profilePath
+                             << "in clearSocket().";
+
+        QDBusPendingReply<> reply = profileManager->UnregisterProfile(QDBusObjectPath(profilePath));
+        reply.waitForFinished();
+        if (reply.isError())
+            qCWarning(QT_BT_BLUEZ) << "Unregister profile:" << reply.error().message();
+
+        QDBusConnection::systemBus().unregisterObject(profilePath);
+
+        delete profileManager;
+        profileManager = nullptr;
     }
 
     remoteDevicePath.clear();
