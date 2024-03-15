@@ -89,6 +89,10 @@ void QNearFieldTargetPrivateImpl::invalidate()
     sessionDelegate = nil;
 
     targetCheckTimer.stop();
+
+    QMetaObject::invokeMethod(this, [this]() {
+        Q_EMIT targetLost(this);
+    }, Qt::QueuedConnection);
 }
 
 QByteArray QNearFieldTargetPrivateImpl::uid() const
@@ -274,9 +278,8 @@ bool QNearFieldTargetPrivateImpl::connect()
                     onExecuteRequest();
                 } else {
                     const auto requestId = queue.dequeue().first;
-                    invalidate();
-                    Q_EMIT targetLost(this);
                     reportError(QNearFieldTarget::ConnectionError, requestId);
+                    invalidate();
                 }
             });
         }];
@@ -302,20 +305,16 @@ bool QNearFieldTargetPrivateImpl::isNdefTag() const
 
 void QNearFieldTargetPrivateImpl::onTargetCheck()
 {
-    if (!isAvailable()) {
+    if (!isAvailable())
         invalidate();
-        Q_EMIT targetLost(this);
-    }
 }
 
 void QNearFieldTargetPrivateImpl::onTargetError(QNearFieldTarget::Error error, const QNearFieldTarget::RequestId &id)
 {
     Q_UNUSED(id);
 
-    if (error == QNearFieldTarget::TimeoutError) {
+    if (error == QNearFieldTarget::TimeoutError)
         invalidate();
-        Q_EMIT targetLost(this);
-    }
 }
 
 namespace {
@@ -441,9 +440,8 @@ void  QNearFieldTargetPrivateImpl::onResponseReceived(QNearFieldTarget::RequestI
         setResponseForRequest(requestId, recvBuffer, true);
         onExecuteRequest();
     } else {
-        invalidate();
-        Q_EMIT targetLost(this);
         reportError(QNearFieldTarget::CommandError, requestId);
+        invalidate();
     }
 }
 
