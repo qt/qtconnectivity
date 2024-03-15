@@ -205,7 +205,6 @@ void QNearFieldManagerPrivateImpl::clearTargets()
     auto i = detectedTargets.begin();
     while (i != detectedTargets.end()) {
         (*i)->invalidate();
-        Q_EMIT targetLost((*i)->q_ptr);
         i = detectedTargets.erase(i);
     }
 }
