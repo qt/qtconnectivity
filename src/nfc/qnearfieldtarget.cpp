@@ -90,6 +90,8 @@ QT_IMPL_METATYPE_EXTERN_TAGGED(QNearFieldTarget::RequestId, QNearFieldTarget__Re
     \value CommandError             Failed to send a command to the target.
     \value TimeoutError             The request could not be completed within the time
                                     specified in waitForRequestCompleted().
+    \value UnsupportedTargetError   The target used is unsupported. As example this can occur on missing
+                                    required entitlement and/or privacy settings from the client app.
 */
 
 /*!

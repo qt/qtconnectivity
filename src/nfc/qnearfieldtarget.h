@@ -59,7 +59,8 @@ public:
         NdefReadError,
         NdefWriteError,
         CommandError,
-        TimeoutError
+        TimeoutError,
+        UnsupportedTargetError
     };
     Q_ENUM(Error)
 

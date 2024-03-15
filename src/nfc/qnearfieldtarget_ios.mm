@@ -270,15 +270,19 @@ bool QNearFieldTargetPrivateImpl::connect()
         id<NFCTag> tag = static_cast<id<NFCTag>>(nfcTag.get());
         NFCTagReaderSession* session = tag.session;
         [session connectToTag: tag completionHandler: ^(NSError* error){
-            const bool success = error == nil;
-            QMetaObject::invokeMethod(this, [this, success] {
+            const int errorCode = error == nil ? -1 : error.code;
+            QMetaObject::invokeMethod(this, [this, errorCode] {
                 requestInProgress = QNearFieldTarget::RequestId();
-                if (success) {
+                if (errorCode == -1) {
                     connected = true;
                     onExecuteRequest();
                 } else {
                     const auto requestId = queue.dequeue().first;
-                    reportError(QNearFieldTarget::ConnectionError, requestId);
+                    reportError(
+                        errorCode == NFCReaderError::NFCReaderErrorSecurityViolation
+                            ? QNearFieldTarget::UnsupportedTargetError
+                            : QNearFieldTarget::ConnectionError,
+                        requestId);
                     invalidate();
                 }
             });
