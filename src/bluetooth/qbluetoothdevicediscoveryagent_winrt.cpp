@@ -82,16 +82,16 @@ static ServiceData extractServiceData(const BluetoothLEAdvertisement &ad)
             if (dataType == 0x16) {
                 Q_ASSERT(bufferData.size() >= 2);
                 ret.insert(QBluetoothUuid(qFromLittleEndian<quint16>(bufferData.constData())),
-                           bufferData + 2);
+                           bufferData.right(bufferData.length() - 2));
             } else if (dataType == 0x20) {
                 Q_ASSERT(bufferData.size() >= 4);
                 ret.insert(QBluetoothUuid(qFromLittleEndian<quint32>(bufferData.constData())),
-                           bufferData + 4);
+                           bufferData.right(bufferData.length() - 4));
             } else if (dataType == 0x21) {
                 Q_ASSERT(bufferData.size() >= 16);
                 ret.insert(QBluetoothUuid(qToBigEndian<quint128>(
                                    qFromLittleEndian<quint128>(bufferData.constData()))),
-                           bufferData + 16);
+                           bufferData.right(bufferData.length() - 16));
             }
         }
     }
