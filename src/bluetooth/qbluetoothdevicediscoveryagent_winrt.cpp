@@ -115,6 +115,7 @@ public:
     }
     void init()
     {
+        m_watcher.AllowExtendedAdvertisements(true);
         m_watcher.ScanningMode(BluetoothLEScanningMode::Active);
     }
     void start() {
