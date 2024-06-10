@@ -24,22 +24,18 @@
 #include "qlowenergycontroller.h"
 #include "qlowenergycontrollerbase_p.h"
 
-namespace ABI {
-    namespace Windows {
-        namespace Devices {
-            namespace Bluetooth {
-                struct IBluetoothLEDevice;
-            }
-        }
-        namespace Foundation {
-            template <typename T> struct IAsyncOperation;
-            enum class AsyncStatus;
-        }
-    }
-}
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.Devices.Bluetooth.h>
+#include <winrt/Windows.Devices.Bluetooth.GenericAttributeProfile.h>
 
-#include <wrl.h>
-#include <windows.devices.bluetooth.genericattributeprofile.h>
+using namespace winrt::Windows::Devices::Bluetooth;
+using namespace winrt::Windows::Devices::Bluetooth::GenericAttributeProfile;
+
+namespace winrt
+{
+    using AsyncStatus = Windows::Foundation::AsyncStatus;
+    using IInspectable = Windows::Foundation::IInspectable;
+}
 
 #include <functional>
 
@@ -105,75 +101,70 @@ private slots:
 private:
     void handleConnectionError(const char *logMessage);
 
-    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice> mDevice;
-    Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattSession>
-            mGattSession;
-    EventRegistrationToken mStatusChangedToken;
-    EventRegistrationToken mMtuChangedToken;
+    BluetoothLEDevice mDevice = nullptr;
+    GattSession mGattSession = nullptr;
+    winrt::event_token mStatusChangedToken{ 0 };
+    winrt::event_token mMtuChangedToken{ 0 };
     struct ValueChangedEntry {
         ValueChangedEntry() {}
-        ValueChangedEntry(Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> c,
-                          EventRegistrationToken t)
+        ValueChangedEntry(GattCharacteristic c,
+                          winrt::event_token t)
             : characteristic(c)
             , token(t)
         {
         }
 
-        Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic> characteristic;
-        EventRegistrationToken token;
+        GattCharacteristic characteristic = nullptr;
+        winrt::event_token token = { 0 };
     };
     QList<ValueChangedEntry> mValueChangedTokens;
 
-    using GattDeviceServiceComPtr = Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService>;
-    QMap<QBluetoothUuid, GattDeviceServiceComPtr> m_openedServices;
+    QMap<QBluetoothUuid, GattDeviceService> m_openedServices;
     QSet<QBluetoothUuid> m_requestDetailsServiceUuids;
 
-    using NativeServiceCallback = std::function<void(GattDeviceServiceComPtr)>;
-    HRESULT getNativeService(const QBluetoothUuid &serviceUuid, NativeServiceCallback callback);
+    using NativeServiceCallback = std::function<void(GattDeviceService)>;
+    bool getNativeService(const QBluetoothUuid &serviceUuid, NativeServiceCallback callback);
 
-    using GattCharacteristicComPtr = Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic>;
-    using NativeCharacteristicCallback = std::function<void(GattCharacteristicComPtr)>;
-    HRESULT getNativeCharacteristic(const QBluetoothUuid &serviceUuid,
-                                    const QBluetoothUuid &charUuid,
-                                    NativeCharacteristicCallback callback);
+    using NativeCharacteristicCallback = std::function<void(GattCharacteristic)>;
+    bool getNativeCharacteristic(const QBluetoothUuid &serviceUuid,
+        const QBluetoothUuid &charUuid,
+        NativeCharacteristicCallback callback);
 
     void registerForValueChanges(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
     void unregisterFromValueChanges();
-    HRESULT onValueChange(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattCharacteristic *characteristic,
-                          ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattValueChangedEventArgs *args);
-    HRESULT onMtuChange(ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattSession *session,
-                        IInspectable *args);
+    void onValueChange(GattCharacteristic characteristic, GattValueChangedEventArgs const &args);
+    void onMtuChange(GattSession session, winrt::IInspectable args);
     bool registerForMtuChanges();
     void unregisterFromMtuChanges();
 
     bool registerForStatusChanges();
     void unregisterFromStatusChanges();
-    HRESULT onStatusChange(ABI::Windows::Devices::Bluetooth::IBluetoothLEDevice *dev, IInspectable *);
+    void onStatusChange(BluetoothLEDevice dev, winrt::IInspectable args);
 
     void obtainIncludedServices(QSharedPointer<QLowEnergyServicePrivate> servicePointer,
-        Microsoft::WRL::ComPtr<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::IGattDeviceService> nativeService);
-    HRESULT onServiceDiscoveryFinished(ABI::Windows::Foundation::IAsyncOperation<ABI::Windows::Devices::Bluetooth::GenericAttributeProfile::GattDeviceServicesResult *> *op,
-                                       ABI::Windows::Foundation::AsyncStatus status);
+        GattDeviceService nativeService);
+    void onServiceDiscoveryFinished(winrt::Windows::Foundation::IAsyncOperation<GattDeviceServicesResult> const &op,
+                                    winrt::AsyncStatus status);
 
     void readCharacteristicHelper(const QSharedPointer<QLowEnergyServicePrivate> service,
                                   const QLowEnergyHandle charHandle,
-                                  GattCharacteristicComPtr characteristic);
+                                  GattCharacteristic characteristic);
     void readDescriptorHelper(const QSharedPointer<QLowEnergyServicePrivate> service,
                               const QLowEnergyHandle charHandle,
                               const QLowEnergyHandle descriptorHandle,
-                              GattCharacteristicComPtr characteristic);
+                              GattCharacteristic characteristic);
     void writeCharacteristicHelper(const QSharedPointer<QLowEnergyServicePrivate> service,
                                    const QLowEnergyHandle charHandle, const QByteArray &newValue,
                                    bool writeWithResponse,
-                                   GattCharacteristicComPtr characteristic);
+                                   GattCharacteristic characteristic);
     void writeDescriptorHelper(const QSharedPointer<QLowEnergyServicePrivate> service,
                                const QLowEnergyHandle charHandle,
                                const QLowEnergyHandle descriptorHandle,
                                const QByteArray &newValue,
-                               GattCharacteristicComPtr characteristic);
+                               GattCharacteristic characteristic);
     void discoverServiceDetailsHelper(const QBluetoothUuid &service,
                                       QLowEnergyService::DiscoveryMode mode,
-                                      GattDeviceServiceComPtr deviceService);
+                                      GattDeviceService deviceService);
 
     void clearAllServices();
     void closeAndRemoveService(const QBluetoothUuid &uuid);
