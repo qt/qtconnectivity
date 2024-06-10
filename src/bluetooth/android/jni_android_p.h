@@ -46,9 +46,7 @@ Q_DECLARE_JNI_CLASS(IntentFilter, "android/content/IntentFilter")
 Q_DECLARE_JNI_CLASS(AndroidContext, "android/content/Context")
 Q_DECLARE_JNI_CLASS(UUID, "java/util/UUID")
 
-Q_DECLARE_JNI_TYPE(ParcelableArray, "[Landroid/os/Parcelable;")
-Q_DECLARE_JNI_TYPE(ParcelUuidArray, "[Landroid/os/ParcelUuid;")
-Q_DECLARE_JNI_TYPE(StringArray, "[Ljava/lang/String;")
+Q_DECLARE_JNI_CLASS(String, "java/lang/String")
 
 Q_DECLARE_JNI_CLASS(BluetoothManager, "android/bluetooth/BluetoothManager")
 Q_DECLARE_JNI_CLASS(AdvertiseData, "android/bluetooth/le/AdvertiseData")
@@ -62,6 +60,11 @@ Q_DECLARE_JNI_CLASS(Parcelable, "android/os/Parcelable")
 Q_DECLARE_JNI_CLASS(Intent, "android/content/Intent")
 Q_DECLARE_JNI_CLASS(Bundle, "android/os/Bundle")
 Q_DECLARE_JNI_CLASS(List, "java/util/List")
+
+namespace QtJniTypes {
+using ParcelableArray = QJniArray<Parcelable>;
+using ParcelUuidArray = QJniArray<ParcelUuid>;
+}
 
 // QLowEnergyHandle is a quint16, ensure it is interpreted as jint
 template<>

@@ -120,8 +120,8 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::readNdefMessages()
     }
 
     // Convert to byte array
-    QJniObject ndefMessageBA = ndefMessage.callMethod<jbyteArray>("toByteArray");
-    QByteArray ndefMessageQBA = jbyteArrayToQByteArray(ndefMessageBA.object<jbyteArray>());
+    QJniArray ndefMessageBA = ndefMessage.callMethod<jbyte[]>("toByteArray");
+    QByteArray ndefMessageQBA = ndefMessageBA.toContainer();
 
     // Sending QNdefMessage, requestCompleted and exit.
     QNdefMessage qNdefMessage = QNdefMessage::fromByteArray(ndefMessageQBA);
@@ -183,13 +183,8 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::sendCommand(const QByte
         return requestId;
     }
 
-    // Making QByteArray
-    QByteArray ba(command);
-    jbyteArray jba = env->NewByteArray(ba.size());
-    env->SetByteArrayRegion(jba, 0, ba.size(), reinterpret_cast<jbyte*>(ba.data()));
-
     // Writing
-    QJniObject myNewVal = tagTech.callMethod<jbyteArray>("transceive", jba);
+    QJniArray myNewVal = tagTech.callMethod<jbyte[]>("transceive", QJniArray(command));
     if (!myNewVal.isValid()) {
         // Some devices (Samsung, Huawei) throw an exception when the card is lost:
         // "android.nfc.TagLostException: Tag was lost". But there seems to be a bug that
@@ -200,8 +195,7 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::sendCommand(const QByte
         reportError(QNearFieldTarget::CommandError, requestId);
         return requestId;
     }
-    QByteArray result = jbyteArrayToQByteArray(myNewVal.object<jbyteArray>());
-    env->DeleteLocalRef(jba);
+    QByteArray result = myNewVal.toContainer();
 
     setResponseForRequest(requestId, result, false);
 
@@ -242,9 +236,8 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::writeNdefMessages(const
     // Making NdefMessage object
     const QNdefMessage &message = messages.first();
     QByteArray ba = message.toByteArray();
-    QJniObject jba = env->NewByteArray(ba.size());
-    env->SetByteArrayRegion(jba.object<jbyteArray>(), 0, ba.size(), reinterpret_cast<jbyte*>(ba.data()));
-    QJniObject jmessage = QJniObject::construct<QtJniTypes::NdefMessage>(jba.object<jbyteArray>());
+    QJniArray jba(ba);
+    QtJniTypes::NdefMessage jmessage(jba);
     if (!jmessage.isValid()) {
         reportError(QNearFieldTarget::UnknownError, requestId);
         return requestId;
@@ -332,7 +325,7 @@ void QNearFieldTargetPrivateImpl::updateTechList()
     QJniObject tag = QtNfc::getTag(targetIntent);
     Q_ASSERT_X(tag.isValid(), "updateTechList", "could not get Tag object");
 
-    QJniObject techListArray = tag.callMethod<QtJniTypes::StringArray>("getTechList");
+    QJniArray techListArray = tag.callMethod<QtJniTypes::String[]>("getTechList");
     if (!techListArray.isValid()) {
         handleTargetLost();
         return;
@@ -340,11 +333,8 @@ void QNearFieldTargetPrivateImpl::updateTechList()
 
     // Converting tech list array to QStringList.
     techList.clear();
-    jsize techCount = env->GetArrayLength(techListArray.object<jobjectArray>());
-    for (jsize i = 0; i < techCount; ++i) {
-        QJniObject tech = env->GetObjectArrayElement(techListArray.object<jobjectArray>(), i);
-        techList.append(tech.callMethod<jstring>("toString").toString());
-    }
+    for (const auto &tech : techListArray)
+        techList.append(tech.toString());
 }
 
 void QNearFieldTargetPrivateImpl::updateType()
@@ -376,8 +366,8 @@ QNearFieldTarget::Type QNearFieldTargetPrivateImpl::getTagType() const
         // Checking ATQA/SENS_RES
         // xxx0 0000  xxxx xxxx: Identifies tag Type 1 platform
         QJniObject nfca = getTagTechnology(NFCATECHNOLOGY);
-        QJniObject atqaBA = nfca.callMethod<jbyteArray>("getAtqa");
-        QByteArray atqaQBA = jbyteArrayToQByteArray(atqaBA.object<jbyteArray>());
+        QJniArray atqaBA = nfca.callMethod<jbyte[]>("getAtqa");
+        QByteArray atqaQBA = atqaBA.toContainer();
         if (atqaQBA.isEmpty())
             return QNearFieldTarget::ProprietaryTag;
         if ((atqaQBA[0] & 0x1F) == 0x00)
@@ -481,14 +471,4 @@ bool QNearFieldTargetPrivateImpl::setCommandTimeout(int timeout)
     if (methodId)
         env->CallVoidMethod(tagTech.object(), methodId, timeout);
     return methodId && !env.checkAndClearExceptions();
-}
-
-QByteArray QNearFieldTargetPrivateImpl::jbyteArrayToQByteArray(const jbyteArray &byteArray) const
-{
-    QJniEnvironment env;
-    QByteArray resultArray;
-    jsize len = env->GetArrayLength(byteArray);
-    resultArray.resize(len);
-    env->GetByteArrayRegion(byteArray, 0, len, reinterpret_cast<jbyte*>(resultArray.data()));
-    return resultArray;
 }

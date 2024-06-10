@@ -21,16 +21,16 @@ QMainNfcNewIntentListener::~QMainNfcNewIntentListener()
     QtAndroidPrivate::unregisterResumePauseListener(this);
 }
 
-bool QMainNfcNewIntentListener::handleNewIntent(JNIEnv * /*env*/, jobject intent)
+bool QMainNfcNewIntentListener::handleNewIntent(JNIEnv * /*env*/, jobject intentObject)
 {
+    QtJniTypes::Intent intent = intentObject;
     // Only intents with a tag are relevant
     if (!QtNfc::getTag(intent).isValid())
         return false;
 
     listenersLock.lockForRead();
-    for (auto listener : std::as_const(listeners)) {
-        listener->newIntent(QJniObject(intent));
-    }
+    for (auto listener : std::as_const(listeners))
+        listener->newIntent(intent);
     listenersLock.unlock();
     return true;
 }
@@ -39,10 +39,9 @@ bool QMainNfcNewIntentListener::registerListener(QAndroidNfcListenerInterface *l
 {
     static bool firstListener = true;
     if (firstListener) {
-        QJniObject intent = QtNfc::getStartIntent();
-        if (intent.isValid()) {
+        QtJniTypes::Intent intent = QtNfc::getStartIntent();
+        if (intent.isValid())
             listener->newIntent(intent);
-        }
         paused = static_cast<QGuiApplication*>(QGuiApplication::instance())->applicationState() != Qt::ApplicationActive;
     }
     firstListener = false;
