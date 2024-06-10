@@ -42,9 +42,6 @@ public:
     void newIntent(QJniObject intent) override;
     QByteArray getUid(const QJniObject &intent);
 
-protected:
-    static QByteArray getUidforTag(const QJniObject &tag);
-
 private:
     bool detecting;
     QNearFieldTarget::AccessMethod requestedMethod;

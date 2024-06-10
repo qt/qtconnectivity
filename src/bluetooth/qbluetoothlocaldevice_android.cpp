@@ -388,24 +388,16 @@ QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
      * returns a few connections of common profiles. The returned list is not complete either
      * but at least it can complement our already detected connections.
      */
-    QJniObject connectedDevices = QJniObject::callStaticMethod<QtJniTypes::StringArray>(
-        QtJniTypes::Traits<QtJniTypes::QtBtBroadcastReceiver>::className(), "getConnectedDevices");
+    using namespace QtJniTypes;
+
+    const auto connectedDevices = QtBtBroadcastReceiver::callStaticMethod<String[]>("getConnectedDevices");
 
     if (!connectedDevices.isValid())
         return d_ptr->connectedDevices;
 
-    jobjectArray connectedDevicesArray = connectedDevices.object<jobjectArray>();
-    if (!connectedDevicesArray)
-        return d_ptr->connectedDevices;
-
-    QJniEnvironment env;
     QList<QBluetoothAddress> knownAddresses = d_ptr->connectedDevices;
-    QJniObject p;
-
-    jint size = env->GetArrayLength(connectedDevicesArray);
-    for (int i = 0; i < size; i++) {
-        p = env->GetObjectArrayElement(connectedDevicesArray, i);
-        QBluetoothAddress address(p.toString());
+    for (const auto &device : connectedDevices) {
+        QBluetoothAddress address(device.toString());
         if (!address.isNull() && !knownAddresses.contains(address))
             knownAddresses.append(address);
     }

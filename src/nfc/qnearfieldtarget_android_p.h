@@ -70,7 +70,6 @@ protected:
     bool setTagTechnology(const QStringList &technologies);
     bool connect();
     bool setCommandTimeout(int timeout);
-    QByteArray jbyteArrayToQByteArray(const jbyteArray &byteArray) const;
 
 protected:
     QJniObject targetIntent;

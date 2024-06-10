@@ -105,7 +105,11 @@ QByteArray QNearFieldManagerPrivateImpl::getUid(const QJniObject &intent)
         return QByteArray();
 
     QJniObject tag = QtNfc::getTag(intent);
-    return getUidforTag(tag);
+    if (!tag.isValid())
+        return QByteArray();
+
+    QJniArray tagId = tag.callMethod<jbyte[]>("getId");
+    return tagId.toContainer();
 }
 
 void QNearFieldManagerPrivateImpl::onTargetDiscovered(QJniObject intent)
@@ -134,20 +138,6 @@ void QNearFieldManagerPrivateImpl::onTargetDiscovered(QJniObject intent)
 void QNearFieldManagerPrivateImpl::onTargetDestroyed(const QByteArray &uid)
 {
     detectedTargets.remove(uid);
-}
-
-QByteArray QNearFieldManagerPrivateImpl::getUidforTag(const QJniObject &tag)
-{
-    if (!tag.isValid())
-        return QByteArray();
-
-    QJniEnvironment env;
-    QJniObject tagId = tag.callMethod<jbyteArray>("getId");
-    QByteArray uid;
-    jsize len = env->GetArrayLength(tagId.object<jbyteArray>());
-    uid.resize(len);
-    env->GetByteArrayRegion(tagId.object<jbyteArray>(), 0, len, reinterpret_cast<jbyte*>(uid.data()));
-    return uid;
 }
 
 QT_END_NAMESPACE
