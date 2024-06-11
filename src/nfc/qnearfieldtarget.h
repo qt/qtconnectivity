@@ -60,7 +60,7 @@ public:
         NdefWriteError,
         CommandError,
         TimeoutError,
-        UnsupportedTargetError
+        UnsupportedTargetError,
     };
     Q_ENUM(Error)
 
