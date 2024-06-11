@@ -44,9 +44,7 @@ Q_DECLARE_JNI_CLASS(BluetoothGattCharacteristic, "android/bluetooth/BluetoothGat
 Q_DECLARE_JNI_CLASS(BluetoothDevice, "android/bluetooth/BluetoothDevice")
 Q_DECLARE_JNI_CLASS(IntentFilter, "android/content/IntentFilter")
 Q_DECLARE_JNI_CLASS(AndroidContext, "android/content/Context")
-Q_DECLARE_JNI_CLASS(UUID, "java/util/UUID")
 
-Q_DECLARE_JNI_CLASS(String, "java/lang/String")
 
 Q_DECLARE_JNI_CLASS(BluetoothManager, "android/bluetooth/BluetoothManager")
 Q_DECLARE_JNI_CLASS(AdvertiseData, "android/bluetooth/le/AdvertiseData")
@@ -56,10 +54,15 @@ Q_DECLARE_JNI_CLASS(OutputStream, "java/io/OutputStream")
 Q_DECLARE_JNI_CLASS(BluetoothSocket, "android/bluetooth/BluetoothSocket")
 Q_DECLARE_JNI_CLASS(BroadcastReceiver, "android/content/BroadcastReceiver")
 Q_DECLARE_JNI_CLASS(BluetoothClass, "android/bluetooth/BluetoothClass")
-Q_DECLARE_JNI_CLASS(Parcelable, "android/os/Parcelable")
-Q_DECLARE_JNI_CLASS(Intent, "android/content/Intent")
 Q_DECLARE_JNI_CLASS(Bundle, "android/os/Bundle")
 Q_DECLARE_JNI_CLASS(List, "java/util/List")
+
+#ifndef QT_DECLARE_JNI_CLASS_STANDARD_TYPES
+Q_DECLARE_JNI_CLASS(UUID, "java/util/UUID")
+Q_DECLARE_JNI_CLASS(String, "java/lang/String")
+Q_DECLARE_JNI_CLASS(Parcelable, "android/os/Parcelable")
+Q_DECLARE_JNI_CLASS(Intent, "android/content/Intent")
+#endif
 
 namespace QtJniTypes {
 using ParcelableArray = QJniArray<Parcelable>;
