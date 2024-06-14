@@ -13,14 +13,14 @@ import java.io.IOException;
 import java.util.UUID;
 
 @SuppressWarnings("WeakerAccess")
-public class QtBluetoothSocketServer extends Thread
+class QtBluetoothSocketServer extends Thread
 {
 
     /* Pointer to the Qt object that "owns" the Java object */
     @SuppressWarnings({"WeakerAccess", "CanBeFinal"})
     long qtObject = 0;
     @SuppressWarnings({"WeakerAccess", "CanBeFinal"})
-    public boolean logEnabled = false;
+    boolean logEnabled = false;
     @SuppressWarnings("WeakerAccess")
     static Context qtContext = null;
 
@@ -35,13 +35,13 @@ public class QtBluetoothSocketServer extends Thread
     private static final int QT_LISTEN_FAILED = 1;
     private static final int QT_ACCEPT_FAILED = 2;
 
-    public QtBluetoothSocketServer(Context context)
+    QtBluetoothSocketServer(Context context)
     {
         qtContext = context;
         setName("QtSocketServerThread");
     }
 
-    public void setServiceDetails(String uuid, String serviceName, boolean isSecure)
+    void setServiceDetails(String uuid, String serviceName, boolean isSecure)
     {
         m_uuid = UUID.fromString(uuid);
         m_serviceName = serviceName;
@@ -49,6 +49,7 @@ public class QtBluetoothSocketServer extends Thread
 
     }
 
+    @Override
     public void run()
     {
         BluetoothManager manager =
@@ -129,7 +130,7 @@ public class QtBluetoothSocketServer extends Thread
     // If the Java thread was in the middle of the blocking accept() call, it will get
     // interrupated by the close() call on the socket. After returning the run() will
     // notice it has been interrupted and return from the run()
-    public void close()
+    void close()
     {
         if (!isAlive())
             return;
@@ -149,6 +150,6 @@ public class QtBluetoothSocketServer extends Thread
         }
     }
 
-    public static native void errorOccurred(long qtObject, int errorCode);
-    public static native void newSocket(long qtObject, BluetoothSocket socket);
+    static native void errorOccurred(long qtObject, int errorCode);
+    static native void newSocket(long qtObject, BluetoothSocket socket);
 }

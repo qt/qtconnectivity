@@ -8,31 +8,32 @@ import java.io.IOException;
 import android.util.Log;
 
 @SuppressWarnings("WeakerAccess")
-public class QtBluetoothInputStreamThread extends Thread
+class QtBluetoothInputStreamThread extends Thread
 {
     /* Pointer to the Qt object that "owns" the Java object */
     @SuppressWarnings("CanBeFinal")
     long qtObject = 0;
     @SuppressWarnings("CanBeFinal")
-    public boolean logEnabled = false;
+    boolean logEnabled = false;
     private static final String TAG = "QtBluetooth";
     private InputStream m_inputStream = null;
 
     //error codes
-    public static final int QT_MISSING_INPUT_STREAM = 0;
-    public static final int QT_READ_FAILED = 1;
-    public static final int QT_THREAD_INTERRUPTED = 2;
+    static final int QT_MISSING_INPUT_STREAM = 0;
+    static final int QT_READ_FAILED = 1;
+    static final int QT_THREAD_INTERRUPTED = 2;
 
-    public QtBluetoothInputStreamThread()
+    QtBluetoothInputStreamThread()
     {
         setName("QtBtInputStreamThread");
     }
 
-    public void setInputStream(InputStream stream)
+    void setInputStream(InputStream stream)
     {
         m_inputStream = stream;
     }
 
+    @Override
     public void run()
     {
         if (m_inputStream == null) {
@@ -63,6 +64,6 @@ public class QtBluetoothInputStreamThread extends Thread
             Log.d(TAG, "Leaving input stream thread");
     }
 
-    public static native void errorOccurred(long qtObject, int errorCode);
-    public static native void readyData(long qtObject, byte[] buffer, int bufferLength);
+    static native void errorOccurred(long qtObject, int errorCode);
+    static native void readyData(long qtObject, byte[] buffer, int bufferLength);
 }

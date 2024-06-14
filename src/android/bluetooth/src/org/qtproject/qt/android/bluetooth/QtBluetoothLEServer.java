@@ -33,7 +33,7 @@ import java.util.ListIterator;
 import java.util.HashMap;
 import java.util.UUID;
 
-public class QtBluetoothLEServer {
+class QtBluetoothLEServer {
     private static final String TAG = "QtBluetoothGattServer";
 
     /* Pointer to the Qt object that "owns" the Java object */
@@ -54,13 +54,13 @@ public class QtBluetoothLEServer {
 
     private String mRemoteName = "";
     // This function is called from Qt thread
-    public synchronized String remoteName() {
+    synchronized String remoteName() {
         return mRemoteName;
     }
 
     private String mRemoteAddress = "";
     // This function is called from Qt thread
-    public synchronized String remoteAddress() {
+    synchronized String remoteAddress() {
         return mRemoteAddress;
     }
 
@@ -84,12 +84,12 @@ public class QtBluetoothLEServer {
                 this.writes = new ArrayList<Pair<byte[], Integer>>();
         }
         // Returns true if this is a proper entry for given device + target
-        public boolean match(BluetoothDevice device, Object target) {
+        boolean match(BluetoothDevice device, Object target) {
             return remoteDevice.equals(device) && target.equals(target);
         }
-        public final BluetoothDevice remoteDevice; // Device that issued the writes
-        public final Object target; // Characteristic or Descriptor
-        public final List<Pair<byte[], Integer>> writes; // Value, offset
+        final BluetoothDevice remoteDevice; // Device that issued the writes
+        final Object target; // Characteristic or Descriptor
+        final List<Pair<byte[], Integer>> writes; // Value, offset
     }
     private final List<WriteEntry> mPendingPreparedWrites = new ArrayList<>();
 
@@ -152,7 +152,7 @@ public class QtBluetoothLEServer {
             boolean isConnected = false;
         }
 
-        public void insertOrUpdate(BluetoothGattCharacteristic characteristic,
+        void insertOrUpdate(BluetoothGattCharacteristic characteristic,
                               BluetoothDevice device, byte[] newValue)
         {
             if (notificationStore.containsKey(characteristic)) {
@@ -192,7 +192,7 @@ public class QtBluetoothLEServer {
             This function avoids that existing configurations are not acted
             upon when the associated device is not connected.
          */
-        public void markDeviceConnectivity(BluetoothDevice device, boolean isConnected)
+        void markDeviceConnectivity(BluetoothDevice device, boolean isConnected)
         {
             final Iterator<BluetoothGattCharacteristic> keys = notificationStore.keySet().iterator();
             while (keys.hasNext()) {
@@ -247,7 +247,7 @@ public class QtBluetoothLEServer {
             .fromString("00002902-0000-1000-8000-00805f9b34fb");
     ClientCharacteristicManager clientCharacteristicManager = new ClientCharacteristicManager();
 
-    public QtBluetoothLEServer(Context context)
+    QtBluetoothLEServer(Context context)
     {
         qtContext = context;
         if (qtContext == null) {
@@ -284,7 +284,7 @@ public class QtBluetoothLEServer {
     //   If each variable would be protected individually, the amount of (nested) locking
     //   would become quite unreasonable
 
-    public synchronized void handleOnConnectionStateChange(BluetoothDevice device,
+    synchronized void handleOnConnectionStateChange(BluetoothDevice device,
                                                            int status, int newState)
     {
         if (mGattServer == null) {
@@ -351,7 +351,7 @@ public class QtBluetoothLEServer {
         leConnectionStateChange(qtObject, qtErrorCode, qtControllerState);
     }
 
-    public synchronized void handleOnServiceAdded(int status, BluetoothGattService service)
+    synchronized void handleOnServiceAdded(int status, BluetoothGattService service)
     {
         if (mGattServer == null) {
             Log.w(TAG, "Ignoring service addition event, server is disconnected");
@@ -382,7 +382,7 @@ public class QtBluetoothLEServer {
         }
     }
 
-    public synchronized void handleOnCharacteristicReadRequest(BluetoothDevice device,
+    synchronized void handleOnCharacteristicReadRequest(BluetoothDevice device,
                                                    int requestId, int offset,
                                                    BluetoothGattCharacteristic characteristic)
     {
@@ -408,7 +408,7 @@ public class QtBluetoothLEServer {
         }
     }
 
-    public synchronized void handleOnCharacteristicWriteRequest(BluetoothDevice device,
+    synchronized void handleOnCharacteristicWriteRequest(BluetoothDevice device,
                                                    int requestId,
                                                    BluetoothGattCharacteristic characteristic,
                                                    boolean preparedWrite, boolean responseNeeded,
@@ -460,7 +460,7 @@ public class QtBluetoothLEServer {
             sendNotificationsOrIndications(characteristic);
     }
 
-    public synchronized void handleOnDescriptorReadRequest(BluetoothDevice device, int requestId,
+    synchronized void handleOnDescriptorReadRequest(BluetoothDevice device, int requestId,
                                               int offset, BluetoothGattDescriptor descriptor)
     {
         if (mGattServer == null) {
@@ -490,7 +490,7 @@ public class QtBluetoothLEServer {
         }
     }
 
-    public synchronized void handleOnDescriptorWriteRequest(BluetoothDevice device, int requestId,
+    synchronized void handleOnDescriptorWriteRequest(BluetoothDevice device, int requestId,
                                      BluetoothGattDescriptor descriptor, boolean preparedWrite,
                                      boolean responseNeeded, int offset, byte[] value)
     {
@@ -543,7 +543,7 @@ public class QtBluetoothLEServer {
             mGattServer.sendResponse(device, requestId, resultStatus, offset, value);
     }
 
-    public synchronized void handleOnExecuteWrite(BluetoothDevice device,
+    synchronized void handleOnExecuteWrite(BluetoothDevice device,
                                             int requestId, boolean execute)
     {
         if (mGattServer == null) {
@@ -627,7 +627,7 @@ public class QtBluetoothLEServer {
         mGattServer.sendResponse(device, requestId, BluetoothGatt.GATT_SUCCESS, 0, null);
     }
 
-    public synchronized void handleOnMtuChanged(BluetoothDevice device, int mtu)
+    synchronized void handleOnMtuChanged(BluetoothDevice device, int mtu)
     {
         if (mSupportedMtu == mtu)
             return;
@@ -706,12 +706,12 @@ public class QtBluetoothLEServer {
     };
 
     // This function is called from Qt thread
-    public synchronized int mtu() {
+    synchronized int mtu() {
         return mSupportedMtu;
     }
 
     // This function is called from Qt thread
-    public synchronized boolean connectServer()
+    synchronized boolean connectServer()
     {
         if (mGattServer != null)
             return true;
@@ -728,7 +728,7 @@ public class QtBluetoothLEServer {
     }
 
     // This function is called from Qt thread
-    public synchronized void disconnectServer()
+    synchronized void disconnectServer()
     {
         if (mGattServer == null)
             return;
@@ -744,7 +744,7 @@ public class QtBluetoothLEServer {
     }
 
     // This function is called from Qt thread
-    public boolean startAdvertising(AdvertiseData advertiseData,
+    boolean startAdvertising(AdvertiseData advertiseData,
                                     AdvertiseData scanResponse,
                                     AdvertiseSettings settings)
     {
@@ -775,7 +775,7 @@ public class QtBluetoothLEServer {
     }
 
     // This function is called from Qt thread
-    public void stopAdvertising()
+    void stopAdvertising()
     {
         if (mLeAdvertiser == null)
             return;
@@ -785,7 +785,7 @@ public class QtBluetoothLEServer {
     }
 
     // This function is called from Qt thread
-    public synchronized void addService(BluetoothGattService service)
+    synchronized void addService(BluetoothGattService service)
     {
         if (!connectServer()) {
             Log.w(TAG, "Server::addService: Cannot open GATT server");
@@ -854,7 +854,7 @@ public class QtBluetoothLEServer {
 
         This function is called from the Qt thread.
      */
-    public boolean writeCharacteristic(BluetoothGattService service, UUID charUuid, byte[] newValue)
+    boolean writeCharacteristic(BluetoothGattService service, UUID charUuid, byte[] newValue)
     {
         BluetoothGattCharacteristic foundChar = null;
         List<BluetoothGattCharacteristic> charList = service.getCharacteristics();
@@ -900,7 +900,7 @@ public class QtBluetoothLEServer {
 
         This function is called from the Qt thread.
      */
-    public boolean writeDescriptor(BluetoothGattService service, UUID charUuid, UUID descUuid,
+    boolean writeDescriptor(BluetoothGattService service, UUID charUuid, UUID descUuid,
                                    byte[] newValue)
     {
         BluetoothGattDescriptor foundDesc = null;
@@ -977,13 +977,13 @@ public class QtBluetoothLEServer {
         }
     };
 
-    public native void leConnectionStateChange(long qtObject, int errorCode, int newState);
-    public native void leMtuChanged(long qtObject, int mtu);
-    public native void leServerAdvertisementError(long qtObject, int status);
-    public native void leServerCharacteristicChanged(long qtObject,
+    native void leConnectionStateChange(long qtObject, int errorCode, int newState);
+    native void leMtuChanged(long qtObject, int mtu);
+    native void leServerAdvertisementError(long qtObject, int status);
+    native void leServerCharacteristicChanged(long qtObject,
                                                      BluetoothGattCharacteristic characteristic,
                                                      byte[] newValue);
-    public native void leServerDescriptorWritten(long qtObject,
+    native void leServerDescriptorWritten(long qtObject,
                                                  BluetoothGattDescriptor descriptor,
                                                  byte[] newValue);
 }

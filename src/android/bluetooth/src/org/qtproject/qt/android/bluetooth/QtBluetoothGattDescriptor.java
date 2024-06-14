@@ -8,8 +8,8 @@ import android.os.Build;
 
 import java.util.UUID;
 
-public class QtBluetoothGattDescriptor extends BluetoothGattDescriptor {
-    public QtBluetoothGattDescriptor(UUID uuid, int permissions) {
+class QtBluetoothGattDescriptor extends BluetoothGattDescriptor {
+    QtBluetoothGattDescriptor(UUID uuid, int permissions) {
         super(uuid, permissions);
     }
     // Starting from API 33 Android Bluetooth deprecates descriptor local value caching by
@@ -18,7 +18,7 @@ public class QtBluetoothGattDescriptor extends BluetoothGattDescriptor {
     // be somewhat complicated. This should be safe as all accesses to this class are synchronized.
     // For clarity: For API levels below 33 we still need to use the setValue() of the base class
     // because Android internally uses getValue() with APIs below 33.
-    public boolean setLocalValue(byte[] value) {
+    boolean setLocalValue(byte[] value) {
         if (Build.VERSION.SDK_INT >= 33) {
             m_localValue = value;
             return true;
@@ -27,7 +27,7 @@ public class QtBluetoothGattDescriptor extends BluetoothGattDescriptor {
         }
     }
 
-    public byte[] getLocalValue()
+    byte[] getLocalValue()
     {
         if (Build.VERSION.SDK_INT >= 33)
             return m_localValue;

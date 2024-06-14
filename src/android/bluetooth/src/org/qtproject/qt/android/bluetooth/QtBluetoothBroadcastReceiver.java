@@ -32,11 +32,12 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
     private static final int TURN_BT_DISABLED = 3332;
 
     // The 'Disable' action identifier is hidden in the public APIs so we define it here
-    public static final String ACTION_REQUEST_DISABLE =
+    static final String ACTION_REQUEST_DISABLE =
         "android.bluetooth.adapter.action.REQUEST_DISABLE";
 
     private static final String TAG = "QtBluetoothBroadcastReceiver";
 
+    @Override
     public void onReceive(Context context, Intent intent)
     {
         synchronized (qtContext) {
@@ -47,7 +48,7 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
         }
     }
 
-    public void unregisterReceiver()
+    void unregisterReceiver()
     {
         synchronized (qtContext) {
             qtObject = 0;
@@ -59,14 +60,14 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
         }
     }
 
-    public native void jniOnReceive(long qtObject, Context context, Intent intent);
+    native void jniOnReceive(long qtObject, Context context, Intent intent);
 
-    static public void setContext(Context context)
+    public static void setContext(Context context)
     {
         qtContext = context;
     }
 
-    static public boolean setDisabled()
+    static boolean setDisabled()
     {
         if (!(qtContext instanceof android.app.Activity)) {
             Log.w(TAG, "Bluetooth cannot be disabled from a service.");
@@ -86,7 +87,7 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
         return true;
     }
 
-    static public boolean setDiscoverable()
+    static boolean setDiscoverable()
     {
         if (!(qtContext instanceof android.app.Activity)) {
             Log.w(TAG, "Discovery mode cannot be enabled from a service.");
@@ -105,7 +106,7 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
         return true;
     }
 
-    static public boolean setEnabled()
+    static boolean setEnabled()
     {
         if (!(qtContext instanceof android.app.Activity)) {
             Log.w(TAG, "Bluetooth cannot be enabled from a service.");
@@ -123,7 +124,7 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
         return true;
     }
 
-    static public boolean setPairingMode(String address, boolean isPairing)
+    static boolean setPairingMode(String address, boolean isPairing)
     {
         BluetoothManager manager =
             (BluetoothManager)qtContext.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -159,7 +160,7 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
      * Unfortunately there is no API that provides the complete list.
      *
      */
-    static public String[] getConnectedDevices()
+    static String[] getConnectedDevices()
     {
         BluetoothManager bluetoothManager =
             (BluetoothManager) qtContext.getSystemService(Context.BLUETOOTH_SERVICE);
