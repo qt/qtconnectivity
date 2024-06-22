@@ -24,11 +24,11 @@ QT_BEGIN_NAMESPACE
 
 // CLASS declaration implies also TYPE declaration
 Q_DECLARE_JNI_CLASS(QtBtBroadcastReceiver,
-                    "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver");
+                    "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver")
 Q_DECLARE_JNI_CLASS(QtBtGattCharacteristic,
-                    "org/qtproject/qt/android/bluetooth/QtBluetoothGattCharacteristic");
+                    "org/qtproject/qt/android/bluetooth/QtBluetoothGattCharacteristic")
 Q_DECLARE_JNI_CLASS(QtBtGattDescriptor,
-                    "org/qtproject/qt/android/bluetooth/QtBluetoothGattDescriptor");
+                    "org/qtproject/qt/android/bluetooth/QtBluetoothGattDescriptor")
 Q_DECLARE_JNI_CLASS(QtBtInputStreamThread,
                     "org/qtproject/qt/android/bluetooth/QtBluetoothInputStreamThread")
 Q_DECLARE_JNI_CLASS(QtBtSocketServer, "org/qtproject/qt/android/bluetooth/QtBluetoothSocketServer")
@@ -56,13 +56,6 @@ Q_DECLARE_JNI_CLASS(BroadcastReceiver, "android/content/BroadcastReceiver")
 Q_DECLARE_JNI_CLASS(BluetoothClass, "android/bluetooth/BluetoothClass")
 Q_DECLARE_JNI_CLASS(Bundle, "android/os/Bundle")
 Q_DECLARE_JNI_CLASS(List, "java/util/List")
-
-#ifndef QT_DECLARE_JNI_CLASS_STANDARD_TYPES
-Q_DECLARE_JNI_CLASS(UUID, "java/util/UUID")
-Q_DECLARE_JNI_CLASS(String, "java/lang/String")
-Q_DECLARE_JNI_CLASS(Parcelable, "android/os/Parcelable")
-Q_DECLARE_JNI_CLASS(Intent, "android/content/Intent")
-#endif
 
 namespace QtJniTypes {
 using ParcelableArray = QJniArray<Parcelable>;

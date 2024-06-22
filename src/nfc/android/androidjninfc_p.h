@@ -24,12 +24,6 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_JNI_CLASS(QtNfc, "org/qtproject/qt/android/nfc/QtNfc")
 Q_DECLARE_JNI_CLASS(QtNfcBroadcastReceiver, "org/qtproject/qt/android/nfc/QtNfcBroadcastReceiver")
 
-#ifndef QT_DECLARE_JNI_CLASS_STANDARD_TYPES
-Q_DECLARE_JNI_CLASS(String, "java/lang/String")
-Q_DECLARE_JNI_CLASS(Intent, "android/content/Intent")
-Q_DECLARE_JNI_CLASS(Parcelable, "android/os/Parcelable")
-#endif
-
 Q_DECLARE_JNI_CLASS(NdefMessage, "android/nfc/NdefMessage")
 
 namespace QtNfc {
