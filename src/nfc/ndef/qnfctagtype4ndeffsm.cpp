@@ -7,7 +7,7 @@
 
 QT_BEGIN_NAMESPACE
 
-Q_LOGGING_CATEGORY(QT_NFC_T4T, "qt.nfc.t4t")
+Q_STATIC_LOGGING_CATEGORY(QT_NFC_T4T, "qt.nfc.t4t")
 
 /*
     NDEF support for NFC Type 4 tags.
