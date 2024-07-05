@@ -18,7 +18,7 @@ import java.lang.reflect.Method;
 import java.util.HashSet;
 import java.util.List;
 
-public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
+class QtBluetoothBroadcastReceiver extends BroadcastReceiver
 {
     /* Pointer to the Qt object that "owns" the Java object */
     @SuppressWarnings("WeakerAccess")
@@ -62,7 +62,7 @@ public class QtBluetoothBroadcastReceiver extends BroadcastReceiver
 
     native void jniOnReceive(long qtObject, Context context, Intent intent);
 
-    public static void setContext(Context context)
+    static void setContext(Context context)
     {
         qtContext = context;
     }

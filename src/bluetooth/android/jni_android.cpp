@@ -208,6 +208,9 @@ Q_BLUETOOTH_EXPORT jint JNICALL JNI_OnLoad(JavaVM* vm, void* /*reserved*/)
         return -1;
     }
 
+    const auto context = QNativeInterface::QAndroidApplication::context();
+    QtJniTypes::QtBtBroadcastReceiver::callStaticMethod<void>("setContext", context);
+
     if (!registerNatives()) {
         __android_log_print(ANDROID_LOG_FATAL, logTag, "registerNatives failed");
         return -1;
