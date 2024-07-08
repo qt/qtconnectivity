@@ -15,17 +15,21 @@ qhp.QtBluetooth.virtualFolder       = qtbluetooth
 qhp.QtBluetooth.indexTitle          = Qt Bluetooth
 qhp.QtBluetooth.indexRoot           =
 
-qhp.QtBluetooth.subprojects         = overviews classes examples
+qhp.QtBluetooth.subprojects = manual examples classes
+
+qhp.QtBluetooth.subprojects.manual.title = Qt Bluetooth
+qhp.QtBluetooth.subprojects.manual.indexTitle = Qt Bluetooth module topics
+qhp.QtBluetooth.subprojects.manual.type = manual
+
+qhp.QtBluetooth.subprojects.examples.title = Qt Bluetooth Examples
+qhp.QtBluetooth.subprojects.examples.indexTitle = Qt Bluetooth Examples
+qhp.QtBluetooth.subprojects.examples.selectors = fake:example
+qhp.QtBluetooth.subprojects.examples.sortPages = true
+
 qhp.QtBluetooth.subprojects.classes.title = C++ Classes
 qhp.QtBluetooth.subprojects.classes.indexTitle = Qt Bluetooth C++ Classes
 qhp.QtBluetooth.subprojects.classes.selectors = class fake:headerfile
 qhp.QtBluetooth.subprojects.classes.sortPages = true
-qhp.QtBluetooth.subprojects.overviews.title = Overviews
-qhp.QtBluetooth.subprojects.overviews.indexTitle = Qt Bluetooth Overview
-qhp.QtBluetooth.subprojects.overviews.selectors = fake:page,group,module
-qhp.QtBluetooth.subprojects.examples.title = Qt Bluetooth Examples
-qhp.QtBluetooth.subprojects.examples.indexTitle = Qt Bluetooth Examples
-qhp.QtBluetooth.subprojects.examples.selectors = fake:example
 
 tagfile                 = ../../../doc/qtbluetooth/qtbluetooth.tags
 
@@ -49,6 +53,9 @@ imagedirs   += images
 
 navigation.landingpage = "Qt Bluetooth"
 navigation.cppclassespage = "Qt Bluetooth C++ Classes"
+# Auto-generate navigation linking based on "Qt Bluetooth module topics":
+navigation.toctitles = "Qt Bluetooth module topics"
+navigation.toctitles.inclusive = false
 
 # Enforce zero documentation warnings
 warninglimit = 0

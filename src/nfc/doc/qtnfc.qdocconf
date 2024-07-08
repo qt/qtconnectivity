@@ -15,17 +15,20 @@ qhp.QtNfc.virtualFolder       = qtnfc
 qhp.QtNfc.indexTitle          = Qt NFC
 qhp.QtNfc.indexRoot           =
 
-qhp.QtNfc.subprojects         = overviews classes examples
+qhp.QtNfc.subprojects = manual examples classes
+qhp.QtNfc.subprojects.manual.title = Qt NFC
+qhp.QtNfc.subprojects.manual.indexTitle = Qt NFC module topics
+qhp.QtNfc.subprojects.manual.type = manual
+
+qhp.QtNfc.subprojects.examples.title = Examples
+qhp.QtNfc.subprojects.examples.indexTitle = Qt NFC Examples
+qhp.QtNfc.subprojects.examples.selectors = fake:example
+qhp.QtNfc.subprojects.examples.sortPages = true
+
 qhp.QtNfc.subprojects.classes.title = C++ Classes
 qhp.QtNfc.subprojects.classes.indexTitle = Qt NFC C++ Classes
 qhp.QtNfc.subprojects.classes.selectors = class fake:headerfile
 qhp.QtNfc.subprojects.classes.sortPages = true
-qhp.QtNfc.subprojects.overviews.title = Overviews
-qhp.QtNfc.subprojects.overviews.indexTitle = Qt NFC Overview
-qhp.QtNfc.subprojects.overviews.selectors = fake:page,group,module
-qhp.QtNfc.subprojects.examples.title = Qt NFC Examples
-qhp.QtNfc.subprojects.examples.indexTitle = Qt NFC Examples
-qhp.QtNfc.subprojects.examples.selectors = fake:example
 
 tagfile                 = ../../../doc/qtnfc/qtnfc.tags
 
@@ -45,6 +48,9 @@ manifestmeta.highlighted.names = \
 
 navigation.landingpage = "Qt NFC"
 navigation.cppclassespage = "Qt NFC C++ Classes"
+# Auto-generate navigation linking based on "Qt NFC module topics":
+navigation.toctitles = "Qt NFC module topics"
+navigation.toctitles.inclusive = false
 
 # Enforce zero documentation warnings
 warninglimit = 0
