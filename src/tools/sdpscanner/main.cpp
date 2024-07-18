@@ -10,6 +10,8 @@
 #include <bluetooth/sdp.h>
 #include <bluetooth/sdp_lib.h>
 
+#include <cstdio>
+
 #define RETURN_SUCCESS      0
 #define RETURN_USAGE        1
 #define RETURN_INVALPARAM   2
@@ -48,50 +50,50 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
         xmlOutput.append("<nil/>\n");
         break;
     case SDP_UINT8:
-        qsnprintf(snBuffer, BUFFER_SIZE, "<uint8 value=\"0x%02x\"/>\n", data->val.uint8);
+        std::snprintf(snBuffer, BUFFER_SIZE, "<uint8 value=\"0x%02x\"/>\n", data->val.uint8);
         xmlOutput.append(snBuffer);
         break;
     case SDP_UINT16:
-        qsnprintf(snBuffer, BUFFER_SIZE, "<uint16 value=\"0x%04x\"/>\n", data->val.uint16);
+        std::snprintf(snBuffer, BUFFER_SIZE, "<uint16 value=\"0x%04x\"/>\n", data->val.uint16);
         xmlOutput.append(snBuffer);
         break;
     case SDP_UINT32:
-        qsnprintf(snBuffer, BUFFER_SIZE, "<uint32 value=\"0x%08x\"/>\n", data->val.uint32);
+        std::snprintf(snBuffer, BUFFER_SIZE, "<uint32 value=\"0x%08x\"/>\n", data->val.uint32);
         xmlOutput.append(snBuffer);
         break;
     case SDP_UINT64:
-        qsnprintf(snBuffer, BUFFER_SIZE, "<uint64 value=\"0x%016llx\"/>\n",
+        std::snprintf(snBuffer, BUFFER_SIZE, "<uint64 value=\"0x%016llx\"/>\n",
                       qulonglong(data->val.uint64));
         xmlOutput.append(snBuffer);
         break;
     case SDP_UINT128:
         xmlOutput.append("<uint128 value=\"0x");
         for (int i = 0; i < 16; i++)
-            ::sprintf(&snBuffer[i * 2], "%02x", data->val.uint128.data[i]);
+            std::sprintf(&snBuffer[i * 2], "%02x", data->val.uint128.data[i]);
         xmlOutput.append(snBuffer);
         xmlOutput.append("\"/>\n");
         break;
     case SDP_INT8:
-        qsnprintf(snBuffer, BUFFER_SIZE, "<int8 value=\"%d\"/>/n", data->val.int8);
+        std::snprintf(snBuffer, BUFFER_SIZE, "<int8 value=\"%d\"/>/n", data->val.int8);
         xmlOutput.append(snBuffer);
         break;
     case SDP_INT16:
-        qsnprintf(snBuffer, BUFFER_SIZE, "<int16 value=\"%d\"/>/n", data->val.int16);
+        std::snprintf(snBuffer, BUFFER_SIZE, "<int16 value=\"%d\"/>/n", data->val.int16);
         xmlOutput.append(snBuffer);
         break;
     case SDP_INT32:
-        qsnprintf(snBuffer, BUFFER_SIZE, "<int32 value=\"%d\"/>/n", data->val.int32);
+        std::snprintf(snBuffer, BUFFER_SIZE, "<int32 value=\"%d\"/>/n", data->val.int32);
         xmlOutput.append(snBuffer);
         break;
     case SDP_INT64:
-        qsnprintf(snBuffer, BUFFER_SIZE, "<int64 value=\"%lld\"/>/n",
+        std::snprintf(snBuffer, BUFFER_SIZE, "<int64 value=\"%lld\"/>/n",
                       qlonglong(data->val.int64));
         xmlOutput.append(snBuffer);
         break;
     case SDP_INT128:
         xmlOutput.append("<int128 value=\"0x");
         for (int i = 0; i < 16; i++)
-            ::sprintf(&snBuffer[i * 2], "%02x", data->val.int128.data[i]);
+            std::sprintf(&snBuffer[i * 2], "%02x", data->val.int128.data[i]);
         xmlOutput.append(snBuffer);
         xmlOutput.append("\"/>\n");
         break;
@@ -205,7 +207,7 @@ static void parseAttribute(void *value, void *extraData)
 
     char buffer[BUFFER_SIZE];
 
-    ::qsnprintf(buffer, BUFFER_SIZE, "  <attribute id=\"0x%04x\">\n", data->attrId);
+    std::snprintf(buffer, BUFFER_SIZE, "  <attribute id=\"0x%04x\">\n", data->attrId);
     xmlOutput->append(buffer);
 
     parseAttributeValues(data, 2, *xmlOutput);
