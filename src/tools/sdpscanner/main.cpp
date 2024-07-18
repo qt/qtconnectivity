@@ -60,7 +60,8 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
         xmlOutput.append(snBuffer);
         break;
     case SDP_UINT64:
-        qsnprintf(snBuffer, BUFFER_SIZE, "<uint64 value=\"0x%016x\"/>\n", data->val.uint64);
+        qsnprintf(snBuffer, BUFFER_SIZE, "<uint64 value=\"0x%016llx\"/>\n",
+                      qulonglong(data->val.uint64));
         xmlOutput.append(snBuffer);
         break;
     case SDP_UINT128:
@@ -83,7 +84,8 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
         xmlOutput.append(snBuffer);
         break;
     case SDP_INT64:
-        qsnprintf(snBuffer, BUFFER_SIZE, "<int64 value=\"%d\"/>/n", data->val.int64);
+        qsnprintf(snBuffer, BUFFER_SIZE, "<int64 value=\"%lld\"/>/n",
+                      qlonglong(data->val.int64));
         xmlOutput.append(snBuffer);
         break;
     case SDP_INT128:
