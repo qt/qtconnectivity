@@ -75,7 +75,7 @@ static void registerQBluetoothAddressMetaType()
 }
 
 /*!
-    Constructs an null Bluetooth address.
+    Constructs a null Bluetooth address.
 */
 QBluetoothAddress::QBluetoothAddress() :
     d_ptr(new QBluetoothAddressPrivate)
