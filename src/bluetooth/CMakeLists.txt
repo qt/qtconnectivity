@@ -124,7 +124,7 @@ if(QT_FEATURE_bluez)
 
 elseif(ANDROID AND NOT ANDROID_EMBEDDED)
     set_property(TARGET Bluetooth APPEND PROPERTY QT_ANDROID_BUNDLED_JAR_DEPENDENCIES
-        jar/Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth.jar:org.qtproject.qt.android.bluetooth.QtBluetoothBroadcastReceiver
+        jar/Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth.jar
     )
     set_property(TARGET Bluetooth APPEND PROPERTY QT_ANDROID_PERMISSIONS
         android.permission.ACCESS_FINE_LOCATION
