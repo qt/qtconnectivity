@@ -3,6 +3,9 @@
 
 #include "androidjninfc_p.h"
 
+#include <QCoreApplication>
+#include <QtCore/qjnitypes.h>
+
 QT_BEGIN_NAMESPACE
 
 namespace QtNfc {
@@ -52,6 +55,9 @@ Q_DECL_EXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void * /*reserved*/)
     if (vm->GetEnv(reinterpret_cast<void**>(&env), JNI_VERSION_1_6) != JNI_OK) {
         return -1;
     }
+
+    const auto context = QNativeInterface::QAndroidApplication::context();
+    QtJniTypes::QtNfc::callStaticMethod<void>("setContext", context);
 
     return JNI_VERSION_1_6;
 }
