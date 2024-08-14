@@ -126,16 +126,35 @@ elseif(ANDROID AND NOT ANDROID_EMBEDDED)
     set_property(TARGET Bluetooth APPEND PROPERTY QT_ANDROID_BUNDLED_JAR_DEPENDENCIES
         jar/Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth.jar
     )
-    set_property(TARGET Bluetooth APPEND PROPERTY QT_ANDROID_PERMISSIONS
-        android.permission.ACCESS_FINE_LOCATION
-        android.permission.BLUETOOTH
-        android.permission.BLUETOOTH_ADMIN
-        # Android 12 / SDK 31+
-        android.permission.BLUETOOTH_SCAN
-        android.permission.BLUETOOTH_ADVERTISE
-        android.permission.BLUETOOTH_CONNECT
+    qt_internal_add_android_permission(Bluetooth
+        NAME android.permission.ACCESS_FINE_LOCATION
+        # We don't set the maxSdkVersion because the application might link also
+        # against QtPositioning (ACCESS_FINE_LOCATION without maxSdkVersion),
+        # in which case there'd be a race if or not the attribute ends in AndroidManifest.xml
+        # ATTRIBUTES android:maxSdkVersion="30"
     )
-
+    qt_internal_add_android_permission(Bluetooth
+        NAME android.permission.BLUETOOTH
+        ATTRIBUTES maxSdkVersion 30
+    )
+    qt_internal_add_android_permission(Bluetooth
+        NAME android.permission.BLUETOOTH_ADMIN
+        ATTRIBUTES maxSdkVersion 30
+    )
+    qt_internal_add_android_permission(Bluetooth
+        NAME android.permission.BLUETOOTH_SCAN
+        ATTRIBUTES
+            minSdkVersion 31
+            usesPermissionFlags neverForLocation
+    )
+    qt_internal_add_android_permission(Bluetooth
+        NAME android.permission.BLUETOOTH_ADVERTISE
+        ATTRIBUTES minSdkVersion 31
+    )
+    qt_internal_add_android_permission(Bluetooth
+        NAME android.permission.BLUETOOTH_CONNECT
+        ATTRIBUTES minSdkVersion 31
+    )
     qt_internal_extend_target(Bluetooth
         SOURCES
             android/androidbroadcastreceiver.cpp android/androidbroadcastreceiver_p.h
