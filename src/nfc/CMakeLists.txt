@@ -29,9 +29,7 @@ if(ANDROID AND (ANDROID AND NOT ANDROID_EMBEDDED))
     set_property(TARGET Nfc APPEND PROPERTY QT_ANDROID_BUNDLED_JAR_DEPENDENCIES
         jar/Qt${QtConnectivity_VERSION_MAJOR}AndroidNfc.jar
     )
-    set_property(TARGET Nfc APPEND PROPERTY QT_ANDROID_PERMISSIONS
-        android.permission.NFC
-    )
+    qt_internal_add_android_permission(Nfc NAME android.permission.NFC)
     set(NFC_BACKEND_AVAILABLE ON)
 endif()
 
