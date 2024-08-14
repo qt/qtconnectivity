@@ -23,6 +23,8 @@
 QT_BEGIN_NAMESPACE
 
 // CLASS declaration implies also TYPE declaration
+Q_DECLARE_JNI_CLASS(QtBtUtility,
+                    "org/qtproject/qt/android/bluetooth/QtBluetoothUtility")
 Q_DECLARE_JNI_CLASS(QtBtBroadcastReceiver,
                     "org/qtproject/qt/android/bluetooth/QtBluetoothBroadcastReceiver")
 Q_DECLARE_JNI_CLASS(QtBtGattCharacteristic,

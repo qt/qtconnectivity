@@ -8,6 +8,7 @@
 #include "qbluetoothdevicediscoveryagent_p.h"
 #include <QCoreApplication>
 #include <QtCore/QLoggingCategory>
+#include <QtCore/qpermissions.h>
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtBluetooth/QBluetoothDeviceInfo>
 #include <QtCore/QJniEnvironment>
@@ -144,41 +145,65 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
     }
     qCDebug(QT_BT_ANDROID) << "QBluetoothPermission::Access permission available";
 
-    // Double check Location service is turned on
-    bool locationTurnedOn = true; // backwards compatible behavior to previous Qt versions
-    const  QJniObject locString = QJniObject::getStaticObjectField(
-                "android/content/Context", "LOCATION_SERVICE", "Ljava/lang/String;");
+    const bool scanNeedsLocation = (bool)QtJniTypes::QtBtUtility::callStaticMethod<jboolean>(
+            "bluetoothScanRequiresLocation", QNativeInterface::QAndroidApplication::context());
 
-    const QJniObject locService =
+    qCDebug(QT_BT_ANDROID) << "Is location service and location permission required for scan:"
+                           << scanNeedsLocation;
+
+    if (scanNeedsLocation) {
+        // Double check we have location permission. With API-level < 31 it is already
+        // guaranteed by the ensureAndroidPermission() above, but with API-level 31+ it is
+        // required additionally if 'neverForLocation' assertion isn't set.
+        QLocationPermission locationPermission;
+        locationPermission.setAccuracy(QLocationPermission::Accuracy::Precise);
+
+        if (qApp->checkPermission(locationPermission) != Qt::PermissionStatus::Granted) {
+            qCWarning(QT_BT_ANDROID) << "Search not possible due to missing location permissions";
+            lastError = QBluetoothDeviceDiscoveryAgent::LocationServiceTurnedOffError;
+            errorString = QBluetoothDeviceDiscoveryAgent::tr("Location permission not granted. Search is not possible.");
+            emit q->errorOccurred(lastError);
+            return;
+        }
+
+        qCDebug(QT_BT_ANDROID) << "Location permission granted";
+
+        // Double check Location service is turned on
+        bool locationTurnedOn = true; // backwards compatible behavior to previous Qt versions
+        const  QJniObject locString = QJniObject::getStaticObjectField(
+            "android/content/Context", "LOCATION_SERVICE", "Ljava/lang/String;");
+
+        const QJniObject locService =
             QJniObject(QNativeInterface::QAndroidApplication::context()).callMethod<jobject>(
                 "getSystemService",
                 locString.object<jstring>());
 
-    if (locService.isValid()) {
-        if (QNativeInterface::QAndroidApplication::sdkVersion() >= 28) {
-            locationTurnedOn = bool(locService.callMethod<jboolean>("isLocationEnabled"));
-        } else {
-            // check whether there is any enabled provider
-            QJniObject listOfEnabledProviders =
+        if (locService.isValid()) {
+            if (QNativeInterface::QAndroidApplication::sdkVersion() >= 28) {
+                locationTurnedOn = bool(locService.callMethod<jboolean>("isLocationEnabled"));
+            } else {
+                // check whether there is any enabled provider
+                QJniObject listOfEnabledProviders =
                     locService.callMethod<QtJniTypes::List>("getProviders", true);
 
-            if (listOfEnabledProviders.isValid()) {
-                int size = listOfEnabledProviders.callMethod<jint>("size");
-                locationTurnedOn = size > 0;
-                qCDebug(QT_BT_ANDROID) << size << "enabled location providers detected.";
+                if (listOfEnabledProviders.isValid()) {
+                    int size = listOfEnabledProviders.callMethod<jint>("size");
+                    locationTurnedOn = size > 0;
+                    qCDebug(QT_BT_ANDROID) << size << "enabled location providers detected.";
+                }
             }
         }
-    }
 
-    if (!locationTurnedOn) {
-        qCWarning(QT_BT_ANDROID) << "Search not possible due to turned off Location service";
-        lastError = QBluetoothDeviceDiscoveryAgent::LocationServiceTurnedOffError;
-        errorString = QBluetoothDeviceDiscoveryAgent::tr("Location service turned off. Search is not possible.");
-        emit q->errorOccurred(lastError);
-        return;
-    }
+        if (!locationTurnedOn) {
+            qCWarning(QT_BT_ANDROID) << "Search not possible due to turned off Location service";
+            lastError = QBluetoothDeviceDiscoveryAgent::LocationServiceTurnedOffError;
+            errorString = QBluetoothDeviceDiscoveryAgent::tr("Location service turned off. Search is not possible.");
+            emit q->errorOccurred(lastError);
+            return;
+        }
 
-    qCDebug(QT_BT_ANDROID) << "Location turned on";
+        qCDebug(QT_BT_ANDROID) << "Location turned on";
+    }
 
     // install Java BroadcastReceiver
     if (!receiver) {
