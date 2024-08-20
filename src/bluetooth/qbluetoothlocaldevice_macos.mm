@@ -18,8 +18,25 @@
 #include <Foundation/Foundation.h>
 
 #include <IOBluetooth/IOBluetooth.h>
+#include <CoreBluetooth/CoreBluetooth.h>
 
 #include <algorithm>
+
+QT_BEGIN_NAMESPACE
+class QBluetoothLocalDevicePrivate;
+QT_END_NAMESPACE
+
+@interface QT_MANGLE_NAMESPACE(QDarwinBluetoothStateMonitor) : NSObject <CBCentralManagerDelegate>
+
+@property (strong, nonatomic) CBCentralManager *manager;
+@property (assign, nonatomic) QT_PREPEND_NAMESPACE(QBluetoothLocalDevicePrivate) *localDevicePrivate;
+
+- (instancetype)initWith:(QT_PREPEND_NAMESPACE(QBluetoothLocalDevicePrivate) *)localDevicePrivate;
+- (CBManagerState)currentState;
+- (void)startMonitoring;
+- (void)stopMonitoring;
+
+@end
 
 QT_BEGIN_NAMESPACE
 
@@ -27,6 +44,7 @@ class QBluetoothLocalDevicePrivate : public DarwinBluetooth::PairingDelegate,
                                      public DarwinBluetooth::ConnectionMonitor
 {
     friend class QBluetoothLocalDevice;
+    Q_DECLARE_PUBLIC(QBluetoothLocalDevice)
 public:
     typedef QBluetoothLocalDevice::Pairing Pairing;
 
@@ -37,6 +55,8 @@ public:
     bool isValid() const;
     void requestPairing(const QBluetoothAddress &address, Pairing pairing);
     Pairing pairingStatus(const QBluetoothAddress &address) const;
+
+    void bluetoothStateChanged(CBManagerState newState);
 
 private:
 
@@ -58,6 +78,9 @@ private:
     void emitError(QBluetoothLocalDevice::Error error, bool queued);
 
     void unpair(const QBluetoothAddress &deviceAddress);
+
+    DarwinBluetooth::ObjCScopedPointer<QT_MANGLE_NAMESPACE(QDarwinBluetoothStateMonitor)> bluetoothStateMonitor;
+    QBluetoothLocalDevice::HostMode hostMode = QBluetoothLocalDevice::HostMode::HostPoweredOff;
 
     QBluetoothLocalDevice *q_ptr;
 
@@ -113,12 +136,43 @@ QBluetoothLocalDevicePrivate::QBluetoothLocalDevicePrivate(QBluetoothLocalDevice
     // This one is optional, if it fails to initialize, we do not care at all.
     connectionMonitor.reset([[DarwinBTConnectionMonitor alloc] initWithMonitor:this],
                             DarwinBluetooth::RetainPolicy::noInitialRetain);
+    // Set the initial host mode
+    if ([hostController powerState])
+        hostMode = QBluetoothLocalDevice::HostConnectable;
+    else
+        hostMode = QBluetoothLocalDevice::HostPoweredOff;
+
+    // Start monitoring for bluetooth state changes
+    bluetoothStateMonitor.reset([[QT_MANGLE_NAMESPACE(QDarwinBluetoothStateMonitor) alloc] initWith:this],
+                                  DarwinBluetooth::RetainPolicy::doInitialRetain);
+    [bluetoothStateMonitor startMonitoring];
 }
 
 QBluetoothLocalDevicePrivate::~QBluetoothLocalDevicePrivate()
 {
-
+    [bluetoothStateMonitor stopMonitoring];
     [connectionMonitor stopMonitoring];
+}
+
+void QBluetoothLocalDevicePrivate::bluetoothStateChanged(CBManagerState state)
+{
+    Q_Q(QBluetoothLocalDevice);
+    qCDebug(QT_BT_DARWIN) << "Bluetooth state changed to" << state;
+    // States other than 'powered ON' and 'powered OFF' are ambiguous to map
+    // unto Qt HostModes. For example lack of permissions might temporarily
+    // generate an 'unauthorized' state irrespective of bluetooth power state.
+    QBluetoothLocalDevice::HostMode mode;
+    if (state == CBManagerState::CBManagerStatePoweredOff)
+        mode = QBluetoothLocalDevice::HostPoweredOff;
+    else if (state == CBManagerState::CBManagerStatePoweredOn)
+        mode = QBluetoothLocalDevice::HostConnectable;
+    else
+        return;
+
+    if (hostMode != mode) {
+        hostMode = mode;
+        emit q->hostModeStateChanged(hostMode);
+    }
 }
 
 bool QBluetoothLocalDevicePrivate::isValid() const
@@ -375,10 +429,22 @@ void QBluetoothLocalDevice::setHostMode(QBluetoothLocalDevice::HostMode mode)
 
 QBluetoothLocalDevice::HostMode QBluetoothLocalDevice::hostMode() const
 {
-    if (!isValid() || ![d_ptr->hostController powerState])
+    Q_D(const QBluetoothLocalDevice);
+    if (!isValid())
         return HostPoweredOff;
 
-    return HostConnectable;
+    auto state = [d->bluetoothStateMonitor currentState];
+    // If the monitored state is unknown or ambiguous, use the HCI state directly.
+    // Otherwise use the monitored state. We can't use HCI state always, because there can
+    // be a significant delay from "monitored state change" to "HCI state change", causing
+    // handlers of hostModeStateChanged() signal to perceive conflicting results (signal
+    // parameter value vs. what this getter returns).
+    if (state == CBManagerState::CBManagerStatePoweredOff)
+        return HostPoweredOff;
+    else if (state == CBManagerState::CBManagerStatePoweredOn)
+        return HostConnectable;
+
+    return [d->hostController powerState] ? HostConnectable : HostPoweredOff;
 }
 
 QList<QBluetoothAddress> QBluetoothLocalDevice::connectedDevices() const
@@ -455,3 +521,45 @@ QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluet
 }
 
 QT_END_NAMESPACE
+
+@implementation QT_MANGLE_NAMESPACE(QDarwinBluetoothStateMonitor)
+
+- (instancetype)initWith:(QT_PREPEND_NAMESPACE(QBluetoothLocalDevicePrivate) *)localDevicePrivate
+{
+    if ((self = [super init])) {
+        self.manager = nil;
+        self.localDevicePrivate = localDevicePrivate;
+    }
+    return self;
+}
+
+- (void)startMonitoring
+{
+    if (self.manager != nil)
+        return;
+    self.manager = [[CBCentralManager alloc] initWithDelegate:self queue:nil];
+}
+
+- (void)stopMonitoring
+{
+    if (self.manager == nil)
+        return;
+    self.manager.delegate = nil;
+    self.manager = nil;
+}
+
+- (CBManagerState)currentState
+{
+    Q_ASSERT(self.manager);
+    return self.manager.state;
+}
+
+- (void)centralManagerDidUpdateState:(CBCentralManager *)aManager
+{
+    Q_ASSERT(self.manager);
+    Q_ASSERT(self.localDevicePrivate);
+    Q_ASSERT(self.manager == aManager);
+    self.localDevicePrivate->bluetoothStateChanged(aManager.state);
+}
+
+@end
