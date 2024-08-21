@@ -128,10 +128,7 @@ elseif(ANDROID AND NOT ANDROID_EMBEDDED)
     )
     qt_internal_add_android_permission(Bluetooth
         NAME android.permission.ACCESS_FINE_LOCATION
-        # We don't set the maxSdkVersion because the application might link also
-        # against QtPositioning (ACCESS_FINE_LOCATION without maxSdkVersion),
-        # in which case there'd be a race if or not the attribute ends in AndroidManifest.xml
-        # ATTRIBUTES android:maxSdkVersion="30"
+        ATTRIBUTES maxSdkVersion 30
     )
     qt_internal_add_android_permission(Bluetooth
         NAME android.permission.BLUETOOTH
