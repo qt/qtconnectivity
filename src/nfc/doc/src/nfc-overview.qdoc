@@ -9,8 +9,6 @@
 \brief Provides access to NFC enabled devices.
 \ingroup explanations-networkingandconnectivity
 
-\tableofcontents
-
 With the Qt NFC API typical use cases are:
 
 \list

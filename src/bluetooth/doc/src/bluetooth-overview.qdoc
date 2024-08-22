@@ -8,8 +8,6 @@
 \brief The Qt Bluetooth API enables connectivity with other regular Bluetooth
        and Bluetooth Low Energy enabled devices.
 
-\tableofcontents
-
     With the Qt Bluetooth API typical use cases are:
 
         \list
