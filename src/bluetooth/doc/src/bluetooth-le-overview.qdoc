@@ -8,8 +8,6 @@
 \brief The Qt Bluetooth Low Energy API enables communication between Bluetooth
 Low Energy devices.
 
-\tableofcontents
-
     The Qt Bluetooth Low Energy API supports the peripheral/server and central/client roles.
     It is supported on all major Qt platforms. The only exception is the missing peripheral role
     support on Windows.
