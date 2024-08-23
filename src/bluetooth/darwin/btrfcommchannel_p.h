@@ -67,6 +67,8 @@ QT_END_NAMESPACE
 - (IOReturn) writeSync:(void*)data length:(UInt16)length;
 - (IOReturn) writeAsync:(void*)data length:(UInt16)length;
 
+- (void)handleChannelOpenTimeout;
+
 @end
 
 QT_NAMESPACE_ALIAS_OBJC_CLASS(DarwinBTRFCOMMChannel);
