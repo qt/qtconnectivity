@@ -497,6 +497,8 @@ void QBluetoothSocketPrivateDarwin::channelClosed()
     // (thus close/abort probably will not work).
 
     if (!isConnecting) {
+        if (state == QBluetoothSocket::SocketState::ConnectedState)
+            q_ptr->setSocketError(QBluetoothSocket::SocketError::RemoteHostClosedError);
         q_ptr->setOpenMode(QIODevice::NotOpen);
         q_ptr->setSocketState(QBluetoothSocket::SocketState::UnconnectedState);
         emit q_ptr->readChannelFinished();
