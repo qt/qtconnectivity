@@ -98,7 +98,7 @@ static constexpr auto channelOpenTimeoutMs = std::chrono::milliseconds{20000};
     const IOReturn status = [device openRFCOMMChannelAsync:&channel
                              withChannelID:channelID delegate:self];
     if (status != kIOReturnSuccess) {
-        qCCritical(QT_BT_DARWIN) << "failed to open L2CAP channel";
+        qCCritical(QT_BT_DARWIN) << "failed to open RFCOMM channel";
         // device is still autoreleased.
         device = nil;
         return status;
