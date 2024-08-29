@@ -103,10 +103,9 @@ inline constexpr T operator|(E x, T y) { return bitwise_or<T, E>(y, x); } \
 template<typename T> \
 inline constexpr T &operator |=(T &a, const E &b) { return bitwise_or_equal(a, b); }
 
-ENUM_BITWISE_OPS(GattClientCharacteristicConfigurationDescriptorValue)
-
-
 QT_BEGIN_NAMESPACE
+
+ENUM_BITWISE_OPS(GattClientCharacteristicConfigurationDescriptorValue)
 
 typedef GattReadClientCharacteristicConfigurationDescriptorResult ClientCharConfigDescriptorResult;
 
