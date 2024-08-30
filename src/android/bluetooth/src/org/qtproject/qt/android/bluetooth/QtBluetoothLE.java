@@ -1519,6 +1519,7 @@ class QtBluetoothLE {
                     break;
                 case CharacteristicValue:
                     handle = nextJob.entry.endHandle;
+                    break;
                 default:
                     break;
             }
