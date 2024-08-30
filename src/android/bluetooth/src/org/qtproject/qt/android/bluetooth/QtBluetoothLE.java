@@ -1543,6 +1543,7 @@ class QtBluetoothLE {
                 break;
             case Mtu:
                 skip = executeMtuExchange();
+                break;
             case Rssi:
                 skip = executeRemoteRssiRead();
                 break;
