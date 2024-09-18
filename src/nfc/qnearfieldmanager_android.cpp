@@ -108,8 +108,7 @@ QByteArray QNearFieldManagerPrivateImpl::getUid(const QJniObject &intent)
     if (!tag.isValid())
         return QByteArray();
 
-    QJniArray tagId = tag.callMethod<jbyte[]>("getId");
-    return tagId.toContainer();
+    return tag.callMethod<jbyte[]>("getId").toContainer();
 }
 
 void QNearFieldManagerPrivateImpl::onTargetDiscovered(QJniObject intent)

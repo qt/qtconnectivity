@@ -137,8 +137,8 @@ void QBluetoothServiceDiscoveryAgentPrivate::start(const QBluetoothAddress &addr
                                << ")" << address.toString() ;
 
         //Minimal discovery uses BluetoothDevice.getUuids()
-        QJniObject parcelUuidArray =
-                remoteDevice.callMethod<QtJniTypes::ParcelUuidArray>("getUuids");
+        const QJniArray parcelUuidArray =
+                remoteDevice.callMethod<QtJniTypes::ParcelUuid[]>("getUuids");
 
         if (!parcelUuidArray.isValid()) {
             if (singleDevice) {

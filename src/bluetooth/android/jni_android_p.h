@@ -59,11 +59,6 @@ Q_DECLARE_JNI_CLASS(BluetoothClass, "android/bluetooth/BluetoothClass")
 Q_DECLARE_JNI_CLASS(Bundle, "android/os/Bundle")
 Q_DECLARE_JNI_CLASS(List, "java/util/List")
 
-namespace QtJniTypes {
-using ParcelableArray = QJniArray<Parcelable>;
-using ParcelUuidArray = QJniArray<ParcelUuid>;
-}
-
 // QLowEnergyHandle is a quint16, ensure it is interpreted as jint
 template<>
 constexpr auto QtJniTypes::Traits<QLowEnergyHandle>::signature()

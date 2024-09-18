@@ -119,9 +119,7 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::readNdefMessages()
         return requestId;
     }
 
-    // Convert to byte array
-    QJniArray ndefMessageBA = ndefMessage.callMethod<jbyte[]>("toByteArray");
-    QByteArray ndefMessageQBA = ndefMessageBA.toContainer();
+    QByteArray ndefMessageQBA = ndefMessage.callMethod<jbyte[]>("toByteArray").toContainer();
 
     // Sending QNdefMessage, requestCompleted and exit.
     QNdefMessage qNdefMessage = QNdefMessage::fromByteArray(ndefMessageQBA);
@@ -184,7 +182,7 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::sendCommand(const QByte
     }
 
     // Writing
-    QJniArray myNewVal = tagTech.callMethod<jbyte[]>("transceive", QJniArray(command));
+    const QJniArray myNewVal = tagTech.callMethod<jbyte[]>("transceive", command);
     if (!myNewVal.isValid()) {
         // Some devices (Samsung, Huawei) throw an exception when the card is lost:
         // "android.nfc.TagLostException: Tag was lost". But there seems to be a bug that
@@ -235,9 +233,7 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::writeNdefMessages(const
 
     // Making NdefMessage object
     const QNdefMessage &message = messages.first();
-    QByteArray ba = message.toByteArray();
-    QJniArray jba(ba);
-    QtJniTypes::NdefMessage jmessage(jba);
+    QtJniTypes::NdefMessage jmessage(message.toByteArray());
     if (!jmessage.isValid()) {
         reportError(QNearFieldTarget::UnknownError, requestId);
         return requestId;
@@ -325,7 +321,7 @@ void QNearFieldTargetPrivateImpl::updateTechList()
     QJniObject tag = QtNfc::getTag(targetIntent);
     Q_ASSERT_X(tag.isValid(), "updateTechList", "could not get Tag object");
 
-    QJniArray techListArray = tag.callMethod<QtJniTypes::String[]>("getTechList");
+    const QJniArray techListArray = tag.callMethod<QtJniTypes::String[]>("getTechList");
     if (!techListArray.isValid()) {
         handleTargetLost();
         return;
@@ -366,8 +362,7 @@ QNearFieldTarget::Type QNearFieldTargetPrivateImpl::getTagType() const
         // Checking ATQA/SENS_RES
         // xxx0 0000  xxxx xxxx: Identifies tag Type 1 platform
         QJniObject nfca = getTagTechnology(NFCATECHNOLOGY);
-        QJniArray atqaBA = nfca.callMethod<jbyte[]>("getAtqa");
-        QByteArray atqaQBA = atqaBA.toContainer();
+        const QByteArray atqaQBA = nfca.callMethod<QByteArray>("getAtqa");
         if (atqaQBA.isEmpty())
             return QNearFieldTarget::ProprietaryTag;
         if ((atqaQBA[0] & 0x1F) == 0x00)
