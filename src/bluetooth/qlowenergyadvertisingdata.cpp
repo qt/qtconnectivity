@@ -212,8 +212,9 @@ QList<QBluetoothUuid> QLowEnergyAdvertisingData::services() const
   \note If \a data is longer than 31 bytes, it will be truncated. It is the caller's responsibility
         to ensure that \a data is well-formed.
 
-  Providing the raw advertising data is not supported on BlueZ DBus backend as BlueZ does not
-  support it. This may change in a future release.
+  Setting raw advertising data is only supported on the \l {Linux Specific}
+  {Linux Bluetooth Kernel API} backend. Other backends do not allow to specify
+  the raw advertising data as a global field.
  */
 void QLowEnergyAdvertisingData::setRawData(const QByteArray &data)
 {
