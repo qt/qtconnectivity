@@ -123,6 +123,9 @@ QString QLowEnergyAdvertisingData::localName() const
 /*!
    Sets the manufacturer id and data. The \a id parameter is a company identifier as assigned
    by the Bluetooth SIG. The \a data parameter is an arbitrary value.
+
+    \note \macos and iOS do not support advertising of manufacturer id or data,
+    so the provided parameters will be ignored on these platforms.
  */
 void QLowEnergyAdvertisingData::setManufacturerData(quint16 id, const QByteArray &data)
 {
