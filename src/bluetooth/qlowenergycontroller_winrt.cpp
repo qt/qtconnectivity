@@ -307,10 +307,7 @@ public slots:
                                                     QWinRTFunctions::ProcessMainThreadEvents, 5000,
                                                     exitCondition);
                         WARN_AND_CONTINUE_IF_FAILED(hr, "Could not await descriptor read result")
-                        if (descData.uuid == QBluetoothUuid::DescriptorType::CharacteristicUserDescription)
-                            descData.value = byteArrayFromGattResult(readResult, true);
-                        else
-                            descData.value = byteArrayFromGattResult(readResult);
+                        descData.value = byteArrayFromGattResult(readResult);
                     }
                 }
                 charData.descriptorList.insert(descHandle, descData);
