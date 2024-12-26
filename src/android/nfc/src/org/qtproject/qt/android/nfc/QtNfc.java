@@ -11,6 +11,7 @@ import android.app.PendingIntent;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.nfc.NfcAdapter;
+import android.nfc.Tag;
 import android.content.IntentFilter.MalformedMimeTypeException;
 import android.os.Build;
 import android.os.Parcelable;
@@ -138,8 +139,12 @@ public class QtNfc
         }
     }
 
+    @SuppressWarnings("deprecation")
     static public Parcelable getTag(Intent intent)
     {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+            return intent.getParcelableExtra(NfcAdapter.EXTRA_TAG, Tag.class);
+
         return intent.getParcelableExtra(NfcAdapter.EXTRA_TAG);
     }
 }
