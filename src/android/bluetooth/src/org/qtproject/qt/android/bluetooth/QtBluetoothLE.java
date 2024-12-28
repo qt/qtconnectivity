@@ -113,7 +113,7 @@ class QtBluetoothLE {
         if (mBluetoothGatt == null)
             return;
 
-        final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        final BluetoothDevice device = getDevice(intent);
         if (device == null || !device.getAddress().equals(mBluetoothGatt.getDevice().getAddress()))
             return;
 
@@ -153,6 +153,15 @@ class QtBluetoothLE {
                 ex.printStackTrace();
             }
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static BluetoothDevice getDevice(Intent intent)
+    {
+        if (Build.VERSION.SDK_INT >= 33)
+            return intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
+
+        return intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
     }
 
     private class BondStateBroadcastReceiver extends BroadcastReceiver {
