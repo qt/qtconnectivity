@@ -668,8 +668,9 @@ class QtBluetoothLE {
 
         }
 
-        @Override
         // API < 33
+        @Override
+        @SuppressWarnings("deprecation")
         public void onCharacteristicRead(android.bluetooth.BluetoothGatt gatt,
                                          android.bluetooth.BluetoothGattCharacteristic characteristic,
                                          int status)
@@ -678,8 +679,8 @@ class QtBluetoothLE {
             handleOnCharacteristicRead(gatt, characteristic, characteristic.getValue(), status);
         }
 
-        @Override
         // API >= 33
+        @Override
         public void onCharacteristicRead(android.bluetooth.BluetoothGatt gatt,
                                     android.bluetooth.BluetoothGattCharacteristic characteristic,
                                     byte[] value,
@@ -701,6 +702,7 @@ class QtBluetoothLE {
 
         // API < 33
         @Override
+        @SuppressWarnings("deprecation")
         public void onCharacteristicChanged(android.bluetooth.BluetoothGatt gatt,
                                             android.bluetooth.BluetoothGattCharacteristic characteristic)
         {
@@ -721,6 +723,7 @@ class QtBluetoothLE {
 
         // API < 33
         @Override
+        @SuppressWarnings("deprecation")
         public void onDescriptorRead(android.bluetooth.BluetoothGatt gatt,
                                      android.bluetooth.BluetoothGattDescriptor descriptor,
                                      int status)
