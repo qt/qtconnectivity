@@ -1134,7 +1134,7 @@ void QLowEnergyControllerPrivateBluez::processReply(
             break;
         }
 
-        QLowEnergyHandle lastHandle;
+        QLowEnergyHandle lastHandle = 0;
         const quint16 elementLength = response.constData()[1];
         const quint16 numElements = (response.size() - 2) / elementLength;
         quint16 offset = 2;
