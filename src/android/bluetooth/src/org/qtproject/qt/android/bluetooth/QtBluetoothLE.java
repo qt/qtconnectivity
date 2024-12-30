@@ -47,7 +47,7 @@ class QtBluetoothLE {
     private BluetoothGatt mBluetoothGatt = null;
     private HandlerThread mHandlerThread = null;
     private Handler mHandler = null;
-    private Constructor mCharacteristicConstructor = null;
+    private Constructor<BluetoothGattCharacteristic> mCharacteristicConstructor = null;
     private String mRemoteGattAddress;
     private final UUID clientCharacteristicUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
     private final int MAX_MTU = 512;
@@ -828,7 +828,7 @@ class QtBluetoothLE {
             handlerThread.start();
             mHandler = new Handler(handlerThread.getLooper());
 
-            Class[] args = new Class[6];
+            Class<?>[] args = new Class<?>[6];
             args[0] = android.content.Context.class;
             args[1] = boolean.class;
             args[2] = android.bluetooth.BluetoothGattCallback.class;
@@ -858,7 +858,7 @@ class QtBluetoothLE {
             try {
                 //This API element is currently: greylist-max-o (API level 27), reflection, allowed
                 //It may change in the future
-                Class[] constr_args = new Class[5];
+                Class<?>[] constr_args = new Class<?>[5];
                 constr_args[0] = android.bluetooth.BluetoothGattService.class;
                 constr_args[1] = java.util.UUID.class;
                 constr_args[2] = int.class;
