@@ -23,6 +23,7 @@ class QtBluetoothGattCharacteristic extends BluetoothGattCharacteristic {
     // be somewhat complicated. This should be safe as all accesses to this class are synchronized.
     // For clarity: For API levels below 33 we still need to use the setValue() of the base class
     // because Android internally uses getValue() with APIs below 33.
+    @SuppressWarnings("deprecation")
     boolean setLocalValue(byte[] value) {
         if (Build.VERSION.SDK_INT >= 33) {
             m_localValue = value;
@@ -32,6 +33,7 @@ class QtBluetoothGattCharacteristic extends BluetoothGattCharacteristic {
         }
     }
 
+    @SuppressWarnings("deprecation")
     byte[] getLocalValue()
     {
         if (Build.VERSION.SDK_INT >= 33)
