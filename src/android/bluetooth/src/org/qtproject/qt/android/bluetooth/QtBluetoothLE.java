@@ -1669,6 +1669,13 @@ public class QtBluetoothLE {
         }
     }
 
+    // API level < 33
+    @SuppressWarnings("deprecation")
+    private boolean executeDescriptorWriteJob(ReadWriteJob nextJob) {
+        return !nextJob.entry.descriptor.setValue(nextJob.newValue)
+                || !mBluetoothGatt.writeDescriptor(nextJob.entry.descriptor);
+    }
+
     // Returns true if nextJob should be skipped.
     private boolean executeWriteJob(ReadWriteJob nextJob)
     {
@@ -1723,11 +1730,7 @@ public class QtBluetoothLE {
                                         nextJob.entry.descriptor, nextJob.newValue);
                     return (writeResult != BluetoothStatusCodes.SUCCESS);
                 }
-                result = nextJob.entry.descriptor.setValue(nextJob.newValue);
-                if (!result || !mBluetoothGatt.writeDescriptor(nextJob.entry.descriptor))
-                    return true;
-
-                break;
+                return executeDescriptorWriteJob(nextJob);
             case Service:
             case CharacteristicValue:
                 return true;
