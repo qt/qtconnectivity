@@ -1642,8 +1642,8 @@ public class QtBluetoothLE {
 
     private BluetoothGattCharacteristic cloneChararacteristic(BluetoothGattCharacteristic other) {
         try {
-            return (BluetoothGattCharacteristic) mCharacteristicConstructor.newInstance(other.getService(),
-                    other.getUuid(), other.getInstanceId(), other.getProperties(), other.getPermissions());
+            return mCharacteristicConstructor.newInstance(other.getService(), other.getUuid(),
+                        other.getInstanceId(), other.getProperties(), other.getPermissions());
         } catch (Exception ex) {
             Log.w(TAG, "Cloning characteristic failed!" + ex);
             return null;
