@@ -806,6 +806,15 @@ class QtBluetoothLEServer {
         }
     }
 
+    // API-level < 33
+    @SuppressWarnings("deprecation")
+    private void notifyCharacteristicChange(BluetoothDevice device,
+                                            BluetoothGattCharacteristic characteristic,
+                                            boolean confirm)
+    {
+        mGattServer.notifyCharacteristicChanged(device, characteristic, confirm);
+    }
+
     /*
         Check the client characteristics configuration for the given characteristic
         and sends notifications or indications as per required.
@@ -832,7 +841,7 @@ class QtBluetoothLEServer {
                         mGattServer.notifyCharacteristicChanged(device, characteristic, false,
                                   ((QtBluetoothGattCharacteristic)characteristic).getLocalValue());
                     } else {
-                        mGattServer.notifyCharacteristicChanged(device, characteristic, false);
+                        notifyCharacteristicChange(device, characteristic, false);
                     }
                 } else if (Arrays.equals(clientCharacteristicConfig,
                                          BluetoothGattDescriptor.ENABLE_INDICATION_VALUE)) {
@@ -840,7 +849,7 @@ class QtBluetoothLEServer {
                         mGattServer.notifyCharacteristicChanged(device, characteristic, true,
                                   ((QtBluetoothGattCharacteristic)characteristic).getLocalValue());
                     } else {
-                        mGattServer.notifyCharacteristicChanged(device, characteristic, true);
+                        notifyCharacteristicChange(device, characteristic, true);
                     }
                 }
             }
