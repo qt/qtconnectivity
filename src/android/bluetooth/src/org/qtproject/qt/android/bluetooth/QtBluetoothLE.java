@@ -1663,6 +1663,25 @@ class QtBluetoothLE {
         }
     }
 
+    // API level < 33
+    @SuppressWarnings("deprecation")
+    private boolean executeCharacteristicWriteJob(ReadWriteJob nextJob) {
+        if (mHandler != null || mCharacteristicConstructor == null) {
+            if (nextJob.entry.characteristic.getWriteType() != nextJob.requestedWriteType) {
+                nextJob.entry.characteristic.setWriteType(nextJob.requestedWriteType);
+            }
+            return !nextJob.entry.characteristic.setValue(nextJob.newValue)
+                   || !mBluetoothGatt.writeCharacteristic(nextJob.entry.characteristic);
+        } else {
+            BluetoothGattCharacteristic orig = nextJob.entry.characteristic;
+            BluetoothGattCharacteristic tmp = cloneChararacteristic(orig);
+            if (tmp == null)
+                return true;
+            tmp.setWriteType(nextJob.requestedWriteType);
+            return !tmp.setValue(nextJob.newValue) || !mBluetoothGatt.writeCharacteristic(tmp);
+        }
+    }
+
     // Returns true if nextJob should be skipped.
     private boolean executeWriteJob(ReadWriteJob nextJob)
     {
@@ -1674,20 +1693,7 @@ class QtBluetoothLE {
                        nextJob.entry.characteristic, nextJob.newValue, nextJob.requestedWriteType);
                     return (writeResult != BluetoothStatusCodes.SUCCESS);
                 }
-                if (mHandler != null || mCharacteristicConstructor == null) {
-                    if (nextJob.entry.characteristic.getWriteType() != nextJob.requestedWriteType) {
-                        nextJob.entry.characteristic.setWriteType(nextJob.requestedWriteType);
-                    }
-                    result = nextJob.entry.characteristic.setValue(nextJob.newValue);
-                    return !result || !mBluetoothGatt.writeCharacteristic(nextJob.entry.characteristic);
-                } else {
-                    BluetoothGattCharacteristic orig = nextJob.entry.characteristic;
-                    BluetoothGattCharacteristic tmp = cloneChararacteristic(orig);
-                    if (tmp == null)
-                        return true;
-                    tmp.setWriteType(nextJob.requestedWriteType);
-                    return !tmp.setValue(nextJob.newValue) || !mBluetoothGatt.writeCharacteristic(tmp);
-                }
+                return executeCharacteristicWriteJob(nextJob);
             case Descriptor:
                 if (nextJob.entry.descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
                         /*
