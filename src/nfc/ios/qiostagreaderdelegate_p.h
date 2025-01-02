@@ -1,5 +1,5 @@
 // Copyright (C) 2020 Governikus GmbH & Co. KG
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
 
 #ifndef QIOSTAGREADERDELEGATE_P_H
 #define QIOSTAGREADERDELEGATE_P_H
