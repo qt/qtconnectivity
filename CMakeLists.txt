@@ -12,7 +12,7 @@ project(QtConnectivity
 )
 
 find_package(Qt6 ${PROJECT_VERSION} CONFIG REQUIRED COMPONENTS BuildInternals Core Network)
-find_package(Qt6 ${PROJECT_VERSION} CONFIG OPTIONAL_COMPONENTS
+find_package(Qt6 ${PROJECT_VERSION} QUIET CONFIG OPTIONAL_COMPONENTS
     DBus Gui Widgets Quick QuickControls2)
 qt_internal_project_setup()
 
