@@ -9,4 +9,4 @@ qt_feature("pcsclite" PUBLIC
 
 qt_feature("neard" PUBLIC
     LABEL "Use neard to access NFC devices"
-    CONDITION LINUX AND NOT QT_FEATURE_pcsclite)
+    CONDITION LINUX AND QT_FEATURE_dbus AND NOT QT_FEATURE_pcsclite)
