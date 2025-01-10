@@ -18,6 +18,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_ANDROID)
 
 typedef QHash<QByteArray, QJniObject> JCachedStringFields;
 Q_GLOBAL_STATIC(JCachedStringFields, cachedStringFields)
+Q_GLOBAL_STATIC(QMutex, stringCacheMutex);
 
 /*
  * This function operates on the assumption that each
@@ -25,6 +26,7 @@ Q_GLOBAL_STATIC(JCachedStringFields, cachedStringFields)
  */
 QJniObject valueFromStaticFieldCache(const char *key, const char *className, const char *fieldName)
 {
+    QMutexLocker lock(stringCacheMutex());
     JCachedStringFields::iterator it = cachedStringFields()->find(key);
     if (it == cachedStringFields()->end()) {
         QJniEnvironment env;
