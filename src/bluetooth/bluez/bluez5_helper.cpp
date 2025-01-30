@@ -448,10 +448,12 @@ void QtBluezDiscoveryManager::removeAdapterFromMonitoring(const QString &dbusPat
 }
 
 /*
-    Finds the path for the local adapter with \a wantedAddress or an empty string
-    if no local adapter with the given address can be found.
-    If \a wantedAddress is \c null it returns the first/default adapter or an empty
-    string if none is available.
+    Finds the path for the local adapter with \a wantedAddress or returns an
+    empty string if no local adapter with the given address can be found.
+
+    If \a wantedAddress is \c null it returns the first powered-on adapter, or
+    the first adapter if all of them are powered off, or an empty string if
+    none is available.
 
     If \a ok is false the lookup was aborted due to a dbus error and this function
     returns an empty string.
@@ -471,8 +473,13 @@ QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok =
         return QString();
     }
 
-    typedef QPair<QString, QBluetoothAddress> AddressForPathType;
-    QList<AddressForPathType> localAdapters;
+    struct AdapterInfo
+    {
+        QString path;
+        QBluetoothAddress address;
+        bool powered;
+    };
+    QList<AdapterInfo> localAdapters;
 
     ManagedObjectList managedObjectList = reply.value();
     for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
@@ -483,12 +490,13 @@ QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok =
             const QString &iface = jt.key();
 
             if (iface == QStringLiteral("org.bluez.Adapter1")) {
-                AddressForPathType pair;
-                pair.first = path.path();
-                pair.second = QBluetoothAddress(ifaceList.value(iface).value(
-                                          QStringLiteral("Address")).toString());
-                if (!pair.second.isNull())
-                    localAdapters.append(pair);
+                AdapterInfo info;
+                info.path = path.path();
+                info.address = QBluetoothAddress(ifaceList.value(iface).value(
+                                                    QStringLiteral("Address")).toString());
+                info.powered = ifaceList.value(iface).value(QStringLiteral("Powered")).toBool();
+                if (!info.address.isNull())
+                    localAdapters.append(info);
                 break;
             }
         }
@@ -500,12 +508,24 @@ QString findAdapterForAddress(const QBluetoothAddress &wantedAddress, bool *ok =
     if (localAdapters.isEmpty())
         return QString(); // -> no local adapter found
 
-    if (wantedAddress.isNull())
-        return localAdapters.front().first; // -> return first found adapter
+    auto findFirstPowered = [&localAdapters]() {
+        Q_ASSERT(!localAdapters.isEmpty());
+        auto it = std::find_if(localAdapters.cbegin(), localAdapters.cend(),
+                               [](const AdapterInfo &info) {
+                                   return info.powered == true;
+                               });
+        if (it != localAdapters.cend())
+            return it->path;
+        // simply return first if none is powered
+        return localAdapters.cbegin()->path;
+    };
 
-    for (const AddressForPathType &pair : std::as_const(localAdapters)) {
-        if (pair.second == wantedAddress)
-            return pair.first; // -> found local adapter with wanted address
+    if (wantedAddress.isNull())
+        return findFirstPowered();
+
+    for (const AdapterInfo &info : std::as_const(localAdapters)) {
+        if (info.address == wantedAddress)
+            return info.path; // -> found local adapter with wanted address
     }
 
     return QString(); // nothing matching found
