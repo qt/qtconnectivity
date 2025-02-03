@@ -644,7 +644,6 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(
         return;
     }
 
-    QStringList descriptorPaths;
     const ManagedObjectList managedObjectList = reply.value();
     for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
         const InterfaceList &ifaceList = it.value();
