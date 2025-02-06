@@ -58,7 +58,7 @@ qt_feature("winrt_bt" PRIVATE
     CONDITION WIN32 AND TEST_winrt_bt
 )
 
-qt_configure_add_summary_section(NAME "Qt Bluetooth")
+qt_configure_add_summary_section(NAME "Qt Bluetooth details")
 qt_configure_add_summary_entry(ARGS bluez)
 qt_configure_add_summary_entry(ARGS bluez_le)
 qt_configure_add_summary_entry(ARGS linux_crypto_api)

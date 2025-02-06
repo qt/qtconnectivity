@@ -11,7 +11,7 @@ qt_feature("neard" PUBLIC
     LABEL "Use neard to access NFC devices"
     CONDITION LINUX AND QT_FEATURE_dbus AND NOT QT_FEATURE_pcsclite)
 
-qt_configure_add_summary_section(NAME "Qt Nfc")
+qt_configure_add_summary_section(NAME "Qt Nfc details")
 qt_configure_add_summary_entry(ARGS pcslite)
 qt_configure_add_summary_entry(ARGS neard)
 qt_configure_end_summary_section()
