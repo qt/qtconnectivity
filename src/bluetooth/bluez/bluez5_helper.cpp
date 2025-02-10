@@ -254,7 +254,7 @@ public:
 
     int reference;
     bool wasListeningAlready;
-    OrgFreedesktopDBusPropertiesInterface *propteryListener = nullptr;
+    OrgFreedesktopDBusPropertiesInterfaceBluetooth *propteryListener = nullptr;
 };
 
 class QtBluezDiscoveryManagerPrivate
@@ -335,9 +335,9 @@ bool QtBluezDiscoveryManager::registerDiscoveryInterest(const QString &adapterPa
 
     AdapterData *data = new AdapterData();
 
-    OrgFreedesktopDBusPropertiesInterface *propIface = new OrgFreedesktopDBusPropertiesInterface(
+    OrgFreedesktopDBusPropertiesInterfaceBluetooth *propIface = new OrgFreedesktopDBusPropertiesInterfaceBluetooth(
                 QStringLiteral("org.bluez"), adapterPath, QDBusConnection::systemBus());
-    connect(propIface, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
+    connect(propIface, &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
             this, &QtBluezDiscoveryManager::PropertiesChanged);
     data->propteryListener = propIface;
 
@@ -406,8 +406,8 @@ void QtBluezDiscoveryManager::PropertiesChanged(const QString &interface,
 {
     Q_UNUSED(invalidated_properties);
 
-    OrgFreedesktopDBusPropertiesInterface *propIface =
-            qobject_cast<OrgFreedesktopDBusPropertiesInterface *>(sender());
+    OrgFreedesktopDBusPropertiesInterfaceBluetooth *propIface =
+            qobject_cast<OrgFreedesktopDBusPropertiesInterfaceBluetooth *>(sender());
 
     if (!propIface)
         return;

@@ -340,10 +340,10 @@ void QLowEnergyControllerPrivateBluezDBus::connectToDeviceHelper()
     device = new OrgBluezDevice1Interface(
                                 QStringLiteral("org.bluez"), devicePath,
                                 QDBusConnection::systemBus(), this);
-    deviceMonitor = new OrgFreedesktopDBusPropertiesInterface(
+    deviceMonitor = new OrgFreedesktopDBusPropertiesInterfaceBluetooth(
                                 QStringLiteral("org.bluez"), devicePath,
                                 QDBusConnection::systemBus(), this);
-    connect(deviceMonitor, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
+    connect(deviceMonitor, &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
             this, &QLowEnergyControllerPrivateBluezDBus::devicePropertiesChanged);
 }
 
@@ -736,11 +736,11 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(
             // every ClientCharacteristicConfiguration needs to track property changes
             if (descData.uuid
                         == QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration)) {
-                dbusChar.charMonitor = QSharedPointer<OrgFreedesktopDBusPropertiesInterface>::create(
+                dbusChar.charMonitor = QSharedPointer<OrgFreedesktopDBusPropertiesInterfaceBluetooth>::create(
                                                 QStringLiteral("org.bluez"),
                                                 dbusChar.characteristic->path(),
                                                 QDBusConnection::systemBus(), this);
-                connect(dbusChar.charMonitor.data(), &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
+                connect(dbusChar.charMonitor.data(), &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
                         this, [this, indexHandle](const QString &interface, const QVariantMap &changedProperties,
                         const QStringList &removedProperties) {
 
