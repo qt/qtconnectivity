@@ -29,7 +29,7 @@ class OrgBluezGattCharacteristic1Interface;
 class OrgBluezGattDescriptor1Interface;
 class OrgBluezGattService1Interface;
 class OrgFreedesktopDBusObjectManagerInterface;
-class OrgFreedesktopDBusPropertiesInterface;
+class OrgFreedesktopDBusPropertiesInterfaceBluetooth;
 
 QT_BEGIN_NAMESPACE
 
@@ -108,7 +108,7 @@ private:
     OrgBluezAdapter1Interface* adapter{};
     OrgBluezDevice1Interface* device{};
     OrgFreedesktopDBusObjectManagerInterface* managerBluez{};
-    OrgFreedesktopDBusPropertiesInterface* deviceMonitor{};
+    OrgFreedesktopDBusPropertiesInterfaceBluetooth* deviceMonitor{};
     QString adapterPathWithPeripheralSupport;
 
     int remoteMtu{-1};
@@ -133,7 +133,7 @@ private:
     struct GattCharacteristic
     {
         QSharedPointer<OrgBluezGattCharacteristic1Interface> characteristic;
-        QSharedPointer<OrgFreedesktopDBusPropertiesInterface> charMonitor;
+        QSharedPointer<OrgFreedesktopDBusPropertiesInterfaceBluetooth> charMonitor;
         QList<QSharedPointer<OrgBluezGattDescriptor1Interface>> descriptors;
     };
 

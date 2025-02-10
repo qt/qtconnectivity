@@ -22,7 +22,7 @@ process profilemanager1  org.bluez.ProfileManager1.xml
 process profile1         org.bluez.Profile1.xml
 
 process objectmanager    org.freedesktop.dbus.objectmanager.xml -i bluez5_helper_p.h
-process properties       org.freedesktop.dbus.properties.xml
+process properties       org.freedesktop.dbus.properties.xml -c OrgFreedesktopDBusPropertiesInterfaceBluetooth
 
 process gattchar1        org.bluez.GattCharacteristic1.xml
 process gattdesc1        org.bluez.GattDescriptor1.xml

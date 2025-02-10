@@ -28,7 +28,7 @@
 #include "bluez/bluez5_helper_p.h"
 
 class OrgBluezAdapter1Interface;
-class OrgFreedesktopDBusPropertiesInterface;
+class OrgFreedesktopDBusPropertiesInterfaceBluetooth;
 class OrgFreedesktopDBusObjectManagerInterface;
 class OrgBluezDevice1Interface;
 
@@ -107,9 +107,9 @@ public:
 
     QSet<QBluetoothAddress> connectedDevicesSet;
     OrgBluezAdapter1Interface *adapter = nullptr;
-    OrgFreedesktopDBusPropertiesInterface *adapterProperties = nullptr;
+    OrgFreedesktopDBusPropertiesInterfaceBluetooth *adapterProperties = nullptr;
     OrgFreedesktopDBusObjectManagerInterface *manager = nullptr;
-    QMap<QString, OrgFreedesktopDBusPropertiesInterface *> deviceChangeMonitors;
+    QMap<QString, OrgFreedesktopDBusPropertiesInterfaceBluetooth *> deviceChangeMonitors;
 
     QList<QBluetoothAddress> connectedDevices() const;
 

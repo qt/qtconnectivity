@@ -20,7 +20,7 @@
     <signal name="PropertiesChanged">
       <arg name="interface" type="s"/>
       <arg name="changed_properties" type="a{sv}"/>
-      <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="QVariantMap"/>
+      <annotation name="org.qtproject.QtDBus.QtTypeName.Out1" value="QVariantMap"/>
       <arg name="invalidated_properties" type="as"/>
     </signal>
   </interface>

@@ -39,7 +39,7 @@
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
 class OrgFreedesktopDBusObjectManagerInterface;
-class OrgFreedesktopDBusPropertiesInterface;
+class OrgFreedesktopDBusPropertiesInterfaceBluetooth;
 class OrgBluezAdapter1Interface;
 class OrgBluezDevice1Interface;
 
@@ -133,7 +133,7 @@ private:
     OrgFreedesktopDBusObjectManagerInterface *manager = nullptr;
     OrgBluezAdapter1Interface *adapter = nullptr;
     QTimer *discoveryTimer = nullptr;
-    QList<OrgFreedesktopDBusPropertiesInterface *> propertyMonitors;
+    QList<OrgFreedesktopDBusPropertiesInterfaceBluetooth *> propertyMonitors;
 
     void deviceFound(const QString &devicePath, const QVariantMap &properties);
 

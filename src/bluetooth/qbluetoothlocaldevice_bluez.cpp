@@ -407,7 +407,7 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
         if (reply.isError())
             return;
 
-        OrgFreedesktopDBusPropertiesInterface *monitor = nullptr;
+        OrgFreedesktopDBusPropertiesInterfaceBluetooth *monitor = nullptr;
 
         ManagedObjectList managedObjectList = reply.value();
         for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
@@ -423,10 +423,10 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
                 const QVariantMap &ifaceValues = jt.value();
 
                 if (iface == QStringLiteral("org.bluez.Device1")) {
-                    monitor = new OrgFreedesktopDBusPropertiesInterface(QStringLiteral("org.bluez"),
+                    monitor = new OrgFreedesktopDBusPropertiesInterfaceBluetooth(QStringLiteral("org.bluez"),
                                                                         path.path(),
                                                                         QDBusConnection::systemBus(), this);
-                    connect(monitor, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
+                    connect(monitor, &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
                             this, &QBluetoothLocalDevicePrivate::PropertiesChanged);
                     deviceChangeMonitors.insert(path.path(), monitor);
 
@@ -478,10 +478,10 @@ void QBluetoothLocalDevicePrivate::initializeAdapter()
 
     if (adapter) {
         //hook up propertiesChanged for current adapter
-        adapterProperties = new OrgFreedesktopDBusPropertiesInterface(
+        adapterProperties = new OrgFreedesktopDBusPropertiesInterfaceBluetooth(
                 QStringLiteral("org.bluez"), adapter->path(),
                 QDBusConnection::systemBus(), this);
-        connect(adapterProperties, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
+        connect(adapterProperties, &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
                 this, &QBluetoothLocalDevicePrivate::PropertiesChanged);
     }
 }
@@ -528,8 +528,8 @@ void QBluetoothLocalDevicePrivate::PropertiesChanged(const QString &interface,
     } else if (interface == QStringLiteral("org.bluez.Device1")
                && changed_properties.contains(QStringLiteral("Connected"))) {
         // update list of connected devices
-        OrgFreedesktopDBusPropertiesInterface *senderIface =
-                qobject_cast<OrgFreedesktopDBusPropertiesInterface*>(sender());
+        OrgFreedesktopDBusPropertiesInterfaceBluetooth *senderIface =
+                qobject_cast<OrgFreedesktopDBusPropertiesInterfaceBluetooth*>(sender());
         if (!senderIface)
             return;
 
@@ -556,11 +556,11 @@ void QBluetoothLocalDevicePrivate::InterfacesAdded(const QDBusObjectPath &object
         // a new device was added which we need to add to list of known devices
 
         if (objectPathIsForThisDevice(deviceAdapterPath, object_path.path())) {
-            OrgFreedesktopDBusPropertiesInterface *monitor = new OrgFreedesktopDBusPropertiesInterface(
+            OrgFreedesktopDBusPropertiesInterfaceBluetooth *monitor = new OrgFreedesktopDBusPropertiesInterfaceBluetooth(
                                                QStringLiteral("org.bluez"),
                                                object_path.path(),
                                                QDBusConnection::systemBus());
-            connect(monitor, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
+            connect(monitor, &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
                     this, &QBluetoothLocalDevicePrivate::PropertiesChanged);
             deviceChangeMonitors.insert(object_path.path(), monitor);
 

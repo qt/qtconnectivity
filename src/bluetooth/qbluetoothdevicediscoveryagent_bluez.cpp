@@ -139,9 +139,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
                      q, [this](const QString &path){
         this->_q_discoveryInterrupted(path);
     });
-    OrgFreedesktopDBusPropertiesInterface *prop = new OrgFreedesktopDBusPropertiesInterface(
+    OrgFreedesktopDBusPropertiesInterfaceBluetooth *prop = new OrgFreedesktopDBusPropertiesInterfaceBluetooth(
                 QStringLiteral("org.bluez"), QStringLiteral(""), QDBusConnection::systemBus());
-    QObject::connect(prop, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
+    QObject::connect(prop, &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
                      q, [this](const QString &interface, const QVariantMap &changedProperties,
                      const QStringList &invalidatedProperties,
                      const QDBusMessage &signal) {
