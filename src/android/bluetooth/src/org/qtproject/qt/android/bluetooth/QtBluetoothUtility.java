@@ -8,12 +8,8 @@ import android.os.Build;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageInfo;
-import android.content.res.AssetManager;
-import android.content.res.XmlResourceParser;
+import android.content.pm.PackageManager;
 import android.util.Log;
-
-import org.xmlpull.v1.XmlPullParser;
-import org.xmlpull.v1.XmlPullParserException;
 
 class QtBluetoothUtility {
 
@@ -28,7 +24,8 @@ class QtBluetoothUtility {
     //
     // API-level < 31: returns always true
     //
-    // API-level >= 31: returns true if BLUETOOTH_SCAN doesn't have 'neverForLocation' set.
+    // API-level >= 31: returns true if BLUETOOTH_SCAN doesn't have 'neverForLocation' set,
+    // or if the BLUETOOTH_SCAN permission is not present.
     // Returns false if BLUETOOTH_SCAN has 'neverForLocation' set, or in case of any
     // unexpected failure.
     public static synchronized boolean bluetoothScanRequiresLocation(final Context qtContext)
@@ -51,39 +48,21 @@ class QtBluetoothUtility {
             return false;
         }
 
-        // API-levels 31 and above require Location if no 'neverForLocation' assertion
-        XmlResourceParser xmlParser = null;
         try {
-            // Open the used AndroidManifest.xml for traversing
-            final AssetManager assetManager =
-                        qtContext.createPackageContext(qtContext.getPackageName(), 0).getAssets();
-            xmlParser = assetManager.openXmlResourceParser(0, "AndroidManifest.xml");
+            // API-levels 31+ require Location if there is no 'neverForLocation' assertion.
+            // Therefore check for BLUETOOTH_SCAN and its permission flags. Note that the
+            // permissions and their flags are indeed "parallel" arrays, i.e. permissions[i]
+            // corresponds with permissionsFlags[i]
+            PackageManager pm = qtContext.getPackageManager();
+            PackageInfo pi = pm.getPackageInfo(qtContext.getPackageName(),
+                                               PackageManager.GET_PERMISSIONS);
+            String[] permissions = pi.requestedPermissions;
+            int[] permissionsFlags = pi.requestedPermissionsFlags;
 
-            int eventType = xmlParser.getEventType();
-            while (eventType != XmlPullParser.END_DOCUMENT) {
-                // Check if the current tag is a <uses-permission> tag
-                if (eventType == XmlPullParser.START_TAG
-                                                && xmlParser.getName().equals("uses-permission")) {
-                    String permissionName = null;
-                    int usesPermissionFlags = 0;
-
-                    // Loop through the attributes to see if there's BLUETOOTH_SCAN
-                    // permission with 'neverForLocation' set
-                    for (int i = 0; i < xmlParser.getAttributeCount(); i++) {
-                        String attributeName = xmlParser.getAttributeName(i);
-                        if (attributeName.equals("name")) {
-                            permissionName = xmlParser.getAttributeValue(i);
-                        } else if (attributeName.equals("usesPermissionFlags")) {
-                            String flagValue = xmlParser.getAttributeValue(i);
-                            if (flagValue.startsWith("0x")) {
-                                usesPermissionFlags = Integer.parseInt(flagValue.substring(2), 16);
-                            } else {
-                                usesPermissionFlags = Integer.parseInt(flagValue);
-                            }
-                        }
-                    }
-                    if (permissionName.equals(Manifest.permission.BLUETOOTH_SCAN)) {
-                        if ((usesPermissionFlags & PackageInfo.REQUESTED_PERMISSION_NEVER_FOR_LOCATION) != 0) {
+            if (permissions != null && permissionsFlags != null) {
+                for (int i = 0; i < permissions.length; ++i) {
+                    if (Manifest.permission.BLUETOOTH_SCAN.equals(permissions[i])) {
+                        if ((permissionsFlags[i] & PackageInfo.REQUESTED_PERMISSION_NEVER_FOR_LOCATION) != 0) {
                             Log.d(TAG, "BLUETOOTH_SCAN with 'neverForLocation' found");
                             scanRequiresLocation = false;
                         } else {
@@ -94,14 +73,10 @@ class QtBluetoothUtility {
                         return scanRequiresLocation;
                     }
                 }
-                eventType = xmlParser.nextToken();
             }
         } catch (Exception ex) {
             Log.w(TAG, "An error occurred while checking Bluetooth's location need: " + ex);
             scanRequiresLocation = false;
-        } finally {
-            if (xmlParser != null)
-                xmlParser.close();
         }
         Log.d(TAG, "BLUETOOTH_SCAN permission not found");
         isScanRequiresLocationChecked = true;
