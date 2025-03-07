@@ -11,6 +11,7 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 using namespace Qt::StringLiterals;
+using namespace QtBluetoothPrivate; // for D-Bus wrappers
 
 static constexpr QLatin1String appObjectPathTemplate{"/qt/btle/application/%1%2/%3"};
 

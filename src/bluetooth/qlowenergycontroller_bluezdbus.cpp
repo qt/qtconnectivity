@@ -18,6 +18,8 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
+using namespace QtBluetoothPrivate; // for D-Bus wrappers
+
 QLowEnergyControllerPrivateBluezDBus::QLowEnergyControllerPrivateBluezDBus(
         const QString &adapterPathWithPeripheralSupport)
     : QLowEnergyControllerPrivate(),
@@ -340,10 +342,10 @@ void QLowEnergyControllerPrivateBluezDBus::connectToDeviceHelper()
     device = new OrgBluezDevice1Interface(
                                 QStringLiteral("org.bluez"), devicePath,
                                 QDBusConnection::systemBus(), this);
-    deviceMonitor = new OrgFreedesktopDBusPropertiesInterfaceBluetooth(
+    deviceMonitor = new OrgFreedesktopDBusPropertiesInterface(
                                 QStringLiteral("org.bluez"), devicePath,
                                 QDBusConnection::systemBus(), this);
-    connect(deviceMonitor, &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
+    connect(deviceMonitor, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
             this, &QLowEnergyControllerPrivateBluezDBus::devicePropertiesChanged);
 }
 
@@ -736,11 +738,11 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServiceDetails(
             // every ClientCharacteristicConfiguration needs to track property changes
             if (descData.uuid
                         == QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration)) {
-                dbusChar.charMonitor = QSharedPointer<OrgFreedesktopDBusPropertiesInterfaceBluetooth>::create(
+                dbusChar.charMonitor = QSharedPointer<OrgFreedesktopDBusPropertiesInterface>::create(
                                                 QStringLiteral("org.bluez"),
                                                 dbusChar.characteristic->path(),
                                                 QDBusConnection::systemBus(), this);
-                connect(dbusChar.charMonitor.data(), &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
+                connect(dbusChar.charMonitor.data(), &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
                         this, [this, indexHandle](const QString &interface, const QVariantMap &changedProperties,
                         const QStringList &removedProperties) {
 

@@ -32,10 +32,12 @@
 #include <QtDBus/QtDBus>
 #include <QtCore/private/qglobal_p.h>
 
+namespace QtBluetoothPrivate {
+
 /*
  * Proxy class for interface org.freedesktop.DBus.Properties
  */
-class OrgFreedesktopDBusPropertiesInterfaceBluetooth: public QDBusAbstractInterface
+class OrgFreedesktopDBusPropertiesInterface: public QDBusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -43,9 +45,9 @@ public:
     { return "org.freedesktop.DBus.Properties"; }
 
 public:
-    OrgFreedesktopDBusPropertiesInterfaceBluetooth(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent = nullptr);
+    OrgFreedesktopDBusPropertiesInterface(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent = nullptr);
 
-    ~OrgFreedesktopDBusPropertiesInterfaceBluetooth();
+    ~OrgFreedesktopDBusPropertiesInterface();
 
 public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QDBusVariant> Get(const QString &interface, const QString &name)
@@ -74,11 +76,14 @@ Q_SIGNALS: // SIGNALS
                            const QDBusMessage &msg);
 };
 
+} // end of namespace QtBluetoothPrivate
+
 namespace org {
   namespace freedesktop {
     namespace DBus {
-      using Properties = ::OrgFreedesktopDBusPropertiesInterfaceBluetooth;
+      using Properties = ::QtBluetoothPrivate::OrgFreedesktopDBusPropertiesInterface;
     }
   }
 }
+
 #endif

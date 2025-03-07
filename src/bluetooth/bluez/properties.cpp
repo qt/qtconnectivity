@@ -11,18 +11,21 @@
 
 #include "properties_p.h"
 
+namespace QtBluetoothPrivate {
+
 /*
- * Implementation of interface class OrgFreedesktopDBusPropertiesInterfaceBluetooth
+ * Implementation of interface class OrgFreedesktopDBusPropertiesInterface
  */
 
-OrgFreedesktopDBusPropertiesInterfaceBluetooth::OrgFreedesktopDBusPropertiesInterfaceBluetooth(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)
+OrgFreedesktopDBusPropertiesInterface::OrgFreedesktopDBusPropertiesInterface(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)
     : QDBusAbstractInterface(service, path, staticInterfaceName(), connection, parent)
 {
 }
 
-OrgFreedesktopDBusPropertiesInterfaceBluetooth::~OrgFreedesktopDBusPropertiesInterfaceBluetooth()
+OrgFreedesktopDBusPropertiesInterface::~OrgFreedesktopDBusPropertiesInterface()
 {
 }
 
+} // end of namespace QtBluetoothPrivate
 
 #include "moc_properties_p.cpp"

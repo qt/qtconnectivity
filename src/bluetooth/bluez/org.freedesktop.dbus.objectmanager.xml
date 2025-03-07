@@ -9,7 +9,7 @@
     <signal name="InterfacesAdded">
       <arg type="o" name="object_path"/>
   <arg type="a{sa{sv}}" name="interfaces_and_properties"/>
-  <annotation name="org.qtproject.QtDBus.QtTypeName.In1" value="InterfaceList"/>
+  <annotation name="org.qtproject.QtDBus.QtTypeName.Out1" value="InterfaceList"/>
     </signal>
     <signal name="InterfacesRemoved">
       <arg type="o" name="object_path"/>

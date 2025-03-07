@@ -19,6 +19,8 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
+using namespace QtBluetoothPrivate; // for D-Bus wrappers
+
 QBluetoothLocalDevice::QBluetoothLocalDevice(QObject *parent) :
     QObject(parent),
     d_ptr(new QBluetoothLocalDevicePrivate(this))
@@ -407,7 +409,7 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
         if (reply.isError())
             return;
 
-        OrgFreedesktopDBusPropertiesInterfaceBluetooth *monitor = nullptr;
+        OrgFreedesktopDBusPropertiesInterface *monitor = nullptr;
 
         ManagedObjectList managedObjectList = reply.value();
         for (ManagedObjectList::const_iterator it = managedObjectList.constBegin(); it != managedObjectList.constEnd(); ++it) {
@@ -423,10 +425,10 @@ void QBluetoothLocalDevicePrivate::connectDeviceChanges()
                 const QVariantMap &ifaceValues = jt.value();
 
                 if (iface == QStringLiteral("org.bluez.Device1")) {
-                    monitor = new OrgFreedesktopDBusPropertiesInterfaceBluetooth(QStringLiteral("org.bluez"),
+                    monitor = new OrgFreedesktopDBusPropertiesInterface(QStringLiteral("org.bluez"),
                                                                         path.path(),
                                                                         QDBusConnection::systemBus(), this);
-                    connect(monitor, &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
+                    connect(monitor, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
                             this, &QBluetoothLocalDevicePrivate::PropertiesChanged);
                     deviceChangeMonitors.insert(path.path(), monitor);
 
@@ -478,10 +480,10 @@ void QBluetoothLocalDevicePrivate::initializeAdapter()
 
     if (adapter) {
         //hook up propertiesChanged for current adapter
-        adapterProperties = new OrgFreedesktopDBusPropertiesInterfaceBluetooth(
+        adapterProperties = new OrgFreedesktopDBusPropertiesInterface(
                 QStringLiteral("org.bluez"), adapter->path(),
                 QDBusConnection::systemBus(), this);
-        connect(adapterProperties, &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
+        connect(adapterProperties, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
                 this, &QBluetoothLocalDevicePrivate::PropertiesChanged);
     }
 }
@@ -528,8 +530,8 @@ void QBluetoothLocalDevicePrivate::PropertiesChanged(const QString &interface,
     } else if (interface == QStringLiteral("org.bluez.Device1")
                && changed_properties.contains(QStringLiteral("Connected"))) {
         // update list of connected devices
-        OrgFreedesktopDBusPropertiesInterfaceBluetooth *senderIface =
-                qobject_cast<OrgFreedesktopDBusPropertiesInterfaceBluetooth*>(sender());
+        OrgFreedesktopDBusPropertiesInterface *senderIface =
+                qobject_cast<OrgFreedesktopDBusPropertiesInterface*>(sender());
         if (!senderIface)
             return;
 
@@ -556,11 +558,11 @@ void QBluetoothLocalDevicePrivate::InterfacesAdded(const QDBusObjectPath &object
         // a new device was added which we need to add to list of known devices
 
         if (objectPathIsForThisDevice(deviceAdapterPath, object_path.path())) {
-            OrgFreedesktopDBusPropertiesInterfaceBluetooth *monitor = new OrgFreedesktopDBusPropertiesInterfaceBluetooth(
+            OrgFreedesktopDBusPropertiesInterface *monitor = new OrgFreedesktopDBusPropertiesInterface(
                                                QStringLiteral("org.bluez"),
                                                object_path.path(),
                                                QDBusConnection::systemBus());
-            connect(monitor, &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
+            connect(monitor, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
                     this, &QBluetoothLocalDevicePrivate::PropertiesChanged);
             deviceChangeMonitors.insert(object_path.path(), monitor);
 
