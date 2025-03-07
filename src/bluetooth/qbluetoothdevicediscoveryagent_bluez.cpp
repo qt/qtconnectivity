@@ -21,6 +21,8 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
+using namespace QtBluetoothPrivate; // for D-Bus wrappers
+
 QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
     const QBluetoothAddress &deviceAdapter, QBluetoothDeviceDiscoveryAgent *parent) :
     adapterAddress(deviceAdapter),
@@ -139,9 +141,9 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
                      q, [this](const QString &path){
         this->_q_discoveryInterrupted(path);
     });
-    OrgFreedesktopDBusPropertiesInterfaceBluetooth *prop = new OrgFreedesktopDBusPropertiesInterfaceBluetooth(
+    OrgFreedesktopDBusPropertiesInterface *prop = new OrgFreedesktopDBusPropertiesInterface(
                 QStringLiteral("org.bluez"), QStringLiteral(""), QDBusConnection::systemBus());
-    QObject::connect(prop, &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
+    QObject::connect(prop, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
                      q, [this](const QString &interface, const QVariantMap &changedProperties,
                      const QStringList &invalidatedProperties,
                      const QDBusMessage &signal) {

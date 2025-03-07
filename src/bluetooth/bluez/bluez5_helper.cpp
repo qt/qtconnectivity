@@ -22,6 +22,8 @@ QT_IMPL_METATYPE_EXTERN(ManagedObjectList)
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
+using namespace QtBluetoothPrivate; // for D-Bus wrappers
+
 typedef enum Bluez5TestResultType
 {
     BluezVersionUnknown,
@@ -254,7 +256,7 @@ public:
 
     int reference;
     bool wasListeningAlready;
-    OrgFreedesktopDBusPropertiesInterfaceBluetooth *propteryListener = nullptr;
+    OrgFreedesktopDBusPropertiesInterface *propteryListener = nullptr;
 };
 
 class QtBluezDiscoveryManagerPrivate
@@ -335,9 +337,9 @@ bool QtBluezDiscoveryManager::registerDiscoveryInterest(const QString &adapterPa
 
     AdapterData *data = new AdapterData();
 
-    OrgFreedesktopDBusPropertiesInterfaceBluetooth *propIface = new OrgFreedesktopDBusPropertiesInterfaceBluetooth(
+    OrgFreedesktopDBusPropertiesInterface *propIface = new OrgFreedesktopDBusPropertiesInterface(
                 QStringLiteral("org.bluez"), adapterPath, QDBusConnection::systemBus());
-    connect(propIface, &OrgFreedesktopDBusPropertiesInterfaceBluetooth::PropertiesChanged,
+    connect(propIface, &OrgFreedesktopDBusPropertiesInterface::PropertiesChanged,
             this, &QtBluezDiscoveryManager::PropertiesChanged);
     data->propteryListener = propIface;
 
@@ -406,8 +408,8 @@ void QtBluezDiscoveryManager::PropertiesChanged(const QString &interface,
 {
     Q_UNUSED(invalidated_properties);
 
-    OrgFreedesktopDBusPropertiesInterfaceBluetooth *propIface =
-            qobject_cast<OrgFreedesktopDBusPropertiesInterfaceBluetooth *>(sender());
+    OrgFreedesktopDBusPropertiesInterface *propIface =
+            qobject_cast<OrgFreedesktopDBusPropertiesInterface *>(sender());
 
     if (!propIface)
         return;

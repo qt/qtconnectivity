@@ -22,7 +22,11 @@
 #include <QtNetwork/qlocalsocket.h>
 #include <QDBusPendingCallWatcher>
 
+namespace QtBluetoothPrivate {
+
 class OrgBluezProfileManager1Interface;
+
+} // namespace QtBluetoothPrivate
 
 QT_BEGIN_NAMESPACE
 
@@ -85,7 +89,7 @@ private:
     void clearSocket();
 
 private:
-    OrgBluezProfileManager1Interface *profileManager = nullptr;
+    QtBluetoothPrivate::OrgBluezProfileManager1Interface *profileManager = nullptr;
     OrgBluezProfile1ContextInterface *profileContext = nullptr;
     QString remoteDevicePath;
     QString profileUuid;

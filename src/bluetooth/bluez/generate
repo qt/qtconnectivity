@@ -12,7 +12,8 @@ process() {
 
     HEADER_FILE=${CPP_BASENAME}_p.h
     CPP_FILE=${CPP_BASENAME}.cpp
-    qdbusxml2cpp "$@" -I "$QGLOBAL_P_H" -p $HEADER_FILE:$CPP_FILE "$XML_FILE" --moc
+    qdbusxml2cpp "$@" -I "$QGLOBAL_P_H" -p $HEADER_FILE:$CPP_FILE "$XML_FILE" \
+    --namespace QtBluetoothPrivate --moc
 }
 
 #Bluez 5
@@ -22,7 +23,7 @@ process profilemanager1  org.bluez.ProfileManager1.xml
 process profile1         org.bluez.Profile1.xml
 
 process objectmanager    org.freedesktop.dbus.objectmanager.xml -i bluez5_helper_p.h
-process properties       org.freedesktop.dbus.properties.xml -c OrgFreedesktopDBusPropertiesInterfaceBluetooth
+process properties       org.freedesktop.dbus.properties.xml
 
 process gattchar1        org.bluez.GattCharacteristic1.xml
 process gattdesc1        org.bluez.GattDescriptor1.xml

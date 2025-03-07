@@ -24,10 +24,16 @@
 #include <QStringList>
 
 #if QT_CONFIG(bluez)
+
+namespace QtBluetoothPrivate {
+
 class OrgBluezManagerInterface;
 class OrgBluezAdapterInterface;
 class OrgBluezDeviceInterface;
 class OrgFreedesktopDBusObjectManagerInterface;
+
+} // namespace QtBluetoothPrivate
+
 #include <QtCore/qprocess.h>
 
 QT_BEGIN_NAMESPACE
@@ -150,7 +156,7 @@ private:
     bool singleDevice;
 #if QT_CONFIG(bluez)
     QString foundHostAdapterPath;
-    OrgFreedesktopDBusObjectManagerInterface *manager = nullptr;
+    QtBluetoothPrivate::OrgFreedesktopDBusObjectManagerInterface *manager = nullptr;
     QProcess *sdpScannerProcess = nullptr;
 #endif
 

@@ -22,6 +22,8 @@
 
 #include <QtDBus/QDBusObjectPath>
 
+namespace QtBluetoothPrivate {
+
 class OrgBluezAdapter1Interface;
 class OrgBluezBattery1Interface;
 class OrgBluezDevice1Interface;
@@ -29,7 +31,9 @@ class OrgBluezGattCharacteristic1Interface;
 class OrgBluezGattDescriptor1Interface;
 class OrgBluezGattService1Interface;
 class OrgFreedesktopDBusObjectManagerInterface;
-class OrgFreedesktopDBusPropertiesInterfaceBluetooth;
+class OrgFreedesktopDBusPropertiesInterface;
+
+} // namespace QtBluetoothPrivate
 
 QT_BEGIN_NAMESPACE
 
@@ -105,10 +109,10 @@ private slots:
     void onDescWriteFinished(QDBusPendingCallWatcher *call);
 private:
 
-    OrgBluezAdapter1Interface* adapter{};
-    OrgBluezDevice1Interface* device{};
-    OrgFreedesktopDBusObjectManagerInterface* managerBluez{};
-    OrgFreedesktopDBusPropertiesInterfaceBluetooth* deviceMonitor{};
+    QtBluetoothPrivate::OrgBluezAdapter1Interface* adapter{};
+    QtBluetoothPrivate::OrgBluezDevice1Interface* device{};
+    QtBluetoothPrivate::OrgFreedesktopDBusObjectManagerInterface* managerBluez{};
+    QtBluetoothPrivate::OrgFreedesktopDBusPropertiesInterface* deviceMonitor{};
     QString adapterPathWithPeripheralSupport;
 
     int remoteMtu{-1};
@@ -132,9 +136,9 @@ private:
 
     struct GattCharacteristic
     {
-        QSharedPointer<OrgBluezGattCharacteristic1Interface> characteristic;
-        QSharedPointer<OrgFreedesktopDBusPropertiesInterfaceBluetooth> charMonitor;
-        QList<QSharedPointer<OrgBluezGattDescriptor1Interface>> descriptors;
+        QSharedPointer<QtBluetoothPrivate::OrgBluezGattCharacteristic1Interface> characteristic;
+        QSharedPointer<QtBluetoothPrivate::OrgFreedesktopDBusPropertiesInterface> charMonitor;
+        QList<QSharedPointer<QtBluetoothPrivate::OrgBluezGattDescriptor1Interface>> descriptors;
     };
 
     struct GattService
@@ -143,7 +147,7 @@ private:
         QList<GattCharacteristic> characteristics;
 
         bool hasBatteryService = false;
-        QSharedPointer<OrgBluezBattery1Interface> batteryInterface;
+        QSharedPointer<QtBluetoothPrivate::OrgBluezBattery1Interface> batteryInterface;
     };
 
     QHash<QBluetoothUuid, GattService> dbusServices;

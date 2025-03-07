@@ -26,6 +26,7 @@
 QT_BEGIN_NAMESPACE
 
 using namespace Qt::StringLiterals;
+using namespace QtBluetoothPrivate; // for D-Bus wrappers
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
