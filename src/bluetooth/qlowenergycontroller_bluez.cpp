@@ -61,6 +61,7 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 using namespace QBluetooth;
+using namespace QtBluetoothPrivate; // for D-Bus wrappers
 
 const int maxPrepareQueueSize = 1024;
 

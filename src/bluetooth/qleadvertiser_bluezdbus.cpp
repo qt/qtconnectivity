@@ -14,6 +14,7 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 using namespace Qt::StringLiterals;
+using namespace QtBluetoothPrivate; // for D-Bus wrappers
 
 // The advertisement dbus object path is freely definable, use as prefix
 static constexpr auto advObjectPathTemplate{"/qt/btle/advertisement/%1%2/%3"_L1};

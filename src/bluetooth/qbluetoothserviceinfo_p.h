@@ -27,8 +27,12 @@
 #include "darwin/btraii_p.h"
 #endif
 
+namespace QtBluetoothPrivate {
+
 class OrgBluezServiceInterface;
 class OrgBluezProfileManager1Interface;
+
+} // namespace QtBluetoothPrivate
 
 #ifdef QT_WINRT_BLUETOOTH
 #include <wrl.h>
@@ -72,7 +76,7 @@ public:
     int serverChannel() const;
 private:
 #if QT_CONFIG(bluez)
-    OrgBluezProfileManager1Interface *service = nullptr;
+    QtBluetoothPrivate::OrgBluezProfileManager1Interface *service = nullptr;
     quint32 serviceRecord;
     QBluetoothAddress currentLocalAdapter;
     QString profilePath;

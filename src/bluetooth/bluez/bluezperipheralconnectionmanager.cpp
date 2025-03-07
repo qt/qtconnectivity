@@ -13,6 +13,7 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 using namespace Qt::StringLiterals;
+using namespace QtBluetoothPrivate; // for D-Bus wrappers
 
 QtBluezPeripheralConnectionManager::QtBluezPeripheralConnectionManager(
         const QBluetoothAddress& localAddress, QObject* parent)
