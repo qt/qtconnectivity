@@ -16,6 +16,7 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
 using namespace Qt::StringLiterals;
+using namespace QtBluetoothPrivate; // for D-Bus adaptors
 
 static constexpr auto characteristicPathTemplate{"%1/char%2"_L1};
 static constexpr auto descriptorPathTemplate{"%1/desc%2"_L1};
