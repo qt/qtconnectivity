@@ -75,7 +75,7 @@ if(QT_FEATURE_bluez)
             bluez/remotedevicemanager.cpp bluez/remotedevicemanager_p.h
             bluez/servicemap.cpp bluez/servicemap_p.h
             bluez/gattmanager1.cpp bluez/gattmanager1_p.h
-            bluez/leadvertisement1.cpp bluez/leadvertisement1_p.h
+            bluez/leadvertisement1adaptor.cpp bluez/leadvertisement1adaptor_p.h
             bluez/leadvertisingmanager1.cpp bluez/leadvertisingmanager1_p.h
             bluez/objectmanageradaptor.cpp bluez/objectmanageradaptor_p.h
             bluez/propertiesadaptor.cpp bluez/propertiesadaptor_p.h
