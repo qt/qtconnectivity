@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 #include "qleadvertiser_bluezdbus_p.h"
-#include "bluez/leadvertisement1_p.h"
+#include "bluez/leadvertisement1adaptor_p.h"
 #include "bluez/leadvertisingmanager1_p.h"
 #include "bluez/bluez5_helper_p.h"
 
