@@ -21,9 +21,9 @@
 #include <QtBluetooth/QBluetoothAddress>
 #include <QtCore/QCoreApplication>
 
-class OrgFreedesktopDBusObjectManagerAdaptor;
 namespace QtBluetoothPrivate {
 
+class OrgFreedesktopDBusObjectManagerAdaptor;
 class OrgBluezGattManager1Interface;
 
 } // namespace QtBluetoothPrivate
@@ -94,7 +94,7 @@ private:
     QMap<QLowEnergyHandle, QtBluezPeripheralDescriptor*> m_descriptors;
 
     QString m_objectPath;
-    OrgFreedesktopDBusObjectManagerAdaptor* m_objectManager{};
+    QtBluetoothPrivate::OrgFreedesktopDBusObjectManagerAdaptor* m_objectManager{};
     QtBluetoothPrivate::OrgBluezGattManager1Interface* m_gattManager{};
     bool m_applicationRegistered{false};
 };
