@@ -23,10 +23,14 @@
 #include <QtBluetooth/QLowEnergyCharacteristicData>
 #include <QtBluetooth/QLowEnergyServiceData>
 
+namespace QtBluetoothPrivate {
+
 class OrgFreedesktopDBusPropertiesAdaptor;
 class OrgBluezGattCharacteristic1Adaptor;
 class OrgBluezGattDescriptor1Adaptor;
 class OrgBluezGattService1Adaptor;
+
+} // namespace QtBluetoothPrivate
 
 QT_BEGIN_NAMESPACE
 
@@ -55,7 +59,7 @@ public:
     // to read and write values towards the Qt API
     QLowEnergyHandle handle;
     // Bluez DBus Gatt objects need to provide this
-    OrgFreedesktopDBusPropertiesAdaptor* propertiesAdaptor{};
+    QtBluetoothPrivate::OrgFreedesktopDBusPropertiesAdaptor* propertiesAdaptor{};
 
 signals:
     void remoteDeviceAccessEvent(const QString& remoteDeviceObjectPath, quint16 mtu);
@@ -97,7 +101,7 @@ signals:
 private:
     void initializeFlags(const QLowEnergyDescriptorData& data);
 
-    OrgBluezGattDescriptor1Adaptor* m_adaptor{};
+    QtBluetoothPrivate::OrgBluezGattDescriptor1Adaptor* m_adaptor{};
     QString m_characteristicPath;
     QByteArray m_value;
     QStringList m_flags;
@@ -139,7 +143,7 @@ private:
     void initializeValue(const QByteArray& value);
     void initializeFlags(const QLowEnergyCharacteristicData& data);
 
-    OrgBluezGattCharacteristic1Adaptor* m_adaptor{};
+    QtBluetoothPrivate::OrgBluezGattCharacteristic1Adaptor* m_adaptor{};
     QString m_servicePath;
     bool m_notifying{false};
     QByteArray m_value;
@@ -161,7 +165,7 @@ public:
 
 private:
     const bool m_isPrimary;
-    OrgBluezGattService1Adaptor* m_adaptor{};
+    QtBluetoothPrivate::OrgBluezGattService1Adaptor* m_adaptor{};
     QList<QDBusObjectPath> m_includedServices;
 };
 
