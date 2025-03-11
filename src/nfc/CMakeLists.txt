@@ -107,6 +107,7 @@ qt_internal_extend_target(Nfc CONDITION QT_FEATURE_neard
         neard/org.neard.Tag.xml
     DBUS_INTERFACE_FLAGS
         -i neard/neard_dbus_types_p.h
+        --namespace QtNfcPrivate
     DEFINES
         NEARD_NFC
     LIBRARIES

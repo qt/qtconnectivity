@@ -24,8 +24,6 @@
 #include <QDBusVariant>
 #include <QMap>
 
-class OrgNeardManagerInterface;
-
 QT_BEGIN_NAMESPACE
 
 class QNearFieldManagerPrivateImpl : public QNearFieldManagerPrivate

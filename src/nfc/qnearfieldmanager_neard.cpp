@@ -13,6 +13,8 @@ QT_BEGIN_NAMESPACE
 Q_DECLARE_LOGGING_CATEGORY(QT_NFC_NEARD)
 Q_LOGGING_CATEGORY(QT_NFC_NEARD, "qt.nfc.neard")
 
+using namespace QtNfcPrivate; // for D-Bus wrappers
+
 // TODO We need a constructor that lets us select an adapter
 QNearFieldManagerPrivateImpl::QNearFieldManagerPrivateImpl()
     : QNearFieldManagerPrivate(),

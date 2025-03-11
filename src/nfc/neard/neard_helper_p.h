@@ -18,7 +18,11 @@
 
 #include "neard_dbus_types_p.h"
 
+namespace QtNfcPrivate {
+
 class OrgFreedesktopDBusObjectManagerInterface;
+
+} // namespace QtNfcPrivate
 
 QT_BEGIN_NAMESPACE
 
@@ -29,7 +33,7 @@ public:
     NeardHelper(QObject* parent = 0);
     static NeardHelper *instance();
 
-    OrgFreedesktopDBusObjectManagerInterface *dbusObjectManager();
+    QtNfcPrivate::OrgFreedesktopDBusObjectManagerInterface *dbusObjectManager();
 
 signals:
     void tagFound(const QDBusObjectPath&);
@@ -42,7 +46,7 @@ private slots:
     void interfacesRemoved(const QDBusObjectPath&, const QStringList&);
 
 private:
-    OrgFreedesktopDBusObjectManagerInterface *m_dbusObjectManager;
+    QtNfcPrivate::OrgFreedesktopDBusObjectManagerInterface *m_dbusObjectManager;
 };
 
 QT_END_NAMESPACE

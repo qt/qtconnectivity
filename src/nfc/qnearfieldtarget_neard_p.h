@@ -58,7 +58,7 @@ private:
     void handleWriteRequest();
 
     QDBusObjectPath m_tagPath;
-    OrgFreedesktopDBusPropertiesInterface *m_dbusProperties;
+    QtNfcPrivate::OrgFreedesktopDBusPropertiesInterface *m_dbusProperties;
     QList<QDBusObjectPath> m_recordPaths;
     QTimer m_recordPathsCollectedTimer;
     QTimer m_readErrorTimer;

@@ -11,6 +11,8 @@ QT_BEGIN_NAMESPACE
 
 Q_DECLARE_LOGGING_CATEGORY(QT_NFC_NEARD)
 
+using namespace QtNfcPrivate; // for D-Bus wrappers
+
 QNearFieldTargetPrivateImpl::QNearFieldTargetPrivateImpl(QObject *parent, QDBusObjectPath interfacePath)
     : QNearFieldTargetPrivate(parent),
       m_tagPath(interfacePath),
