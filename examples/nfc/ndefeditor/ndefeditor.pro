@@ -4,7 +4,7 @@
 QT += nfc quick quickcontrols2
 
 CONFIG += qmltypes
-QML_IMPORT_NAME = NdefEditor
+QML_IMPORT_NAME = NdefEditorModule
 QML_IMPORT_MAJOR_VERSION = 1
 
 TARGET = ndefeditor
@@ -27,7 +27,7 @@ qml_resources.files = \
     MainWindow.qml \
     NdefRecordDelegate.qml
 
-qml_resources.prefix = /qt/qml/NdefEditor
+qml_resources.prefix = /qt/qml/NdefEditorModule
 
 theme_resources.files = \
     icons/ndefeditor/20x20@2/add.png \
