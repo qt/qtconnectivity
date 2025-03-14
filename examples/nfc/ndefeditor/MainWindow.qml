@@ -7,7 +7,7 @@ import QtQuick.Controls
 import QtQuick.Dialogs
 import QtQuick.Layouts
 
-import NdefEditor
+import NdefEditorModule
 
 ApplicationWindow {
     id: window
