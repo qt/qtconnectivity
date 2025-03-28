@@ -60,8 +60,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 
     \note On macOS Monterey (12) the socket data flow is paused when a
     modal dialogue is executing, or an event tracking mode is entered (for
-    example by long-pressing a Window close button). This may change in the
-    future releases of macOS.
+    example by long-pressing a Window close button). This issue has been
+    fixed in macOS Sequoia (15).
 */
 
 /*!
