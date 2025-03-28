@@ -36,11 +36,9 @@ include
 config.tests/bluez/bluez
 config.tests/bluez_le/bluez_le
 examples/bluetooth/btchat/btchat
-examples/bluetooth/btscanner/btscanner
 examples/bluetooth/heartrate-game/heartrate-game
 examples/bluetooth/heartrate-server/heartrate-server
 examples/bluetooth/lowenergyscanner/lowenergyscanner
-examples/bluetooth/pingpong/pingpong
 examples/nfc/annotatedurl/annotatedurl
 examples/nfc/ndefeditor/ndefeditor
 examples/nfc/poster/qml_poster
