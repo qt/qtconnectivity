@@ -38,7 +38,8 @@ QNearFieldTargetPrivateImpl::QNearFieldTargetPrivateImpl(QObject *parent, QDBusO
         return;
     }
 
-    const QString &type = reply.value().value(QStringLiteral("Type")).toString();
+    const QVariantMap props = reply.value();
+    const QString type = props.value(QStringLiteral("Type")).toString();
     m_type = QNearFieldTarget::ProprietaryTag;
 
     if (type == QStringLiteral("Type 1"))
@@ -51,6 +52,9 @@ QNearFieldTargetPrivateImpl::QNearFieldTargetPrivateImpl(QObject *parent, QDBusO
         m_type = QNearFieldTarget::NfcTagType4;
 
     qCDebug(QT_NFC_NEARD) << "tag type" << type;
+
+    m_uid = props.value(QStringLiteral("Uid")).toByteArray();
+    qCDebug(QT_NFC_NEARD) << "tag UID" << m_uid.toHex();
 
     connect(&m_recordPathsCollectedTimer, &QTimer::timeout,
             this, &QNearFieldTargetPrivateImpl::createNdefMessage);
@@ -73,8 +77,7 @@ bool QNearFieldTargetPrivateImpl::isValid()
 
 QByteArray QNearFieldTargetPrivateImpl::uid() const
 {
-    return QByteArray(); // TODO figure out a workaround because neard does not offer
-                         // this property
+    return m_uid;
 }
 
 QNearFieldTarget::Type QNearFieldTargetPrivateImpl::type() const

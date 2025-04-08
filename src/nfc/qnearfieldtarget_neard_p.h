@@ -63,6 +63,7 @@ private:
     QTimer m_recordPathsCollectedTimer;
     QTimer m_readErrorTimer;
     QTimer m_delayedWriteTimer;
+    QByteArray m_uid;
     QNearFieldTarget::Type m_type;
     bool m_readRequested;
     QNearFieldTarget::RequestId m_currentReadRequestId;
