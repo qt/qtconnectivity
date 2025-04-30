@@ -158,7 +158,19 @@ int QNearFieldTargetPrivateImpl::maxCommandLength() const
 
 QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::sendCommand(const QByteArray &command)
 {
-    if (command.size() == 0 || command.size() > maxCommandLength()) {
+    const int maxLength = maxCommandLength();
+    if (maxLength == 0) {
+        // Similar to the handling of "transceive" below, some devices (especially Samsung)
+        // fail to report a lost card right away but consider it still present.
+        // Thus, checkIsTargetLost() does not emit the targetLost signal. When actually
+        // trying to communicate with the alleged card, the JNI call will fail with
+        // an SecurityException, indicating that the card was, in fact, lost before.
+        handleTargetLost();
+        Q_EMIT error(QNearFieldTarget::ConnectionError, QNearFieldTarget::RequestId());
+        return QNearFieldTarget::RequestId();
+    }
+
+    if (command.size() == 0 || command.size() > maxLength) {
         Q_EMIT error(QNearFieldTarget::InvalidParametersError, QNearFieldTarget::RequestId());
         return QNearFieldTarget::RequestId();
     }
@@ -442,8 +454,10 @@ bool QNearFieldTargetPrivateImpl::connect()
     bool connected = false;
     if (methodId)
         connected = env->CallBooleanMethod(tagTech.object(), methodId);
-    if (!methodId || env.checkAndClearExceptions())
+    if (!methodId || env.checkAndClearExceptions()) {
+        handleTargetLost();
         return false;
+    }
 
     if (connected)
         return true;
