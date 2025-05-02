@@ -409,11 +409,7 @@ bool QNdefNfcSmartPosterRecord::removeTitle(const QString &locale)
  */
 void QNdefNfcSmartPosterRecord::setTitles(const QList<QNdefNfcTextRecord> &titles)
 {
-    d->m_titleList.clear();
-
-    for (qsizetype i = 0; i < titles.size(); ++i) {
-        d->m_titleList.append(titles[i]);
-    }
+    d->m_titleList = titles;
 
     // Convert to payload
     convertToPayload();
@@ -633,11 +629,7 @@ bool QNdefNfcSmartPosterRecord::removeIcon(const QByteArray &type)
  */
 void QNdefNfcSmartPosterRecord::setIcons(const QList<QNdefNfcIconRecord> &icons)
 {
-    d->m_iconList.clear();
-
-    for (qsizetype i = 0; i < icons.size(); ++i) {
-        d->m_iconList.append(icons[i]);
-    }
+    d->m_iconList = icons;
 
     // Convert to payload
     convertToPayload();
