@@ -300,7 +300,7 @@ bool QNearFieldTarget::hasNdefMessage()
     if the target does not support reading NDEF messages.
 
     An ndefMessageRead() signal will be emitted for each NDEF message. The requestCompleted()
-    signal will be emitted was all NDEF messages have been read. The error() signal is emitted if
+    signal will be emitted when all NDEF messages have been read. The error() signal is emitted if
     an error occurs.
 
     \note An attempt to read an NDEF message from a tag, that is in INITIALIZED
@@ -317,7 +317,7 @@ QNearFieldTarget::RequestId QNearFieldTarget::readNdefMessages()
 /*!
     Writes the NDEF messages in \a messages to the target. Returns a request id which can be used
     to track the completion status of the request. An invalid request id will be returned if the
-    target does not support reading NDEF messages.
+    target does not support writing NDEF messages.
 
     The requestCompleted() signal will be emitted when the write operation completes
     successfully; otherwise the error() signal is emitted.
