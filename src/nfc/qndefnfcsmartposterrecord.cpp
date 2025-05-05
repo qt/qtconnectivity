@@ -59,6 +59,22 @@ QT_BEGIN_NAMESPACE
     \value EditAction           Open for editing (open an SMS in the SMS editor, open the URI in a URI editor, open the telephone number for editing).
  */
 
+QNdefNfcSmartPosterRecordPrivate::~QNdefNfcSmartPosterRecordPrivate()
+{
+    cleanup();
+}
+
+void QNdefNfcSmartPosterRecordPrivate::cleanup()
+{
+    // Clean-up existing internal structure
+    m_titleList.clear();
+    delete m_uri;
+    delete m_action;
+    m_iconList.clear();
+    delete m_size;
+    delete m_type;
+}
+
 /*!
     Constructs a new empty smart poster.
 */
@@ -108,15 +124,8 @@ QNdefNfcSmartPosterRecord::~QNdefNfcSmartPosterRecord()
 
 void QNdefNfcSmartPosterRecord::cleanup()
 {
-    if (d) {
-        // Clean-up existing internal structure
-        d->m_titleList.clear();
-        if (d->m_uri) delete d->m_uri;
-        if (d->m_action) delete d->m_action;
-        d->m_iconList.clear();
-        if (d->m_size) delete d->m_size;
-        if (d->m_type) delete d->m_type;
-    }
+    if (d)
+        d->cleanup();
 }
 
 /*!
