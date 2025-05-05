@@ -218,6 +218,7 @@ QNearFieldTarget::RequestId QNearFieldTargetPrivateImpl::writeNdefMessages(const
         // with some queue inside the delegate's code (plus some unpredictable errors
         // handling) - require a single message as a single request.
         qCWarning(QT_IOS_NFC, "Only one NDEF message per request ID can be written");
+        reportError(QNearFieldTarget::UnsupportedError, requestId);
         return requestId;
     }
 
