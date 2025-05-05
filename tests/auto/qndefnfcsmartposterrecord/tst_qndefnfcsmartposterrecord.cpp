@@ -79,6 +79,7 @@ private slots:
     void tst_typeInfo();
     void tst_construct();
     void tst_downcast();
+    void tst_smartPosterRecordDoesNotLeak();
 };
 
 tst_QNdefNfcSmartPosterRecord::tst_QNdefNfcSmartPosterRecord()
@@ -536,6 +537,61 @@ void tst_QNdefNfcSmartPosterRecord::tst_downcast()
 
     // Check the payloads are the same
     QCOMPARE(basePayload, spPayload);
+}
+
+// This test shouldn't leak memory under ASAN/valgrind/etc...
+void tst_QNdefNfcSmartPosterRecord::tst_smartPosterRecordDoesNotLeak()
+{
+    QNdefNfcSmartPosterRecord record;
+
+    // titles
+    const QString enLoc = QStringLiteral("en_US");
+    const QString deLoc = QStringLiteral("de_DE");
+
+    record.addTitle(QStringLiteral("Hello"), enLoc, QNdefNfcTextRecord::Utf16);
+    record.addTitle(QStringLiteral("Hallo"), deLoc, QNdefNfcTextRecord::Utf8);
+
+    // URI
+    const QUrl uri(QStringLiteral("https://contribute.qt-project.org/"));
+    record.setUri(uri);
+
+    // Action
+    record.setAction(QNdefNfcSmartPosterRecord::DoAction);
+
+    // Icons
+    record.addIcon("type1", "data1");
+    record.addIcon("type2", "data2");
+
+    // Size
+    record.setSize(42);
+
+    // TypeInfo
+    const QString typeInfo = QStringLiteral("Some typeinfo");
+    record.setTypeInfo(typeInfo);
+
+    QCOMPARE(record.titleCount(), 2);
+    QVERIFY(record.hasTitle(deLoc));
+    QCOMPARE(record.title(deLoc), QStringLiteral("Hallo"));
+    QVERIFY(record.hasTitle(enLoc));
+    QCOMPARE(record.title(enLoc), QStringLiteral("Hello"));
+    QVERIFY(!record.hasTitle(QStringLiteral("no_NO")));
+
+    QCOMPARE(record.uri(), uri);
+
+    QVERIFY(record.hasAction());
+    QCOMPARE(record.action(), QNdefNfcSmartPosterRecord::DoAction);
+
+    QCOMPARE(record.iconCount(), 2);
+    QVERIFY(record.hasIcon("type1"));
+    QCOMPARE(record.icon("type1"), "data1");
+    QVERIFY(record.hasIcon("type2"));
+    QCOMPARE(record.icon("type2"), "data2");
+
+    QVERIFY(record.hasSize());
+    QCOMPARE(record.size(), 42);
+
+    QVERIFY(record.hasTypeInfo());
+    QCOMPARE(record.typeInfo(), typeInfo);
 }
 
 QTEST_MAIN(tst_QNdefNfcSmartPosterRecord)
