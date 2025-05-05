@@ -48,6 +48,9 @@ class QNdefNfcSmartPosterRecordPrivate : public QSharedData
 {
 public:
     QNdefNfcSmartPosterRecordPrivate() {}
+    ~QNdefNfcSmartPosterRecordPrivate();
+
+    void cleanup();
 
 public:
     QList<QNdefNfcTextRecord> m_titleList;
