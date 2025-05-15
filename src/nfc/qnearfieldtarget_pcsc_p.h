@@ -1,5 +1,5 @@
 // Copyright (C) 2022q The Qt Company Ltd.
-// SPDX-License-Identifier: LicenseRef-Qt-Commercial OR LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only
+// SPDX-License-Identifier: LicenseRef-Qt-Commercial
 
 #ifndef QNEARFIELDTARGET_PCSC_P_H
 #define QNEARFIELDTARGET_PCSC_P_H
