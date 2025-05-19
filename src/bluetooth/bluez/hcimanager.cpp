@@ -402,6 +402,11 @@ void HciManager::_q_readNotify()
         return;
     }
 
+    if (size == 0) {
+        qCWarning(QT_BT_BLUEZ) << "No data when trying to read HCI events";
+        return;
+    }
+
     switch (buffer[0]) {
     case HCI_EVENT_PKT:
         handleHciEventPacket(buffer + 1, size - 1);
