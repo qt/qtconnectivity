@@ -441,7 +441,11 @@ void HciManager::handleHciEventPacket(const quint8 *data, int size)
 
     switch ((HciManager::HciEvent)header->evt) {
     case HciEvent::EVT_ENCRYPT_CHANGE: {
-        const evt_encrypt_change *event = (evt_encrypt_change *) data;
+        if (size < static_cast<int>(sizeof(evt_encrypt_change))) {
+            qCWarning(QT_BT_BLUEZ) << "EVT_ENCRYPT_CHANGE: unexpected event packet size";
+            return;
+        }
+        const evt_encrypt_change *event = reinterpret_cast<const evt_encrypt_change *>(data);
         qCDebug(QT_BT_BLUEZ) << "HCI Encrypt change, status:"
                              << (event->status == 0 ? "Success" : "Failed")
                              << "handle:" << Qt::hex << event->handle
@@ -455,10 +459,15 @@ void HciManager::handleHciEventPacket(const quint8 *data, int size)
         constexpr auto eventSize = sizeof(evt_cmd_complete);
         static_assert(eventSize == 3, "unexpected struct size");
 
+        // There is always a status byte right after the generic structure,
+        // that's why we need +1 here
+        if (size < static_cast<int>(eventSize + 1)) {
+            qCWarning(QT_BT_BLUEZ) << "EVT_CMD_COMPLETE: unexpected event packet size";
+            return;
+        }
         auto * const event = reinterpret_cast<const evt_cmd_complete *>(data);
 
-        // There is always a status byte right after the generic structure.
-        Q_ASSERT(size > static_cast<int>(eventSize));
+        // Status byte is right after then event struct
         const quint8 status = data[eventSize];
         const auto additionalData = QByteArray(reinterpret_cast<const char *>(data)
                                                + eventSize + 1, size - eventSize - 1);
