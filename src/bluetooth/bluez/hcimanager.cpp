@@ -473,7 +473,7 @@ void HciManager::handleHciEventPacket(const quint8 *data, int size)
         emit commandCompleted(event->opcode, status, additionalData);
     } break;
     case HciEvent::EVT_LE_META_EVENT:
-        handleLeMetaEvent(data);
+        handleLeMetaEvent(data, size);
         break;
     default:
         break;
@@ -538,13 +538,25 @@ void HciManager::handleHciAclPacket(const quint8 *data, int size)
     emit signatureResolvingKeyReceived(aclData->handle, isRemoteKey, csrk);
 }
 
-void HciManager::handleLeMetaEvent(const quint8 *data)
+void HciManager::handleLeMetaEvent(const quint8 *data, int size)
 {
+    if (size == 0) {
+        qCWarning(QT_BT_BLUEZ) << "LE Meta Event: not enough bytes to extract event code";
+        return;
+    }
+
     // Spec v5.3, Vol 4, part E, 7.7.65.*
     switch (*data) {
     case 0x1: // HCI_LE_Connection_Complete
     case 0xA: // HCI_LE_Enhanced_Connection_Complete
     {
+        // subevent code (1 byte) + status (1 byte) + handle (2 bytes)
+        if (size < 4) {
+            qCWarning(QT_BT_BLUEZ) << "LE Meta Event: not enough bytes to parse "
+                                      "Connection Complete event";
+            return;
+        }
+        // Skipping status here. TODO: should we process it?
         const quint16 handle = bt_get_le16(data + 2);
         emit connectionComplete(handle);
         break;
@@ -558,6 +570,13 @@ void HciManager::handleLeMetaEvent(const quint8 *data)
             quint16 latency;
             quint16 timeout;
         } __attribute((packed));
+        // +1 byte for a status!
+        if (size < static_cast<int>(sizeof(ConnectionUpdateData) + 1)) {
+            qCWarning(QT_BT_BLUEZ) << "LE Meta Event: not enough bytes to parse "
+                                      "Connection Update Complete event";
+            return;
+        }
+
         const auto * const updateData
                 = reinterpret_cast<const ConnectionUpdateData *>(data + 1);
         if (updateData->status == 0) {
