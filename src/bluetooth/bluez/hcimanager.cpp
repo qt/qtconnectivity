@@ -451,14 +451,16 @@ void HciManager::handleHciEventPacket(const quint8 *data, int size)
             emit encryptionChangedEvent(remoteDevice, event->status == 0);
     } break;
     case HciEvent::EVT_CMD_COMPLETE: {
+        constexpr auto eventSize = sizeof(evt_cmd_complete);
+        static_assert(eventSize == 3, "unexpected struct size");
+
         auto * const event = reinterpret_cast<const evt_cmd_complete *>(data);
-        static_assert(sizeof *event == 3, "unexpected struct size");
 
         // There is always a status byte right after the generic structure.
-        Q_ASSERT(size > static_cast<int>(sizeof *event));
-        const quint8 status = data[sizeof *event];
+        Q_ASSERT(size > static_cast<int>(eventSize));
+        const quint8 status = data[eventSize];
         const auto additionalData = QByteArray(reinterpret_cast<const char *>(data)
-                                               + sizeof *event + 1, size - sizeof *event - 1);
+                                               + eventSize + 1, size - eventSize - 1);
         emit commandCompleted(event->opcode, status, additionalData);
     } break;
     case HciEvent::EVT_LE_META_EVENT:
