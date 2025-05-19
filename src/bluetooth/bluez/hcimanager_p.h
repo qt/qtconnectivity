@@ -188,7 +188,7 @@ private:
     int hciForAddress(const QBluetoothAddress &deviceAdapter);
     void handleHciEventPacket(const quint8 *data, int size);
     void handleHciAclPacket(const quint8 *data, int size);
-    void handleLeMetaEvent(const quint8 *data);
+    void handleLeMetaEvent(const quint8 *data, int size);
 
     int hciSocket;
     int hciDev;
