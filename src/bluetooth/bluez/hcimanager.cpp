@@ -526,12 +526,12 @@ void HciManager::handleHciAclPacket(const quint8 *data, int size)
 //                         << "payload length:" << l2CapHeader.length;
     if (l2CapHeader.channelId != SECURITY_CHANNEL_ID)
         return;
-    if (*data != 0xa) // "Signing Information". Spec v4.2, Vol 3, Part H, 3.6.6
-        return;
     if (size != 17) {
         qCWarning(QT_BT_BLUEZ) << "Unexpected key size" << size << "in Signing Information packet";
         return;
     }
+    if (*data != 0xa) // "Signing Information". Spec v4.2, Vol 3, Part H, 3.6.6
+        return;
     quint128 csrk;
     memcpy(&csrk, data + 1, sizeof csrk);
     const bool isRemoteKey = aclData->pbFlag == 2;
