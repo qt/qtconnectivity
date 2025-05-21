@@ -19,6 +19,7 @@
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qcoreapplication.h>
 #include <QtCore/qmetaobject.h>
+#include <QtCore/q26numeric.h>
 
 #include <algorithm>
 #include <limits>
@@ -160,10 +161,11 @@ qint64 QBluetoothSocketPrivateDarwin::writeData(const char *data, qint64 maxSize
     if (!txBuffer.size())
         QMetaObject::invokeMethod(this, [this](){_q_writeNotify();}, Qt::QueuedConnection);
 
-    char *dst = txBuffer.reserve(int(maxSize));
-    std::copy(data, data + maxSize, dst);
+    const int adjustedMaxSize = q26::saturate_cast<int>(maxSize);
+    char *dst = txBuffer.reserve(adjustedMaxSize);
+    std::copy(data, data + adjustedMaxSize, dst);
 
-    return maxSize;
+    return adjustedMaxSize;
 }
 
 qint64 QBluetoothSocketPrivateDarwin::readData(char *data, qint64 maxSize)
