@@ -417,7 +417,10 @@ void QLeAdvertiserBluez::handleCommandCompleted(quint16 opCode, quint8 status,
     switch (ocf) {
     case QBluezConst::OcfLeReadTxPowerLevel:
         if (m_sendPowerLevel) {
-            m_powerLevel = data.at(0);
+            if (!data.isEmpty())
+                m_powerLevel = data.at(0);
+            else
+                m_powerLevel = 0;
             qCDebug(QT_BT_BLUEZ) << "TX power level is" << m_powerLevel;
         }
         queueAdvertisingCommands();
