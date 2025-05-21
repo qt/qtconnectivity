@@ -518,8 +518,13 @@ void QBluetoothSocketPrivateDarwin::readChannelData(void *data, std::size_t size
     Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     const char *src = static_cast<char *>(data);
-    char *dst = rxBuffer.reserve(int(size));
-    std::copy(src, src + size, dst);
+
+    if (size > std::numeric_limits<int>::max())
+        qCWarning(QT_BT_DARWIN) << Q_FUNC_INFO << "Truncating the incoming data to INT_MAX";
+
+    const int adjustedSize = q26::saturate_cast<int>(size);
+    char *dst = rxBuffer.reserve(adjustedSize);
+    std::copy(src, src + adjustedSize, dst);
 
     if (!isConnecting) {
         // If we're still in connectToService, do not emit.
