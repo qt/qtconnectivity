@@ -160,10 +160,13 @@ qint64 QBluetoothSocketPrivateDarwin::writeData(const char *data, qint64 maxSize
     if (!txBuffer.size())
         QMetaObject::invokeMethod(this, [this](){_q_writeNotify();}, Qt::QueuedConnection);
 
-    char *dst = txBuffer.reserve(int(maxSize));
-    std::copy(data, data + maxSize, dst);
+    const int adjustedMaxSize =
+            (maxSize > std::numeric_limits<int>::max()) ? std::numeric_limits<int>::max()
+                                                        : static_cast<int>(maxSize);
+    char *dst = txBuffer.reserve(adjustedMaxSize);
+    std::copy(data, data + adjustedMaxSize, dst);
 
-    return maxSize;
+    return adjustedMaxSize;
 }
 
 qint64 QBluetoothSocketPrivateDarwin::readData(char *data, qint64 maxSize)
