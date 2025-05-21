@@ -527,6 +527,7 @@ QBluetoothServiceInfo &QBluetoothServiceInfo::operator=(const QBluetoothServiceI
     return *this;
 }
 
+#ifndef QT_NO_DEBUG_STREAM
 static void dumpAttributeVariant(QDebug dbg, const QVariant &var, const QString& indent)
 {
     switch (var.typeId()) {
@@ -605,7 +606,6 @@ static void dumpAttributeVariant(QDebug dbg, const QVariant &var, const QString&
     }
 }
 
-#ifndef QT_NO_DEBUG_STREAM
 QDebug QBluetoothServiceInfo::streamingOperator(QDebug dbg, const QBluetoothServiceInfo &info)
 {
     QDebugStateSaver saver(dbg);
@@ -616,7 +616,7 @@ QDebug QBluetoothServiceInfo::streamingOperator(QDebug dbg, const QBluetoothServ
     }
     return dbg;
 }
-#endif
+#endif // QT_NO_DEBUG_STREAM
 
 QBluetoothServiceInfo::Sequence QBluetoothServiceInfoPrivate::protocolDescriptor(QBluetoothUuid::ProtocolUuid protocol) const
 {
