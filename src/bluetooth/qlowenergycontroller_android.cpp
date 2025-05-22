@@ -8,6 +8,7 @@
 #include <QtCore/QLoggingCategory>
 #include <QtCore/QJniEnvironment>
 #include <QtCore/QJniObject>
+#include <QtCore/q26numeric.h>
 #include <QtBluetooth/QLowEnergyServiceData>
 #include <QtBluetooth/QLowEnergyCharacteristicData>
 #include <QtBluetooth/QLowEnergyDescriptorData>
@@ -219,9 +220,10 @@ void QLowEnergyControllerPrivateAndroid::writeCharacteristic(
         return;
 
     QJniEnvironment env;
+    const jsize nativeSize = q26::saturate_cast<jsize>(newValue.size());
     jbyteArray payload;
-    payload = env->NewByteArray(newValue.size());
-    env->SetByteArrayRegion(payload, 0, newValue.size(),
+    payload = env->NewByteArray(nativeSize);
+    env->SetByteArrayRegion(payload, 0, nativeSize,
                             (jbyte *)newValue.constData());
 
     bool result = false;
@@ -265,9 +267,10 @@ void QLowEnergyControllerPrivateAndroid::writeDescriptor(
     Q_ASSERT(!service.isNull());
 
     QJniEnvironment env;
+    const jsize nativeSize = q26::saturate_cast<jsize>(newValue.size());
     jbyteArray payload;
-    payload = env->NewByteArray(newValue.size());
-    env->SetByteArrayRegion(payload, 0, newValue.size(),
+    payload = env->NewByteArray(nativeSize);
+    env->SetByteArrayRegion(payload, 0, nativeSize,
                             (jbyte *)newValue.constData());
 
     bool result = false;
@@ -901,7 +904,7 @@ static QJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData &data)
 
     if (!data.manufacturerData().isEmpty()) {
         QJniEnvironment env;
-        const qint32 nativeSize = data.manufacturerData().size();
+        const jsize nativeSize = q26::saturate_cast<jsize>(data.manufacturerData().size());
         jbyteArray nativeData = env->NewByteArray(nativeSize);
         env->SetByteArrayRegion(nativeData, 0, nativeSize,
                                 reinterpret_cast<const jbyte*>(data.manufacturerData().constData()));
@@ -919,7 +922,7 @@ static QJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData &data)
           -> Android pairs rawData() per service uuid
     if (!data.rawData().isEmpty()) {
         QJniEnvironment env;
-        qint32 nativeSize = data.rawData().size();
+        const jsize nativeSize = q26::saturate_cast<jsize>(data.rawData().size());
         jbyteArray nativeData = env->NewByteArray(nativeSize);
         env->SetByteArrayRegion(nativeData, 0, nativeSize,
                                 reinterpret_cast<const jbyte*>(data.rawData().constData()));
@@ -1214,8 +1217,9 @@ void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEne
                            charData.maximumValueLength());
 
         QJniEnvironment env;
-        jbyteArray jb = env->NewByteArray(charData.value().size());
-        env->SetByteArrayRegion(jb, 0, charData.value().size(), (jbyte*)charData.value().data());
+        const jsize nativeCharSize = q26::saturate_cast<jsize>(charData.value().size());
+        jbyteArray jb = env->NewByteArray(nativeCharSize);
+        env->SetByteArrayRegion(jb, 0, nativeCharSize, (jbyte*)charData.value().data());
         jboolean success = javaChar.callMethod<jboolean>("setLocalValue", jb);
         if (!success)
             qCWarning(QT_BT_ANDROID) << "Cannot setup initial characteristic value for " << charData.uuid();
@@ -1227,8 +1231,9 @@ void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEne
                                     javaUuidfromQtUuid(descData.uuid()).object<QtJniTypes::UUID>(),
                                     setupDescPermissions(descData));
 
-            jb = env->NewByteArray(descData.value().size());
-            env->SetByteArrayRegion(jb, 0, descData.value().size(), (jbyte*)descData.value().data());
+            const jsize nativeDescSize = q26::saturate_cast<jsize>(descData.value().size());
+            jb = env->NewByteArray(nativeDescSize);
+            env->SetByteArrayRegion(jb, 0, nativeDescSize, (jbyte*)descData.value().data());
             success = javaDesc.callMethod<jboolean>("setLocalValue", jb);
             if (!success) {
                 qCWarning(QT_BT_ANDROID) << "Cannot setup initial descriptor value for "
