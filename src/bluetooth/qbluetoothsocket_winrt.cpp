@@ -758,13 +758,10 @@ void QBluetoothSocketPrivateWinRT::handleError(QBluetoothSocket::SocketError err
 void QBluetoothSocketPrivateWinRT::addToPendingData(const QList<QByteArray> &data)
 {
     Q_Q(QBluetoothSocket);
-    QMutexLocker locker(&m_readMutex);
-    m_pendingData.append(data);
     for (const QByteArray &newData : data) {
         char *writePointer = rxBuffer.reserve(newData.length());
         memcpy(writePointer, newData.data(), size_t(newData.length()));
     }
-    locker.unlock();
     emit q->readyRead();
 }
 

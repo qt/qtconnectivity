@@ -90,11 +90,6 @@ public:
     Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocket> m_socketObject;
     Microsoft::WRL::ComPtr<ABI::Windows::Foundation::IAsyncAction> m_connectOp;
 
-    QMutex m_readMutex;
-
-    // Protected by m_readMutex. Written in addToPendingData (native callback)
-    QList<QByteArray> m_pendingData;
-
     Q_INVOKABLE void addToPendingData(const QList<QByteArray> &data);
 
 private slots:
