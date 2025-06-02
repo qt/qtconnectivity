@@ -305,6 +305,17 @@ void QBluetoothDeviceDiscoveryAgent::start()
     {LowEnergyMethod} only. This may happen due to previously cached search results
     which may be incorporated into the search results.
 
+    \note Some platforms (e.g. Windows) may also provide cached results for
+    the devices that are not currently advertising. Other platforms
+    (like \c {iOS}) only provide information about currently advertising
+    devices. You can store the received device UUID (or Bluetooth address)
+    upon first discovery, and then use it later to establish a connection
+    directly (see
+    \l {QBluetoothDeviceInfo::QBluetoothDeviceInfo(const QBluetoothUuid &uuid, const QString &name, quint32 classOfDevice)}
+    {QBluetoothDeviceInfo}). This way the applications can omit the
+    later device discovery phases. Using the Bluetooth address requires
+    that the remote device's Bluetooth address does not change.
+
     \since 5.8
 */
 void QBluetoothDeviceDiscoveryAgent::start(DiscoveryMethods methods)
