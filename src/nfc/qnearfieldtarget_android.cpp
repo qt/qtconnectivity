@@ -453,7 +453,7 @@ bool QNearFieldTargetPrivateImpl::connect()
     if (connected)
         return true;
 
-    setCommandTimeout(2000);
+    setCommandTimeout(3000);
     methodId = env.findMethod<void>(tagTech.objectClass(), "connect");
     if (!methodId)
         return false;
