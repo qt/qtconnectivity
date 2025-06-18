@@ -19,7 +19,7 @@ NFC tag replaces the manually added records with the NDEF message from the tag.
 If the read operation was cancelled or failed, the NDEF message remains
 unchanged.
 
-\image ndefeditor.png
+\image {ndefeditor.png} {NDEF editor interface}
 
 \sa {Qt NFC}
 */
