@@ -258,6 +258,8 @@ elseif(QT_FEATURE_winrt_bt)
             qbluetoothdevicediscoveryagent_winrt.cpp
             qbluetoothdevicewatcher_winrt.cpp
             qbluetoothlocaldevice_winrt.cpp
+            qbluetoothservicediscoveryagent_winrt.cpp
+            qlowenergycontroller_winrt.cpp
         DEFINES
             QT_WINRT_BLUETOOTH
         LIBRARIES
