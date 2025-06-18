@@ -14,12 +14,12 @@ Tag. The NDEF message should contain a URI record, an optional \c
 image/* MIME record, and one or more localized Text records.
 
 This is the initial state of the example:
-\image annotatedurl.png
+\image {annotatedurl.png} {Annotated URL NFC main screen}
 
 If a tag is touched, its NDEF content will be shown. Here is the UI
 for a tag that contains a text record and URI record:
 
-\image annotatedurl2.png
+\image {annotatedurl2.png} {Annotated URL NFC tag details}
 
 When the screen is tapped, the URL will be opened in the browser.
 
@@ -61,7 +61,7 @@ is populated as follows:
 
 If the incoming message does not match the filter, an error message is shown:
 
-\image annotatedurl3.png
+\image {annotatedurl3.png} {Annotated URL NFC tag data view}
 
 \note The \l {ndefeditor}{NDEF Editor} example application can be used to create
 the tags with correct or incorrect message structure.
