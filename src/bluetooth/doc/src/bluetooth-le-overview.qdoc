@@ -128,7 +128,7 @@ Low Energy devices.
     descriptors are recognized by their 128-bit UUID. Finally, it is possible to include
     services inside of services (see picture below).
 
-    \image peripheral-structure.png
+    \image {peripheral-structure.png} {Structure of a BLE peripheral in Qt}
 
     \section1 Using Qt Bluetooth Low Energy API
 

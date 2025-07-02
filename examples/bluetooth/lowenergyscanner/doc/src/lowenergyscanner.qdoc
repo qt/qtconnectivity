@@ -16,7 +16,7 @@
     scanning for Low Energy devices, scanning their services and reading
     the service characteristics and descriptors.
 
-    \image lowenergyscanner-services.png
+    \image {lowenergyscanner-services.png} {GATT services found using Qt BLE scanner}
 
     The example introduces the following Qt classes:
 
@@ -74,7 +74,7 @@
     The list of devices may look like in the image below. \note It is a prerequisite
     that the remote devices actively advertise their presence.
 
-    \image lowenergyscanner-devices.png
+    \image {lowenergyscanner-devices.png} {Nearby devices listed in Qt BLE scanner}
 
     \section1 Connecting to Services
 
@@ -96,7 +96,7 @@
     device is selected. The view lists the names of the services, whether they are
     primary or secondary services and the UUID which determines the service type.
 
-    \image lowenergyscanner-services.png
+    \image {lowenergyscanner-services.png} {GATT services found using Qt BLE scanner}
 
     As soon as the service is chosen the related \l QLowEnergyService instance is created to
     permit interaction with it:
@@ -119,7 +119,7 @@
     Upon selection of a service the service details are shown. Each characteristic
     is listed together with its name, UUID, value, handle and properties.
 
-    \image lowenergyscanner-chars.png
+    \image {lowenergyscanner-chars.png} {GATT characteristics listed in Qt BLE Scanner}
 
     It is possible to retrieve the service's characteristics via
     \l QLowEnergyService::characteristics() and in turn, each descriptor can be obtained
