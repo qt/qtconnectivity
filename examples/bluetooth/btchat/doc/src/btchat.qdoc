@@ -10,7 +10,7 @@
     The Bluetooth Chat example shows how to use the \l{Qt Bluetooth} API to communicate
     with another application on a remote device using Bluetooth RFCOMM protocol.
 
-    \image btchat-example.png
+    \image {btchat-example.png} {Qt Bluetooth chat UI}
 
     The Bluetooth Chat example implements a simple chat program between multiple parties. The
     application always acts as both a server and a client eliminating the need to determine who
