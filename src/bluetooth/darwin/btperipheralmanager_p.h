@@ -49,14 +49,6 @@ class LECBManagerNotifier;
 
 } // namespace DarwinBluetooth
 
-QT_END_NAMESPACE
-
-
-// Exposing names in a header is ugly, but constant QT_PREPEND_NAMESPACE is even worse ...
-// After all, this header is to be included only in its own and controller's *.mm files.
-
-QT_USE_NAMESPACE
-
 using namespace DarwinBluetooth;
 
 
@@ -83,6 +75,13 @@ struct UpdateRequest
     QLowEnergyHandle charHandle = {};
     ObjCStrongReference<NSData> value;
 };
+
+QT_END_NAMESPACE
+
+// Exposing names in a header is ugly, but constant QT_PREPEND_NAMESPACE is even worse ...
+// After all, this header is to be included only in its own and controller's *.mm files.
+
+QT_USE_NAMESPACE
 
 using ValueRange = QPair<NSUInteger, NSUInteger>;
 
