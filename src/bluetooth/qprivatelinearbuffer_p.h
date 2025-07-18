@@ -16,6 +16,10 @@
 // We mean it.
 //
 
+#include <QtCore/qtconfigmacros.h>
+
+QT_BEGIN_NAMESPACE
+
 // This is QIODevice's read buffer, optimised for read(), isEmpty() and getChar()
 class QPrivateLinearBuffer
 {
@@ -147,5 +151,7 @@ private:
     // allocated buffer size
     size_t capacity;
 };
+
+QT_END_NAMESPACE
 
 #endif // QPRIVATELINEARBUFFER_P_H
