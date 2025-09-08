@@ -4,7 +4,9 @@
 #define QT_BLUETOOTH_BUILD_REMOVED_API
 
 // Undefine Qt 128-bit int types
-#define QT_NO_INT128
+#ifndef QT_NO_INT128
+#  define QT_NO_INT128
+#endif
 
 #include "qtbluetoothglobal.h"
 
