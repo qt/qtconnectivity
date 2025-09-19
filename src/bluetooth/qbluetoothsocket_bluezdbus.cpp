@@ -116,7 +116,8 @@ void QBluetoothSocketPrivateBluezDBus::connectToServiceHelper(
 
     int i = 0;
     bool success = false;
-    profileUuid = uuid.toString(QUuid::WithoutBraces);
+    profileUuid = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    const QString remoteDeviceUuid = uuid.toString(QUuid::WithoutBraces);
 
     if (!profileManager) {
         profileManager = new OrgBluezProfileManager1Interface(
@@ -165,7 +166,7 @@ void QBluetoothSocketPrivateBluezDBus::connectToServiceHelper(
 
     QVariantMap profileOptions;
     profileOptions.insert(QStringLiteral("Role"), QStringLiteral("client"));
-    profileOptions.insert(QStringLiteral("Service"), profileUuid);
+    profileOptions.insert(QStringLiteral("Service"), remoteDeviceUuid);
     profileOptions.insert(QStringLiteral("Name"),
                           QStringLiteral("QBluetoothSocket-%1").arg(QCoreApplication::applicationPid()));
 
@@ -202,7 +203,7 @@ void QBluetoothSocketPrivateBluezDBus::connectToServiceHelper(
 
     OrgBluezDevice1Interface device(QStringLiteral("org.bluez"), remoteDevicePath,
                                     QDBusConnection::systemBus());
-    reply = device.ConnectProfile(profileUuid);
+    reply = device.ConnectProfile(remoteDeviceUuid);
     QDBusPendingCallWatcher *watcher = new QDBusPendingCallWatcher(reply, this);
     connect(watcher, &QDBusPendingCallWatcher::finished,
             this, &QBluetoothSocketPrivateBluezDBus::connectToServiceReplyHandler);
