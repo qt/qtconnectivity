@@ -16,6 +16,11 @@ Window {
         anchors.fill: parent
         currentIndex: 0
 
+        anchors.topMargin: parent.SafeArea.margins.top
+        anchors.leftMargin: parent.SafeArea.margins.left
+        anchors.rightMargin: parent.SafeArea.margins.right
+        anchors.bottomMargin: parent.SafeArea.margins.bottom
+
         Devices {
             onShowServices: pagesLayout.currentIndex = 1
         }
