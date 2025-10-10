@@ -6,7 +6,15 @@
 #include "btdelegates_p.h"
 #include "btutility_p.h"
 
+#include <QtCore/qtimer.h>
+
 QT_USE_NAMESPACE
+
+namespace {
+
+static constexpr auto channelOpenTimeoutMs = std::chrono::milliseconds{20000};
+
+} // namespace
 
 @implementation DarwinBTRFCOMMChannel
 {
@@ -14,6 +22,7 @@ QT_USE_NAMESPACE
     IOBluetoothDevice *device;
     IOBluetoothRFCOMMChannel *channel;
     bool connected;
+    std::unique_ptr<QTimer> channelOpenTimer;
 }
 
 - (id)initWithDelegate:(DarwinBluetooth::ChannelDelegate *)aDelegate
@@ -89,11 +98,23 @@ QT_USE_NAMESPACE
     const IOReturn status = [device openRFCOMMChannelAsync:&channel
                              withChannelID:channelID delegate:self];
     if (status != kIOReturnSuccess) {
-        qCCritical(QT_BT_DARWIN) << "failed to open L2CAP channel";
+        qCCritical(QT_BT_DARWIN) << "failed to open RFCOMM channel";
         // device is still autoreleased.
         device = nil;
         return status;
     }
+
+    if (!channelOpenTimer) {
+        channelOpenTimer.reset(new QTimer);
+        QObject::connect(channelOpenTimer.get(), &QTimer::timeout,
+                         channelOpenTimer.get(), [self]() {
+            qCDebug(QT_BT_DARWIN) << "Could not open the RFCOMM channel within the specified "
+                                     "timeout. Assuming that the remote device is not available.";
+            [self handleChannelOpenTimeout];
+        });
+        channelOpenTimer->setSingleShot(true);
+    }
+    channelOpenTimer->start(channelOpenTimeoutMs);
 
     [channel retain];// What if we're closed already?
     [device retain];
@@ -121,10 +142,13 @@ QT_USE_NAMESPACE
 {
     Q_UNUSED(rfcommChannel);
 
+    Q_ASSERT_X(channelOpenTimer.get(), Q_FUNC_INFO, "invalid timer (null)");
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
+    channelOpenTimer->stop();
     if (error != kIOReturnSuccess) {
         delegate->setChannelError(error);
+        delegate->channelClosed();
     } else {
         connected = true;
         delegate->channelOpenComplete();
@@ -221,5 +245,14 @@ QT_USE_NAMESPACE
     return [channel writeAsync:data length:length refcon:nullptr];
 }
 
+- (void)handleChannelOpenTimeout
+{
+    Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
+    Q_ASSERT_X(channel, Q_FUNC_INFO, "invalid RFCOMM channel");
+
+    delegate->setChannelError(kIOReturnNotOpen);
+    [channel closeChannel];
+    delegate->channelClosed();
+}
 
 @end
