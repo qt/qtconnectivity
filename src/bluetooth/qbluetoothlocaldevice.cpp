@@ -74,8 +74,8 @@ QT_IMPL_METATYPE_EXTERN_TAGGED(QBluetoothLocalDevice::Error, QBluetoothLocalDevi
      as service discovery can be skipped on devices not in LimitedInquiry mode. In this mode, the device will
      be connectable and powered on, if required. This mode is is not supported on Android.
 
-    \note On \macos, it is not possible to set the \l hostMode() to
-    HostConnectable or HostPoweredOff.
+    \note On \macos, it is not possible to set the \l hostMode(). The
+    reported host modes are limited to HostPoweredOff and HostConnectable.
 
     \note On Windows, it is not possible to set the \l hostMode() to
     HostDiscoverable or HostDiscoverableLimitedInquiry. Using these modes is
