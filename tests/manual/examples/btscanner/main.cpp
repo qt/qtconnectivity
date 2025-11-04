@@ -22,8 +22,8 @@ int main(int argc, char *argv[])
 #if QT_CONFIG(permissions)
     const auto permissionStatus = app.checkPermission(QBluetoothPermission{});
     if (permissionStatus == Qt::PermissionStatus::Undetermined) {
-        app.requestPermission(QBluetoothPermission{}, [](const QPermission &){
-        });
+        app.requestPermission(QBluetoothPermission{},
+                              &app, [](const QPermission &) { });
     }
     // Else means either 'Granted' or 'Denied' and both normally must be
     // changed using the system's settings application.

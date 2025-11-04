@@ -189,7 +189,8 @@ int main(int argc, char *argv[])
         }
     };
 
-    QObject::connect(leController.data(), &QLowEnergyController::stateChanged, stateChangedHandler);
+    QObject::connect(leController.data(), &QLowEnergyController::stateChanged,
+                     &app, stateChangedHandler);
     const auto descriptorWriteHandler = [customService]() {
         if (++descriptorWriteCount != 2)
             return;
@@ -210,7 +211,7 @@ int main(int argc, char *argv[])
         leController->requestConnectionUpdate(connParams);
     };
     QObject::connect(customService.data(), &QLowEnergyService::descriptorWritten,
-                     descriptorWriteHandler);
+                     &app, descriptorWriteHandler);
 
     return app.exec();
 }

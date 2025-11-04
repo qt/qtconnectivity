@@ -135,7 +135,8 @@ tst_qlowenergycontroller_device::tst_qlowenergycontroller_device()
     permissionStatus = qApp->checkPermission(QBluetoothPermission{});
     if (qApp->checkPermission(QBluetoothPermission{}) == Qt::PermissionStatus::Undetermined) {
         QTestEventLoop loop;
-        qApp->requestPermission(QBluetoothPermission{}, [this, &loop](const QPermission &permission){
+        qApp->requestPermission(QBluetoothPermission{},
+                                 &loop, [this, &loop](const QPermission &permission) {
             permissionStatus = permission.status();
             loop.exitLoop();
         });

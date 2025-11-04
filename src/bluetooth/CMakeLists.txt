@@ -35,8 +35,6 @@ qt_internal_add_module(Bluetooth
         qlowenergyserviceprivate.cpp qlowenergyserviceprivate_p.h
         qprivatelinearbuffer_p.h
         qtbluetoothglobal.h qtbluetoothglobal_p.h
-    DEFINES
-        QT_NO_CONTEXTLESS_CONNECT
     LIBRARIES
         Qt::CorePrivate
         Qt::NetworkPrivate

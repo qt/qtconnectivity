@@ -926,12 +926,12 @@ void BtLocalDevice::peripheralCreate()
     emit leChanged();
 
     QObject::connect(lePeripheralController.get(), &QLowEnergyController::errorOccurred,
-                     [this](QLowEnergyController::Error error) {
+                     this, [this](QLowEnergyController::Error error) {
         qDebug() << "QLowEnergyController peripheral errorOccurred:" << error;
         emit leChanged();
     });
     QObject::connect(lePeripheralController.get(), &QLowEnergyController::stateChanged,
-                     [this](QLowEnergyController::ControllerState state) {
+                     this, [this](QLowEnergyController::ControllerState state) {
         qDebug() << "QLowEnergyController peripheral stateChanged:" << state;
         emit leChanged();
     });
@@ -1038,32 +1038,32 @@ void BtLocalDevice::peripheralAddServices()
     }
 
     QObject::connect(lePeripheralServices[0].get(), &QLowEnergyService::characteristicWritten,
-                     [](const QLowEnergyCharacteristic&, const QByteArray& value){
+                     this, [](const QLowEnergyCharacteristic&, const QByteArray& value){
         qDebug() << "LE peripheral service characteristic value written" << value;
     });
     QObject::connect(lePeripheralServices[0].get(), &QLowEnergyService::characteristicRead,
-                     [](const QLowEnergyCharacteristic&, const QByteArray& value){
+                     this, [](const QLowEnergyCharacteristic&, const QByteArray& value){
         qDebug() << "LE peripheral service characteristic value read" << value;
     });
     QObject::connect(lePeripheralServices[0].get(), &QLowEnergyService::characteristicChanged,
-                     [](const QLowEnergyCharacteristic&, const QByteArray& value){
+                     this, [](const QLowEnergyCharacteristic&, const QByteArray& value){
         qDebug() << "LE peripheral service characteristic value changed" << value;
     });
     QObject::connect(lePeripheralServices[0].get(), &QLowEnergyService::descriptorRead,
-                     [](const QLowEnergyDescriptor&, const QByteArray& value){
+                     this, [](const QLowEnergyDescriptor&, const QByteArray& value) {
         qDebug() << "LE peripheral service descriptor value read" << value;
     });
     QObject::connect(lePeripheralServices[0].get(), &QLowEnergyService::descriptorWritten,
-                     [](const QLowEnergyDescriptor&, const QByteArray& value){
+                     this, [](const QLowEnergyDescriptor&, const QByteArray& value) {
         qDebug() << "LE peripheral service descriptor value written" << value;
     });
     QObject::connect(lePeripheralServices[0].get(), &QLowEnergyService::errorOccurred,
-                     [this](QLowEnergyService::ServiceError error){
+                     this, [this](QLowEnergyService::ServiceError error){
         qDebug() << "LE peripheral service errorOccurred:" << error;
         emit leChanged();
     });
     QObject::connect(lePeripheralServices[0].get(), &QLowEnergyService::stateChanged,
-                     [this](QLowEnergyService::ServiceState state){
+                     this, [this](QLowEnergyService::ServiceState state) {
         qDebug() << "LE peripheral service state changed:" << state;
         emit leChanged();
     });
@@ -1293,25 +1293,26 @@ void BtLocalDevice::centralCreate()
     }
 
     QObject::connect(leCentralController.get(), &QLowEnergyController::errorOccurred,
-                     [](QLowEnergyController::Error error) {
+                     this, [](QLowEnergyController::Error error) {
         qDebug() << "QLowEnergyController central errorOccurred:" << error;
     });
-    QObject::connect(leCentralController.get(), &QLowEnergyController::discoveryFinished, []() {
+    QObject::connect(leCentralController.get(), &QLowEnergyController::discoveryFinished,
+                     this, []() {
         qDebug() << "QLowEnergyController central service discovery finished";
     });
     QObject::connect(leCentralController.get(), &QLowEnergyController::serviceDiscovered,
-                     [](const QBluetoothUuid &newService){
+                     this, [](const QBluetoothUuid &newService){
         qDebug() << "QLowEnergyController central service discovered:" << newService;
     });
     QObject::connect(leCentralController.get(), &QLowEnergyController::stateChanged,
-                     [this](QLowEnergyController::ControllerState state) {
+                     this, [this](QLowEnergyController::ControllerState state) {
         qDebug() << "QLowEnergyController central stateChanged:" << state;
         if (state == QLowEnergyController::UnconnectedState)
             latestRSSI = "N/A"_ba;
         emit leChanged();
     });
     QObject::connect(leCentralController.get(), &QLowEnergyController::rssiRead,
-                     [this](qint16 rssi) {
+                     this, [this](qint16 rssi) {
         qDebug() << "QLowEnergyController central RSSI updated:" << rssi;
         latestRSSI = QByteArray::number(rssi);
         emit leChanged();
@@ -1333,33 +1334,33 @@ void BtLocalDevice::centralDiscoverServiceDetails()
          return;
      }
      QObject::connect(leCentralService.get(), &QLowEnergyService::stateChanged,
-                      [this](QLowEnergyService::ServiceState state){
+                      this, [this](QLowEnergyService::ServiceState state) {
          qDebug() << "LE central service state changed:" << state;
          emit leChanged();
      });
      QObject::connect(leCentralService.get(), &QLowEnergyService::characteristicWritten,
-                      [](const QLowEnergyCharacteristic&, const QByteArray& value){
+                      this, [](const QLowEnergyCharacteristic&, const QByteArray& value){
          qDebug() << "LE central service characteristic value written" << value;
      });
      QObject::connect(leCentralService.get(), &QLowEnergyService::characteristicRead,
-                      [](const QLowEnergyCharacteristic&, const QByteArray& value){
+                      this, [](const QLowEnergyCharacteristic&, const QByteArray& value){
          qDebug() << "LE central service characteristic value read" << value;
      });
      QObject::connect(leCentralService.get(), &QLowEnergyService::characteristicChanged,
-                      [](const QLowEnergyCharacteristic&, const QByteArray& value){
+                      this, [](const QLowEnergyCharacteristic&, const QByteArray& value){
          qDebug() << "LE central service characteristic value changed" << value;
      });
      QObject::connect(leCentralService.get(), &QLowEnergyService::descriptorRead,
-                      [](const QLowEnergyDescriptor&, const QByteArray& value){
+                      this, [](const QLowEnergyDescriptor&, const QByteArray& value) {
          qDebug() << "LE central service descriptor value read" << value;
      });
      QObject::connect(leCentralService.get(), &QLowEnergyService::descriptorWritten,
-                      [this](const QLowEnergyDescriptor&, const QByteArray& value){
+                      this, [this](const QLowEnergyDescriptor&, const QByteArray& value){
          qDebug() << "LE central service descriptor value written" << value;
          emit leChanged();
      });
      QObject::connect(leCentralService.get(), &QLowEnergyService::errorOccurred,
-                      [](QLowEnergyService::ServiceError error){
+                      this, [](QLowEnergyService::ServiceError error){
          qDebug() << "LE central service error occurred:" << error;
      });
      leCentralService->discoverDetails(QLowEnergyService::FullDiscovery);
