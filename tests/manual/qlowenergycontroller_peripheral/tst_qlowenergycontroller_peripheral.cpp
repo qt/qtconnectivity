@@ -57,7 +57,8 @@ void tst_qlowenergycontroller_peripheral::initTestCase()
     // change is in qtbase.
     if (qApp->checkPermission(QBluetoothPermission{}) == Qt::PermissionStatus::Undetermined) {
         QTestEventLoop loop;
-        qApp->requestPermission(QBluetoothPermission{}, [&permissionStatus, &loop](const QPermission &permission){
+        qApp->requestPermission(QBluetoothPermission{},
+                                &loop, [&permissionStatus, &loop](const QPermission &permission){
             permissionStatus = permission.status();
             loop.exitLoop();
         });

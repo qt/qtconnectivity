@@ -86,7 +86,8 @@ tst_QBluetoothDeviceDiscoveryAgent::tst_QBluetoothDeviceDiscoveryAgent()
     const bool ciRun = qEnvironmentVariable("QTEST_ENVIRONMENT").split(' ').contains("ci");
     if (!ciRun && permissionStatus == Qt::PermissionStatus::Undetermined) {
         QTestEventLoop loop;
-        qApp->requestPermission(QBluetoothPermission{}, [this, &loop](const QPermission &permission){
+        qApp->requestPermission(QBluetoothPermission{},
+                                &loop, [this, &loop](const QPermission &permission) {
             permissionStatus = permission.status();
             loop.exitLoop();
         });

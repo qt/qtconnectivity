@@ -26,7 +26,7 @@ int main(int argc, char *argv[])
     auto permissionStatus = app.checkPermission(QBluetoothPermission{});
     if (permissionStatus == Qt::PermissionStatus::Undetermined) {
         app.requestPermission(QBluetoothPermission{},
-                              [&permissionStatus](const QPermission &permission) {
+                              &app, [&permissionStatus](const QPermission &permission) {
             qApp->exit(); // Exit the permission request processing started below
             permissionStatus = permission.status();
         });

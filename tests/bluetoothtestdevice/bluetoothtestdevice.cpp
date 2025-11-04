@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     auto permissionStatus = app.checkPermission(QBluetoothPermission{});
     if (permissionStatus == Qt::PermissionStatus::Undetermined) {
         app.requestPermission(QBluetoothPermission{},
-                              [&permissionStatus](const QPermission &permission) {
+                              &app, [&permissionStatus](const QPermission &permission) {
             qApp->exit(); // Exit the permission request processing started below
             permissionStatus = permission.status();
         });
@@ -370,12 +370,12 @@ int main(int argc, char *argv[])
 #endif // Q_OS_IOS
 
     QObject::connect(leController.data(), &QLowEnergyController::errorOccurred,
-                     [](QLowEnergyController::Error error) {
+                     &app, [](QLowEnergyController::Error error) {
         qDebug() << "Bluetoothtestdevice QLowEnergyController errorOccurred:" << error;
     });
 
     QObject::connect(leController.data(), &QLowEnergyController::stateChanged,
-                     [](QLowEnergyController::ControllerState state) {
+                     &app, [](QLowEnergyController::ControllerState state) {
         qDebug() << "Bluetoothtestdevice QLowEnergyController stateChanged:" << state;
     });
 
@@ -427,9 +427,10 @@ int main(int argc, char *argv[])
         else
             qDebug() << "Cannot start advertising: Service not valid.";
     };
-    QObject::connect(leController.data(), &QLowEnergyController::disconnected, reconnect);
+    QObject::connect(leController.data(), &QLowEnergyController::disconnected, &app, reconnect);
 
-    QObject::connect(leController.data(), &QLowEnergyController::mtuChanged, [&services](int mtu) {
+    QObject::connect(leController.data(), &QLowEnergyController::mtuChanged,
+                     &app, [&services](int mtu) {
         qDebug() << "MTU changed, callback called.";
         Q_ASSERT(services[1]->serviceUuid() == QBluetoothUuid(mtuServiceUuid));
         QByteArray value((const char *)&mtu, sizeof(int));
@@ -470,7 +471,7 @@ int main(int argc, char *argv[])
 
         ++currentCharacteristicValue;
     };
-    QObject::connect(&notificationTestTimer, &QTimer::timeout, characteristicChanger);
+    QObject::connect(&notificationTestTimer, &QTimer::timeout, &app, characteristicChanger);
     notificationTestTimer.start(100);
 
     return app.exec();
