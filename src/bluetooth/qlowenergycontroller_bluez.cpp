@@ -163,6 +163,11 @@ template<> void putDataAndIncrement(const QByteArray &value, char *&dst)
     dst += value.size();
 }
 
+/*!
+    \class QLowEnergyControllerPrivateBluez
+    \inmodule QtBluetooth
+    \internal
+*/
 QLowEnergyControllerPrivateBluez::QLowEnergyControllerPrivateBluez()
     : QLowEnergyControllerPrivate(),
       requestPending(false),

@@ -11,6 +11,12 @@
 QT_BEGIN_NAMESPACE
 
 /*!
+    \class QBluetoothServiceDiscoveryAgentPrivate
+    \inmodule QtBluetooth
+    \internal
+*/
+
+/*!
     \class QBluetoothServiceDiscoveryAgent
     \inmodule QtBluetooth
     \brief The QBluetoothServiceDiscoveryAgent class enables you to query for

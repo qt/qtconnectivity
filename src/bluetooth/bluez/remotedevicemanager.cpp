@@ -15,11 +15,13 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 using namespace QtBluetoothPrivate; // for D-Bus wrappers
 
 /*!
- * Convenience wrapper around org.bluez.Device1 management
- *
- * Very simple and not thread safe.
- */
+    \class RemoteDeviceManager
+    \inmodule QtBluetooth
+    \internal
 
+    Convenience wrapper around org.bluez.Device1 management.
+    Very simple and not thread safe.
+*/
 RemoteDeviceManager::RemoteDeviceManager(
         const QBluetoothAddress &address, QObject *parent)
     : QObject(parent), localAddress(address)
