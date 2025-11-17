@@ -285,11 +285,11 @@ void tst_QNdefNfcSmartPosterRecord::tst_uri()
     QCOMPARE(record.uri(), qtUrl);
 
     QNdefNfcUriRecord qtRecord;
-    qtRecord.setUri(qtString);
+    qtRecord.setUri(QUrl{qtString});
     QCOMPARE(record.uriRecord(), qtRecord);
 
     QNdefNfcUriRecord bbRecord;
-    bbRecord.setUri(bbString);
+    bbRecord.setUri(QUrl{bbString});
     record.setUri(bbRecord);
     QCOMPARE(record.uri(), QUrl(bbString));
     QCOMPARE(record.uriRecord(), bbRecord);
