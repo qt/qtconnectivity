@@ -46,7 +46,7 @@ QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
         stop();
 
     if (leScanner.isValid())
-        leScanner.setField<jlong>("qtObject", reinterpret_cast<jlong>(nullptr));
+        leScanner.setField("qtObject", reinterpret_cast<jlong>(nullptr));
 
     if (receiver) {
         receiver->unregisterReceiver();
@@ -439,7 +439,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
             return;
         }
 
-        leScanner.setField<jlong>("qtObject", reinterpret_cast<long>(receiver));
+        leScanner.setField("qtObject", reinterpret_cast<jlong>(receiver));
     }
 
     jboolean result = leScanner.callMethod<jboolean>("scanForLeDevice", true);

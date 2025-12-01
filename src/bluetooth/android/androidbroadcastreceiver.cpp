@@ -23,7 +23,7 @@ AndroidBroadcastReceiver::AndroidBroadcastReceiver(QObject* parent)
     broadcastReceiverObject = QJniObject::construct<QtJniTypes::QtBtBroadcastReceiver>();
     if (!broadcastReceiverObject.isValid())
         return;
-    broadcastReceiverObject.setField<jlong>("qtObject", reinterpret_cast<long>(this));
+    broadcastReceiverObject.setField("qtObject", reinterpret_cast<jlong>(this));
 
     intentFilterObject = QJniObject::construct<QtJniTypes::IntentFilter>();
     if (!intentFilterObject.isValid())

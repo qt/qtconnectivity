@@ -80,7 +80,7 @@ void ServerAcceptanceThread::run()
     if (!javaThread.isValid())
         return;
 
-    javaThread.setField<jlong>("qtObject", reinterpret_cast<long>(this));
+    javaThread.setField("qtObject", reinterpret_cast<jlong>(this));
     javaThread.setField<jboolean>("logEnabled", QT_BT_ANDROID().isDebugEnabled());
 
     QString tempUuid = m_uuid.toString(QUuid::WithoutBraces);

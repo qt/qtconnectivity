@@ -28,7 +28,7 @@ bool InputStreamThread::run()
 
     javaInputStreamThread.callMethod<void>("setInputStream",
                                         m_socket_p->inputStream.object<QtJniTypes::InputStream>());
-    javaInputStreamThread.setField<jlong>("qtObject", reinterpret_cast<long>(this));
+    javaInputStreamThread.setField("qtObject", reinterpret_cast<jlong>(this));
     javaInputStreamThread.setField<jboolean>("logEnabled", QT_BT_ANDROID().isDebugEnabled());
 
     javaInputStreamThread.callMethod<void>("start");

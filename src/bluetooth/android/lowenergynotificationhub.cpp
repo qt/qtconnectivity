@@ -51,7 +51,7 @@ LowEnergyNotificationHub::LowEnergyNotificationHub(const QBluetoothAddress &remo
     hubMap()->insert(javaToCtoken, this);
     lock.unlock();
 
-    jBluetoothLe.setField<jlong>("qtObject", javaToCtoken);
+    jBluetoothLe.setField("qtObject", jlong(javaToCtoken));
 }
 
 LowEnergyNotificationHub::~LowEnergyNotificationHub()
