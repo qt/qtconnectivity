@@ -1491,7 +1491,7 @@ void QLowEnergyControllerPrivateBluezDBus::handlePeripheralConnectivityChanged(b
 void QLowEnergyControllerPrivateBluezDBus::requestConnectionUpdate(
                     const QLowEnergyConnectionParameters & /* params */)
 {
-    qCWarning(QT_BT_BLUEZ) << "Connection udpate requests not supported on Bluez DBus";
+    qCWarning(QT_BT_BLUEZ) << "Connection update requests not supported on Bluez DBus";
 }
 
 void QLowEnergyControllerPrivateBluezDBus::addToGenericAttributeList(

@@ -23,12 +23,13 @@ QT_BEGIN_NAMESPACE
 */
 QResponseApdu::QResponseApdu(const QByteArray &response)
 {
-    if (response.size() < 2) {
+    const auto view = qToByteArrayViewIgnoringNull(response);
+    if (view.size() < 2) {
         m_status = Empty;
         m_data = response;
     } else {
-        const auto dataSize = response.size() - 2;
-        m_status = qFromBigEndian(qFromUnaligned<uint16_t>(response.constData() + dataSize));
+        const auto dataSize = view.size() - 2;
+        m_status = qFromBigEndian(qFromUnaligned<uint16_t>(view.data() + dataSize));
         m_data = response.left(dataSize);
     }
 }
