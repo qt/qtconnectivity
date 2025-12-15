@@ -123,6 +123,9 @@ QString QLowEnergyAdvertisingData::localName() const
 /*!
    Sets the manufacturer id and data. The \a id parameter is a company identifier as assigned
    by the Bluetooth SIG. The \a data parameter is an arbitrary value.
+
+    \note \macos and iOS do not support advertising of manufacturer id or data,
+    so the provided parameters will be ignored on these platforms.
  */
 void QLowEnergyAdvertisingData::setManufacturerData(quint16 id, const QByteArray &data)
 {
@@ -212,8 +215,9 @@ QList<QBluetoothUuid> QLowEnergyAdvertisingData::services() const
   \note If \a data is longer than 31 bytes, it will be truncated. It is the caller's responsibility
         to ensure that \a data is well-formed.
 
-  Providing the raw advertising data is not supported on BlueZ DBus backend as BlueZ does not
-  support it. This may change in a future release.
+  Setting raw advertising data is only supported on the \l {Linux Specific}
+  {Linux Bluetooth Kernel API} backend. Other backends do not allow to specify
+  the raw advertising data as a global field.
  */
 void QLowEnergyAdvertisingData::setRawData(const QByteArray &data)
 {
