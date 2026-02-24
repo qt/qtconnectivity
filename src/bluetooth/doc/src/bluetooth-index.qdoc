@@ -17,7 +17,7 @@ Currently, the API is supported on the following platforms:
     \li \l {Qt for Android}{Android}
     \li \l {Qt for iOS}{iOS}
     \li \l {Qt for Linux}{Linux (BlueZ 5.x)}
-    \li \l \macos
+    \li \l {Qt for macOS}{\macos}
     \li \l {Qt for Windows}{Windows}
 \row
     \li Classic Bluetooth
