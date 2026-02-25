@@ -14,9 +14,10 @@ import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.BluetoothProfile;
-import android.bluetooth.le.AdvertiseCallback;
+import android.bluetooth.le.AdvertisingSet;
+import android.bluetooth.le.AdvertisingSetCallback;
+import android.bluetooth.le.AdvertisingSetParameters;
 import android.bluetooth.le.AdvertiseData;
-import android.bluetooth.le.AdvertiseSettings;
 import android.bluetooth.le.BluetoothLeAdvertiser;
 import android.os.Build;
 import android.util.Log;
@@ -742,9 +743,17 @@ class QtBluetoothLEServer {
     }
 
     // This function is called from Qt thread
+    boolean isLeExtendedAdvertisingSupported()
+    {
+        if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled())
+            return false;
+        return mBluetoothAdapter.isLeExtendedAdvertisingSupported();
+    }
+
+    // This function is called from Qt thread
     boolean startAdvertising(AdvertiseData advertiseData,
-                                    AdvertiseData scanResponse,
-                                    AdvertiseSettings settings)
+                             AdvertiseData scanResponse,
+                             AdvertisingSetParameters settings)
     {
         // Check that the bluetooth is on
         if (mBluetoothAdapter == null || !mBluetoothAdapter.isEnabled()) {
@@ -766,9 +775,15 @@ class QtBluetoothLEServer {
             return false;
         }
 
-        Log.w(TAG, "Starting to advertise.");
-        mLeAdvertiser.startAdvertising(settings, advertiseData, scanResponse, mAdvertiseListener);
+        try {
+            mLeAdvertiser.startAdvertisingSet(settings, advertiseData, scanResponse,
+                                              null, null,  mAdvertiseSetListener);
+        } catch (IllegalArgumentException e) {
+            Log.w(TAG, "Server::startAdvertising: Illegal parameters");
+            return false;
+        }
 
+        Log.w(TAG, "Starting to advertise.");
         return true;
     }
 
@@ -778,7 +793,7 @@ class QtBluetoothLEServer {
         if (mLeAdvertiser == null)
             return;
 
-        mLeAdvertiser.stopAdvertising(mAdvertiseListener);
+        mLeAdvertiser.stopAdvertisingSet(mAdvertiseSetListener);
         Log.w(TAG, "Advertisement stopped.");
     }
 
@@ -944,43 +959,46 @@ class QtBluetoothLEServer {
     }
 
     /*
-     * Call back handler for Advertisement requests.
+     * Call back handler for AdvertisingSet requests.
      */
-    private AdvertiseCallback mAdvertiseListener = new AdvertiseCallback()
+    private AdvertisingSetCallback mAdvertiseSetListener = new AdvertisingSetCallback()
     {
         @Override
-        public void onStartSuccess(AdvertiseSettings settingsInEffect) {
-            super.onStartSuccess(settingsInEffect);
-        }
-
-        @Override
-        public void onStartFailure(int errorCode) {
-            Log.e(TAG, "Advertising failure: " + errorCode);
-            super.onStartFailure(errorCode);
+        public void onAdvertisingSetStarted(AdvertisingSet advSet, int txPower, int status)
+        {
+            super.onAdvertisingSetStarted(advSet, txPower, status);
 
             // changing errorCode here implies changes to errorCode handling on Qt side
             int qtErrorCode = 0;
-            switch (errorCode) {
-                case AdvertiseCallback.ADVERTISE_FAILED_ALREADY_STARTED:
+            switch (status) {
+                case AdvertisingSetCallback.ADVERTISE_SUCCESS:
+                case AdvertisingSetCallback.ADVERTISE_FAILED_ALREADY_STARTED:
                     return; // ignore -> noop
-                case AdvertiseCallback.ADVERTISE_FAILED_DATA_TOO_LARGE:
-                    Log.e(TAG, "Please reduce size of advertising data.");
+                case AdvertisingSetCallback.ADVERTISE_FAILED_DATA_TOO_LARGE:
+                    Log.e(TAG, "Please reduce the size of the advertising data.");
                     qtErrorCode = 1;
                     break;
-                case AdvertiseCallback.ADVERTISE_FAILED_FEATURE_UNSUPPORTED:
+                case AdvertisingSetCallback.ADVERTISE_FAILED_FEATURE_UNSUPPORTED:
                     qtErrorCode = 2;
                     break;
                 default: // default maps to internal error
-                case AdvertiseCallback.ADVERTISE_FAILED_INTERNAL_ERROR:
+                case AdvertisingSetCallback.ADVERTISE_FAILED_INTERNAL_ERROR:
                     qtErrorCode = 3;
                     break;
-                case AdvertiseCallback.ADVERTISE_FAILED_TOO_MANY_ADVERTISERS:
+                case AdvertisingSetCallback.ADVERTISE_FAILED_TOO_MANY_ADVERTISERS:
                     qtErrorCode = 4;
                     break;
             }
 
             if (qtErrorCode > 0)
                 leServerAdvertisementError(qtObject, qtErrorCode);
+        }
+
+        @Override
+        public void onAdvertisingSetStopped(AdvertisingSet advSet)
+        {
+            // Nothing to do
+            super.onAdvertisingSetStopped(advSet);
         }
     };
 

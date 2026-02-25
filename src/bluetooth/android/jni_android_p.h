@@ -39,7 +39,6 @@ Q_DECLARE_JNI_CLASS(QtBtLECentral, "org/qtproject/qt/android/bluetooth/QtBluetoo
 Q_DECLARE_JNI_CLASS(BluetoothAdapter, "android/bluetooth/BluetoothAdapter")
 Q_DECLARE_JNI_CLASS(ParcelUuid, "android/os/ParcelUuid")
 Q_DECLARE_JNI_CLASS(AdvertiseDataBuilder, "android/bluetooth/le/AdvertiseData$Builder")
-Q_DECLARE_JNI_CLASS(AdvertiseSettingsBuilder, "android/bluetooth/le/AdvertiseSettings$Builder")
 Q_DECLARE_JNI_CLASS(BluetoothGattService, "android/bluetooth/BluetoothGattService")
 Q_DECLARE_JNI_CLASS(BluetoothGattDescriptor, "android/bluetooth/BluetoothGattDescriptor")
 Q_DECLARE_JNI_CLASS(BluetoothGattCharacteristic, "android/bluetooth/BluetoothGattCharacteristic")
@@ -50,7 +49,6 @@ Q_DECLARE_JNI_CLASS(AndroidContext, "android/content/Context")
 
 Q_DECLARE_JNI_CLASS(BluetoothManager, "android/bluetooth/BluetoothManager")
 Q_DECLARE_JNI_CLASS(AdvertiseData, "android/bluetooth/le/AdvertiseData")
-Q_DECLARE_JNI_CLASS(AdvertiseSettings, "android/bluetooth/le/AdvertiseSettings")
 Q_DECLARE_JNI_CLASS(InputStream, "java/io/InputStream")
 Q_DECLARE_JNI_CLASS(OutputStream, "java/io/OutputStream")
 Q_DECLARE_JNI_CLASS(BluetoothSocket, "android/bluetooth/BluetoothSocket")
@@ -58,6 +56,10 @@ Q_DECLARE_JNI_CLASS(BroadcastReceiver, "android/content/BroadcastReceiver")
 Q_DECLARE_JNI_CLASS(BluetoothClass, "android/bluetooth/BluetoothClass")
 Q_DECLARE_JNI_CLASS(Bundle, "android/os/Bundle")
 Q_DECLARE_JNI_CLASS(List, "java/util/List")
+
+Q_DECLARE_JNI_CLASS(AdvertisingSetParameters, "android/bluetooth/le/AdvertisingSetParameters")
+Q_DECLARE_JNI_CLASS(AdvertisingSetParametersBuilder,
+                    "android/bluetooth/le/AdvertisingSetParameters$Builder")
 
 // QLowEnergyHandle is a quint16, ensure it is interpreted as jint
 template<>

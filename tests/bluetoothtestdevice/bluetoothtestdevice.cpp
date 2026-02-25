@@ -388,9 +388,12 @@ int main(int argc, char *argv[])
 
     establishNotifyOnWriteConnection(services[5].get());
 
-    leController->startAdvertising(QLowEnergyAdvertisingParameters(), advertisingData,
-                                   advertisingData);
+    QLowEnergyAdvertisingParameters parameters;
+    parameters.setMode(QLowEnergyAdvertisingParameters::AdvInd);
+    parameters.setInterval(500, 1000);
 
+    leController->startAdvertising(parameters, advertisingData,
+                                   advertisingData);
 
     auto reconnect = [&connectioncount, &leController, advertisingData, &services, serviceDefinitions]() {
         connectioncount++;
