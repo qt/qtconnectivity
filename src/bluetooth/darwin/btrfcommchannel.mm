@@ -142,10 +142,12 @@ static constexpr auto channelOpenTimeoutMs = std::chrono::milliseconds{20000};
 {
     Q_UNUSED(rfcommChannel);
 
-    Q_ASSERT_X(channelOpenTimer.get(), Q_FUNC_INFO, "invalid timer (null)");
     Q_ASSERT_X(delegate, Q_FUNC_INFO, "invalid delegate (null)");
 
-    channelOpenTimer->stop();
+    // Timer can be null, if we're running as a server, and the channel is
+    // opened as a result of a client connection
+    if (channelOpenTimer)
+        channelOpenTimer->stop();
     if (error != kIOReturnSuccess) {
         delegate->setChannelError(error);
         delegate->channelClosed();
