@@ -562,4 +562,15 @@ QBluetoothDeviceInfo DeviceDiscoveryBroadcastReceiver::retrieveDeviceInfo(const 
     return info;
 }
 
+#if defined(Q_OS_ANDROID)
+Q_BLUETOOTH_EXPORT void testEnumToString(std::function<void(const char*, int)> callback)
+{
+    for (const auto &entry : minorMappings) {
+        if (entry.javaFieldName) {
+            callback(entry.javaFieldName, entry.qtMinor);
+        }
+    }
+}
+#endif
+
 QT_END_NAMESPACE
