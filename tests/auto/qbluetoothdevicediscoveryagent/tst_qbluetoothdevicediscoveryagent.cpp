@@ -22,6 +22,8 @@
 
 #include <memory>
 
+using namespace Qt::StringLiterals;
+
 QT_USE_NAMESPACE
 
 /*
@@ -42,6 +44,7 @@ const int MaxWaitForCancelTime = 15 * 1000;  // 15 seconds in ms
 #ifdef Q_OS_ANDROID
 // Android is sometimes unable to cancel immediately
 const int WaitBeforeStopTime = 200;
+extern void testEnumToString(std::function<void(const char*, int)> callback);
 #endif
 
 class tst_QBluetoothDeviceDiscoveryAgent : public QObject
@@ -68,6 +71,8 @@ private slots:
     void tst_discoveryTimeout();
 
     void tst_discoveryMethods();
+
+    void tst_majorMinorMapping();
 private:
     qsizetype noOfLocalDevices;
     using DiscoveryAgentPtr = std::unique_ptr<QBluetoothDeviceDiscoveryAgent>;
@@ -575,6 +580,104 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryMethods()
         QCOMPARE(agent.error(), QBluetoothDeviceDiscoveryAgent::NoError);
         QCOMPARE(finishedSpy.size(), 1);
     }
+}
+
+
+
+void tst_QBluetoothDeviceDiscoveryAgent::tst_majorMinorMapping()
+{
+#if !defined(Q_OS_ANDROID)
+    QSKIP("This test is only pertinent to Android!");
+#else
+    const QMap<QLatin1StringView, int> expectedMapping = {
+        // AUDIO_VIDEO
+        { "AUDIO_VIDEO_CAMCORDER"_L1, QBluetoothDeviceInfo::Camcorder },
+        { "AUDIO_VIDEO_CAR_AUDIO"_L1, QBluetoothDeviceInfo::CarAudio },
+        { "AUDIO_VIDEO_HANDSFREE"_L1, QBluetoothDeviceInfo::HandsFreeDevice },
+        { "AUDIO_VIDEO_HEADPHONES"_L1, QBluetoothDeviceInfo::Headphones },
+        { "AUDIO_VIDEO_HIFI_AUDIO"_L1, QBluetoothDeviceInfo::HiFiAudioDevice },
+        { "AUDIO_VIDEO_LOUDSPEAKER"_L1, QBluetoothDeviceInfo::Loudspeaker },
+        { "AUDIO_VIDEO_MICROPHONE"_L1, QBluetoothDeviceInfo::Microphone },
+        { "AUDIO_VIDEO_PORTABLE_AUDIO"_L1, QBluetoothDeviceInfo::PortableAudioDevice },
+        { "AUDIO_VIDEO_SET_TOP_BOX"_L1, QBluetoothDeviceInfo::SetTopBox },
+        { "AUDIO_VIDEO_UNCATEGORIZED"_L1, QBluetoothDeviceInfo::UncategorizedAudioVideoDevice },
+        { "AUDIO_VIDEO_VCR"_L1, QBluetoothDeviceInfo::Vcr },
+        { "AUDIO_VIDEO_VIDEO_CAMERA"_L1, QBluetoothDeviceInfo::VideoCamera },
+        { "AUDIO_VIDEO_VIDEO_CONFERENCING"_L1, QBluetoothDeviceInfo::VideoConferencing },
+        { "AUDIO_VIDEO_VIDEO_DISPLAY_AND_LOUDSPEAKER"_L1, QBluetoothDeviceInfo::VideoDisplayAndLoudspeaker },
+        { "AUDIO_VIDEO_VIDEO_GAMING_TOY"_L1, QBluetoothDeviceInfo::GamingDevice },
+        { "AUDIO_VIDEO_VIDEO_MONITOR"_L1, QBluetoothDeviceInfo::VideoMonitor },
+        { "AUDIO_VIDEO_WEARABLE_HEADSET"_L1, QBluetoothDeviceInfo::WearableHeadsetDevice },
+
+        // COMPUTER
+        { "COMPUTER_UNCATEGORIZED"_L1, QBluetoothDeviceInfo::UncategorizedComputer },
+        { "COMPUTER_DESKTOP"_L1, QBluetoothDeviceInfo::DesktopComputer },
+        { "COMPUTER_HANDHELD_PC_PDA"_L1, QBluetoothDeviceInfo::HandheldComputer },
+        { "COMPUTER_LAPTOP"_L1, QBluetoothDeviceInfo::LaptopComputer },
+        { "COMPUTER_PALM_SIZE_PC_PDA"_L1, QBluetoothDeviceInfo::HandheldClamShellComputer },
+        { "COMPUTER_SERVER"_L1, QBluetoothDeviceInfo::ServerComputer },
+        { "COMPUTER_WEARABLE"_L1, QBluetoothDeviceInfo::WearableComputer },
+
+        // HEALTH
+        { "HEALTH_BLOOD_PRESSURE"_L1, QBluetoothDeviceInfo::HealthBloodPressureMonitor },
+        { "HEALTH_DATA_DISPLAY"_L1, QBluetoothDeviceInfo::HealthDataDisplay },
+        { "HEALTH_GLUCOSE"_L1, QBluetoothDeviceInfo::HealthGlucoseMeter },
+        { "HEALTH_PULSE_OXIMETER"_L1, QBluetoothDeviceInfo::HealthPulseOximeter },
+        { "HEALTH_PULSE_RATE"_L1, QBluetoothDeviceInfo::HealthStepCounter },
+        { "HEALTH_THERMOMETER"_L1, QBluetoothDeviceInfo::HealthThermometer },
+        { "HEALTH_UNCATEGORIZED"_L1, QBluetoothDeviceInfo::UncategorizedHealthDevice },
+        { "HEALTH_WEIGHING"_L1, QBluetoothDeviceInfo::HealthWeightScale },
+
+        // PHONE
+        { "PHONE_CELLULAR"_L1, QBluetoothDeviceInfo::CellularPhone },
+        { "PHONE_CORDLESS"_L1, QBluetoothDeviceInfo::CordlessPhone },
+        { "PHONE_ISDN"_L1, QBluetoothDeviceInfo::CommonIsdnAccessPhone },
+        { "PHONE_MODEM_OR_GATEWAY"_L1, QBluetoothDeviceInfo::WiredModemOrVoiceGatewayPhone },
+        { "PHONE_SMART"_L1, QBluetoothDeviceInfo::SmartPhone },
+        { "PHONE_UNCATEGORIZED"_L1, QBluetoothDeviceInfo::UncategorizedPhone },
+
+        // TOY
+        { "TOY_CONTROLLER"_L1, QBluetoothDeviceInfo::ToyController },
+        { "TOY_DOLL_ACTION_FIGURE"_L1, QBluetoothDeviceInfo::ToyDoll },
+        { "TOY_GAME"_L1, QBluetoothDeviceInfo::ToyGame },
+        { "TOY_ROBOT"_L1, QBluetoothDeviceInfo::ToyRobot },
+        { "TOY_UNCATEGORIZED"_L1, QBluetoothDeviceInfo::UncategorizedToy },
+        { "TOY_VEHICLE"_L1, QBluetoothDeviceInfo::ToyVehicle },
+
+        // WEARABLE
+        { "WEARABLE_GLASSES"_L1, QBluetoothDeviceInfo::WearableGlasses },
+        { "WEARABLE_HELMET"_L1, QBluetoothDeviceInfo::WearableHelmet },
+        { "WEARABLE_JACKET"_L1, QBluetoothDeviceInfo::WearableJacket },
+        { "WEARABLE_PAGER"_L1, QBluetoothDeviceInfo::WearablePager },
+        { "WEARABLE_UNCATEGORIZED"_L1, QBluetoothDeviceInfo::UncategorizedWearableDevice },
+        { "WEARABLE_WRIST_WATCH"_L1, QBluetoothDeviceInfo::WearableWristWatch },
+
+        // PERIPHERAL
+        { "PERIPHERAL_NON_KEYBOARD_NON_POINTING"_L1, QBluetoothDeviceInfo::UncategorizedPeripheral },
+        { "PERIPHERAL_KEYBOARD"_L1, QBluetoothDeviceInfo::KeyboardPeripheral },
+        { "PERIPHERAL_POINTING"_L1, QBluetoothDeviceInfo::PointingDevicePeripheral },
+        { "PERIPHERAL_KEYBOARD_POINTING"_L1, QBluetoothDeviceInfo::KeyboardWithPointingDevicePeripheral }
+    };
+
+    qsizetype hits = 0;
+
+    testEnumToString([&](const char *generatedName, int minor) {
+        QLatin1StringView generatedNameL1(generatedName);
+
+        auto printOnFailure = qScopeGuard([&] { qDebug("%s", generatedName); });
+
+        QVERIFY(expectedMapping.contains(generatedNameL1));
+
+        int expectedValue = expectedMapping.value(generatedNameL1);
+        QCOMPARE(minor, expectedValue);
+
+        printOnFailure.dismiss();
+
+        ++hits;
+    });
+
+    QCOMPARE(hits, expectedMapping.size());
+#endif
 }
 
 QTEST_MAIN(tst_QBluetoothDeviceDiscoveryAgent)
