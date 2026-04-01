@@ -50,7 +50,8 @@ QLeDBusAdvertiser::QLeDBusAdvertiser(const QLowEnergyAdvertisingParameters &para
     // Union of service UUIDs:
     if (scanResponseData.services() != advertisingData.services()) {
         QList<QBluetoothUuid> services = advertisingData.services();
-        for (const auto &service: scanResponseData.services()) {
+        const auto scanResponseServices = scanResponseData.services();
+        for (const auto &service : scanResponseServices) {
             if (!services.contains(service))
                 services.append(service);
         }
@@ -136,7 +137,8 @@ void QLeDBusAdvertiser::setAdvertisementDataForDBus()
     // Service UUIDs
     if (!m_advData.services().isEmpty()) {
         QStringList serviceUUIDList;
-        for (const auto& service: m_advData.services())
+        const auto services = m_advData.services();
+        for (const auto &service : services)
             serviceUUIDList << service.toString(QUuid::StringFormat::WithoutBraces);
         m_advDataDBus->setServiceUUIDs(serviceUUIDList);
     }
