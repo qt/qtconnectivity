@@ -128,7 +128,8 @@ void QLowEnergyControllerPrivateBluezDBus::devicePropertiesChanged(
             for (const QString &uuidString : newUuidStringList)
                 newUuidList.append(QBluetoothUuid(uuidString));
 
-            for (const QBluetoothUuid &uuid : serviceList.keys()) {
+            const auto serviceKeys = serviceList.keys();
+            for (const QBluetoothUuid &uuid : serviceKeys) {
                 if (!newUuidList.contains(uuid)) {
                     qCDebug(QT_BT_BLUEZ) << __func__ << "Service" << uuid << "has been removed";
                     QSharedPointer<QLowEnergyServicePrivate> service = serviceList.take(uuid);
@@ -502,8 +503,9 @@ void QLowEnergyControllerPrivateBluezDBus::discoverServices()
                     batteryServicePath = it.key().path();
                     break;
                 } else if (iface == QStringLiteral("org.bluez.Device1")) {
-                    for (auto const& uuid :
-                         battIter.value()[QStringLiteral("UUIDs")].toStringList()) {
+                    const auto batteryUuids =
+                            battIter.value()[QStringLiteral("UUIDs")].toStringList();
+                    for (auto const &uuid : batteryUuids) {
                         if (QBluetoothUuid(uuid) ==
                                 QBluetoothUuid::ServiceClassUuid::BatteryService) {
                             qCDebug(QT_BT_BLUEZ) << "Battery service listed as available service";

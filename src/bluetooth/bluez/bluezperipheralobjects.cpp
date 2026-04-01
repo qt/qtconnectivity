@@ -340,7 +340,8 @@ void QtBluezPeripheralCharacteristic::initializeFlags(const QLowEnergyCharacteri
         // describing them. Bluez will generate the actual descriptor based on these
         // flags. For clarity: the 'extended-properties' token mentioned in the Bluez
         // API is implied by these flags.
-        for (const auto& descriptor : data.descriptors()) {
+        const auto descriptors = data.descriptors();
+        for (const auto &descriptor : descriptors) {
             // Core Bluetooth v5.3 Vol 3, Part G, 3.3.3.1
             if (descriptor.uuid()
                     == QBluetoothUuid::DescriptorType::CharacteristicExtendedProperties
