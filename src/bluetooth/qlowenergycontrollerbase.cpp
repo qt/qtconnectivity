@@ -235,10 +235,10 @@ quint16 QLowEnergyControllerPrivate::updateValueOfDescriptor(
 
 void QLowEnergyControllerPrivate::invalidateServices()
 {
-    for (const QSharedPointer<QLowEnergyServicePrivate> &service : serviceList.values())
+    for (const QSharedPointer<QLowEnergyServicePrivate> &service : std::as_const(serviceList))
         service->setController(nullptr);
 
-    for (const QSharedPointer<QLowEnergyServicePrivate> &service : localServices.values())
+    for (const QSharedPointer<QLowEnergyServicePrivate> &service : std::as_const(localServices))
         service->setController(nullptr);
 
     serviceList.clear();
