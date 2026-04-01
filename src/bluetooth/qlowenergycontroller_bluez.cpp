@@ -451,7 +451,7 @@ void QLowEnergyControllerPrivateBluez::connectToDevice()
     // BlueZ 5.37+ (maybe even earlier versions) can have pending BTLE connections
     // Only one active L2CP socket to CID 0x4 possible at a time
 
-    QList<quint16> activeHandles = hciManager->activeLowEnergyConnections();
+    const QList<quint16> activeHandles = hciManager->activeLowEnergyConnections();
     if (!activeHandles.isEmpty()) {
         qCWarning(QT_BT_BLUEZ) << "Cannot connect due to pending active LE connections";
 
