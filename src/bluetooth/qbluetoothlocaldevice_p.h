@@ -116,6 +116,7 @@ public:
     QMap<QString, QtBluetoothPrivate::OrgFreedesktopDBusPropertiesInterface *> deviceChangeMonitors;
 
     QList<QBluetoothAddress> connectedDevices() const;
+    bool isValid() const;
 
     QBluetoothAddress localAddress;
     QBluetoothAddress address;
@@ -128,9 +129,6 @@ public:
 
 public slots:
     void pairingCompleted(QDBusPendingCallWatcher *);
-
-    bool isValid() const;
-
     void requestPairing(const QBluetoothAddress &address,
                         QBluetoothLocalDevice::Pairing targetPairing);
 
