@@ -1,0 +1,18 @@
+plugins {
+    alias(libs.plugins.android.library)
+}
+
+android {
+    namespace = 'org.qtproject.qt.android.nfc'
+    compileSdk = (project.findProperty('compileSdk') ?: '36') as int
+
+    defaultConfig {
+        minSdk = (project.findProperty('minSdk') ?: '28') as int
+    }
+
+    sourceSets {
+        main {
+            java.srcDirs = ['src']
+        }
+    }
+}

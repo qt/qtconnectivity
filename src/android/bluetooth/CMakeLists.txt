@@ -13,7 +13,6 @@ set(java_sources
 )
 
 qt_internal_add_jar(Qt${QtConnectivity_VERSION_MAJOR}AndroidBluetooth
-    INCLUDE_JARS ${QT_ANDROID_JAR}
     SOURCES ${java_sources}
     OUTPUT_DIR "${QT_BUILD_DIR}/jar"
 )

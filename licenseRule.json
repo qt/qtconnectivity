@@ -124,6 +124,11 @@
                 "comment": "",
                 "file type": "3rd party",
                 "spdx": ["Apache-2.0"]
+            },
+            ".*(\\.gradle|gradle\\.properties|libs\\.versions\\.toml)$": {
+                "comment": "Android Gradle build files",
+                "file type": "build system",
+                "spdx": ["BSD-3-Clause"]
             }
         }
     }
