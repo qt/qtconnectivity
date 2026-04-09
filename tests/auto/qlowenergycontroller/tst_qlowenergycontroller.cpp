@@ -120,7 +120,7 @@ tst_QLowEnergyController::~tst_QLowEnergyController()
 
 void tst_QLowEnergyController::initTestCase()
 {
-#if !defined(Q_OS_MAC)
+#if !defined(Q_OS_APPLE)
     if (remoteDevice.isNull()
 #if !QT_CONFIG(winrt_bt)
         || QBluetoothLocalDevice::allDevices().isEmpty()) {
