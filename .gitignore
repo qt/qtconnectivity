@@ -76,3 +76,15 @@ tests/auto/qnearfieldtagtype1/tst_qnearfieldtagtype1
 tests/auto/qnearfieldtagtype2/tst_qnearfieldtagtype2
 tests/bttestui/bttestui
 tests/nfctestserver/nfctestserver
+
+# cmake related artifacts
+/build*
+build/
+CMakeFiles
+CTestTestfile.cmake
+CMakeUserPresets.json
+cmake_install.cmake
+*_autogen
+tst_*.xml
+CMakeLists.txt.user*
+.xdp_CMakeLists.txt.*
