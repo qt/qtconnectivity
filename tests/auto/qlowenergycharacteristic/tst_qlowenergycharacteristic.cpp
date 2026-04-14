@@ -261,7 +261,9 @@ void tst_QLowEnergyCharacteristic::tst_assignCompare()
     // test assignment operator
     target = chars[indexWithDescriptor];
     QVERIFY(target.isValid());
-    QVERIFY(!target.name().isEmpty());
+    // Only standard 16-bit Bluetooth SIG UUIDs are guaranteed to have a name
+    if (target.uuid().minimumSize() == 2)
+        QVERIFY(!target.name().isEmpty());
     QVERIFY(!target.uuid().isNull());
     QVERIFY(target.properties() != QLowEnergyCharacteristic::Unknown);
     if (target.properties() & QLowEnergyCharacteristic::Read)
