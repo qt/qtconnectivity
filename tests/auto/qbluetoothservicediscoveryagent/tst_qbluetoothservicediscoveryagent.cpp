@@ -51,8 +51,6 @@ private:
 tst_QBluetoothServiceDiscoveryAgent::tst_QBluetoothServiceDiscoveryAgent()
 {
     QLoggingCategory::setFilterRules(QStringLiteral("qt.bluetooth* = true"));
-    if (androidBluetoothEmulator())
-        return;
     // start Bluetooth if not started
 #ifndef Q_OS_MACOS
     QBluetoothLocalDevice *device = new QBluetoothLocalDevice();
@@ -92,9 +90,6 @@ void tst_QBluetoothServiceDiscoveryAgent::serviceError(const QBluetoothServiceDi
 
 void tst_QBluetoothServiceDiscoveryAgent::initTestCase()
 {
-    if (androidBluetoothEmulator())
-        QSKIP("Skipping test on Android 12+ emulator, CI can timeout waiting for user input");
-
     if (localDeviceAvailable) {
         QBluetoothDeviceDiscoveryAgent discoveryAgent;
 
