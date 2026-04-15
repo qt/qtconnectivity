@@ -159,9 +159,6 @@ void tst_QBluetoothDeviceDiscoveryAgent::deviceDiscoveryDebug(const QBluetoothDe
 
 void tst_QBluetoothDeviceDiscoveryAgent::tst_startStopDeviceDiscoveries()
 {
-    if (androidBluetoothEmulator())
-        QSKIP("Skipping test on Android 12+ emulator, CI can timeout waiting for user input");
-
     QBluetoothDeviceDiscoveryAgent discoveryAgent;
 
     QVERIFY(discoveryAgent.error() == discoveryAgent.NoError);
@@ -447,9 +444,6 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryTimeout()
 
 void tst_QBluetoothDeviceDiscoveryAgent::tst_discoveryMethods()
 {
-    if (androidBluetoothEmulator())
-        QSKIP("Skipping test on Android 12+ emulator, CI can timeout waiting for user input");
-
     const QBluetoothLocalDevice localDevice;
     if (localDevice.allDevices().size() != 1) {
         // On iOS it returns 0 but we still have working BT.
