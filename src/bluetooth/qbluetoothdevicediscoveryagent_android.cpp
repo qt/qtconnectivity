@@ -313,6 +313,11 @@ void QBluetoothDeviceDiscoveryAgentPrivate::stop()
             return;
         }
     } else if (m_active == BtleScanActive) {
+        if (pendingCancel)
+            return;
+        pendingCancel = true;
+        if (leScanTimeout->isActive())
+            leScanTimeout->stop();
         stopLowEnergyScan();
     }
 }
@@ -428,6 +433,7 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
     Q_Q(QBluetoothDeviceDiscoveryAgent);
 
     m_active = BtleScanActive;
+    ++leScanEpoch;
 
     if (!leScanner.isValid()) {
         leScanner = QJniObject::construct<QtJniTypes::QtBtLECentral>(
@@ -467,22 +473,38 @@ void QBluetoothDeviceDiscoveryAgentPrivate::startLowEnergyScan()
         << "QBluetoothDeviceDiscoveryAgentPrivate::start() - Low Energy search successfully started.";
 }
 
+void QBluetoothDeviceDiscoveryAgentPrivate::processLeDiscoveryFinished(int epoch)
+{
+    // Drop stale or duplicate invocations.
+    if (epoch != leScanEpoch || m_active != BtleScanActive)
+        return;
+
+    m_active = NoScanActive;
+
+    // Same three-way branch as processSdpDiscoveryFinished().
+    Q_Q(QBluetoothDeviceDiscoveryAgent);
+    if (pendingCancel && !pendingStart) {
+        pendingCancel = false;
+        emit q->canceled();
+    } else if (pendingStart) {
+        pendingStart = pendingCancel = false;
+        start(requestedMethods);
+    } else {
+        // timeout -> regular stop
+        emit q->finished();
+    }
+}
+
 void QBluetoothDeviceDiscoveryAgentPrivate::stopLowEnergyScan()
 {
     jboolean result = leScanner.callMethod<jboolean>("scanForLeDevice", false);
     if (!result)
         qCWarning(QT_BT_ANDROID) << "Cannot stop BTLE device scanner";
 
-    m_active = NoScanActive;
-
-    Q_Q(QBluetoothDeviceDiscoveryAgent);
-    if (leScanTimeout->isActive()) {
-        // still active if this function was called from stop()
-        leScanTimeout->stop();
-        emit q->canceled();
-    } else {
-        // timeout -> regular stop
-        emit q->finished();
-    }
+    // Defer so a follow-up start() can set pendingStart; the captured epoch
+    // skips this handler if a fresh scan starts first.
+    QMetaObject::invokeMethod(this,
+            [this, epoch = leScanEpoch]() { processLeDiscoveryFinished(epoch); },
+            Qt::QueuedConnection);
 }
 QT_END_NAMESPACE
