@@ -118,6 +118,7 @@ private slots:
 
 private:
     void startLowEnergyScan();
+    void processLeDiscoveryFinished(int epoch);
     void classicDiscoveryStartFail();
     bool setErrorIfPowerOff();
 
@@ -128,6 +129,7 @@ private:
     QTimer *leScanTimeout = nullptr;
     QTimer *deviceDiscoveryStartTimeout = nullptr;
     short deviceDiscoveryStartAttemptsLeft;
+    int leScanEpoch = 0;
 
     bool pendingCancel = false;
     bool pendingStart = false;
