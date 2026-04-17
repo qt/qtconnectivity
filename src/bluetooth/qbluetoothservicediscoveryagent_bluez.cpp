@@ -120,6 +120,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::runExternalSdpScan(
         sdpScannerProcess->setReadChannel(QProcess::StandardOutput);
         if (QT_BT_BLUEZ().isDebugEnabled())
             sdpScannerProcess->setProcessChannelMode(QProcess::ForwardedErrorChannel);
+        // AXIVION Next Line Qt-Security-QProcessStart: expected behavior
         sdpScannerProcess->setProgram(fileInfo.canonicalFilePath());
         q->connect(sdpScannerProcess,
                    QOverload<int, QProcess::ExitStatus>::of(&QProcess::finished),
