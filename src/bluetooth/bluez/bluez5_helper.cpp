@@ -188,6 +188,7 @@ QVersionNumber bluetoothdVersion()
 
             auto determineBinaryVersion = [](const QString &binary) -> QVersionNumber {
                 QProcess process;
+                // AXIVION Next Line Qt-Security-QProcessStart: expected behavior
                 process.start(binary, {QStringLiteral("--version")});
                 process.waitForFinished();
 
