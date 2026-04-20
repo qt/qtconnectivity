@@ -212,9 +212,7 @@ void QLowEnergyControllerPrivateBluez::init()
                         || (!remoteKey && role == QLowEnergyController::PeripheralRole)) {
                     return;
                 }
-                qCDebug(QT_BT_BLUEZ) << "received new signature resolving key"
-                                     << QByteArray(reinterpret_cast<const char *>(csrk.data),
-                                                   sizeof csrk).toHex();
+                qCDebug(QT_BT_BLUEZ) << "received new signature resolving key";
                 signingData.insert(remoteDevice.toUInt64(), SigningData(csrk));
         }
     );
@@ -3229,7 +3227,6 @@ void QLowEnergyControllerPrivateBluez::loadSigningDataIfNecessary(SigningKeyType
                                << keyString.size();
         return;
     }
-    qCDebug(QT_BT_BLUEZ) << "CSRK of peer device is" << keyString;
     const quint32 counter = settings.value(QLatin1String("Counter"), 0).toUInt();
     using namespace std;
     BluezUint128 csrk;

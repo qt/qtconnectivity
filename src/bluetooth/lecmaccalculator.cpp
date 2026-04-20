@@ -68,8 +68,6 @@ quint64 LeCmacCalculator::calculateMac(const QByteArray &message, QUuid::Id128By
         return false;
     QUuid::Id128Bytes csrkMsb;
     std::reverse_copy(std::begin(csrk.data), std::end(csrk.data), std::begin(csrkMsb.data));
-    qCDebug(QT_BT_BLUEZ) << "CSRK (MSB):" << QByteArray(reinterpret_cast<char *>(csrkMsb.data),
-                                                        sizeof csrkMsb).toHex();
     if (setsockopt(m_baseSocket, 279 /* SOL_ALG */, ALG_SET_KEY, csrkMsb.data, sizeof csrkMsb) == -1) {
         qCWarning(QT_BT_BLUEZ) << "setsockopt() failed for crypto socket:" << strerror(errno);
         return 0;
@@ -134,8 +132,7 @@ bool LeCmacCalculator::verify(const QByteArray &message, QUuid::Id128Bytes csrk,
 #ifdef CONFIG_LINUX_CRYPTO_API
     const quint64 actualMac = calculateMac(message, csrk);
     if (actualMac != expectedMac) {
-        qCWarning(QT_BT_BLUEZ) << Qt::hex << "signature verification failed: calculated mac:"
-                               << actualMac << "expected mac:" << expectedMac;
+        qCWarning(QT_BT_BLUEZ) << "signature verification failed: mac mismatch";
         return false;
     }
     return true;
