@@ -1040,6 +1040,16 @@ QString QBluetoothUuid::descriptorToString(QBluetoothUuid::DescriptorType uuid)
     \brief Returns \c true if \a a is not equal to \a b, otherwise \c false.
 */
 
+/*!
+    \since 6.11.1
+    \fn size_t QBluetoothUuid::qHash(QBluetoothUuid key, size_t seed = 0)
+    \qhash{QBluetoothUuid}
+
+    In Qt versions prior to 6.11.1, the type was hashable via its implicit
+    conversion to QUuid. This explicit qHash() overload retains compatibility
+    with that implicit qHash().
+*/
+
 #ifndef QT_NO_DEBUG_STREAM
 QDebug operator<<(QDebug debug, const QBluetoothUuid &uuid)
 {
