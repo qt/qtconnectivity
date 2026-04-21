@@ -26,6 +26,7 @@
 #    include <winscard.h>
 #endif
 #include <QtCore/QByteArray>
+#include <QtCore/qhashfunctions.h>
 #include <QtCore/QString>
 
 QT_BEGIN_NAMESPACE
@@ -43,12 +44,15 @@ QString errorMessage(LONG error);
 
 } // namespace QPcsc
 
-class QPcscSlotName : public
+using QPcscSlotNameBase =
 #ifdef Q_OS_WIN
                       QString
 #else
                       QByteArray
 #endif
+                      ;
+
+class QPcscSlotName : public QPcscSlotNameBase
 {
 public:
 #ifdef Q_OS_WIN
@@ -65,6 +69,12 @@ public:
     Ptr ptr() { return reinterpret_cast<Ptr>(data()); }
 
     static qsizetype nameSize(CPtr p);
+
+    friend size_t qHash(const QPcscSlotName &key, size_t seed = 0) noexcept
+    {
+        const QPcscSlotNameBase &base = key;
+        return qHash(base, seed);
+    }
 };
 
 QT_END_NAMESPACE
