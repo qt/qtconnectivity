@@ -7,6 +7,7 @@
 #include <QtBluetooth/qtbluetoothglobal.h>
 
 #include <QtCore/QtGlobal>
+#include <QtCore/qhashfunctions.h>
 #include <QtCore/QMetaType>
 #include <QtCore/QUuid>
 
@@ -401,6 +402,12 @@ public:
     static QString protocolToString(ProtocolUuid uuid);
     static QString characteristicToString(CharacteristicType uuid);
     static QString descriptorToString(DescriptorType uuid);
+
+private:
+    friend size_t qHash(QBluetoothUuid key, size_t seed = 0) noexcept
+    {
+        return QHashPrivate::ex1to2arg(QUuid{key}, seed);
+    }
 };
 
 #if QT_BLUETOOTH_INLINE_IMPL_SINCE(6, 6)
