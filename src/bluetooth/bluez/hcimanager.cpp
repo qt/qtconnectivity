@@ -527,8 +527,9 @@ void HciManager::handleHciAclPacket(const quint8 *data, int size)
 //                         << "payload length:" << l2CapHeader.length;
     if (l2CapHeader.channelId != SECURITY_CHANNEL_ID)
         return;
-    if (size != 17) {
-        qCWarning(QT_BT_BLUEZ) << "Unexpected key size" << size << "in Signing Information packet";
+    if (l2CapHeader.length != 17) {
+        qCWarning(QT_BT_BLUEZ) << "Unexpected length of the Signing Information packet:"
+                               << l2CapHeader.length;
         return;
     }
     if (*data != 0xa) // "Signing Information". Spec v4.2, Vol 3, Part H, 3.6.6
