@@ -69,7 +69,7 @@ private:
     HRESULT onBluetoothDeviceFoundAsync(IAsyncOperation<BluetoothDevice *> *op, AsyncStatus status);
 
     void processServiceSearchResult(quint64 address, ComPtr<IVectorView<RfcommDeviceService*>> services);
-    QBluetoothServiceInfo::Sequence readSequence(ComPtr<IDataReader> dataReader, bool *ok, quint8 *bytesRead);
+    QBluetoothServiceInfo::Sequence readSequence(ComPtr<IDataReader> dataReader, bool *ok, quint8 *bytesRead, int depth = 0);
 
 private:
     quint64 m_targetAddress;
@@ -306,7 +306,7 @@ void QWinRTBluetoothServiceDiscoveryWorker::processServiceSearchResult(quint64 a
     deleteLater();
 }
 
-QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSequence(ComPtr<IDataReader> dataReader, bool *ok, quint8 *bytesRead)
+QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSequence(ComPtr<IDataReader> dataReader, bool *ok, quint8 *bytesRead, int depth)
 {
     if (ok)
         *ok = false;
@@ -315,6 +315,11 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
     QBluetoothServiceInfo::Sequence result;
     if (!dataReader)
         return result;
+
+    if (depth > QBluetoothServiceDiscoveryAgentPrivate::kMaxSdpRecursionDepth) {
+        qCWarning(QT_BT_WINDOWS) << "SDP sequence recursion depth exceeded";
+        return result;
+    }
 
     quint8 remainingLength;
     HRESULT hr = dataReader->ReadByte(&remainingLength);
@@ -404,7 +409,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
         }
         case TYPE_SEQUENCE: {
             quint8 bytesR;
-            const QBluetoothServiceInfo::Sequence sequence = readSequence(dataReader, ok, &bytesR);
+            const QBluetoothServiceInfo::Sequence sequence = readSequence(dataReader, ok, &bytesR, depth + 1);
             if (*ok)
                 result.append(QVariant::fromValue(sequence));
             else
