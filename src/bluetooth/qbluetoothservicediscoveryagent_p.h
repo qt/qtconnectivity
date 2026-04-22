@@ -56,6 +56,9 @@ QT_END_NAMESPACE
 #include <QtBluetooth/QBluetoothLocalDevice>
 #endif
 
+// intentionally outside of Qt namespace
+class tst_QBluetoothServiceDiscoveryAgent;
+
 QT_BEGIN_NAMESPACE
 
 class QBluetoothDeviceDiscoveryAgent;
@@ -68,7 +71,7 @@ class LocalDeviceBroadcastReceiver;
 class QWinRTBluetoothServiceDiscoveryWorker;
 #endif
 
-class QBluetoothServiceDiscoveryAgentPrivate
+class Q_AUTOTEST_EXPORT QBluetoothServiceDiscoveryAgentPrivate
 #if defined(QT_WINRT_BLUETOOTH)
         : public QObject
 {
@@ -80,8 +83,12 @@ class QBluetoothServiceDiscoveryAgentPrivate
 {
 #endif
     Q_DECLARE_PUBLIC(QBluetoothServiceDiscoveryAgent)
+    friend class ::tst_QBluetoothServiceDiscoveryAgent;
 
 public:
+    // Best-guess value. Should be enough for all real usecases.
+    static constexpr int kMaxSdpRecursionDepth = 64;
+
     enum DiscoveryState {
         Inactive,
         DeviceDiscovery,
@@ -132,7 +139,7 @@ private:
     void runExternalSdpScan(const QBluetoothAddress &remoteAddress,
                     const QBluetoothAddress &localAddress);
     void sdpScannerDone(int exitCode, QProcess::ExitStatus exitStatus);
-    QVariant readAttributeValue(QXmlStreamReader &xml);
+    QVariant readAttributeValue(QXmlStreamReader &xml, int depth = 0);
     QBluetoothServiceInfo parseServiceXml(const QString& xml);
     void performMinimalServiceDiscovery(const QBluetoothAddress &deviceAddress);
 #endif

@@ -404,9 +404,15 @@ void QBluetoothServiceDiscoveryAgentPrivate::performMinimalServiceDiscovery(cons
     _q_serviceDiscoveryFinished();
 }
 
-QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamReader &xml)
+QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamReader &xml,
+                                                                    int depth)
 {
     auto skippingCurrentElementByDefault = qScopeGuard([&] { xml.skipCurrentElement(); });
+
+    if (depth > kMaxSdpRecursionDepth) {
+        qCWarning(QT_BT_BLUEZ) << "SDP XML attribute recursion depth exceeded";
+        return QVariant();
+    }
 
     if (xml.name() == QLatin1String("boolean")) {
         return xml.attributes().value(QLatin1String("value")) == QLatin1String("true");
@@ -448,7 +454,7 @@ QVariant QBluetoothServiceDiscoveryAgentPrivate::readAttributeValue(QXmlStreamRe
         skippingCurrentElementByDefault.dismiss(); // we skip several elements here
 
         while (xml.readNextStartElement()) {
-            QVariant value = readAttributeValue(xml);
+            QVariant value = readAttributeValue(xml, depth + 1);
             sequence.append(value);
         }
 

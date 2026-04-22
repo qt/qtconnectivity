@@ -15,7 +15,7 @@ qt_internal_add_test(tst_qbluetoothservicediscoveryagent
     SOURCES
         tst_qbluetoothservicediscoveryagent.cpp
     LIBRARIES
-        Qt::Bluetooth
+        Qt::BluetoothPrivate
 )
 
 ## Scopes:
