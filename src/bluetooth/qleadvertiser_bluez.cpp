@@ -275,7 +275,7 @@ void QLeAdvertiserBluez::setManufacturerData(const QLowEnergyAdvertisingData &sr
         return;
 
     const QByteArray manufacturerData = src.manufacturerData();
-    if (dest.length >= sizeof dest.data - 1 - 1 - 2 - manufacturerData.size()) {
+    if (qsizetype(sizeof dest.data) - dest.length < 1 + 1 + 2 + manufacturerData.size()) {
         qCWarning(QT_BT_BLUEZ) << "manufacturer data does not fit into advertising data packet";
         return;
     }
