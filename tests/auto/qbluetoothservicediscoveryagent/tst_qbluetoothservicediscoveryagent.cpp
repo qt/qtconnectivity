@@ -16,7 +16,13 @@
 #include <qbluetoothserver.h>
 #include <qbluetoothserviceinfo.h>
 
+#if QT_CONFIG(bluez) && defined(QT_BUILD_INTERNAL)
+#include <private/qbluetoothservicediscoveryagent_p.h>
+#endif
+
 QT_USE_NAMESPACE
+
+using namespace Qt::StringLiterals;
 
 // Maximum time to for bluetooth device scan
 const int MaxScanTime = 5 * 60 * 1000;  // 5 minutes in ms
@@ -42,6 +48,7 @@ private slots:
     void tst_serviceDiscovery();
     void tst_serviceDiscoveryStop();
     void tst_serviceDiscoveryAdapters();
+    void tst_parseServiceXmlRecursionLimit();
 
 private:
     QList<QBluetoothDeviceInfo> devices;
@@ -451,6 +458,53 @@ void tst_QBluetoothServiceDiscoveryAgent::tst_serviceDiscovery()
 
     discoveryAgent.stop();
     QVERIFY(!discoveryAgent.isActive());
+}
+
+void tst_QBluetoothServiceDiscoveryAgent::tst_parseServiceXmlRecursionLimit()
+{
+#if QT_CONFIG(bluez) && defined(QT_BUILD_INTERNAL)
+    // Build an SDP XML record with deeply nested <sequence> elements.
+    // Without a recursion limit this would overflow the stack.
+    const int nestingDepth = QBluetoothServiceDiscoveryAgentPrivate::kMaxSdpRecursionDepth * 3;
+
+    QString xml = "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"
+                  "<record>"
+                  "<attribute id=\"0x0001\">"_L1;
+
+    for (int i = 0; i < nestingDepth; ++i)
+        xml += "<sequence>"_L1;
+    xml += "<uint16 value=\"0x1101\" />"_L1;
+    for (int i = 0; i < nestingDepth; ++i)
+        xml += "</sequence>"_L1;
+
+    xml += "</attribute></record>"_L1;
+
+    QBluetoothServiceDiscoveryAgentPrivate priv(nullptr, QBluetoothAddress());
+    // parseServiceXml accesses discoveredDevices.at(0), so provide a dummy
+    QBluetoothDeviceInfo dummyInfo{ QBluetoothAddress("00:11:22:33:44:55"_L1), "Dummy"_L1, 0 };
+    priv.discoveredDevices.emplace_back(std::move(dummyInfo));
+
+    // Must not crash or hang; expect the recursion-limit warning
+    QTest::ignoreMessage(QtWarningMsg, "SDP XML attribute recursion depth exceeded");
+    const QBluetoothServiceInfo info = priv.parseServiceXml(xml);
+
+    // Walk the nested sequences and count the actual depth parsed.
+    // The recursion limit must have kicked in: we expect many levels
+    // but strictly fewer than nestingDepth.
+    int actualDepth = 0;
+    QVariant v = info.attribute(0x0001);
+    while (v.canConvert<QBluetoothServiceInfo::Sequence>()) {
+        const auto seq = v.value<QBluetoothServiceInfo::Sequence>();
+        if (seq.isEmpty())
+            break;
+        ++actualDepth;
+        v = seq.first();
+    }
+    QVERIFY(actualDepth > 1);
+    QVERIFY(actualDepth < nestingDepth);
+#else
+    QSKIP("This test is only available on Linux developer build with BlueZ");
+#endif
 }
 
 QTEST_MAIN(tst_QBluetoothServiceDiscoveryAgent)
