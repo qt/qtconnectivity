@@ -322,11 +322,29 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
     }
 
     quint8 remainingLength;
+
+    auto verifyLength = [&remainingLength](size_t dataLen) -> bool {
+        if (size_t(remainingLength) < dataLen) {
+            qCWarning(QT_BT_WINDOWS)
+                    << "Remaining length of the sequence is not enough to fit the new value."
+                    << "Remaining length:" << remainingLength << "Size to read:" << dataLen;
+            return false;
+        }
+        return true;
+    };
+
+#define RETURN_IF_INVALID_LENGTH(dataLen)    \
+    if (!verifyLength(dataLen)) {           \
+        result.clear();                     \
+        return result;                      \
+    }
+
     HRESULT hr = dataReader->ReadByte(&remainingLength);
     Q_ASSERT_SUCCEEDED(hr);
     if (bytesRead)
         *bytesRead += 1;
     BYTE type;
+    RETURN_IF_INVALID_LENGTH(sizeof(type));
     hr = dataReader->ReadByte(&type);
     remainingLength -= 1;
     if (bytesRead)
@@ -336,6 +354,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
         switch (type) {
         case TYPE_UINT8: {
             quint8 value;
+            RETURN_IF_INVALID_LENGTH(sizeof(value));
             hr = dataReader->ReadByte(&value);
             Q_ASSERT_SUCCEEDED(hr);
             result.append(QVariant::fromValue(value));
@@ -346,6 +365,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
         }
         case TYPE_UINT16: {
             quint16 value;
+            RETURN_IF_INVALID_LENGTH(sizeof(value));
             hr = dataReader->ReadUInt16(&value);
             Q_ASSERT_SUCCEEDED(hr);
             result.append(QVariant::fromValue(value));
@@ -356,6 +376,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
         }
         case TYPE_UINT32: {
             quint32 value;
+            RETURN_IF_INVALID_LENGTH(sizeof(value));
             hr = dataReader->ReadUInt32(&value);
             Q_ASSERT_SUCCEEDED(hr);
             result.append(QVariant::fromValue(value));
@@ -366,6 +387,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
         }
         case TYPE_SHORT_UUID: {
             quint16 b;
+            RETURN_IF_INVALID_LENGTH(sizeof(b));
             hr = dataReader->ReadUInt16(&b);
             Q_ASSERT_SUCCEEDED(hr);
 
@@ -378,6 +400,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
         }
         case TYPE_LONG_UUID: {
             GUID b;
+            RETURN_IF_INVALID_LENGTH(sizeof(b));
             hr = dataReader->ReadGuid(&b);
             Q_ASSERT_SUCCEEDED(hr);
             // The latter 8 bytes are in reverse order
@@ -391,11 +414,13 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
         }
         case TYPE_STRING: {
             BYTE length;
+            RETURN_IF_INVALID_LENGTH(sizeof(length));
             hr = dataReader->ReadByte(&length);
             Q_ASSERT_SUCCEEDED(hr);
             remainingLength -= 1;
             if (bytesRead)
                 *bytesRead += 1;
+            RETURN_IF_INVALID_LENGTH(size_t(length));
             HString value;
             hr = dataReader->ReadString(length, value.GetAddressOf());
             Q_ASSERT_SUCCEEDED(hr);
@@ -410,6 +435,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
         case TYPE_SEQUENCE: {
             quint8 bytesR;
             const QBluetoothServiceInfo::Sequence sequence = readSequence(dataReader, ok, &bytesR, depth + 1);
+            RETURN_IF_INVALID_LENGTH(size_t(bytesR));
             if (*ok)
                 result.append(QVariant::fromValue(sequence));
             else
@@ -427,12 +453,15 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
         if (remainingLength == 0)
             break;
 
+        RETURN_IF_INVALID_LENGTH(sizeof(type));
         hr = dataReader->ReadByte(&type);
         Q_ASSERT_SUCCEEDED(hr);
         remainingLength -= 1;
         if (bytesRead)
             *bytesRead += 1;
     }
+
+#undef RETURN_IF_INVALID_LENGTH
 
     if (ok)
         *ok = true;
