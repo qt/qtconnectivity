@@ -44,6 +44,8 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_WINDOWS)
 #define TYPE_STRING 37
 #define TYPE_SEQUENCE 53
 
+#define BREAK_IF_FAILED(msg) RETURN_IF_FAILED(msg, break)
+
 // Helper to reverse given uchar array
 static void reverseArray(uchar data[], size_t length)
 {
@@ -230,36 +232,36 @@ void QWinRTBluetoothServiceDiscoveryWorker::processServiceSearchResult(quint64 a
             Q_ASSERT_SUCCEEDED(hr);
             BYTE type;
             hr = dataReader->ReadByte(&type);
-            Q_ASSERT_SUCCEEDED(hr);
+            BREAK_IF_FAILED("type");
             if (type == TYPE_UINT8) {
                 quint8 value;
                 hr = dataReader->ReadByte(&value);
-                Q_ASSERT_SUCCEEDED(hr);
+                BREAK_IF_FAILED("uint8 value");
                 info.setAttribute(key, value);
                 qCDebug(QT_BT_WINDOWS) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "UINT8" << Qt::hex << value;
             } else if (type == TYPE_UINT16) {
                 quint16 value;
                 hr = dataReader->ReadUInt16(&value);
-                Q_ASSERT_SUCCEEDED(hr);
+                BREAK_IF_FAILED("uint16 value");
                 info.setAttribute(key, value);
                 qCDebug(QT_BT_WINDOWS) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "UINT16" << Qt::hex << value;
             } else if (type == TYPE_UINT32) {
                 quint32 value;
                 hr = dataReader->ReadUInt32(&value);
-                Q_ASSERT_SUCCEEDED(hr);
+                BREAK_IF_FAILED("uint32 value");
                 info.setAttribute(key, value);
                 qCDebug(QT_BT_WINDOWS) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "UINT32" << Qt::hex << value;
             } else if (type == TYPE_SHORT_UUID) {
                 quint16 value;
                 hr = dataReader->ReadUInt16(&value);
-                Q_ASSERT_SUCCEEDED(hr);
+                BREAK_IF_FAILED("short uuid");
                 const QBluetoothUuid uuid(value);
                 info.setAttribute(key, uuid);
                 qCDebug(QT_BT_WINDOWS) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "UUID" << Qt::hex << uuid;
             } else if (type == TYPE_LONG_UUID) {
                 GUID value;
                 hr = dataReader->ReadGuid(&value);
-                Q_ASSERT_SUCCEEDED(hr);
+                BREAK_IF_FAILED("long uuid");
                 // The latter 8 bytes are in reverse order
                 reverseArray(value.Data4, sizeof(value.Data4)/sizeof(value.Data4[0]));
                 const QBluetoothUuid uuid(value);
@@ -268,10 +270,10 @@ void QWinRTBluetoothServiceDiscoveryWorker::processServiceSearchResult(quint64 a
             } else if (type == TYPE_STRING) {
                 BYTE length;
                 hr = dataReader->ReadByte(&length);
-                Q_ASSERT_SUCCEEDED(hr);
+                BREAK_IF_FAILED("string length");
                 HString value;
                 hr = dataReader->ReadString(length, value.GetAddressOf());
-                Q_ASSERT_SUCCEEDED(hr);
+                BREAK_IF_FAILED("string value");
                 const QString str = QString::fromWCharArray(WindowsGetStringRawBuffer(value.Get(), nullptr));
                 info.setAttribute(key, str);
                 qCDebug(QT_BT_WINDOWS) << "UUID" << uuid << "KEY" << Qt::hex << key << "TYPE" << Qt::dec << type << "STRING" << str;
@@ -340,23 +342,23 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
     }
 
     HRESULT hr = dataReader->ReadByte(&remainingLength);
-    Q_ASSERT_SUCCEEDED(hr);
+    RETURN_IF_FAILED("remainingLength", return result);
     if (bytesRead)
         *bytesRead += 1;
     BYTE type;
     RETURN_IF_INVALID_LENGTH(sizeof(type));
     hr = dataReader->ReadByte(&type);
+    RETURN_IF_FAILED("type", return result);
     remainingLength -= 1;
     if (bytesRead)
         *bytesRead += 1;
-    Q_ASSERT_SUCCEEDED(hr);
     while (true) {
         switch (type) {
         case TYPE_UINT8: {
             quint8 value;
             RETURN_IF_INVALID_LENGTH(sizeof(value));
             hr = dataReader->ReadByte(&value);
-            Q_ASSERT_SUCCEEDED(hr);
+            RETURN_IF_FAILED("uint8 value", return result);
             result.append(QVariant::fromValue(value));
             remainingLength -= 1;
             if (bytesRead)
@@ -367,7 +369,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
             quint16 value;
             RETURN_IF_INVALID_LENGTH(sizeof(value));
             hr = dataReader->ReadUInt16(&value);
-            Q_ASSERT_SUCCEEDED(hr);
+            RETURN_IF_FAILED("uint16 value", return result);
             result.append(QVariant::fromValue(value));
             remainingLength -= 2;
             if (bytesRead)
@@ -378,7 +380,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
             quint32 value;
             RETURN_IF_INVALID_LENGTH(sizeof(value));
             hr = dataReader->ReadUInt32(&value);
-            Q_ASSERT_SUCCEEDED(hr);
+            RETURN_IF_FAILED("uint32 value", return result);
             result.append(QVariant::fromValue(value));
             remainingLength -= 4;
             if (bytesRead)
@@ -389,7 +391,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
             quint16 b;
             RETURN_IF_INVALID_LENGTH(sizeof(b));
             hr = dataReader->ReadUInt16(&b);
-            Q_ASSERT_SUCCEEDED(hr);
+            RETURN_IF_FAILED("short uuid", return result);
 
             const QBluetoothUuid uuid(b);
             result.append(QVariant::fromValue(uuid));
@@ -402,7 +404,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
             GUID b;
             RETURN_IF_INVALID_LENGTH(sizeof(b));
             hr = dataReader->ReadGuid(&b);
-            Q_ASSERT_SUCCEEDED(hr);
+            RETURN_IF_FAILED("long uuid", return result);
             // The latter 8 bytes are in reverse order
             reverseArray(b.Data4, sizeof(b.Data4)/sizeof(b.Data4[0]));
             const QBluetoothUuid uuid(b);
@@ -416,14 +418,14 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
             BYTE length;
             RETURN_IF_INVALID_LENGTH(sizeof(length));
             hr = dataReader->ReadByte(&length);
-            Q_ASSERT_SUCCEEDED(hr);
+            RETURN_IF_FAILED("string length", return result);
             remainingLength -= 1;
             if (bytesRead)
                 *bytesRead += 1;
             RETURN_IF_INVALID_LENGTH(size_t(length));
             HString value;
             hr = dataReader->ReadString(length, value.GetAddressOf());
-            Q_ASSERT_SUCCEEDED(hr);
+            RETURN_IF_FAILED("string value", return result);
 
             const QString str = QString::fromWCharArray(WindowsGetStringRawBuffer(value.Get(), nullptr));
             result.append(QVariant::fromValue(str));
@@ -455,7 +457,7 @@ QBluetoothServiceInfo::Sequence QWinRTBluetoothServiceDiscoveryWorker::readSeque
 
         RETURN_IF_INVALID_LENGTH(sizeof(type));
         hr = dataReader->ReadByte(&type);
-        Q_ASSERT_SUCCEEDED(hr);
+        RETURN_IF_FAILED("next type", return result);
         remainingLength -= 1;
         if (bytesRead)
             *bytesRead += 1;
