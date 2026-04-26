@@ -30,6 +30,63 @@ namespace winrt::impl
 
 #include <wrl/client.h>
 
+#include <functional>
+#include <type_traits>
+
+// Macros for guarding C++/WinRT projection calls. Each accessor on a winrt
+// projection runs check_hresult() on the underlying ABI HRESULT and throws
+// winrt::hresult_error on failure. After the Bluetooth stack tears down state
+// (suspend/resume, radio toggle, service restart), those calls routinely fail
+// and the exception propagates out of completion lambdas, crashing the process.
+//
+// SAFE(expr): returns expr's value on success, a logged-and-defaulted value on
+//   a caught hresult_error. Default-constructible types (primitives, enums,
+//   winrt::hstring, generic interfaces like IAsyncOperation<T>) take T{};
+//   runtimeclass projections that only declare an explicit Class(nullptr_t)
+//   constructor fall back to T(nullptr).
+// HR(stmt): runs stmt and returns the resulting winrt::hresult (S_OK on
+//   success, e.code() on failure).
+// TRY(stmt): runs stmt and returns true on success, false on failure.
+// LOG_HRESULT(hr): warning-log helper used by the wrappers.
+//
+// Callsites must have the QT_BT_WINDOWS logging category in scope.
+
+#define LOG_HRESULT(hr) qCWarning(QT_BT_WINDOWS) << "HRESULT:" << quint32(hr)
+
+#define HR(x) \
+    std::invoke([&]() { \
+        try { \
+            x; \
+        } catch (winrt::hresult_error const &e) { \
+            LOG_HRESULT(e.code()) << "/*" << #x << "*/"; \
+            return e.code(); \
+        } \
+        return winrt::hresult{ S_OK }; \
+    })
+
+#define TRY(x) \
+    std::invoke([&]() { \
+        try { \
+            x; \
+        } catch (winrt::hresult_error const &e) { \
+            LOG_HRESULT(e.code()) << "/*" << #x << "*/"; \
+            return false; \
+        } \
+        return true; \
+    })
+
+#define SAFE(x) \
+    std::invoke([&]() -> decltype(x) { \
+        try { return (x); } \
+        catch (winrt::hresult_error const &e) { \
+            LOG_HRESULT(e.code()) << "/*" << #x << "*/"; \
+            if constexpr (std::is_default_constructible_v<decltype(x)>) \
+                return decltype(x){}; \
+            else \
+                return decltype(x)(nullptr); \
+        } \
+    })
+
 namespace ABI {
     namespace Windows {
         namespace Storage {
