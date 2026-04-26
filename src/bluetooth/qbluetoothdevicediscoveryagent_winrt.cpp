@@ -643,10 +643,15 @@ void QWinRTBluetoothDeviceDiscoveryWorker::getLowEnergyDeviceFromId(const winrt:
 // this is a callback - executes in a new thread
 void QWinRTBluetoothDeviceDiscoveryWorker::handleLowEnergyDevice(const BluetoothLEDevice &device)
 {
-    const uint64_t address = device.BluetoothAddress();
-    const std::wstring name { device.Name() }; // via operator std::wstring_view()
+    uint64_t address = 0;
+    if (!TRY(address = device.BluetoothAddress())) {
+        qCDebug(QT_BT_WINDOWS) << "Failed to read BluetoothAddress() for LE device";
+        invokeDecrementPendingDevicesCountAndCheckFinished(shared_from_this());
+        return;
+    }
+    const std::wstring name { SAFE(device.Name()) }; // via operator std::wstring_view()
     const QString btName = QString::fromStdWString(name);
-    const bool isPaired = device.DeviceInformation().Pairing().IsPaired();
+    const bool isPaired = SAFE(device.DeviceInformation().Pairing().IsPaired());
 
     m_leDevicesMutex.lock();
     const LEAdvertisingInfo adInfo = m_foundLEDevicesMap.value(address);
@@ -680,11 +685,15 @@ void QWinRTBluetoothDeviceDiscoveryWorker::handleLowEnergyDevice(const Bluetooth
         invokeDecrementPendingDevicesCountAndCheckFinished(shared_from_this());
         invokeDeviceFoundWithDebug(info);
     } else {
-        auto asyncOp = device.GetGattServicesAsync();
+        auto asyncOp = SAFE(device.GetGattServicesAsync());
+        if (!asyncOp) {
+            invokeDecrementPendingDevicesCountAndCheckFinished(shared_from_this());
+            return;
+        }
         auto thisPtr = shared_from_this();
-        asyncOp.Completed([thisPtr, info](auto &&op, AsyncStatus status) mutable {
+        const bool ok = TRY(asyncOp.Completed([thisPtr, info](auto &&op, AsyncStatus status) mutable {
             if (status == AsyncStatus::Completed) {
-                auto servicesResult = op.GetResults();
+                auto servicesResult = SAFE(op.GetResults());
                 if (servicesResult) {
                     thisPtr->handleGattServices(servicesResult, info);
                     return;
@@ -693,7 +702,11 @@ void QWinRTBluetoothDeviceDiscoveryWorker::handleLowEnergyDevice(const Bluetooth
             // Failed to get services
             qCDebug(QT_BT_WINDOWS) << "Failed to get GATT services for device" << info.name();
             invokeDecrementPendingDevicesCountAndCheckFinished(thisPtr);
-        });
+        }));
+        if (!ok) {
+            invokeDecrementPendingDevicesCountAndCheckFinished(thisPtr);
+            return;
+        }
     }
 }
 
@@ -708,18 +721,22 @@ void QWinRTBluetoothDeviceDiscoveryWorker::handleGattServices(
     });
     Q_UNUSED(guard); // to suppress warning
 
-    const auto status = servicesResult.Status();
-    if (status == GattCommunicationStatus::Success) {
-        const auto services = servicesResult.Services();
-        QList<QBluetoothUuid> uuids;
-        for (const auto &service : services) {
-            const GUID uuid = fromWinRtGuid(service.Uuid());
-            uuids.append(QBluetoothUuid(uuid));
+    try {
+        const auto status = servicesResult.Status();
+        if (status == GattCommunicationStatus::Success) {
+            const auto services = servicesResult.Services();
+            QList<QBluetoothUuid> uuids;
+            for (const auto &service : services) {
+                const GUID uuid = fromWinRtGuid(service.Uuid());
+                uuids.append(QBluetoothUuid(uuid));
+            }
+            info.setServiceUuids(uuids);
+        } else {
+            qCWarning(QT_BT_WINDOWS) << "Obtaining LE services finished with status"
+                                     << static_cast<int>(status);
         }
-        info.setServiceUuids(uuids);
-    } else {
-        qCWarning(QT_BT_WINDOWS) << "Obtaining LE services finished with status"
-                                 << static_cast<int>(status);
+    } catch (winrt::hresult_error const &e) {
+        LOG_HRESULT(e.code()) << "/* handleGattServices */";
     }
     invokeDeviceFoundWithDebug(info);
 }
