@@ -140,40 +140,6 @@ static inline T await_forever(IAsyncOperation<T> asyncInfo, GlobalCondition canc
     return await(asyncInfo, canceled, timeout_infinity);
 }
 
-#define LOG_HRESULT(hr) qCWarning(QT_BT_WINDOWS) << "HRESULT:" << quint32(hr)
-
-#define HR(x) \
-    std::invoke([&]() { \
-        try { \
-            x; \
-        } catch (hresult_error const &e) { \
-            LOG_HRESULT(e.code()) << "/*"  << #x << "*/"; \
-            return e.code(); \
-        } \
-        return hresult{ S_OK } ; \
-    })
-
-#define TRY(x) \
-    std::invoke([&]() { \
-        try { \
-            x; \
-        } catch (hresult_error const &e) { \
-            LOG_HRESULT(e.code()) << "/*"  << #x << "*/"; \
-            return false; \
-        } \
-        return true; \
-    })
-
-#define SAFE(x) \
-    std::invoke([&]() { \
-        try { \
-            return(x); \
-        } catch (hresult_error const &e) { \
-            LOG_HRESULT(e.code()) << "/*"  << #x << "*/"; \
-            return decltype(x)(0); \
-        } \
-    })
-
 #define WARN_AND_CONTINUE(msg) \
     { \
         qCWarning(QT_BT_WINDOWS) << msg; \
