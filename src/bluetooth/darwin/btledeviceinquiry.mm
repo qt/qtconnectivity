@@ -84,7 +84,8 @@ AdvertisementData::AdvertisementData(NSDictionary *advertisementData)
     value = [advertisementData objectForKey:CBAdvertisementDataManufacturerDataKey];
     if (value && [value isKindOfClass:[NSData class]]) {
         QByteArray data = QByteArray::fromNSData(static_cast<NSData *>(value));
-        manufacturerData.insert(qFromLittleEndian<quint16>(data.constData()), data.mid(2));
+        if (data.size() >= 2)
+            manufacturerData.insert(qFromLittleEndian<quint16>(data.constData()), data.mid(2));
     }
 }
 
