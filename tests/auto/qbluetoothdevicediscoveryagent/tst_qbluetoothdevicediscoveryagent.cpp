@@ -20,6 +20,10 @@
 #include <QtCore/qnamespace.h>
 #endif // permissions
 
+#ifdef Q_OS_ANDROID
+#include <QtCore/qjnienvironment.h>
+#endif
+
 #include <memory>
 
 using namespace Qt::StringLiterals;
@@ -45,6 +49,7 @@ const int MaxWaitForCancelTime = 15 * 1000;  // 15 seconds in ms
 // Android is sometimes unable to cancel immediately
 const int WaitBeforeStopTime = 200;
 extern void testEnumToString(std::function<void(const char*, int)> callback);
+extern void parseScanRecord(QBluetoothDeviceInfo &, jbyteArray);
 #endif
 
 class tst_QBluetoothDeviceDiscoveryAgent : public QObject
@@ -73,6 +78,9 @@ private slots:
     void tst_discoveryMethods();
 
     void tst_majorMinorMapping();
+
+    void tst_androidScanRecordParsing_data();
+    void tst_androidScanRecordParsing();
 private:
     qsizetype noOfLocalDevices;
     using DiscoveryAgentPtr = std::unique_ptr<QBluetoothDeviceDiscoveryAgent>;
@@ -677,6 +685,95 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_majorMinorMapping()
     });
 
     QCOMPARE(hits, expectedMapping.size());
+#endif
+}
+
+void tst_QBluetoothDeviceDiscoveryAgent::tst_androidScanRecordParsing_data()
+{
+#ifndef Q_OS_ANDROID
+    QSKIP("This test only runs on Android");
+#endif
+    QTest::addColumn<QByteArray>("scanRecord");
+    QTest::addColumn<int>("expectedServiceUuidCount");
+    QTest::addColumn<bool>("expectName");
+    QTest::addColumn<bool>("expectManufacturerData");
+
+    // -----------------------------------------------------------------------
+    // Baseline: well-formed scan record containing a 16-bit service UUID,
+    // a complete local name, and manufacturer-specific data.
+    // All three fields must be parsed correctly.
+    //
+    // Layout (each field: [nBytes] [ADType] [data...]):
+    //   02 01 06        -- Flags (ADType 0x01); not parsed by Qt, skipped
+    //   03 03 34 12     -- 16-bit UUID complete (0x1234 in little-endian)
+    //   05 09 54 65 73 74 -- Complete local name: "Test"
+    //   05 FF E0 00 AB CD -- Manufacturer data: company=0x00E0, payload=0xAB 0xCD
+    // -----------------------------------------------------------------------
+    QByteArray validRecord = QByteArray::fromHex("020106"      // Flags
+                                                 "03033412"    // 16-bit UUID 0x1234
+                                                 "050954657374"// "Test"
+                                                 "05FFE000ABCD"); // Mfr data
+    QTest::newRow("valid_record") << validRecord << 1 << true << true;
+
+    QTest::newRow("zero_length") << QByteArray(1, 0x00) << 0 << false << false;
+
+    QByteArray truncated;
+    truncated += char(0x0A);          // nBytes = 10, claims 9 bytes of name data
+    truncated += char(0x09);          // ADType: complete local name
+    truncated += QByteArray("Hi");    // only 2 bytes available — record is truncated
+    QTest::newRow("truncated_record") << truncated << 0 << false << false;
+}
+
+#ifdef Q_OS_ANDROID
+
+// Allocates a JVM byte array from a QByteArray. The caller is responsible for
+// releasing the returned local reference via env->DeleteLocalRef().
+static jbyteArray toJByteArray(QJniEnvironment &env, const QByteArray &data)
+{
+    jbyteArray arr = env->NewByteArray(jsize(data.size()));
+    if (arr && !data.isEmpty())
+        env->SetByteArrayRegion(arr, 0, jsize(data.size()),
+                                reinterpret_cast<const jbyte *>(data.constData()));
+    return arr;
+}
+
+#endif
+
+void tst_QBluetoothDeviceDiscoveryAgent::tst_androidScanRecordParsing()
+{
+#ifdef Q_OS_ANDROID
+    QFETCH(QByteArray, scanRecord);
+    QFETCH(int, expectedServiceUuidCount);
+    QFETCH(bool, expectName);
+    QFETCH(bool, expectManufacturerData);
+
+    QBluetoothDeviceInfo info{ QBluetoothAddress("00:11:22:33:44:55"_L1), QString(), 0 };
+
+    QJniEnvironment env;
+    jbyteArray jScanRecord = toJByteArray(env, scanRecord);
+
+    parseScanRecord(info, jScanRecord);
+
+    env->DeleteLocalRef(jScanRecord);
+
+    QCOMPARE(info.serviceUuids().size(), expectedServiceUuidCount);
+
+    if (expectedServiceUuidCount > 0) {
+        // The valid-record row carries UUID 0x1234 — verify it was parsed correctly.
+        QVERIFY(info.serviceUuids().contains(QBluetoothUuid(quint16(0x1234))));
+    }
+
+    QCOMPARE(!info.name().isEmpty(), expectName);
+
+    if (expectManufacturerData) {
+        // The valid-record row carries manufacturer data for company 0x00E0.
+        const auto mfrData = info.manufacturerData();
+#ifdef Q_PROCESSOR_X86
+        QEXPECT_FAIL("valid_record", "AD type read incorrectly", Abort);
+#endif
+        QVERIFY(mfrData.contains(0x00E0));
+        QCOMPARE(mfrData.value(0x00E0), QByteArray::fromHex("ABCD"));
+    }
 #endif
 }
 
