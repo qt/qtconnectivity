@@ -736,6 +736,49 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_androidScanRecordParsing_data()
     highBitLength += char(0x09);          // ADType: complete local name
     highBitLength += QByteArray(30, 'A'); // 30 bytes of name data
     QTest::newRow("length_high_bit_set") << highBitLength << 0 << false << false;
+
+    // -----------------------------------------------------------------------
+    // Issue 2a – 128-bit UUID AD type with only 1 data byte (nBytes = 2).
+    //
+    // ADType128BitUuidComplete requires 16 bytes of data, so we'll read past
+    // the end of the buffer without a proper length check.
+    //
+    // After the fix (per-case guard: if (nBytes >= 17)), no read occurs and
+    // no UUID is produced.
+    // -----------------------------------------------------------------------
+    QByteArray short128BitUuid;
+    short128BitUuid += char(0x02);  // nBytes = 2
+    short128BitUuid += char(0x07);  // ADType128BitUuidComplete
+    short128BitUuid += char(0xAB);  // only 1 data byte instead of 16
+    QTest::newRow("128bit_uuid_too_short") << short128BitUuid << 0 << false << false;
+
+    // -----------------------------------------------------------------------
+    // Issue 2b – 32-bit UUID AD type with only 1 data byte (nBytes = 2).
+    //
+    // ADType32BitUuidComplete requires 4 bytes of data, so we'll read past
+    // the end of the buffer without a proper length check.
+    //
+    // After the fix (per-case guard: if (nBytes >= 5)), no UUID is produced.
+    // -----------------------------------------------------------------------
+    QByteArray short32BitUuid;
+    short32BitUuid += char(0x02);  // nBytes = 2
+    short32BitUuid += char(0x05);  // ADType32BitUuidComplete
+    short32BitUuid += char(0xAB);  // only 1 data byte instead of 4
+    QTest::newRow("32bit_uuid_too_short") << short32BitUuid << 0 << false << false;
+
+    // -----------------------------------------------------------------------
+    // Issue 2c – 16-bit UUID AD type with no data bytes (nBytes = 1).
+    //
+    // ADType16BitUuidComplete requires 2 bytes of data, so we'll read past
+    // the end of the buffer without a proper length check.
+    //
+    // After the fix (per-case guard: if (nBytes >= 3)), no UUID is produced.
+    // -----------------------------------------------------------------------
+    QByteArray short16BitUuid;
+    short16BitUuid += char(0x01);  // nBytes = 1
+    short16BitUuid += char(0x03);  // ADType16BitUuidComplete
+    // no data bytes — buffer ends here
+    QTest::newRow("16bit_uuid_too_short") << short16BitUuid << 0 << false << false;
 }
 
 #ifdef Q_OS_ANDROID

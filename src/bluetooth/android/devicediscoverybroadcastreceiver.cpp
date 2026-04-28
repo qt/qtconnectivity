@@ -444,16 +444,20 @@ Q_BLUETOOTH_EXPORT void parseScanRecord(QBluetoothDeviceInfo &info, jbyteArray s
         switch (adType) {
         case ADType16BitUuidIncomplete:
         case ADType16BitUuidComplete:
-            foundService = QBluetoothUuid(qFromLittleEndian<quint16>(dataPtr));
+            if (nBytes >= 3)
+                foundService = QBluetoothUuid(qFromLittleEndian<quint16>(dataPtr));
             break;
         case ADType32BitUuidIncomplete:
         case ADType32BitUuidComplete:
-            foundService = QBluetoothUuid(qFromLittleEndian<quint32>(dataPtr));
+            if (nBytes >= 5)
+                foundService = QBluetoothUuid(qFromLittleEndian<quint32>(dataPtr));
             break;
         case ADType128BitUuidIncomplete:
         case ADType128BitUuidComplete:
-            foundService =
-                QBluetoothUuid(qToBigEndian<QUuid::Id128Bytes>(qFromLittleEndian<QUuid::Id128Bytes>(dataPtr)));
+            if (nBytes >= 17) {
+                foundService =
+                    QBluetoothUuid(qToBigEndian<QUuid::Id128Bytes>(qFromLittleEndian<QUuid::Id128Bytes>(dataPtr)));
+            }
             break;
         case ADTypeServiceData16Bit:
             if (nBytes >= 3) {
