@@ -722,6 +722,20 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_androidScanRecordParsing_data()
     truncated += char(0x09);          // ADType: complete local name
     truncated += QByteArray("Hi");    // only 2 bytes available — record is truncated
     QTest::newRow("truncated_record") << truncated << 0 << false << false;
+
+    // -----------------------------------------------------------------------
+    // Issue 1 – length byte with the high bit set (e.g. 0xFF).
+    //
+    // When the length field is read as a signed char (the bug), 0xFF becomes
+    // -1, making 'i += nBytes + 1' advance by zero — causing an infinite loop.
+    //
+    // This test will hang indefinitely with the unfixed implementation.
+    // -----------------------------------------------------------------------
+    QByteArray highBitLength;
+    highBitLength += char(0xFF);          // length byte — high bit set
+    highBitLength += char(0x09);          // ADType: complete local name
+    highBitLength += QByteArray(30, 'A'); // 30 bytes of name data
+    QTest::newRow("length_high_bit_set") << highBitLength << 0 << false << false;
 }
 
 #ifdef Q_OS_ANDROID
@@ -768,9 +782,6 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_androidScanRecordParsing()
     if (expectManufacturerData) {
         // The valid-record row carries manufacturer data for company 0x00E0.
         const auto mfrData = info.manufacturerData();
-#ifdef Q_PROCESSOR_X86
-        QEXPECT_FAIL("valid_record", "AD type read incorrectly", Abort);
-#endif
         QVERIFY(mfrData.contains(0x00E0));
         QCOMPARE(mfrData.value(0x00E0), QByteArray::fromHex("ABCD"));
     }

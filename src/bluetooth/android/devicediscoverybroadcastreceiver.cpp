@@ -430,14 +430,14 @@ Q_BLUETOOTH_EXPORT void parseScanRecord(QBluetoothDeviceInfo &info, jbyteArray s
         // sizeof(EIR Data) = sizeof(Length) + sizeof(EIR data Type) + sizeof(EIR Data)
         // Length = sizeof(EIR data Type) + sizeof(EIR Data)
 
-        const int nBytes = scanRecordBuffer[i];
+        const int nBytes = quint8(scanRecordBuffer[i]);
         if (nBytes == 0)
             break;
 
         if (i >= scanRecordLength - nBytes)
             break;
 
-        const int adType = scanRecordBuffer[i+1];
+        const int adType = quint8(scanRecordBuffer[i+1]);
         const char *dataPtr = &scanRecordBuffer[i+2];
         QBluetoothUuid foundService;
 
