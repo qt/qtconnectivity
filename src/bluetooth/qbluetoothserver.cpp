@@ -258,12 +258,24 @@ int QBluetoothServer::maxPendingConnections() const
     before calling listen(). The Bluetooth link will always be encrypted when using
     Bluetooth 2.1 devices as encryption is mandatory.
 
+//! [bluetooth_security_bluez]
+    On the Linux BlueZ backend, the flags are mapped to kernel security levels:
+    \list
+      \li \l QBluetooth::Security::Authorization maps to \c BT_SECURITY_LOW;
+      \li \l QBluetooth::Security::Encryption maps to \c BT_SECURITY_MEDIUM;
+      \li \l QBluetooth::Security::Secure maps to \c BT_SECURITY_HIGH;
+      \li \l QBluetooth::Security::Authentication is not used by the kernel
+          and \b {is ignored}.
+    \endlist
+    The default value is \l QBluetooth::Security::Authorization.
+//! [bluetooth_security_bluez]
+
     Android only supports two levels of security (secure and non-secure). If this flag
     is set to \l QBluetooth::Security::NoSecurity the server object will not employ
     any authentication or encryption. Any other security flag combination will
     trigger a secure Bluetooth connection.
 
-    On \macos, security flags are not supported and will be ignored.
+    On \macos and Windows, security flags are not supported and will be ignored.
 */
 
 /*!
