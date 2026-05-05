@@ -216,7 +216,7 @@ QNearFieldTarget::RequestId &QNearFieldTarget::RequestId::operator=(const Reques
     Constructs a new near field target with \a parent.
 */
 QNearFieldTarget::QNearFieldTarget(QObject *parent)
-:   QNearFieldTarget(new QNearFieldTargetPrivate(this), parent)
+:   QNearFieldTarget(new QNearFieldTargetPrivate(), parent)
 {
 }
 
