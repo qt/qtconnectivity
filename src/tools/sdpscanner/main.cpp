@@ -34,170 +34,169 @@ void usage()
 
 static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &xmlOutput)
 {
-    if (!data)
-        return;
+    while (data) {
+        const int length = indentation*2 + 1;
+        QByteArray indentString(length, ' ');
 
-    const int length = indentation*2 + 1;
-    QByteArray indentString(length, ' ');
+        char snBuffer[BUFFER_SIZE];
 
-    char snBuffer[BUFFER_SIZE];
+        xmlOutput.append(indentString);
 
-    xmlOutput.append(indentString);
+        // deal with every dtd type
+        switch (data->dtd) {
+        case SDP_DATA_NIL:
+            xmlOutput.append("<nil/>\n");
+            break;
+        case SDP_UINT8:
+            std::snprintf(snBuffer, BUFFER_SIZE, "<uint8 value=\"0x%02x\"/>\n", data->val.uint8);
+            xmlOutput.append(snBuffer);
+            break;
+        case SDP_UINT16:
+            std::snprintf(snBuffer, BUFFER_SIZE, "<uint16 value=\"0x%04x\"/>\n", data->val.uint16);
+            xmlOutput.append(snBuffer);
+            break;
+        case SDP_UINT32:
+            std::snprintf(snBuffer, BUFFER_SIZE, "<uint32 value=\"0x%08x\"/>\n", data->val.uint32);
+            xmlOutput.append(snBuffer);
+            break;
+        case SDP_UINT64:
+            std::snprintf(snBuffer, BUFFER_SIZE, "<uint64 value=\"0x%016llx\"/>\n",
+                          qulonglong(data->val.uint64));
+            xmlOutput.append(snBuffer);
+            break;
+        case SDP_UINT128:
+            xmlOutput.append("<uint128 value=\"0x");
+            for (int i = 0; i < 16; i++)
+                std::sprintf(&snBuffer[i * 2], "%02x", data->val.uint128.data[i]);
+            xmlOutput.append(snBuffer);
+            xmlOutput.append("\"/>\n");
+            break;
+        case SDP_INT8:
+            std::snprintf(snBuffer, BUFFER_SIZE, "<int8 value=\"%d\"/>/n", data->val.int8);
+            xmlOutput.append(snBuffer);
+            break;
+        case SDP_INT16:
+            std::snprintf(snBuffer, BUFFER_SIZE, "<int16 value=\"%d\"/>/n", data->val.int16);
+            xmlOutput.append(snBuffer);
+            break;
+        case SDP_INT32:
+            std::snprintf(snBuffer, BUFFER_SIZE, "<int32 value=\"%d\"/>/n", data->val.int32);
+            xmlOutput.append(snBuffer);
+            break;
+        case SDP_INT64:
+            std::snprintf(snBuffer, BUFFER_SIZE, "<int64 value=\"%lld\"/>/n",
+                          qlonglong(data->val.int64));
+            xmlOutput.append(snBuffer);
+            break;
+        case SDP_INT128:
+            xmlOutput.append("<int128 value=\"0x");
+            for (int i = 0; i < 16; i++)
+                std::sprintf(&snBuffer[i * 2], "%02x", data->val.int128.data[i]);
+            xmlOutput.append(snBuffer);
+            xmlOutput.append("\"/>\n");
+            break;
+        case SDP_UUID_UNSPEC:
+            break;
+        case SDP_UUID16:
+        case SDP_UUID32:
+            xmlOutput.append("<uuid value=\"0x");
+            sdp_uuid2strn(&(data->val.uuid), snBuffer, BUFFER_SIZE);
+            xmlOutput.append(snBuffer);
+            xmlOutput.append("\"/>\n");
+            break;
+        case SDP_UUID128:
+            xmlOutput.append("<uuid value=\"");
+            sdp_uuid2strn(&(data->val.uuid), snBuffer, BUFFER_SIZE);
+            xmlOutput.append(snBuffer);
+            xmlOutput.append("\"/>\n");
+            break;
+        case SDP_TEXT_STR_UNSPEC:
+            break;
+        case SDP_TEXT_STR8:
+        case SDP_TEXT_STR16:
+        case SDP_TEXT_STR32:
+        {
+            xmlOutput.append("<text ");
+            QByteArray text = QByteArray::fromRawData(data->val.str, data->unitSize);
 
-    // deal with every dtd type
-    switch (data->dtd) {
-    case SDP_DATA_NIL:
-        xmlOutput.append("<nil/>\n");
-        break;
-    case SDP_UINT8:
-        std::snprintf(snBuffer, BUFFER_SIZE, "<uint8 value=\"0x%02x\"/>\n", data->val.uint8);
-        xmlOutput.append(snBuffer);
-        break;
-    case SDP_UINT16:
-        std::snprintf(snBuffer, BUFFER_SIZE, "<uint16 value=\"0x%04x\"/>\n", data->val.uint16);
-        xmlOutput.append(snBuffer);
-        break;
-    case SDP_UINT32:
-        std::snprintf(snBuffer, BUFFER_SIZE, "<uint32 value=\"0x%08x\"/>\n", data->val.uint32);
-        xmlOutput.append(snBuffer);
-        break;
-    case SDP_UINT64:
-        std::snprintf(snBuffer, BUFFER_SIZE, "<uint64 value=\"0x%016llx\"/>\n",
-                      qulonglong(data->val.uint64));
-        xmlOutput.append(snBuffer);
-        break;
-    case SDP_UINT128:
-        xmlOutput.append("<uint128 value=\"0x");
-        for (int i = 0; i < 16; i++)
-            std::sprintf(&snBuffer[i * 2], "%02x", data->val.uint128.data[i]);
-        xmlOutput.append(snBuffer);
-        xmlOutput.append("\"/>\n");
-        break;
-    case SDP_INT8:
-        std::snprintf(snBuffer, BUFFER_SIZE, "<int8 value=\"%d\"/>/n", data->val.int8);
-        xmlOutput.append(snBuffer);
-        break;
-    case SDP_INT16:
-        std::snprintf(snBuffer, BUFFER_SIZE, "<int16 value=\"%d\"/>/n", data->val.int16);
-        xmlOutput.append(snBuffer);
-        break;
-    case SDP_INT32:
-        std::snprintf(snBuffer, BUFFER_SIZE, "<int32 value=\"%d\"/>/n", data->val.int32);
-        xmlOutput.append(snBuffer);
-        break;
-    case SDP_INT64:
-        std::snprintf(snBuffer, BUFFER_SIZE, "<int64 value=\"%lld\"/>/n",
-                      qlonglong(data->val.int64));
-        xmlOutput.append(snBuffer);
-        break;
-    case SDP_INT128:
-        xmlOutput.append("<int128 value=\"0x");
-        for (int i = 0; i < 16; i++)
-            std::sprintf(&snBuffer[i * 2], "%02x", data->val.int128.data[i]);
-        xmlOutput.append(snBuffer);
-        xmlOutput.append("\"/>\n");
-        break;
-    case SDP_UUID_UNSPEC:
-        break;
-    case SDP_UUID16:
-    case SDP_UUID32:
-        xmlOutput.append("<uuid value=\"0x");
-        sdp_uuid2strn(&(data->val.uuid), snBuffer, BUFFER_SIZE);
-        xmlOutput.append(snBuffer);
-        xmlOutput.append("\"/>\n");
-        break;
-    case SDP_UUID128:
-        xmlOutput.append("<uuid value=\"");
-        sdp_uuid2strn(&(data->val.uuid), snBuffer, BUFFER_SIZE);
-        xmlOutput.append(snBuffer);
-        xmlOutput.append("\"/>\n");
-        break;
-    case SDP_TEXT_STR_UNSPEC:
-        break;
-    case SDP_TEXT_STR8:
-    case SDP_TEXT_STR16:
-    case SDP_TEXT_STR32:
-    {
-        xmlOutput.append("<text ");
-        QByteArray text = QByteArray::fromRawData(data->val.str, data->unitSize);
-
-        bool hasNonPrintableChar = false;
-        for (qsizetype i = 0; i < text.size(); ++i) {
-            if (text[i] == '\0') {
-                text.resize(i); // cut trailing content
-                break;
-            } else if (!isprint(text[i])) {
-                hasNonPrintableChar = true;
-                const auto firstNullIdx = text.indexOf('\0');
-                if (firstNullIdx > 0)
-                    text.resize(firstNullIdx); // cut trailing content
-                break;
+            bool hasNonPrintableChar = false;
+            for (qsizetype i = 0; i < text.size(); ++i) {
+                if (text[i] == '\0') {
+                    text.resize(i); // cut trailing content
+                    break;
+                } else if (!isprint(text[i])) {
+                    hasNonPrintableChar = true;
+                    const auto firstNullIdx = text.indexOf('\0');
+                    if (firstNullIdx > 0)
+                        text.resize(firstNullIdx); // cut trailing content
+                    break;
+                }
             }
+
+            if (hasNonPrintableChar) {
+                xmlOutput.append("encoding=\"hex\" value=\"");
+                xmlOutput.append(text.toHex());
+            } else {
+                text.replace('&', "&amp;");
+                text.replace('<', "&lt;");
+                text.replace('>', "&gt;");
+                text.replace('"', "&quot;");
+
+                xmlOutput.append("value=\"");
+                xmlOutput.append(text);
+            }
+
+            xmlOutput.append("\"/>\n");
+            break;
+        }
+        case SDP_BOOL:
+            if (data->val.uint8)
+                xmlOutput.append("<boolean value=\"true\"/>\n");
+            else
+                xmlOutput.append("<boolean value=\"false\"/>\n");
+            break;
+        case SDP_SEQ_UNSPEC:
+            break;
+        case SDP_SEQ8:
+        case SDP_SEQ16:
+        case SDP_SEQ32:
+            xmlOutput.append("<sequence>\n");
+            parseAttributeValues(data->val.dataseq, indentation + 1, xmlOutput);
+            xmlOutput.append(indentString);
+            xmlOutput.append("</sequence>\n");
+            break;
+        case SDP_ALT_UNSPEC:
+            break;
+        case SDP_ALT8:
+        case SDP_ALT16:
+        case SDP_ALT32:
+            xmlOutput.append("<alternate>\n");
+            parseAttributeValues(data->val.dataseq, indentation + 1, xmlOutput);
+            xmlOutput.append(indentString);
+            xmlOutput.append("</alternate>\n");
+            break;
+        case SDP_URL_STR_UNSPEC:
+            break;
+        case SDP_URL_STR8:
+        case SDP_URL_STR16:
+        case SDP_URL_STR32:
+        {
+            xmlOutput.append("<url value=\"");
+            const QByteArray urlData =
+                    QByteArray::fromRawData(data->val.str, qstrnlen(data->val.str, data->unitSize));
+            const QUrl url = QUrl::fromEncoded(urlData);
+            // Encoded url %-encodes all of the XML special characters except '&',
+            // so we need to do that manually
+            xmlOutput.append(url.toEncoded().replace('&', "&amp;"));
+            xmlOutput.append("\"/>\n");
+            break;
+        }
+        default:
+            fprintf(stderr, "Unknown dtd type\n");
         }
 
-        if (hasNonPrintableChar) {
-            xmlOutput.append("encoding=\"hex\" value=\"");
-            xmlOutput.append(text.toHex());
-        } else {
-            text.replace('&', "&amp;");
-            text.replace('<', "&lt;");
-            text.replace('>', "&gt;");
-            text.replace('"', "&quot;");
-
-            xmlOutput.append("value=\"");
-            xmlOutput.append(text);
-        }
-
-        xmlOutput.append("\"/>\n");
-        break;
+        data = data->next;
     }
-    case SDP_BOOL:
-        if (data->val.uint8)
-            xmlOutput.append("<boolean value=\"true\"/>\n");
-        else
-            xmlOutput.append("<boolean value=\"false\"/>\n");
-        break;
-    case SDP_SEQ_UNSPEC:
-        break;
-    case SDP_SEQ8:
-    case SDP_SEQ16:
-    case SDP_SEQ32:
-        xmlOutput.append("<sequence>\n");
-        parseAttributeValues(data->val.dataseq, indentation + 1, xmlOutput);
-        xmlOutput.append(indentString);
-        xmlOutput.append("</sequence>\n");
-        break;
-    case SDP_ALT_UNSPEC:
-        break;
-    case SDP_ALT8:
-    case SDP_ALT16:
-    case SDP_ALT32:
-        xmlOutput.append("<alternate>\n");
-        parseAttributeValues(data->val.dataseq, indentation + 1, xmlOutput);
-        xmlOutput.append(indentString);
-        xmlOutput.append("</alternate>\n");
-        break;
-    case SDP_URL_STR_UNSPEC:
-        break;
-    case SDP_URL_STR8:
-    case SDP_URL_STR16:
-    case SDP_URL_STR32:
-    {
-        xmlOutput.append("<url value=\"");
-        const QByteArray urlData =
-                QByteArray::fromRawData(data->val.str, qstrnlen(data->val.str, data->unitSize));
-        const QUrl url = QUrl::fromEncoded(urlData);
-        // Encoded url %-encodes all of the XML special characters except '&',
-        // so we need to do that manually
-        xmlOutput.append(url.toEncoded().replace('&', "&amp;"));
-        xmlOutput.append("\"/>\n");
-        break;
-    }
-    default:
-        fprintf(stderr, "Unknown dtd type\n");
-    }
-
-    parseAttributeValues(data->next, indentation, xmlOutput);
 }
 
 static void parseAttribute(void *value, void *extraData)
