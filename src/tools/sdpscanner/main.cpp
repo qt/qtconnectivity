@@ -32,8 +32,15 @@ void usage()
 
 #define BUFFER_SIZE 1024
 
-static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &xmlOutput)
+static void parseAttributeValues(sdp_data_t *data, int indentation,
+                                 QByteArray &xmlOutput, int depth = 0)
 {
+    // same as in src/bluetooth/qbluetoothservicediscoveryagent_p.h
+    static constexpr int kMaxSdpRecursionDepth = 64;
+
+    if (depth > kMaxSdpRecursionDepth)
+        return;
+
     while (data) {
         const int length = indentation*2 + 1;
         QByteArray indentString(length, ' ');
@@ -161,7 +168,7 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
         case SDP_SEQ16:
         case SDP_SEQ32:
             xmlOutput.append("<sequence>\n");
-            parseAttributeValues(data->val.dataseq, indentation + 1, xmlOutput);
+            parseAttributeValues(data->val.dataseq, indentation + 1, xmlOutput, depth + 1);
             xmlOutput.append(indentString);
             xmlOutput.append("</sequence>\n");
             break;
@@ -171,7 +178,7 @@ static void parseAttributeValues(sdp_data_t *data, int indentation, QByteArray &
         case SDP_ALT16:
         case SDP_ALT32:
             xmlOutput.append("<alternate>\n");
-            parseAttributeValues(data->val.dataseq, indentation + 1, xmlOutput);
+            parseAttributeValues(data->val.dataseq, indentation + 1, xmlOutput, depth + 1);
             xmlOutput.append(indentString);
             xmlOutput.append("</alternate>\n");
             break;
