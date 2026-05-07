@@ -270,7 +270,7 @@ private:
 QBluetoothSocketPrivateWinRT::QBluetoothSocketPrivateWinRT()
     : m_worker(new SocketWorker())
 {
-    mainThreadCoInit(this);
+    threadCoInit(this);
     secFlags = QBluetooth::Security::NoSecurity;
     connect(m_worker, &SocketWorker::newDataReceived,
             this, &QBluetoothSocketPrivateWinRT::handleNewData, Qt::QueuedConnection);
@@ -281,7 +281,7 @@ QBluetoothSocketPrivateWinRT::QBluetoothSocketPrivateWinRT()
 QBluetoothSocketPrivateWinRT::~QBluetoothSocketPrivateWinRT()
 {
     abort();
-    mainThreadCoUninit(this);
+    threadCoUninit(this);
 }
 
 bool QBluetoothSocketPrivateWinRT::ensureNativeSocket(QBluetoothServiceInfo::Protocol type)

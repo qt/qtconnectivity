@@ -24,6 +24,10 @@
 #include <QtCore/qjnienvironment.h>
 #endif
 
+#ifdef Q_OS_WIN
+#include <objbase.h> // for CoInitializeEx() and friends
+#endif
+
 #include <memory>
 
 using namespace Qt::StringLiterals;
@@ -81,6 +85,9 @@ private slots:
 
     void tst_androidScanRecordParsing_data();
     void tst_androidScanRecordParsing();
+
+    void tst_windowsDiscoveryInThread_data();
+    void tst_windowsDiscoveryInThread();
 private:
     qsizetype noOfLocalDevices;
     using DiscoveryAgentPtr = std::unique_ptr<QBluetoothDeviceDiscoveryAgent>;
@@ -829,6 +836,114 @@ void tst_QBluetoothDeviceDiscoveryAgent::tst_androidScanRecordParsing()
         QCOMPARE(mfrData.value(0x00E0), QByteArray::fromHex("ABCD"));
     }
 #endif
+}
+
+namespace {
+
+enum class CoInitType {
+    Auto,
+    ManualApartment,
+    ManualMultithread,
+};
+
+} // namespace
+
+void tst_QBluetoothDeviceDiscoveryAgent::tst_windowsDiscoveryInThread_data()
+{
+#ifndef Q_OS_WIN
+    QSKIP("This is a Windows only test");
+#endif
+    QTest::addColumn<CoInitType>("coInitType");
+
+    QTest::newRow("default_CoInit") << CoInitType::Auto;
+    QTest::newRow("manual_multithreaded_CoInit") << CoInitType::ManualMultithread;
+    QTest::newRow("manual_apartment_CoInit") << CoInitType::ManualApartment;
+}
+
+class HelperContextObject : public QObject
+{
+    Q_OBJECT
+public slots:
+    void onDiscoveryError(QBluetoothDeviceDiscoveryAgent::Error err)
+    {
+        m_error = err;
+    }
+    void onFinished()
+    {
+        m_finished = true;
+    }
+    void onCanceled()
+    {
+        m_canceled = true;
+    }
+
+public:
+    QBluetoothDeviceDiscoveryAgent::Error m_error = QBluetoothDeviceDiscoveryAgent::NoError;
+    bool m_finished = false;
+    bool m_canceled = false;
+};
+
+void tst_QBluetoothDeviceDiscoveryAgent::tst_windowsDiscoveryInThread()
+{
+#ifdef Q_OS_WIN
+    // This test checks that a Bluetooth device can be created in a secondary
+    // thread. The manualCoInit flag is used to emulate the situation when
+    // the secondary thread already called CoInitializeEx() with a different
+    // threading model.
+
+    QBluetoothLocalDevice localDevice;
+    QBluetoothAddress address = localDevice.address();
+    if (address.isNull())
+        QSKIP("No local Bluetooth adapter found!");
+
+    QFETCH(const CoInitType, coInitType);
+
+    HelperContextObject context;
+
+    using namespace std::chrono_literals;
+    static constexpr auto DiscoveryTimeout = 10000ms;
+
+    auto threadFunc = [coInitType, address, &context] {
+        switch (coInitType) {
+        case CoInitType::Auto:
+            break; // nothing to do
+        case CoInitType::ManualApartment:
+            CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+            break;
+        case CoInitType::ManualMultithread:
+            CoInitializeEx(NULL, COINIT_MULTITHREADED);
+            break;
+        }
+
+        auto guard = qScopeGuard([coInitType]{
+            if (coInitType != CoInitType::Auto)
+                CoUninitialize();
+        });
+
+
+        QBluetoothDeviceDiscoveryAgent discoveryAgent(address);
+
+        QObject::connect(&discoveryAgent, &QBluetoothDeviceDiscoveryAgent::finished,
+                         &context, &HelperContextObject::onFinished);
+        QObject::connect(&discoveryAgent, &QBluetoothDeviceDiscoveryAgent::canceled,
+                         &context, &HelperContextObject::onCanceled);
+        QObject::connect(&discoveryAgent, &QBluetoothDeviceDiscoveryAgent::errorOccurred,
+                         &context, &HelperContextObject::onDiscoveryError);
+
+        discoveryAgent.start();
+
+        QTest::qWait(DiscoveryTimeout);
+
+        discoveryAgent.stop();
+    };
+
+    auto thread = std::unique_ptr<QThread>(QThread::create(std::move(threadFunc)));
+
+    thread->start();
+
+    QTRY_VERIFY_WITH_TIMEOUT(context.m_canceled || context.m_finished, DiscoveryTimeout * 2);
+    QCOMPARE(context.m_error, QBluetoothDeviceDiscoveryAgent::NoError);
+#endif // Q_OS_WIN
 }
 
 QTEST_MAIN(tst_QBluetoothDeviceDiscoveryAgent)

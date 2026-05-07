@@ -104,8 +104,8 @@ QByteArray byteArrayFromBuffer(const Microsoft::WRL::ComPtr<NativeBuffer> &buffe
                                bool isWCharString = false);
 
 // The calls to Co(Un)init must be balanced
-void mainThreadCoInit(void* caller);
-void mainThreadCoUninit(void* caller);
+void threadCoInit(void* caller);
+void threadCoUninit(void* caller);
 
 QT_END_NAMESPACE
 
