@@ -4,7 +4,9 @@
 #include "qbluetoothutils_winrt_p.h"
 #include <QtBluetooth/private/qtbluetoothglobal_p.h>
 #include <QtCore/private/qfunctions_winrt_p.h>
+#include <QtCore/qhash.h>
 #include <QtCore/QLoggingCategory>
+#include <QtCore/qmutex.h>
 
 #include <robuffer.h>
 #include <wrl.h>
@@ -42,51 +44,56 @@ QByteArray byteArrayFromBuffer(const ComPtr<NativeBuffer> &buffer, bool isWCharS
     return QByteArray(data, qint32(size));
 }
 
-static QSet<void*> successfulInits;
-static QThread *mainThread = nullptr;
+static QHash<void *, QThread *> successfulInits;
+static QBasicMutex initsMutex;
 
-void mainThreadCoInit(void* caller)
+void threadCoInit(void* caller)
 {
     Q_ASSERT(caller);
 
-    if (QThread::currentThread() != QCoreApplication::instance()->thread()) {
-        qCWarning(QT_BT_WINDOWS) << "Main thread COM init tried from another thread";
+    if (QMutexLocker locker(&initsMutex); successfulInits.contains(caller)) {
+        qCWarning(QT_BT_WINDOWS) << "Multiple COM inits by the same object";
         return;
     }
 
-    if (successfulInits.contains(caller)) {
-        qCWarning(QT_BT_WINDOWS) << "Multiple COM inits by same object";
+    // This *may* execute in the main thread which may run Gui, so we request
+    // the apartment-threaded model. However, QtBluetooth does not strictly
+    // require it, so if the thread is already initialized with a different
+    // model, that's also totally fine for us.
+    HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    if (!SUCCEEDED(hr)) {
+        // RPC_E_CHANGED_MODE means that the thread is already initialized
+        // in a different mode. Do not warn about it.
+        if (hr != RPC_E_CHANGED_MODE)
+            qCWarning(QT_BT_WINDOWS) << "Unexpected COM initialization result";
         return;
     }
 
-    Q_ASSERT_X(!mainThread || mainThread == QThread::currentThread(),
-               __FUNCTION__, "QCoreApplication's thread has changed!");
-
-    // This executes in main thread which may run Gui => use apartment threaded
-    if (!SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED))) {
-        qCWarning(QT_BT_WINDOWS) << "Unexpected COM initialization result";
-        return;
-    }
-    successfulInits.insert(caller);
-    if (!mainThread)
-        mainThread = QThread::currentThread();
+    QMutexLocker locker(&initsMutex);
+    successfulInits.insert(caller, QThread::currentThread());
 }
 
-void mainThreadCoUninit(void* caller)
+void threadCoUninit(void* caller)
 {
     Q_ASSERT(caller);
 
-    if (!successfulInits.contains(caller)) {
-        qCWarning(QT_BT_WINDOWS) << "COM uninitialization without initialization";
-        return;
+    QThread *thread = nullptr;
+    {
+        QMutexLocker locker(&initsMutex);
+        thread = successfulInits.value(caller, nullptr);
     }
+    // Valid case: thread could be initialized outside of Qt
+    if (!thread)
+        return;
 
-    if (QThread::currentThread() != mainThread) {
-        qCWarning(QT_BT_WINDOWS) << "Main thread COM uninit tried from another thread";
+    if (QThread::currentThread() != thread) {
+        qCWarning(QT_BT_WINDOWS) << "COM uninit tried from another thread";
         return;
     }
 
     CoUninitialize();
+
+    QMutexLocker locker(&initsMutex);
     successfulInits.remove(caller);
 
 }

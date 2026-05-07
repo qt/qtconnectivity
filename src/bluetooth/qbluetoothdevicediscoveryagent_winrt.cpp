@@ -757,13 +757,13 @@ QBluetoothDeviceDiscoveryAgentPrivate::QBluetoothDeviceDiscoveryAgentPrivate(
         const QBluetoothAddress &deviceAdapter, QBluetoothDeviceDiscoveryAgent *parent)
     : q_ptr(parent), adapterAddress(deviceAdapter)
 {
-    mainThreadCoInit(this);
+    threadCoInit(this);
 }
 
 QBluetoothDeviceDiscoveryAgentPrivate::~QBluetoothDeviceDiscoveryAgentPrivate()
 {
     disconnectAndClearWorker();
-    mainThreadCoUninit(this);
+    threadCoUninit(this);
 }
 
 bool QBluetoothDeviceDiscoveryAgentPrivate::isActive() const
