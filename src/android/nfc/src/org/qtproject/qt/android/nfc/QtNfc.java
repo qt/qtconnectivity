@@ -23,12 +23,10 @@ class QtNfc
     static private final String TAG = "QtNfc";
     static private NfcAdapter m_adapter = null;
     static private PendingIntent m_pendingIntent = null;
-    static private Context m_context = null;
     static private Activity m_activity = null;
 
     static void setContext(Context context)
     {
-        m_context = context;
         if (context instanceof Activity) m_activity = (Activity) context;
         m_adapter = NfcAdapter.getDefaultAdapter(context);
 
