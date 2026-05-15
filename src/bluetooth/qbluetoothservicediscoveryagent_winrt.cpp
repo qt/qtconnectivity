@@ -114,6 +114,11 @@ HRESULT QWinRTBluetoothServiceDiscoveryWorker::onBluetoothDeviceFoundAsync(IAsyn
     HRESULT hr;
     hr = op->GetResults(&device);
     Q_ASSERT_SUCCEEDED(hr);
+    if (!device) {
+        qCDebug(QT_BT_WINDOWS) << "The returned device is NULL";
+        emit errorOccured();
+        return S_OK;
+    }
     quint64 address;
     device->get_BluetoothAddress(&address);
 
