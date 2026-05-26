@@ -63,6 +63,7 @@ qt_internal_extend_target(Nfc CONDITION IOS
     DEFINES
         IOS_NFC
     LIBRARIES
+        ${FWFoundation}
         ${FWCoreNFC}
         Qt::CorePrivate
 )
