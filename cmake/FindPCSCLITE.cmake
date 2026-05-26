@@ -1,6 +1,11 @@
 # Copyright (C) 2022 The Qt Company Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 
+if(TARGET PkgConfig::PCSCLITE)
+    set(PCSCLITE_FOUND 1)
+    return()
+endif()
+
 if(WIN32)
     add_library(PkgConfig::PCSCLITE INTERFACE IMPORTED)
     target_link_libraries(PkgConfig::PCSCLITE INTERFACE winscard)
