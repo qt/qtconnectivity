@@ -33,7 +33,7 @@ qt_add_resources(ndefeditor "theme" FILES
 )
 
 qt_add_qml_module(ndefeditor
-    URI NdefEditor
+    URI NdefEditorModule
     VERSION 1.0
     QML_FILES
         Main.qml

@@ -47,7 +47,7 @@ public class QtBluetoothLE {
     private BluetoothGatt mBluetoothGatt = null;
     private HandlerThread mHandlerThread = null;
     private Handler mHandler = null;
-    private Constructor mCharacteristicConstructor = null;
+    private Constructor<BluetoothGattCharacteristic> mCharacteristicConstructor = null;
     private String mRemoteGattAddress;
     private final UUID clientCharacteristicUuid = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
     private final int MAX_MTU = 512;
@@ -113,7 +113,7 @@ public class QtBluetoothLE {
         if (mBluetoothGatt == null)
             return;
 
-        final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+        final BluetoothDevice device = getDevice(intent);
         if (device == null || !device.getAddress().equals(mBluetoothGatt.getDevice().getAddress()))
             return;
 
@@ -153,6 +153,15 @@ public class QtBluetoothLE {
                 ex.printStackTrace();
             }
         }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static BluetoothDevice getDevice(Intent intent)
+    {
+        if (Build.VERSION.SDK_INT >= 33)
+            return intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE, BluetoothDevice.class);
+
+        return intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
     }
 
     private class BondStateBroadcastReceiver extends BroadcastReceiver {
@@ -659,6 +668,7 @@ public class QtBluetoothLE {
         }
 
         // API < 33
+        @SuppressWarnings("deprecation")
         public void onCharacteristicRead(android.bluetooth.BluetoothGatt gatt,
                                          android.bluetooth.BluetoothGattCharacteristic characteristic,
                                          int status)
@@ -687,6 +697,7 @@ public class QtBluetoothLE {
         }
 
         // API < 33
+        @SuppressWarnings("deprecation")
         public void onCharacteristicChanged(android.bluetooth.BluetoothGatt gatt,
                                             android.bluetooth.BluetoothGattCharacteristic characteristic)
         {
@@ -705,6 +716,7 @@ public class QtBluetoothLE {
         }
 
         // API < 33
+        @SuppressWarnings("deprecation")
         public void onDescriptorRead(android.bluetooth.BluetoothGatt gatt,
                                      android.bluetooth.BluetoothGattDescriptor descriptor,
                                      int status)
@@ -804,7 +816,7 @@ public class QtBluetoothLE {
             handlerThread.start();
             mHandler = new Handler(handlerThread.getLooper());
 
-            Class[] args = new Class[6];
+            Class<?>[] args = new Class<?>[6];
             args[0] = android.content.Context.class;
             args[1] = boolean.class;
             args[2] = android.bluetooth.BluetoothGattCallback.class;
@@ -834,7 +846,7 @@ public class QtBluetoothLE {
             try {
                 //This API element is currently: greylist-max-o (API level 27), reflection, allowed
                 //It may change in the future
-                Class[] constr_args = new Class[5];
+                Class<?>[] constr_args = new Class<?>[5];
                 constr_args[0] = android.bluetooth.BluetoothGattService.class;
                 constr_args[1] = java.util.UUID.class;
                 constr_args[2] = int.class;
@@ -1630,12 +1642,38 @@ public class QtBluetoothLE {
 
     private BluetoothGattCharacteristic cloneChararacteristic(BluetoothGattCharacteristic other) {
         try {
-            return (BluetoothGattCharacteristic) mCharacteristicConstructor.newInstance(other.getService(),
-                    other.getUuid(), other.getInstanceId(), other.getProperties(), other.getPermissions());
+            return mCharacteristicConstructor.newInstance(other.getService(), other.getUuid(),
+                        other.getInstanceId(), other.getProperties(), other.getPermissions());
         } catch (Exception ex) {
             Log.w(TAG, "Cloning characteristic failed!" + ex);
             return null;
         }
+    }
+
+    // API level < 33
+    @SuppressWarnings("deprecation")
+    private boolean executeCharacteristicWriteJob(ReadWriteJob nextJob) {
+        if (mHandler != null || mCharacteristicConstructor == null) {
+            if (nextJob.entry.characteristic.getWriteType() != nextJob.requestedWriteType) {
+                nextJob.entry.characteristic.setWriteType(nextJob.requestedWriteType);
+            }
+            return !nextJob.entry.characteristic.setValue(nextJob.newValue)
+                   || !mBluetoothGatt.writeCharacteristic(nextJob.entry.characteristic);
+        } else {
+            BluetoothGattCharacteristic orig = nextJob.entry.characteristic;
+            BluetoothGattCharacteristic tmp = cloneChararacteristic(orig);
+            if (tmp == null)
+                return true;
+            tmp.setWriteType(nextJob.requestedWriteType);
+            return !tmp.setValue(nextJob.newValue) || !mBluetoothGatt.writeCharacteristic(tmp);
+        }
+    }
+
+    // API level < 33
+    @SuppressWarnings("deprecation")
+    private boolean executeDescriptorWriteJob(ReadWriteJob nextJob) {
+        return !nextJob.entry.descriptor.setValue(nextJob.newValue)
+                || !mBluetoothGatt.writeDescriptor(nextJob.entry.descriptor);
     }
 
     // Returns true if nextJob should be skipped.
@@ -1649,20 +1687,7 @@ public class QtBluetoothLE {
                        nextJob.entry.characteristic, nextJob.newValue, nextJob.requestedWriteType);
                     return (writeResult != BluetoothStatusCodes.SUCCESS);
                 }
-                if (mHandler != null || mCharacteristicConstructor == null) {
-                    if (nextJob.entry.characteristic.getWriteType() != nextJob.requestedWriteType) {
-                        nextJob.entry.characteristic.setWriteType(nextJob.requestedWriteType);
-                    }
-                    result = nextJob.entry.characteristic.setValue(nextJob.newValue);
-                    return !result || !mBluetoothGatt.writeCharacteristic(nextJob.entry.characteristic);
-                } else {
-                    BluetoothGattCharacteristic orig = nextJob.entry.characteristic;
-                    BluetoothGattCharacteristic tmp = cloneChararacteristic(orig);
-                    if (tmp == null)
-                        return true;
-                    tmp.setWriteType(nextJob.requestedWriteType);
-                    return !tmp.setValue(nextJob.newValue) || !mBluetoothGatt.writeCharacteristic(tmp);
-                }
+                return executeCharacteristicWriteJob(nextJob);
             case Descriptor:
                 if (nextJob.entry.descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
                         /*
@@ -1705,11 +1730,7 @@ public class QtBluetoothLE {
                                         nextJob.entry.descriptor, nextJob.newValue);
                     return (writeResult != BluetoothStatusCodes.SUCCESS);
                 }
-                result = nextJob.entry.descriptor.setValue(nextJob.newValue);
-                if (!result || !mBluetoothGatt.writeDescriptor(nextJob.entry.descriptor))
-                    return true;
-
-                break;
+                return executeDescriptorWriteJob(nextJob);
             case Service:
             case CharacteristicValue:
                 return true;
