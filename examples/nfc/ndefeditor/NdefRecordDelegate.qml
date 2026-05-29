@@ -6,7 +6,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 
-import NdefEditor
+import NdefEditorModule
 
 SwipeDelegate {
     required property int index

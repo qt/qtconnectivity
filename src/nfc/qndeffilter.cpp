@@ -6,6 +6,7 @@
 
 #include <QtCore/QList>
 #include <QtCore/QMap>
+#include <QtCore/QVarLengthArray>
 
 QT_BEGIN_NAMESPACE
 
@@ -341,7 +342,7 @@ bool QNdefFilter::match(const QNdefMessage &message) const
         mergedRecords.push_back(currentRecord);
 
         // The list contains the current number of occurrences of each record.
-        QList<unsigned int> counts(mergedRecords.size(), 0);
+        QVarLengthArray<unsigned int> counts(mergedRecords.size(), 0);
 
         // Iterate through the messages and calculate the number of occurrences.
         qsizetype filterIndex = 0;
