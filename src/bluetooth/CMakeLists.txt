@@ -266,6 +266,20 @@ elseif(QT_FEATURE_winrt_bt)
         PRIVATE_MODULE_INTERFACE
             Qt::CorePrivate
     )
+elseif(OHOS)
+    qt_internal_extend_target(Bluetooth
+        SOURCES
+            dummy/dummy_helper.cpp dummy/dummy_helper_p.h
+            qbluetoothdevicediscoveryagent_p.cpp
+            qbluetoothlocaldevice_p.cpp
+            qbluetoothserver_p.cpp
+            qbluetoothservicediscoveryagent_p.cpp
+            qbluetoothserviceinfo_p.cpp
+            qbluetoothsocket_dummy.cpp qbluetoothsocket_dummy_p.h
+            qlowenergycontroller_dummy.cpp qlowenergycontroller_dummy_p.h
+        DEFINES
+            QT_OHOS_BLUETOOTH
+    )
 else()
     qt_internal_extend_target(Bluetooth
         SOURCES
