@@ -11,6 +11,10 @@
 
 qt_find_package(BlueZ PROVIDED_TARGETS PkgConfig::BLUEZ)
 
+if(OHOS)
+    qt_find_package(NodeAddonApi MODULE
+        PROVIDED_TARGETS NodeAddonApi::NodeAddonApi MODULE_NAME bluetooth)
+endif()
 
 #### Tests
 
