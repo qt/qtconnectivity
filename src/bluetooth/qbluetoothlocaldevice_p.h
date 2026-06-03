@@ -184,6 +184,16 @@ public:
 signals:
     void updateMode(winrt::hstring id, QBluetoothLocalDevice::HostMode mode);
 };
+#elif defined(QT_HARMONY_BLUETOOTH)
+class QBluetoothLocalDevicePrivate : public QObject
+{
+    Q_OBJECT
+public:
+    QBluetoothLocalDevicePrivate();
+    virtual ~QBluetoothLocalDevicePrivate();
+
+    virtual bool isValid() const = 0;
+};
 #elif !defined(QT_OSX_BLUETOOTH) // dummy backend
 class QBluetoothLocalDevicePrivate : public QObject
 {

@@ -270,10 +270,12 @@ elseif(OHOS)
     qt_internal_extend_target(Bluetooth
         SOURCES
             dummy/dummy_helper.cpp dummy/dummy_helper_p.h
+            ohos/qohosbluetoothaccess.cpp ohos/qohosbluetoothaccess_p.h
             ohos/qohosbluetoothcommon.cpp ohos/qohosbluetoothcommon_p.h
             ohos/qohosbluetoothenums_p.h
+            ohos/qohosbluetoothlocaldevice.cpp ohos/qohosbluetoothlocaldevice_p.h
             qbluetoothdevicediscoveryagent_p.cpp
-            qbluetoothlocaldevice_p.cpp
+            qbluetoothlocaldevice_ohos.cpp
             qbluetoothserver_p.cpp
             qbluetoothservicediscoveryagent_p.cpp
             qbluetoothserviceinfo_p.cpp
