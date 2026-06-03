@@ -44,6 +44,19 @@ enum class BluetoothState {
 
 }
 
+namespace connection {
+
+enum class ScanMode {
+    SCAN_MODE_CONNECTABLE,
+    SCAN_MODE_CONNECTABLE_GENERAL_DISCOVERABLE,
+    SCAN_MODE_CONNECTABLE_LIMITED_DISCOVERABLE,
+    SCAN_MODE_GENERAL_DISCOVERABLE,
+    SCAN_MODE_LIMITED_DISCOVERABLE,
+    SCAN_MODE_NONE,
+};
+
+}
+
 }
 
 }
@@ -73,10 +86,26 @@ struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::access::BluetoothSt
     }};
 };
 
+template<>
+struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::connection::ScanMode>
+{
+    using Enum = QtOhosBluetooth::enums::ohos::bluetooth::connection::ScanMode;
+    static constexpr const char *fullTypeName = "@ohos.bluetooth.connection.ScanMode";
+    static constexpr std::array<std::pair<Enum, const char *>, 6> enumeratorsNames = {{
+        {Enum::SCAN_MODE_CONNECTABLE, "SCAN_MODE_CONNECTABLE"},
+        {Enum::SCAN_MODE_CONNECTABLE_GENERAL_DISCOVERABLE, "SCAN_MODE_CONNECTABLE_GENERAL_DISCOVERABLE"},
+        {Enum::SCAN_MODE_CONNECTABLE_LIMITED_DISCOVERABLE, "SCAN_MODE_CONNECTABLE_LIMITED_DISCOVERABLE"},
+        {Enum::SCAN_MODE_GENERAL_DISCOVERABLE, "SCAN_MODE_GENERAL_DISCOVERABLE"},
+        {Enum::SCAN_MODE_LIMITED_DISCOVERABLE, "SCAN_MODE_LIMITED_DISCOVERABLE"},
+        {Enum::SCAN_MODE_NONE, "SCAN_MODE_NONE"},
+    }};
+};
+
 }
 
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::access::BluetoothState));
+Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::connection::ScanMode));
 
 #endif
