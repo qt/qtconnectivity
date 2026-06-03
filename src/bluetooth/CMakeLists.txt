@@ -270,6 +270,8 @@ elseif(OHOS)
     qt_internal_extend_target(Bluetooth
         SOURCES
             dummy/dummy_helper.cpp dummy/dummy_helper_p.h
+            ohos/qohosbluetoothcommon.cpp ohos/qohosbluetoothcommon_p.h
+            ohos/qohosbluetoothenums_p.h
             qbluetoothdevicediscoveryagent_p.cpp
             qbluetoothlocaldevice_p.cpp
             qbluetoothserver_p.cpp
@@ -278,7 +280,18 @@ elseif(OHOS)
             qbluetoothsocket_dummy.cpp qbluetoothsocket_dummy_p.h
             qlowenergycontroller_dummy.cpp qlowenergycontroller_dummy_p.h
         DEFINES
-            QT_OHOS_BLUETOOTH
+            QT_HARMONY_BLUETOOTH
+            NODE_ADDON_API_ENABLE_TYPE_CHECK_ON_AS
+            NAPI_CPP_EXCEPTIONS
+        LIBRARIES
+            NodeAddonApi::NodeAddonApi
+            ace_napi.z
+    )
+    qt_internal_set_exceptions_flags(Bluetooth ON)
+
+    qt_internal_add_harmonyos_permission(Bluetooth
+        NAME ohos.permission.ACCESS_BLUETOOTH
+        REASON "Used to discover and connect to nearby Bluetooth devices."
     )
 else()
     qt_internal_extend_target(Bluetooth
