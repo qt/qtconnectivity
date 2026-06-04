@@ -78,6 +78,16 @@ enum class UnbondCause {
 
 }
 
+namespace socket {
+
+enum class SppType {
+    SPP_L2CAP,
+    SPP_L2CAP_BLE,
+    SPP_RFCOMM,
+};
+
+}
+
 }
 
 }
@@ -161,6 +171,18 @@ struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::connection::UnbondC
     }};
 };
 
+template<>
+struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::socket::SppType>
+{
+    using Enum = QtOhosBluetooth::enums::ohos::bluetooth::socket::SppType;
+    static constexpr const char *fullTypeName = "@ohos.bluetooth.socket.SppType";
+    static constexpr std::array<std::pair<Enum, const char *>, 3> enumeratorsNames = {{
+        {Enum::SPP_L2CAP, "SPP_L2CAP"},
+        {Enum::SPP_L2CAP_BLE, "SPP_L2CAP_BLE"},
+        {Enum::SPP_RFCOMM, "SPP_RFCOMM"},
+    }};
+};
+
 }
 
 QT_END_NAMESPACE
@@ -170,5 +192,6 @@ Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth:
 Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::connection::BondState));
 Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::connection::ScanMode));
 Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::connection::UnbondCause));
+Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::socket::SppType));
 
 #endif
