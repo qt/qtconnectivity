@@ -77,6 +77,60 @@ std::optional<QOhosBluetoothRemoteDeviceProxy::BondState> readPairState(
 
 }
 
+std::optional<std::string> readRemoteDeviceName(QOhosJsState &jsState, const std::string &deviceId)
+{
+    try {
+        return jsState.eval<QNapi::String>(
+            "@ohos.bluetooth.connection.getRemoteDeviceName(*)", {deviceId}).Utf8Value();
+    } catch (const Napi::Error &error) {
+        if (const auto optErrorCode = tryGetKnownErrorCode(error.Value(), Q_FUNC_INFO)) {
+            qOhosPrintfWarning(
+                "%s: cannot read the name of the device %s, error code: %u", Q_FUNC_INFO,
+                deviceId.c_str(), qToUnderlying(*optErrorCode));
+        }
+        return std::nullopt;
+    }
+}
+
+std::optional<quint32> readRemoteDeviceClass(QOhosJsState &jsState, const std::string &deviceId)
+{
+    try {
+        return jsState.eval<QNapi::Object>(
+            "@ohos.bluetooth.connection.getRemoteDeviceClass(*)", {deviceId})
+            .get<QNapi::Number>("classOfDevice").Uint32Value();
+    } catch (const Napi::Error &error) {
+        if (const auto optErrorCode = tryGetKnownErrorCode(error.Value(), Q_FUNC_INFO)) {
+            qOhosPrintfWarning(
+                "%s: cannot read the class of the device %s, error code: %u", Q_FUNC_INFO,
+                deviceId.c_str(), qToUnderlying(*optErrorCode));
+        }
+        return std::nullopt;
+    }
+}
+
+std::optional<QOhosBluetoothRemoteDeviceProxy::BluetoothTransport> readRemoteDeviceTransport(
+    QOhosJsState &jsState, const std::string &deviceId)
+{
+    try {
+        return jsState.tryMapOhosEnumFromJs<QOhosBluetoothRemoteDeviceProxy::BluetoothTransport>(
+            jsState.eval<QNapi::Number>(
+                "@ohos.bluetooth.connection.getRemoteDeviceTransport(*)", {deviceId}));
+    } catch (const Napi::Error &error) {
+        if (const auto optErrorCode = tryGetKnownErrorCode(error.Value(), Q_FUNC_INFO)) {
+            qOhosPrintfWarning(
+                "%s: cannot read the transport of the device %s, error code: %u", Q_FUNC_INFO,
+                deviceId.c_str(), qToUnderlying(*optErrorCode));
+        }
+        return std::nullopt;
+    }
+}
+
+bool isRemoteDeviceLowEnergyOnly(QOhosJsState &jsState, const std::string &deviceId)
+{
+    return readRemoteDeviceTransport(jsState, deviceId)
+        == QOhosBluetoothRemoteDeviceProxy::BluetoothTransport::TRANSPORT_LE;
+}
+
 QOhosBluetoothRemoteDeviceProxy::QOhosBluetoothRemoteDeviceProxy()
 {
     ensureBondStateChangeConsumerRegistered();
@@ -138,6 +192,70 @@ std::optional<QOhosBluetoothRemoteDeviceProxy::BondState> QOhosBluetoothRemoteDe
     return QOhosJsThreadGateway::eval(
         [&](QOhosJsState &jsState) {
             return readPairState(jsState, deviceId.toStdString());
+        },
+        Q_FUNC_INFO);
+}
+
+std::optional<QOhosBluetoothErrorCode> QOhosBluetoothRemoteDeviceProxy::requestRemoteDeviceServices(
+    const QString &deviceId)
+{
+    if (!checkAccessBluetoothPermissionGranted(Q_FUNC_INFO))
+        return QOhosBluetoothErrorCode::PermissionDenied;
+
+    auto selfRef = QtOhos::makeQThreadSafeRef(this);
+    return QOhosJsThreadGateway::eval(
+        [&](QOhosJsState &jsState) -> std::optional<QOhosBluetoothErrorCode> {
+            if (!isBluetoothEnabled(jsState))
+                return QOhosBluetoothErrorCode::BluetoothDisabled;
+
+            RemoteDeviceServices remoteDeviceServices;
+            remoteDeviceServices.deviceId = deviceId.toStdString();
+            remoteDeviceServices.optDeviceName =
+                readRemoteDeviceName(jsState, remoteDeviceServices.deviceId);
+            remoteDeviceServices.optClassOfDevice =
+                readRemoteDeviceClass(jsState, remoteDeviceServices.deviceId);
+            remoteDeviceServices.lowEnergyOnly =
+                isRemoteDeviceLowEnergyOnly(jsState, remoteDeviceServices.deviceId);
+
+            auto pendingServices = QtOhos::moveToSharedPtr(std::move(remoteDeviceServices));
+            auto reportRemoteDeviceServices =
+                [selfRef, pendingServices]() {
+                    selfRef.visitInQtThreadIfAlive(
+                        [pendingServices](auto &self) {
+                            Q_EMIT self.remoteDeviceServicesRead(*pendingServices);
+                        });
+                };
+
+            try {
+                jsState.evalToPromiseOrRejectOnThrow(
+                    "@ohos.bluetooth.connection.getRemoteProfileUuids(*)",
+                    {pendingServices->deviceId})
+                .onThen(
+                    [reportRemoteDeviceServices, pendingServices](
+                        const QOhosCallbackInfo &cbInfo) {
+                        auto resultArray = cbInfo.getFirstArg<QNapi::Array>(Q_FUNC_INFO);
+                        pendingServices->optProfileUuids =
+                            QNapi::getArrayElements<std::vector<std::string>, QNapi::String>(
+                                resultArray,
+                                [](QNapi::String &&profileUuid) {
+                                    return profileUuid.Utf8Value();
+                                });
+                        reportRemoteDeviceServices();
+                    },
+                    [reportRemoteDeviceServices](const QOhosCallbackInfo &cbInfo) {
+                        QtOhos::logJsCallbackError(cbInfo, "Got error from getRemoteProfileUuids()");
+                        reportRemoteDeviceServices();
+                    });
+                return std::nullopt;
+            } catch (const Napi::Error &error) {
+                const auto errorCode =
+                    tryGetKnownErrorCode(error.Value(), Q_FUNC_INFO)
+                        .value_or(QOhosBluetoothErrorCode::OperationFailed);
+                qOhosPrintfWarning(
+                    "%s: cannot read the remote profile uuids, error code: %u", Q_FUNC_INFO,
+                    qToUnderlying(errorCode));
+                return errorCode;
+            }
         },
         Q_FUNC_INFO);
 }
