@@ -279,7 +279,7 @@ elseif(OHOS)
             qbluetoothdevicediscoveryagent_ohos.cpp
             qbluetoothlocaldevice_ohos.cpp
             qbluetoothserver_p.cpp
-            qbluetoothservicediscoveryagent_p.cpp
+            qbluetoothservicediscoveryagent_ohos.cpp
             qbluetoothserviceinfo_p.cpp
             qbluetoothsocket_dummy.cpp qbluetoothsocket_dummy_p.h
             qlowenergycontroller_dummy.cpp qlowenergycontroller_dummy_p.h

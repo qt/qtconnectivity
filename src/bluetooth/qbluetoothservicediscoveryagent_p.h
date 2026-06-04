@@ -23,6 +23,19 @@
 #include <QStack>
 #include <QStringList>
 
+#ifdef QT_HARMONY_BLUETOOTH
+#include <memory>
+#include <optional>
+#include <string>
+
+QT_BEGIN_NAMESPACE
+namespace QtOhosBluetooth {
+class QOhosBluetoothRemoteDeviceProxy;
+struct RemoteDeviceServices;
+}
+QT_END_NAMESPACE
+#endif
+
 #if QT_CONFIG(bluez)
 
 namespace QtBluetoothPrivate {
@@ -204,6 +217,17 @@ private:
 
     DarwinBluetooth::ScopedPointer serviceInquiry;
 #endif // QT_OSX_BLUETOOTH
+
+#ifdef QT_HARMONY_BLUETOOTH
+    void reportErrorAsync(
+        QBluetoothServiceDiscoveryAgent::Error discoveryError, const QString &discoveryErrorString);
+    void finishDeviceDiscoveryAsync();
+    void reportRemoteDeviceServices(
+        const QtOhosBluetooth::RemoteDeviceServices &remoteDeviceServices);
+
+    std::shared_ptr<QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy> m_remoteDeviceProxy;
+    std::optional<std::string> m_optRequestedDeviceId;
+#endif
 
 protected:
     QBluetoothServiceDiscoveryAgent *q_ptr;

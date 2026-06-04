@@ -46,6 +46,13 @@ enum class BluetoothState {
 
 namespace connection {
 
+enum class BluetoothTransport {
+    TRANSPORT_BR_EDR,
+    TRANSPORT_DUAL,
+    TRANSPORT_LE,
+    TRANSPORT_UNKNOWN,
+};
+
 enum class BondState {
     BOND_STATE_BONDED,
     BOND_STATE_BONDING,
@@ -101,6 +108,19 @@ struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::access::BluetoothSt
 };
 
 template<>
+struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::connection::BluetoothTransport>
+{
+    using Enum = QtOhosBluetooth::enums::ohos::bluetooth::connection::BluetoothTransport;
+    static constexpr const char *fullTypeName = "@ohos.bluetooth.connection.BluetoothTransport";
+    static constexpr std::array<std::pair<Enum, const char *>, 4> enumeratorsNames = {{
+        {Enum::TRANSPORT_BR_EDR, "TRANSPORT_BR_EDR"},
+        {Enum::TRANSPORT_DUAL, "TRANSPORT_DUAL"},
+        {Enum::TRANSPORT_LE, "TRANSPORT_LE"},
+        {Enum::TRANSPORT_UNKNOWN, "TRANSPORT_UNKNOWN"},
+    }};
+};
+
+template<>
 struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::connection::BondState>
 {
     using Enum = QtOhosBluetooth::enums::ohos::bluetooth::connection::BondState;
@@ -146,6 +166,7 @@ struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::connection::UnbondC
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::access::BluetoothState));
+Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::connection::BluetoothTransport));
 Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::connection::BondState));
 Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::connection::ScanMode));
 Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::connection::UnbondCause));

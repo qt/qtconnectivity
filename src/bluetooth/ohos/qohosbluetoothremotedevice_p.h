@@ -32,10 +32,21 @@ QT_BEGIN_NAMESPACE
 
 namespace QtOhosBluetooth {
 
+struct RemoteDeviceServices
+{
+    std::string deviceId;
+    std::optional<std::string> optDeviceName;
+    std::optional<quint32> optClassOfDevice;
+    bool lowEnergyOnly = false;
+    std::optional<std::vector<std::string>> optProfileUuids;
+};
+
 class QOhosBluetoothRemoteDeviceProxy : public QObject
 {
     Q_OBJECT
 public:
+    using BluetoothTransport =
+        QtOhosBluetooth::enums::ohos::bluetooth::connection::BluetoothTransport;
     using BondState = QtOhosBluetooth::enums::ohos::bluetooth::connection::BondState;
     using UnbondCause = QtOhosBluetooth::enums::ohos::bluetooth::connection::UnbondCause;
 
@@ -44,10 +55,12 @@ public:
     std::optional<BondState> tryGetPairState(const QString &deviceId);
 
     bool pairDevice(const QString &deviceId);
+    std::optional<QOhosBluetoothErrorCode> requestRemoteDeviceServices(const QString &deviceId);
 
 Q_SIGNALS:
     void bondStateChanged(QString deviceId, BondState bondState, std::optional<UnbondCause> unbondCause);
     void pairDeviceFailed(QString deviceId);
+    void remoteDeviceServicesRead(RemoteDeviceServices remoteDeviceServices);
     void missingPermission();
 
 protected:
@@ -59,6 +72,11 @@ private:
     std::shared_ptr<void> m_bondStateChangeConsumerHandle;
 };
 
+std::optional<std::string> readRemoteDeviceName(QOhosJsState &jsState, const std::string &deviceId);
+std::optional<quint32> readRemoteDeviceClass(QOhosJsState &jsState, const std::string &deviceId);
+std::optional<QOhosBluetoothRemoteDeviceProxy::BluetoothTransport> readRemoteDeviceTransport(
+    QOhosJsState &jsState, const std::string &deviceId);
+bool isRemoteDeviceLowEnergyOnly(QOhosJsState &jsState, const std::string &deviceId);
 
 }
 
