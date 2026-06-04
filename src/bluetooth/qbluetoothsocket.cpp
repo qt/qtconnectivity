@@ -13,6 +13,8 @@
 #include "qbluetoothsocket_winrt_p.h"
 #elif defined(QT_OSX_BLUETOOTH)
 #include "qbluetoothsocket_macos_p.h"
+#elif defined(QT_HARMONY_BLUETOOTH)
+#include "qbluetoothsocket_ohos_p.h"
 #else
 #include "qbluetoothsocket_dummy_p.h"
 #endif
@@ -253,6 +255,8 @@ static QBluetoothSocketBasePrivate *createSocketPrivate()
     return new QBluetoothSocketPrivateWinRT();
 #elif defined(QT_OSX_BLUETOOTH)
     return new QBluetoothSocketPrivateDarwin();
+#elif defined(QT_HARMONY_BLUETOOTH)
+    return new QBluetoothSocketPrivateOhos();
 #else
     return new QBluetoothSocketPrivateDummy();
 #endif

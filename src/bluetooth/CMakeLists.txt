@@ -276,12 +276,13 @@ elseif(OHOS)
             ohos/qohosbluetoothenums_p.h
             ohos/qohosbluetoothlocaldevice.cpp ohos/qohosbluetoothlocaldevice_p.h
             ohos/qohosbluetoothremotedevice.cpp ohos/qohosbluetoothremotedevice_p.h
+            ohos/qohosbluetoothsocket.cpp ohos/qohosbluetoothsocket_p.h
             qbluetoothdevicediscoveryagent_ohos.cpp
             qbluetoothlocaldevice_ohos.cpp
             qbluetoothserver_p.cpp
             qbluetoothservicediscoveryagent_ohos.cpp
             qbluetoothserviceinfo_p.cpp
-            qbluetoothsocket_dummy.cpp qbluetoothsocket_dummy_p.h
+            qbluetoothsocket_ohos.cpp qbluetoothsocket_ohos_p.h
             qlowenergycontroller_dummy.cpp qlowenergycontroller_dummy_p.h
         DEFINES
             QT_HARMONY_BLUETOOTH

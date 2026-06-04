@@ -86,7 +86,7 @@ public:
                              QBluetoothSocket::OpenMode openMode = QBluetoothSocket::ReadWrite) = 0;
 
 
-#if defined(QT_ANDROID_BLUETOOTH)
+#if defined(QT_ANDROID_BLUETOOTH) || defined(QT_HARMONY_BLUETOOTH)
     virtual void connectToServiceHelper(const QBluetoothAddress &address, const QBluetoothUuid &uuid,
                           QIODevice::OpenMode openMode) = 0;
 #else

@@ -183,6 +183,25 @@ std::shared_ptr<QOhosBluetoothRemoteDeviceProxy> QOhosBluetoothRemoteDeviceProxy
     return instance;
 }
 
+std::optional<QString> QOhosBluetoothRemoteDeviceProxy::tryGetRemoteDeviceName(const QString &deviceId)
+{
+    if (!checkAccessBluetoothPermissionGranted(Q_FUNC_INFO))
+        return std::nullopt;
+
+    return QOhosJsThreadGateway::eval(
+        [&](QOhosJsState &jsState) -> std::optional<QString> {
+            if (!isBluetoothEnabled(jsState))
+                return std::nullopt;
+
+            const auto optRemoteDeviceName = readRemoteDeviceName(jsState, deviceId.toStdString());
+
+            return optRemoteDeviceName
+                ? std::optional(QString::fromStdString(*optRemoteDeviceName))
+                : std::nullopt;
+        },
+        Q_FUNC_INFO);
+}
+
 std::optional<QOhosBluetoothRemoteDeviceProxy::BondState> QOhosBluetoothRemoteDeviceProxy::tryGetPairState(
     const QString &deviceId)
 {

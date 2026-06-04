@@ -52,6 +52,7 @@ public:
 
     static std::shared_ptr<QOhosBluetoothRemoteDeviceProxy> instance();
 
+    std::optional<QString> tryGetRemoteDeviceName(const QString &deviceId);
     std::optional<BondState> tryGetPairState(const QString &deviceId);
 
     bool pairDevice(const QString &deviceId);
