@@ -73,6 +73,9 @@ static const char * const abbreviations[] = {
 
 /*!
     Returns the URI of this URI record.
+
+    \warning Application developers are advised to validate the returned
+    URI before acting on it. See \l{Qt NFC Security Considerations} for guidance.
 */
 QUrl QNdefNfcUriRecord::uri() const
 {
