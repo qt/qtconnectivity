@@ -50,9 +50,9 @@ QString QNdefNfcTextRecord::locale() const
     if (p.isEmpty())
         return QString();
 
-    quint8 status = p.at(0);
+    const quint8 status = p.at(0);
 
-    quint8 codeLength = status & 0x3f;
+    const quint8 codeLength = status & 0x3f;
 
     if (p.size() < 1 + codeLength)
         return QString();
@@ -68,9 +68,9 @@ void QNdefNfcTextRecord::setLocale(const QString &locale)
 {
     QByteArray p = payload();
 
-    quint8 status = p.isEmpty() ? 0 : p.at(0);
+    const quint8 status = p.isEmpty() ? 0 : p.at(0);
 
-    quint8 codeLength = status & 0x3f;
+    const quint8 codeLength = status & 0x3f;
 
     // Preserve encoding and RFU bits only (bits 7 and 6)
     const quint8 statusWithoutLanguageCodeLength = status & 0xc0;
@@ -100,9 +100,9 @@ QString QNdefNfcTextRecord::text() const
     if (p.isEmpty())
         return QString();
 
-    quint8 status = p.at(0);
-    bool utf16 = status & 0x80;
-    quint8 codeLength = status & 0x3f;
+    const quint8 status = p.at(0);
+    const bool utf16 = status & 0x80;
+    const quint8 codeLength = status & 0x3f;
 
     if (p.size() < 1 + codeLength)
         return QString();
@@ -124,10 +124,10 @@ void QNdefNfcTextRecord::setText(const QString text)
 
     QByteArray p = payload();
 
-    quint8 status = p.at(0);
+    const quint8 status = p.at(0);
 
-    bool utf16 = status & 0x80;
-    quint8 codeLength = status & 0x3f;
+    const bool utf16 = status & 0x80;
+    const quint8 codeLength = status & 0x3f;
 
     p.truncate(1 + codeLength);
 
@@ -150,9 +150,9 @@ QNdefNfcTextRecord::Encoding QNdefNfcTextRecord::encoding() const
 
     QByteArray p = payload();
 
-    quint8 status = p.at(0);
+    const quint8 status = p.at(0);
 
-    bool utf16 = status & 0x80;
+    const bool utf16 = status & 0x80;
 
     if (utf16)
         return Utf16;
@@ -169,7 +169,7 @@ void QNdefNfcTextRecord::setEncoding(Encoding encoding)
 
     quint8 status = p.isEmpty() ? 0 : p.at(0);
 
-    QString string = text();
+    const QString string = text();
 
     if (encoding == Utf8)
         status &= ~0x80;
