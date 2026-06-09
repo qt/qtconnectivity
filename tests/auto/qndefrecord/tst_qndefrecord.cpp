@@ -28,6 +28,9 @@ private slots:
     void tst_textRecord_data();
     void tst_textRecord();
 
+    void tst_textRecord_malformedPayload_data();
+    void tst_textRecord_malformedPayload();
+
     void tst_uriRecord_data();
     void tst_uriRecord();
 
@@ -338,6 +341,43 @@ void tst_QNdefRecord::tst_textRecord()
         QCOMPARE(textRecord.text(), text);
         QCOMPARE(textRecord.encoding() == QNdefNfcTextRecord::Utf8, utf8);
     }
+}
+
+void tst_QNdefRecord::tst_textRecord_malformedPayload_data()
+{
+    QTest::addColumn<QByteArray>("payload");
+
+    // The payload layout for an nfc text record is:
+    // [status: 1 byte][language code: codeLength bytes][text: remaining bytes]
+
+    // status byte claims codeLength=2, so payload should have 3 bytes or more
+    QTest::newRow("codeLength=2-payload=1byte")
+            << QByteArray::fromHex("02");
+
+    // status byte claims codeLength=5, but only 2 locale bytes follow
+    QTest::newRow("codeLength=5-payload=3bytes")
+            << QByteArray::fromHex("05656e");   // 0x05 + "en"
+
+    // status byte claims codeLength=63 (maximum), but payload is only 1 byte
+    QTest::newRow("codeLength=63-payload=1byte")
+        << QByteArray::fromHex("3f");
+
+    // utf16 flag set, codeLength=2, payload is only 2 bytes
+    QTest::newRow("utf16-codeLength=2-payload=2bytes")
+        << QByteArray::fromHex("8265");   // 0x82 + 'e'
+}
+
+void tst_QNdefRecord::tst_textRecord_malformedPayload()
+{
+    QFETCH(QByteArray, payload);
+
+    QNdefNfcTextRecord record;
+    record.setPayload(payload);
+
+    // Before the fix for QTBUG-147372, locale() and text() read past the end of
+    // the payload when codeLength > p.size()-1. ASAN would catch both calls here.
+    QCOMPARE(record.locale(), QString());
+    QCOMPARE(record.text(), QString());
 }
 
 void tst_QNdefRecord::tst_uriRecord_data()
