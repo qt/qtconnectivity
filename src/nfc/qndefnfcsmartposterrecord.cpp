@@ -426,6 +426,9 @@ void QNdefNfcSmartPosterRecord::setTitles(const QList<QNdefNfcTextRecord> &title
 
 /*!
     Returns the URI from the smart poster's URI record if set. Otherwise an empty URI is returned.
+
+    \warning Application developers are advised to validate the returned
+    URI before acting on it. See \l{Qt NFC Security Considerations} for guidance.
  */
 QUrl QNdefNfcSmartPosterRecord::uri() const
 {
@@ -520,6 +523,9 @@ QNdefNfcIconRecord QNdefNfcSmartPosterRecord::iconRecord(qsizetype index) const
 /*!
     Returns the associated icon record data if the smart poster contains an icon record with MIME type \a mimetype.
     If \a mimetype is omitted or empty then the first icon's record data is returned. In all other cases, an empty array is returned.
+
+    \warning Application developers are advised to validate the returned data
+    before processing it. See \l{Qt NFC Security Considerations} for guidance.
  */
 QByteArray QNdefNfcSmartPosterRecord::icon(const QByteArray& mimetype) const
 {
@@ -741,6 +747,9 @@ void QNdefNfcIconRecord::setData(const QByteArray &data)
 
 /*!
     Returns the icon data as \l QByteArray.
+
+    \warning Application developers are advised to validate the returned data
+    before processing it. See \l{Qt NFC Security Considerations} for guidance.
 */
 QByteArray QNdefNfcIconRecord::data() const
 {

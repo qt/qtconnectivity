@@ -72,6 +72,31 @@ The \l QtNfc module exports the following
     \li \l {Qt NFC C++ Classes}{C++ Classes}
 \endlist
 
+\section1 Security Considerations
+
+The content of an NFC tag cannot be treated as a trusted input. It's the
+application developer's responsibility to validate the data before using it.
+
+\section2 URIs
+
+Functions such as \l QNdefNfcUriRecord::uri() and
+\l QNdefNfcSmartPosterRecord::uri() return URIs decoded directly from tag
+content. Applications can, for example, verify that the scheme is one the
+application expects to receive (for example, \c https rather than \c file
+or \c javascript) before opening, loading, or acting on a returned URI.
+
+\section2 Icon Data
+
+Functions such as \l QNdefNfcIconRecord::data() and
+\l QNdefNfcSmartPosterRecord::icon() return raw byte arrays containing icon
+data embedded in the tag. Since the MIME type and content are both provided
+by the tag author, the actual bytes may not conform to the claimed type.
+
+Applications should verify the result after decoding rather than assuming the
+data is valid. As an example, passing the data directly to \l QImage is
+generally safe, as it handles validation. However, it is advised to perform
+additional validation when processing the data manually or using non-Qt tools.
+
 \section1 Module Evolution
 
 \l {Changes to Qt NFC} lists important changes in the module API and
