@@ -105,7 +105,7 @@ void QBluetoothServiceDiscoveryAgentPrivate::runExternalSdpScan(
     Q_Q(QBluetoothServiceDiscoveryAgent);
 
     if (!sdpScannerProcess) {
-        const QString binPath = QLibraryInfo::path(QLibraryInfo::LibraryExecutablesPath);
+        const QString binPath = QLibraryInfo::paths(QLibraryInfo::LibraryExecutablesPath).value(0);
         QFileInfo fileInfo(binPath, QStringLiteral("sdpscanner"));
         if (!fileInfo.exists() || !fileInfo.isExecutable()) {
             _q_finishSdpScan(QBluetoothServiceDiscoveryAgent::InputOutputError,
