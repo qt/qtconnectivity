@@ -46,15 +46,13 @@ target_link_libraries(btchat PRIVATE
 )
 
 if (APPLE)
-    # Using absolute path for shared plist files is a Ninja bug workaround
-    get_filename_component(SHARED_PLIST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../shared ABSOLUTE)
     if (IOS)
         set_target_properties(btchat PROPERTIES
-            MACOSX_BUNDLE_INFO_PLIST "${SHARED_PLIST_DIR}/Info.cmake.ios.plist"
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.cmake.ios.plist"
         )
     else()
         set_target_properties(btchat PROPERTIES
-            MACOSX_BUNDLE_INFO_PLIST "${SHARED_PLIST_DIR}/Info.cmake.macos.plist"
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.cmake.macos.plist"
         )
     endif()
 endif()
