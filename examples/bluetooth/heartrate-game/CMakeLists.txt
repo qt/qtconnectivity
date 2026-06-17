@@ -71,15 +71,13 @@ qt_add_qml_module(heartrate-game
 )
 
 if (APPLE)
-    # Using absolute path for shared plist files is a Ninja bug workaround
-    get_filename_component(SHARED_PLIST_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../shared ABSOLUTE)
     if (IOS)
         set_target_properties(heartrate-game PROPERTIES
-            MACOSX_BUNDLE_INFO_PLIST "${SHARED_PLIST_DIR}/Info.cmake.ios.plist"
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.cmake.ios.plist"
         )
     else()
         set_target_properties(heartrate-game PROPERTIES
-            MACOSX_BUNDLE_INFO_PLIST "${SHARED_PLIST_DIR}/Info.cmake.macos.plist"
+            MACOSX_BUNDLE_INFO_PLIST "${CMAKE_CURRENT_SOURCE_DIR}/Info.cmake.macos.plist"
         )
     endif()
 endif()
