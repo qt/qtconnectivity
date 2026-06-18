@@ -623,6 +623,7 @@ void QBluetoothSocket::doDeviceDiscovery(const QBluetoothServiceInfo &service, O
     d->discoveryAgent->start(QBluetoothServiceDiscoveryAgent::FullDiscovery);
 }
 
+/*! \internal */
 void QBluetoothSocket::serviceDiscovered(const QBluetoothServiceInfo &service)
 {
     Q_D(QBluetoothSocketBase);
@@ -643,6 +644,7 @@ void QBluetoothSocket::serviceDiscovered(const QBluetoothServiceInfo &service)
     }
 }
 
+/*! \internal */
 void QBluetoothSocket::discoveryFinished()
 {
     qCDebug(QT_BT) << "Socket discovery finished";
