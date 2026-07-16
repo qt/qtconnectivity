@@ -275,6 +275,7 @@ elseif(OHOS)
             ohos/qohosbluetoothdevicediscovery.cpp ohos/qohosbluetoothdevicediscovery_p.h
             ohos/qohosbluetoothenums_p.h
             ohos/qohosbluetoothlocaldevice.cpp ohos/qohosbluetoothlocaldevice_p.h
+            ohos/qohosbluetoothremotedevice.cpp ohos/qohosbluetoothremotedevice_p.h
             qbluetoothdevicediscoveryagent_ohos.cpp
             qbluetoothlocaldevice_ohos.cpp
             qbluetoothserver_p.cpp

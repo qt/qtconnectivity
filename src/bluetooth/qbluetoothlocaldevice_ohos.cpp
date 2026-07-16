@@ -8,8 +8,10 @@
 #include <QtBluetooth/private/qohosbluetoothaccess_p.h>
 #include <QtBluetooth/private/qohosbluetoothcommon_p.h>
 #include <QtBluetooth/private/qohosbluetoothlocaldevice_p.h>
+#include <QtBluetooth/private/qohosbluetoothremotedevice_p.h>
 
 #include <QtCore/qdeadlinetimer.h>
+#include <QtCore/qhash.h>
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/qtimer.h>
 
@@ -26,6 +28,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT_OHOS)
 
 namespace {
 
+constexpr auto pairingRequestTimeout = std::chrono::seconds(30);
 constexpr auto hostModeRequestRetryDelay = std::chrono::milliseconds(500);
 constexpr auto hostModeRequestGiveUpDelay = std::chrono::seconds(20);
 
@@ -103,6 +106,14 @@ QBluetoothLocalDevice::HostMode getBluetoothLocalDeviceHostMode(
         : QBluetoothLocalDevice::HostMode::HostPoweredOff;
 }
 
+QBluetoothLocalDevice::Pairing mapOhosBondStateToLocalDevicePairing(
+    QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::BondState bondState)
+{
+    return bondState == QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::BondState::BOND_STATE_BONDED
+        ? QBluetoothLocalDevice::Pairing::Paired
+        : QBluetoothLocalDevice::Pairing::Unpaired;
+}
+
 enum class HostModeUpdateSource { ChangeEvent, LiveRead };
 
 class QOhosBluetoothLocalDevicePrivate : public QBluetoothLocalDevicePrivate
@@ -112,6 +123,8 @@ public:
 
     bool isValid() const override;
     std::optional<QtOhosBluetooth::QOhosBluetoothAccessProxy::BluetoothState> tryGetBluetoothState() const;
+    std::optional<QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::BondState> tryGetPairState(
+        const QBluetoothAddress &address) const;
     void requestHostMode(QBluetoothLocalDevice::HostMode requestedHostMode);
     void requestPowerOn();
     void cancelHostModeRequest();
@@ -119,6 +132,9 @@ public:
         QBluetoothLocalDevice::HostMode hostMode,
         std::optional<QtOhosBluetooth::QOhosBluetoothAccessProxy::BluetoothState> optBluetoothState,
         HostModeUpdateSource source = HostModeUpdateSource::ChangeEvent);
+
+    bool pairDevice(const QBluetoothAddress &address);
+    void cancelPendingPairingRequests();
 
 private:
     struct HostModeRequest
@@ -143,19 +159,25 @@ private:
         bool adapterPoweredOn);
     static bool isPowerSwitchOutcomePending(
         const HostModeRequest &request, bool adapterPoweredOn);
+    void rearmPendingPairingRequestsTimer();
+    void handleExpiredPendingPairingRequests();
     void emitAsyncError(QBluetoothLocalDevice::Error error);
 
     QBluetoothLocalDevice *m_qBluetoothLocalDevice;
+    std::shared_ptr<QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy> m_remoteDeviceProxy;
     bool m_isValid = false;
     QBluetoothLocalDevice::HostMode m_lastHostMode =
         QBluetoothLocalDevice::HostMode::HostPoweredOff;
     std::optional<HostModeRequest> m_optHostModeRequest = std::nullopt;
+    QHash<QBluetoothAddress, QDeadlineTimer> m_pendingPairingRequests;
+    QTimer m_pendingPairingRequestsTimer;
     QTimer m_hostModeRequestTimer;
 };
 
 QOhosBluetoothLocalDevicePrivate::QOhosBluetoothLocalDevicePrivate(
     QBluetoothLocalDevice *qBluetoothLocalDevice, const QBluetoothAddress &address)
     : m_qBluetoothLocalDevice(qBluetoothLocalDevice)
+    , m_remoteDeviceProxy(QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::instance())
 {
     if (!address.isNull()) {
         qCWarning(
@@ -175,6 +197,9 @@ QOhosBluetoothLocalDevicePrivate::QOhosBluetoothLocalDevicePrivate(
         &QtOhosBluetooth::QOhosBluetoothAccessProxy::stateChanged,
         this,
         [this](auto state) {
+            if (state != QtOhosBluetooth::QOhosBluetoothAccessProxy::BluetoothState::STATE_ON)
+                cancelPendingPairingRequests();
+
             handleAdapterHostModeChanged(getBluetoothLocalDeviceHostMode(state), state);
         });
 
@@ -204,6 +229,62 @@ QOhosBluetoothLocalDevicePrivate::QOhosBluetoothLocalDevicePrivate(
             handleAdapterHostModeChanged(mapScanModeToQtHostMode(scanMode), optBluetoothState);
         });
 
+    QObject::connect(
+        m_remoteDeviceProxy.get(),
+        &QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::bondStateChanged,
+        this,
+        [this](const QString &deviceId, QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::BondState bondState,
+            std::optional<QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::UnbondCause> optUnbondCause) {
+            const QBluetoothAddress deviceAddress(deviceId);
+            if (deviceAddress.isNull()) {
+                qCWarning(
+                    QT_BT_OHOS,
+                    "%s: ignoring the bond state change for a device with an unexpected address: '%ls'",
+                    Q_FUNC_INFO, qUtf16Printable(deviceId));
+                return;
+            }
+
+            if (!m_pendingPairingRequests.contains(deviceAddress))
+                return;
+
+            switch (bondState) {
+            case QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::BondState::BOND_STATE_INVALID:
+                qCWarning(
+                    QT_BT_OHOS, "%s: pairing with the device %ls failed with the unbond cause %d",
+                    Q_FUNC_INFO, qUtf16Printable(deviceAddress.toString()),
+                    optUnbondCause ? static_cast<int>(*optUnbondCause) : -1);
+                m_pendingPairingRequests.remove(deviceAddress);
+                rearmPendingPairingRequestsTimer();
+                emitAsyncError(QBluetoothLocalDevice::Error::PairingError);
+                break;
+            case QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::BondState::BOND_STATE_BONDING:
+                break;
+            case QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::BondState::BOND_STATE_BONDED:
+                m_pendingPairingRequests.remove(deviceAddress);
+                rearmPendingPairingRequestsTimer();
+                Q_EMIT m_qBluetoothLocalDevice->pairingFinished(
+                    deviceAddress, QBluetoothLocalDevice::Paired);
+                break;
+            }
+        });
+
+    QObject::connect(
+        m_remoteDeviceProxy.get(),
+        &QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::pairDeviceFailed,
+        this,
+        [this](const QString &deviceId) {
+            const QBluetoothAddress deviceAddress(deviceId);
+            if (!m_pendingPairingRequests.contains(deviceAddress))
+                return;
+
+            qCWarning(
+                QT_BT_OHOS, "%s: the pairing request for the device %ls was rejected", Q_FUNC_INFO,
+                qUtf16Printable(deviceId));
+            m_pendingPairingRequests.remove(deviceAddress);
+            rearmPendingPairingRequestsTimer();
+            emitAsyncError(QBluetoothLocalDevice::Error::PairingError);
+        });
+
     auto emitMissingPermissionsError = [this]() {
         emitAsyncError(QBluetoothLocalDevice::MissingPermissionsError);
     };
@@ -215,6 +296,18 @@ QOhosBluetoothLocalDevicePrivate::QOhosBluetoothLocalDevicePrivate(
         QtOhosBluetooth::QOhosBluetoothLocalDeviceProxy::instance().get(),
         &QtOhosBluetooth::QOhosBluetoothLocalDeviceProxy::missingPermission,
         this, emitMissingPermissionsError);
+    QObject::connect(
+        m_remoteDeviceProxy.get(),
+        &QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::missingPermission,
+        this, emitMissingPermissionsError);
+
+    m_pendingPairingRequestsTimer.setSingleShot(true);
+    QObject::connect(
+        &m_pendingPairingRequestsTimer, &QTimer::timeout, this,
+        [this]() {
+            handleExpiredPendingPairingRequests();
+        });
+
     m_hostModeRequestTimer.setSingleShot(true);
     QObject::connect(
         &m_hostModeRequestTimer, &QTimer::timeout, this,
@@ -244,6 +337,12 @@ bool QOhosBluetoothLocalDevicePrivate::isValid() const
 std::optional<QtOhosBluetooth::QOhosBluetoothAccessProxy::BluetoothState> QOhosBluetoothLocalDevicePrivate::tryGetBluetoothState() const
 {
     return QtOhosBluetooth::QOhosBluetoothAccessProxy::instance()->tryGetBluetoothState();
+}
+
+std::optional<QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::BondState> QOhosBluetoothLocalDevicePrivate::tryGetPairState(
+    const QBluetoothAddress &address) const
+{
+    return m_remoteDeviceProxy->tryGetPairState(address.toString());
 }
 
 void QOhosBluetoothLocalDevicePrivate::requestHostMode(
@@ -485,6 +584,39 @@ void QOhosBluetoothLocalDevicePrivate::handleAdapterHostModeChanged(
     }
 }
 
+bool QOhosBluetoothLocalDevicePrivate::pairDevice(const QBluetoothAddress &address)
+{
+    const auto addressStr = address.toString().toStdString();
+    if (m_pendingPairingRequests.contains(address)) {
+        qCDebug(
+            QT_BT_OHOS,
+            "%s: pairing request ignored due to already pending pairing process to the device with address %s",
+            Q_FUNC_INFO, addressStr.c_str());
+        return true;
+    }
+
+    m_pendingPairingRequests.insert(address, QDeadlineTimer(pairingRequestTimeout));
+    rearmPendingPairingRequestsTimer();
+
+    if (!m_remoteDeviceProxy->pairDevice(address.toString())) {
+        m_pendingPairingRequests.remove(address);
+        rearmPendingPairingRequestsTimer();
+        return false;
+    }
+
+    return true;
+}
+
+void QOhosBluetoothLocalDevicePrivate::cancelPendingPairingRequests()
+{
+    if (m_pendingPairingRequests.isEmpty())
+        return;
+
+    m_pendingPairingRequests.clear();
+    rearmPendingPairingRequestsTimer();
+    emitAsyncError(QBluetoothLocalDevice::Error::PairingError);
+}
+
 void QOhosBluetoothLocalDevicePrivate::emitAsyncError(QBluetoothLocalDevice::Error error)
 {
     QMetaObject::invokeMethod(
@@ -493,6 +625,52 @@ void QOhosBluetoothLocalDevicePrivate::emitAsyncError(QBluetoothLocalDevice::Err
             Q_EMIT m_qBluetoothLocalDevice->errorOccurred(error);
         },
         Qt::QueuedConnection);
+}
+
+void QOhosBluetoothLocalDevicePrivate::rearmPendingPairingRequestsTimer()
+{
+    if (m_pendingPairingRequests.isEmpty()) {
+        m_pendingPairingRequestsTimer.stop();
+        return;
+    }
+
+    const auto earliestDeadline = std::min_element(
+        m_pendingPairingRequests.cbegin(), m_pendingPairingRequests.cend());
+
+    m_pendingPairingRequestsTimer.start(
+        std::max(
+            std::chrono::ceil<std::chrono::milliseconds>(earliestDeadline->remainingTimeAsDuration()),
+            std::chrono::milliseconds::zero()));
+}
+
+void QOhosBluetoothLocalDevicePrivate::handleExpiredPendingPairingRequests()
+{
+    QList<QBluetoothAddress> expiredAddresses;
+    for (auto pendingPairingRequest = m_pendingPairingRequests.cbegin();
+         pendingPairingRequest != m_pendingPairingRequests.cend(); ++pendingPairingRequest) {
+        if (pendingPairingRequest.value().hasExpired())
+            expiredAddresses.append(pendingPairingRequest.key());
+    }
+
+    for (const auto &expiredAddress : expiredAddresses)
+        m_pendingPairingRequests.remove(expiredAddress);
+
+    rearmPendingPairingRequestsTimer();
+
+    for (const auto &expiredAddress : expiredAddresses) {
+        const auto optPairState = tryGetPairState(expiredAddress);
+        if (optPairState
+            && *optPairState == QtOhosBluetooth::QOhosBluetoothRemoteDeviceProxy::BondState::BOND_STATE_BONDED) {
+            Q_EMIT m_qBluetoothLocalDevice->pairingFinished(
+                expiredAddress, QBluetoothLocalDevice::Paired);
+            continue;
+        }
+
+        qCWarning(
+            QT_BT_OHOS, "%s: pairing with the device %ls not confirmed by the system in time",
+            Q_FUNC_INFO, qUtf16Printable(expiredAddress.toString()));
+        emitAsyncError(QBluetoothLocalDevice::Error::PairingError);
+    }
 }
 
 }
@@ -606,13 +784,101 @@ QList<QBluetoothHostInfo> QBluetoothLocalDevice::allDevices()
     return { bluetoothHostInfo };
 }
 
-void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &, Pairing)
+void QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &address, Pairing pairing)
 {
+    auto emitPairingError = [this]() {
+        QMetaObject::invokeMethod(
+            this,
+            [this]() {
+                Q_EMIT errorOccurred(QBluetoothLocalDevice::PairingError);
+            },
+            Qt::QueuedConnection);
+    };
+
+    auto emitPairingFinishedAsync = [this, address](Pairing finishedPairing) {
+        QMetaObject::invokeMethod(
+            this,
+            [this, address, finishedPairing]() {
+                Q_EMIT pairingFinished(address, finishedPairing);
+            },
+            Qt::QueuedConnection);
+    };
+
+    if (!isValid() || address.isNull()) {
+        qCWarning(
+            QT_BT_OHOS, "%s: local device is not valid or the device address is null. Ignoring...",
+            Q_FUNC_INFO);
+        emitPairingError();
+        return;
+    }
+
+    const auto optBluetoothState = static_cast<QOhosBluetoothLocalDevicePrivate *>(d_ptr)->tryGetBluetoothState();
+    if (optBluetoothState != QtOhosBluetooth::QOhosBluetoothAccessProxy::BluetoothState::STATE_ON) {
+        qCWarning(QT_BT_OHOS, "%s: bluetooth not in powered on state. Ignoring...", Q_FUNC_INFO);
+        emitPairingError();
+        return;
+    }
+
+    switch (pairing) {
+    case AuthorizedPaired:
+        qCWarning(
+            QT_BT_OHOS,
+            "%s: AuthorizedPaired not supported on HarmonyOS. Falling back to Paired.",
+            Q_FUNC_INFO);
+        Q_FALLTHROUGH();
+    case Paired:
+        if (pairingStatus(address) == QBluetoothLocalDevice::Pairing::Paired) {
+            qCDebug(
+                QT_BT_OHOS, "%s: Already paired with the device %ls. Ignoring pairing request.",
+                Q_FUNC_INFO, qUtf16Printable(address.toString()));
+            emitPairingFinishedAsync(QBluetoothLocalDevice::Pairing::Paired);
+            break;
+        }
+
+        if (!static_cast<QOhosBluetoothLocalDevicePrivate *>(d_ptr)->pairDevice(address))
+            emitPairingError();
+        break;
+    case Unpaired:
+        if (pairingStatus(address) == QBluetoothLocalDevice::Pairing::Unpaired) {
+            qCDebug(
+                QT_BT_OHOS, "%s: Not paired with the device %ls. Ignoring unpairing request.",
+                Q_FUNC_INFO, qUtf16Printable(address.toString()));
+            emitPairingFinishedAsync(QBluetoothLocalDevice::Pairing::Unpaired);
+            break;
+        }
+
+        qCWarning(
+            QT_BT_OHOS, "%s: Unpairing not supported on HarmonyOS for paired devices.",
+            Q_FUNC_INFO);
+        emitPairingError();
+        break;
+    }
 }
 
-QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluetoothAddress &) const
+QBluetoothLocalDevice::Pairing QBluetoothLocalDevice::pairingStatus(const QBluetoothAddress &address) const
 {
-    return Unpaired;
+    if (!d_ptr->isValid()) {
+        qCWarning(
+            QT_BT_OHOS, "%s: local device is not valid. Reporting unpaired device.", Q_FUNC_INFO);
+        return Unpaired;
+    }
+
+    if (address.isNull()) {
+        qCWarning(
+            QT_BT_OHOS, "%s: device address is null. Reporting unpaired device.", Q_FUNC_INFO);
+        return Unpaired;
+    }
+
+    const auto optBluetoothState = static_cast<QOhosBluetoothLocalDevicePrivate *>(d_ptr)->tryGetBluetoothState();
+    if (optBluetoothState != QtOhosBluetooth::QOhosBluetoothAccessProxy::BluetoothState::STATE_ON)
+        return Unpaired;
+
+    const auto optPairState =
+        static_cast<QOhosBluetoothLocalDevicePrivate *>(d_ptr)->tryGetPairState(address);
+    if (!optPairState)
+        return QBluetoothLocalDevice::Pairing::Unpaired;
+
+    return mapOhosBondStateToLocalDevicePairing(*optPairState);
 }
 
 QT_END_NAMESPACE
