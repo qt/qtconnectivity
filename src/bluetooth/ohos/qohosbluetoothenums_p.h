@@ -46,6 +46,12 @@ enum class BluetoothState {
 
 namespace connection {
 
+enum class BondState {
+    BOND_STATE_BONDED,
+    BOND_STATE_BONDING,
+    BOND_STATE_INVALID,
+};
+
 enum class ScanMode {
     SCAN_MODE_CONNECTABLE,
     SCAN_MODE_CONNECTABLE_GENERAL_DISCOVERABLE,
@@ -53,6 +59,14 @@ enum class ScanMode {
     SCAN_MODE_GENERAL_DISCOVERABLE,
     SCAN_MODE_LIMITED_DISCOVERABLE,
     SCAN_MODE_NONE,
+};
+
+enum class UnbondCause {
+    AUTH_FAILURE,
+    AUTH_REJECTED,
+    INTERNAL_ERROR,
+    REMOTE_DEVICE_DOWN,
+    USER_REMOVED,
 };
 
 }
@@ -87,6 +101,18 @@ struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::access::BluetoothSt
 };
 
 template<>
+struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::connection::BondState>
+{
+    using Enum = QtOhosBluetooth::enums::ohos::bluetooth::connection::BondState;
+    static constexpr const char *fullTypeName = "@ohos.bluetooth.connection.BondState";
+    static constexpr std::array<std::pair<Enum, const char *>, 3> enumeratorsNames = {{
+        {Enum::BOND_STATE_BONDED, "BOND_STATE_BONDED"},
+        {Enum::BOND_STATE_BONDING, "BOND_STATE_BONDING"},
+        {Enum::BOND_STATE_INVALID, "BOND_STATE_INVALID"},
+    }};
+};
+
+template<>
 struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::connection::ScanMode>
 {
     using Enum = QtOhosBluetooth::enums::ohos::bluetooth::connection::ScanMode;
@@ -101,11 +127,27 @@ struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::connection::ScanMod
     }};
 };
 
+template<>
+struct OhosEnumMeta<QtOhosBluetooth::enums::ohos::bluetooth::connection::UnbondCause>
+{
+    using Enum = QtOhosBluetooth::enums::ohos::bluetooth::connection::UnbondCause;
+    static constexpr const char *fullTypeName = "@ohos.bluetooth.connection.UnbondCause";
+    static constexpr std::array<std::pair<Enum, const char *>, 5> enumeratorsNames = {{
+        {Enum::AUTH_FAILURE, "AUTH_FAILURE"},
+        {Enum::AUTH_REJECTED, "AUTH_REJECTED"},
+        {Enum::INTERNAL_ERROR, "INTERNAL_ERROR"},
+        {Enum::REMOTE_DEVICE_DOWN, "REMOTE_DEVICE_DOWN"},
+        {Enum::USER_REMOVED, "USER_REMOVED"},
+    }};
+};
+
 }
 
 QT_END_NAMESPACE
 
 Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::access::BluetoothState));
+Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::connection::BondState));
 Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::connection::ScanMode));
+Q_DECLARE_METATYPE(QT_PREPEND_NAMESPACE(QtOhosBluetooth::enums::ohos::bluetooth::connection::UnbondCause));
 
 #endif
