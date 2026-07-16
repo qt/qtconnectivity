@@ -272,9 +272,10 @@ elseif(OHOS)
             dummy/dummy_helper.cpp dummy/dummy_helper_p.h
             ohos/qohosbluetoothaccess.cpp ohos/qohosbluetoothaccess_p.h
             ohos/qohosbluetoothcommon.cpp ohos/qohosbluetoothcommon_p.h
+            ohos/qohosbluetoothdevicediscovery.cpp ohos/qohosbluetoothdevicediscovery_p.h
             ohos/qohosbluetoothenums_p.h
             ohos/qohosbluetoothlocaldevice.cpp ohos/qohosbluetoothlocaldevice_p.h
-            qbluetoothdevicediscoveryagent_p.cpp
+            qbluetoothdevicediscoveryagent_ohos.cpp
             qbluetoothlocaldevice_ohos.cpp
             qbluetoothserver_p.cpp
             qbluetoothservicediscoveryagent_p.cpp
@@ -287,7 +288,10 @@ elseif(OHOS)
             NAPI_CPP_EXCEPTIONS
         LIBRARIES
             NodeAddonApi::NodeAddonApi
+            Qt::CorePrivate
             ace_napi.z
+        PRIVATE_MODULE_INTERFACE
+            Qt::CorePrivate
     )
     qt_internal_set_exceptions_flags(Bluetooth ON)
 

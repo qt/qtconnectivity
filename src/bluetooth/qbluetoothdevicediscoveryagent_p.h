@@ -62,6 +62,10 @@ QT_DECL_METATYPE_EXTERN(ManufacturerData, Q_BLUETOOTH_EXPORT)
 QT_DECL_METATYPE_EXTERN(ServiceData, Q_BLUETOOTH_EXPORT)
 #endif
 
+#ifdef QT_HARMONY_BLUETOOTH
+#include <QtBluetooth/private/qohosbluetoothdevicediscovery_p.h>
+#endif
+
 QT_BEGIN_NAMESPACE
 
 #ifdef QT_WINRT_BLUETOOTH
@@ -70,7 +74,7 @@ class QWinRTBluetoothDeviceDiscoveryWorker;
 
 class QBluetoothDeviceDiscoveryAgentPrivate
 #if defined(QT_ANDROID_BLUETOOTH) || defined(QT_WINRT_BLUETOOTH) \
-            || defined(Q_OS_DARWIN)
+            || defined(Q_OS_DARWIN) || defined(QT_HARMONY_BLUETOOTH)
     : public QObject
 #if defined(Q_OS_MACOS)
     , public DarwinBluetooth::DeviceInquiryDelegate
@@ -207,6 +211,18 @@ private:
     DarwinBluetooth::ScopedPointer inquiryLE;
 
 #endif // Q_OS_DARWIN
+
+#ifdef QT_HARMONY_BLUETOOTH
+    enum class DiscoveryStopReason { Finished, BluetoothPoweredOff };
+    void reportDiscoveryStopped(DiscoveryStopReason reason);
+    void clearDiscoveryState();
+    void emitAsyncError();
+    void reportDiscoveredDevices(const std::vector<QBluetoothDeviceInfo> &bluetoothDevicesInfos);
+    std::shared_ptr<QtOhosBluetooth::QOhosBluetoothDeviceDiscoveryAgentProxy> m_discoveryAgentProxy;
+    bool m_discoveryRequested = false;
+    bool m_pendingStart = false;
+    bool m_pendingCancel = false;
+#endif
 
     int lowEnergySearchTimeout = 40000;
     QBluetoothDeviceDiscoveryAgent::DiscoveryMethods requestedMethods;
