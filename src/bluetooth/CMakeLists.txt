@@ -283,7 +283,7 @@ elseif(OHOS)
             qbluetoothserver_ohos.cpp
             qbluetoothserver_ohos_p.cpp qbluetoothserver_ohos_p.h
             qbluetoothservicediscoveryagent_ohos.cpp
-            qbluetoothserviceinfo_p.cpp
+            qbluetoothserviceinfo_ohos.cpp
             qbluetoothsocket_ohos.cpp qbluetoothsocket_ohos_p.h
             qlowenergycontroller_dummy.cpp qlowenergycontroller_dummy_p.h
         DEFINES

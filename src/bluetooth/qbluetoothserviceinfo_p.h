@@ -27,6 +27,11 @@
 #include "darwin/btraii_p.h"
 #endif
 
+#ifdef QT_HARMONY_BLUETOOTH
+#include <memory>
+#include <optional>
+#endif
+
 namespace QtBluetoothPrivate {
 
 class OrgBluezServiceInterface;
@@ -54,6 +59,11 @@ QT_BEGIN_NAMESPACE
 
 class QBluetoothServiceInfo;
 
+#ifdef QT_HARMONY_BLUETOOTH
+namespace QtOhosBluetooth {
+class QOhosBluetoothServerProxy;
+}
+#endif
 
 class QBluetoothServiceInfoPrivate
     : public QObject
@@ -98,6 +108,13 @@ private:
     SDPRecord serviceRecord;
     quint32 serviceRecordHandle = 0;
 #endif // QT_OSX_BLUETOOTH
+
+#ifdef QT_HARMONY_BLUETOOTH
+    bool isRegisteredWithServerProxy() const;
+
+    std::weak_ptr<QtOhosBluetooth::QOhosBluetoothServerProxy> registeredServerProxy;
+    std::optional<quint64> optRegisteredServiceId;
+#endif
 
     mutable bool registered = false;
 };

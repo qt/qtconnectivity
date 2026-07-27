@@ -42,6 +42,8 @@ struct QOhosBluetoothServerProxyContext
 std::shared_ptr<QOhosBluetoothServerProxyContext> makeServerProxyContext(quint16 port);
 std::shared_ptr<QOhosBluetoothServerProxyContext> tryGetServerProxyContext(quint16 port);
 
+bool isServiceNameAlreadyRegistered(const QString &serviceName);
+
 }
 
 QT_END_NAMESPACE
