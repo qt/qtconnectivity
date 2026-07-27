@@ -40,6 +40,8 @@ public:
     bool accept();
     void close();
     bool isServiceRegistered() const;
+    std::optional<QString> tryGetRegisteredServiceName() const;
+    std::optional<std::uint64_t> tryGetRegisteredServiceId() const;
 
 Q_SIGNALS:
     void clientAccepted(int clientSocketDescriptor);
@@ -56,6 +58,8 @@ private:
 
     std::shared_ptr<int> m_serverSocketHandle;
     std::optional<QString> m_registeredServiceName;
+    std::optional<std::uint64_t> m_optRegisteredServiceId;
+    std::uint64_t m_registeredServicesCounter = 0;
 };
 
 }

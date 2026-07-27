@@ -69,6 +69,23 @@ std::shared_ptr<QOhosBluetoothServerProxyContext> tryGetServerProxyContext(quint
         : nullptr;
 }
 
+bool isServiceNameAlreadyRegistered(const QString &serviceName)
+{
+    if (serviceName.isEmpty())
+        return false;
+
+    for (const auto &context : serverProxyContexts()) {
+        auto serverProxyContext = context.second.lock();
+        if (!serverProxyContext)
+            continue;
+
+        if (serverProxyContext->bluetoothServerProxy->tryGetRegisteredServiceName() == serviceName)
+            return true;
+    }
+
+    return false;
+}
+
 }
 
 QT_END_NAMESPACE

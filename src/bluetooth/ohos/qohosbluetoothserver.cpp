@@ -126,6 +126,7 @@ bool QOhosBluetoothServerProxy::listen(const QString &serviceName, const QString
 
     m_serverSocketHandle = makeSppServerSocketHandle(listenResult.serverSocketId);
     m_registeredServiceName = serviceName;
+    m_optRegisteredServiceId = ++m_registeredServicesCounter;
 
     return true;
 }
@@ -292,6 +293,7 @@ void QOhosBluetoothServerProxy::close()
 
     m_serverSocketHandle.reset();
     m_registeredServiceName.reset();
+    m_optRegisteredServiceId.reset();
 
     reportAcceptingStopped();
 }
@@ -299,6 +301,16 @@ void QOhosBluetoothServerProxy::close()
 bool QOhosBluetoothServerProxy::isServiceRegistered() const
 {
     return bool(m_registeredServiceName);
+}
+
+std::optional<QString> QOhosBluetoothServerProxy::tryGetRegisteredServiceName() const
+{
+    return m_registeredServiceName;
+}
+
+std::optional<std::uint64_t> QOhosBluetoothServerProxy::tryGetRegisteredServiceId() const
+{
+    return m_optRegisteredServiceId;
 }
 
 void QOhosBluetoothServerProxy::reportError(QOhosBluetoothErrorCode errorCode)
