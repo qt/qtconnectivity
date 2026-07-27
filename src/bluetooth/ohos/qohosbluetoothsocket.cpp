@@ -59,6 +59,11 @@ std::shared_ptr<int> makeSppClientSocketHandle(int socketDescriptor)
     return makeSppSocketHandle(socketDescriptor, "@ohos.bluetooth.socket.sppCloseClientSocket(*)");
 }
 
+std::shared_ptr<int> makeSppServerSocketHandle(int socketDescriptor)
+{
+    return makeSppSocketHandle(socketDescriptor, "@ohos.bluetooth.socket.sppCloseServerSocket(*)");
+}
+
 namespace {
 
 using SppType = QtOhosBluetooth::enums::ohos::bluetooth::socket::SppType;
@@ -192,6 +197,34 @@ std::unordered_map<int, std::shared_ptr<int>> &QOhosBluetoothSocketProxy::pendin
 {
     static std::unordered_map<int, std::shared_ptr<int>> handles;
     return handles;
+}
+
+bool QOhosBluetoothSocketProxy::registerPendingSocketHandle(std::shared_ptr<int> socketHandle)
+{
+    if (!socketHandle) {
+        qCCritical(QT_BT_OHOS, "%s: no socket handle to register", Q_FUNC_INFO);
+        return false;
+    }
+
+    const auto socketDescriptor = *socketHandle;
+
+    auto &handles = pendingSocketHandles();
+    if (handles.find(socketDescriptor) != handles.end()) {
+        qCCritical(
+            QT_BT_OHOS,
+            "%s: socket descriptor %d is already registered as pending. Rejecting the socket ...",
+            Q_FUNC_INFO, socketDescriptor);
+        return false;
+    }
+
+    handles[socketDescriptor] = std::move(socketHandle);
+
+    return true;
+}
+
+void QOhosBluetoothSocketProxy::dropPendingSocketHandle(int socketDescriptor)
+{
+    pendingSocketHandles().erase(socketDescriptor);
 }
 
 std::shared_ptr<int> QOhosBluetoothSocketProxy::takePendingSocketHandle(int socketDescriptor)

@@ -36,6 +36,7 @@ namespace QtOhosBluetooth {
 constexpr int invalidSocketDescriptor = -1;
 
 std::shared_ptr<int> makeSppClientSocketHandle(int socketDescriptor);
+std::shared_ptr<int> makeSppServerSocketHandle(int socketDescriptor);
 
 class QOhosBluetoothSocketProxy : public QObject
 {
@@ -51,6 +52,8 @@ public:
     std::optional<QString> tryGetPeerDeviceAddress() const;
     std::optional<QString> tryGetPeerDeviceName() const;
 
+    static bool registerPendingSocketHandle(std::shared_ptr<int> socketHandle);
+    static void dropPendingSocketHandle(int socketDescriptor);
     static std::shared_ptr<int> takePendingSocketHandle(int socketDescriptor);
 
 Q_SIGNALS:

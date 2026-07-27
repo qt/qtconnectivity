@@ -276,10 +276,12 @@ elseif(OHOS)
             ohos/qohosbluetoothenums_p.h
             ohos/qohosbluetoothlocaldevice.cpp ohos/qohosbluetoothlocaldevice_p.h
             ohos/qohosbluetoothremotedevice.cpp ohos/qohosbluetoothremotedevice_p.h
+            ohos/qohosbluetoothserver.cpp ohos/qohosbluetoothserver_p.h
             ohos/qohosbluetoothsocket.cpp ohos/qohosbluetoothsocket_p.h
             qbluetoothdevicediscoveryagent_ohos.cpp
             qbluetoothlocaldevice_ohos.cpp
-            qbluetoothserver_p.cpp
+            qbluetoothserver_ohos.cpp
+            qbluetoothserver_ohos_p.cpp qbluetoothserver_ohos_p.h
             qbluetoothservicediscoveryagent_ohos.cpp
             qbluetoothserviceinfo_p.cpp
             qbluetoothsocket_ohos.cpp qbluetoothsocket_ohos_p.h
