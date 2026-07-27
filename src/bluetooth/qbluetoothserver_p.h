@@ -25,6 +25,12 @@
 QT_FORWARD_DECLARE_CLASS(QSocketNotifier)
 #endif
 
+#ifdef QT_HARMONY_BLUETOOTH
+#include <QtBluetooth/private/qbluetoothserver_ohos_p.h>
+
+#include <memory>
+#endif
+
 #ifdef QT_ANDROID_BLUETOOTH
 #include <QtCore/QJniEnvironment>
 #include <QtCore/QJniObject>
@@ -113,6 +119,10 @@ public:
     Microsoft::WRL::ComPtr<ABI::Windows::Networking::Sockets::IStreamSocketListener> listener() { return socketListener; }
     bool initiateActiveListening(const QString &serviceName);
     bool deactivateActiveListening();
+#elif defined(QT_HARMONY_BLUETOOTH)
+    bool isListening() const;
+    void resetServerContext();
+    std::shared_ptr<QtOhosBluetooth::QOhosBluetoothServerProxyContext> m_bluetoothServerProxyContext;
 #endif
 
 #ifdef QT_OSX_BLUETOOTH
