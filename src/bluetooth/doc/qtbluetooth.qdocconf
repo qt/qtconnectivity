@@ -36,7 +36,7 @@ qhp.QtBluetooth.subprojects.classes.sortPages = true
 
 tagfile                 = ../../../doc/qtbluetooth/qtbluetooth.tags
 
-depends += qtcore qtgui qtwidgets qtdoc qtquick qtcmake qmake
+depends += qtcore qtgui qtwidgets qtdoc qtqml qtquick qtcmake qmake
 
 headerdirs  += ..
 
