@@ -544,7 +544,13 @@ void QWinRTBluetoothDeviceDiscoveryWorker::handleClassicDevice(const BluetoothDe
     // That is because Windows will always report paired devices, even if
     // they are not physically available. This is a sub-optimal approach,
     // but looks like we cannot do better...
-    const bool isCached = device.DeviceInformation().Pairing().IsPaired();
+    const auto deviceInfo = SAFE(device.DeviceInformation());
+    if (!deviceInfo) {
+        qCDebug(QT_BT_WINDOWS) << "Failed to obtain DeviceInformation for Classic device";
+        invokeDecrementPendingDevicesCountAndCheckFinished(shared_from_this());
+        return;
+    }
+    const bool isCached = SAFE(deviceInfo.Pairing().IsPaired());
 
     auto thisPtr = shared_from_this();
     auto asyncOp = device.GetRfcommServicesAsync();
@@ -651,7 +657,15 @@ void QWinRTBluetoothDeviceDiscoveryWorker::handleLowEnergyDevice(const Bluetooth
     }
     const std::wstring name { SAFE(device.Name()) }; // via operator std::wstring_view()
     const QString btName = QString::fromStdWString(name);
-    const bool isPaired = SAFE(device.DeviceInformation().Pairing().IsPaired());
+
+    const auto deviceInfo = SAFE(device.DeviceInformation());
+    if (!deviceInfo) {
+        qCDebug(QT_BT_WINDOWS) << "Failed to obtain DeviceInformation for LE device";
+        invokeDecrementPendingDevicesCountAndCheckFinished(shared_from_this());
+        return;
+    }
+
+    const bool isPaired = SAFE(deviceInfo.Pairing().IsPaired());
 
     m_leDevicesMutex.lock();
     const LEAdvertisingInfo adInfo = m_foundLEDevicesMap.value(address);
