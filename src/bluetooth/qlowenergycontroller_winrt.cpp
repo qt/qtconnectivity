@@ -319,6 +319,7 @@ public slots:
                     WARN_AND_CONTINUE("Could not get descriptor UUID");
                 charData.descriptorList.insert(descHandle, descData);
                 if (descData.uuid == QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration)) {
+                    mIndicateChars << charData.uuid;
                     if (mMode == QLowEnergyService::FullDiscovery) {
                         auto readResult = SAFE(await(characteristic.ReadClientCharacteristicConfigurationDescriptorAsync(), exitCondition));
                         if (!readResult)
@@ -344,7 +345,6 @@ public slots:
                         descData.value = QByteArray(2, Qt::Uninitialized);
                         qToLittleEndian(result, descData.value.data());
                     }
-                    mIndicateChars << charData.uuid;
                 } else {
                     if (mMode == QLowEnergyService::FullDiscovery) {
 
