@@ -296,7 +296,12 @@ public slots:
                 else
                     charData.value = byteArrayFromGattResult(readResult);
             }
-            mCharacteristicList.insert(handle, charData);
+            // Insert the characteristic before its descriptors are discovered. Descriptor
+            // discovery below can fail, but the characteristic itself was discovered and
+            // has to stay visible in the Qt API. All further updates go through charIt,
+            // which stays valid until the next insertion into mCharacteristicList, i.e.
+            // until the next iteration of this loop.
+            auto charIt = mCharacteristicList.insert(handle, charData);
 
             if (!SAFE(descResult.Status() == GattCommunicationStatus::Success))
                 DEC_CHAR_COUNT_AND_CONTINUE("Descriptor operation failed");
@@ -317,9 +322,13 @@ public slots:
                     WARN_AND_CONTINUE("Could not get descriptor handle");
                 if (!TRY(descData.uuid = QBluetoothUuid(descriptor.Uuid())))
                     WARN_AND_CONTINUE("Could not get descriptor UUID");
-                charData.descriptorList.insert(descHandle, descData);
+                // Same reasoning as for the characteristic above: reading the value can
+                // fail, but the descriptor was discovered and has to be reported. descIt
+                // stays valid until the next insertion into the descriptor list, i.e.
+                // until the next iteration of this loop.
+                auto descIt = charIt->descriptorList.insert(descHandle, descData);
                 if (descData.uuid == QBluetoothUuid(QBluetoothUuid::DescriptorType::ClientCharacteristicConfiguration)) {
-                    mIndicateChars << charData.uuid;
+                    mIndicateChars << charIt->uuid;
                     if (mMode == QLowEnergyService::FullDiscovery) {
                         auto readResult = SAFE(await(characteristic.ReadClientCharacteristicConfigurationDescriptorAsync(), exitCondition));
                         if (!readResult)
@@ -342,8 +351,8 @@ public slots:
                         if (!correct)
                             continue;
 
-                        descData.value = QByteArray(2, Qt::Uninitialized);
-                        qToLittleEndian(result, descData.value.data());
+                        descIt->value = QByteArray(2, Qt::Uninitialized);
+                        qToLittleEndian(result, descIt->value.data());
                     }
                 } else {
                     if (mMode == QLowEnergyService::FullDiscovery) {
@@ -351,13 +360,11 @@ public slots:
                         auto readResult = SAFE(await(descriptor.ReadValueAsync(BluetoothCacheMode::Uncached), exitCondition));
                         if (!readResult)
                             WARN_AND_CONTINUE("Could not read descriptor value");
-                        descData.value = byteArrayFromGattResult(readResult);
+                        descIt->value = byteArrayFromGattResult(readResult);
                     }
                 }
-                charData.descriptorList.insert(descHandle, descData);
             }
 
-            mCharacteristicList.insert(handle, charData);
             --mCharacteristicsCountToBeDiscovered;
         }
         checkAllCharacteristicsDiscovered();
