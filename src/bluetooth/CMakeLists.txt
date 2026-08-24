@@ -300,6 +300,13 @@ elseif(OHOS)
         BUTTONS "^allow$" "^confirm$"
         POSITION rightmost
     )
+
+    qt_internal_add_harmonyos_blocking_test_dialog(Bluetooth
+        NAME bluetooth-switch
+        PROMPT "would like to (enable|disable) bluetooth"
+        BUTTONS "^(enable|disable)$"
+        POSITION rightmost
+    )
 else()
     qt_internal_extend_target(Bluetooth
         SOURCES
