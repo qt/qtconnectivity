@@ -4,7 +4,7 @@
 
 #include <QDBusMetaType>
 #include "neard_helper_p.h"
-#include "objectmanager_interface.h"
+#include "objectmanager_interface_p.h"
 
 QT_BEGIN_NAMESPACE
 
