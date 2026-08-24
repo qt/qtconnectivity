@@ -25,3 +25,8 @@ qt_internal_extend_target(tst_qbluetoothlocaldevice CONDITION MACOS
     LIBRARIES
         Qt::Widgets
 )
+
+qt_internal_extend_target(tst_qbluetoothlocaldevice CONDITION OHOS
+    DEFINES
+        QT_HARMONY_BLUETOOTH
+)

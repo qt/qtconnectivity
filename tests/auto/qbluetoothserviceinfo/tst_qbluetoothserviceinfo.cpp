@@ -157,7 +157,7 @@ void tst_QBluetoothServiceInfo::tst_assignment_data()
 
     bool l2cpSupported = true;
     //some platforms don't support L2CP
-#if defined(QT_ANDROID_BLUETOOTH) || defined(Q_OS_WIN)
+#if defined(QT_ANDROID_BLUETOOTH) || defined(QT_HARMONY_BLUETOOTH) || defined(Q_OS_WIN)
     l2cpSupported = false;
 #endif
 

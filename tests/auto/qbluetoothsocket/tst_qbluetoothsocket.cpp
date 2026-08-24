@@ -488,7 +488,7 @@ void tst_QBluetoothSocket::tst_preferredSecurityFlags()
     QBluetoothSocket socket;
 
     //test default values
-#if defined(QT_ANDROID_BLUETOOTH) || defined(QT_OSX_BLUETOOTH)
+#if defined(QT_ANDROID_BLUETOOTH) || defined(QT_OSX_BLUETOOTH) || defined(QT_HARMONY_BLUETOOTH)
     QCOMPARE(socket.preferredSecurityFlags(), QBluetooth::Security::Secure);
 #elif QT_CONFIG(bluez)
     // The bluezdbus socket uses "NoSecurity" by default, whereas the non-dbus bluez
