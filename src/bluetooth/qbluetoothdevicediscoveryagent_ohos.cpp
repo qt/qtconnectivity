@@ -55,15 +55,37 @@ std::vector<QBluetoothDeviceInfo> processFoundDevices(
     return foundDevicesInfos;
 }
 
+std::vector<QBluetoothDeviceInfo> processPairedDevices(
+    const std::vector<QtOhosBluetooth::DiscoveryResult> &pairedDevices)
+{
+    std::vector<QBluetoothDeviceInfo> pairedDevicesInfos;
+    pairedDevicesInfos.reserve(pairedDevices.size());
+
+    for (const auto &pairedDevice : pairedDevices) {
+        auto optDeviceInfo = tryMakeDeviceInfo(pairedDevice);
+        if (!optDeviceInfo)
+            continue;
+
+        optDeviceInfo->setCached(true);
+
+        pairedDevicesInfos.push_back(std::move(*optDeviceInfo));
+    }
+
+    return pairedDevicesInfos;
+}
+
 QBluetoothDeviceInfo::Fields updateDeviceInfoIfNeeded(
     QBluetoothDeviceInfo &existingDevice, const QBluetoothDeviceInfo &newDevice)
 {
     QBluetoothDeviceInfo::Fields updatedFields = QBluetoothDeviceInfo::Field::None;
 
-    if (existingDevice.rssi() != newDevice.rssi()) {
+    if (!newDevice.isCached() && existingDevice.rssi() != newDevice.rssi()) {
         existingDevice.setRssi(newDevice.rssi());
         updatedFields.setFlag(QBluetoothDeviceInfo::Field::RSSI);
     }
+
+    if (existingDevice.isCached() && !newDevice.isCached())
+        existingDevice.setCached(false);
 
     if (existingDevice.name().isEmpty() && !newDevice.name().isEmpty())
         existingDevice.setName(newDevice.name());
@@ -215,6 +237,8 @@ void QBluetoothDeviceDiscoveryAgentPrivate::start(QBluetoothDeviceDiscoveryAgent
         return;
     }
 
+    reportPairedDevicesAsync();
+
     m_discoveryAgentProxy->startBluetoothDiscovery();
 }
 
@@ -255,6 +279,19 @@ void QBluetoothDeviceDiscoveryAgentPrivate::reportDiscoveryStopped(DiscoveryStop
         m_discoveryRequested = false;
         Q_EMIT q_ptr->finished();
     }
+}
+
+void QBluetoothDeviceDiscoveryAgentPrivate::reportPairedDevicesAsync()
+{
+    QMetaObject::invokeMethod(
+        this,
+        [this]() {
+            if (!m_discoveryRequested)
+                return;
+
+            reportDiscoveredDevices(processPairedDevices(m_discoveryAgentProxy->getPairedDevices()));
+        },
+        Qt::QueuedConnection);
 }
 
 void QBluetoothDeviceDiscoveryAgentPrivate::reportDiscoveredDevices(

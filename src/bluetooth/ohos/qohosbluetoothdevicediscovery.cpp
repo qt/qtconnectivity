@@ -4,6 +4,7 @@
 #include "qohosbluetoothdevicediscovery_p.h"
 
 #include <QtBluetooth/private/qohosbluetoothcommon_p.h>
+#include <QtBluetooth/private/qohosbluetoothremotedevice_p.h>
 
 #include <QtCore/qloggingcategory.h>
 #include <QtCore/private/qnapi_p.h>
@@ -23,6 +24,7 @@ namespace QtOhosBluetooth {
 
 namespace {
 
+constexpr qint16 unknownRssi = 0;
 
 std::optional<bool> tryReadBluetoothDiscoveringState(QOhosJsState &jsState)
 {
@@ -60,13 +62,69 @@ bool requestBluetoothDiscoveryStop(QOhosJsState &jsState)
     return true;
 }
 
+std::vector<std::string> readPairedDeviceIds(QOhosJsState &jsState)
+{
+    if (!isBluetoothEnabled(jsState))
+        return {};
+
+    try {
+        return QNapi::getArrayElements<std::vector<std::string>, QNapi::String>(
+            jsState.eval<QNapi::Array>("@ohos.bluetooth.connection.getPairedDevices()"),
+            [](QNapi::String &&pairedDeviceId) {
+                return pairedDeviceId.Utf8Value();
+            });
+    } catch (const Napi::Error &error) {
+        if (const auto optErrorCode = tryGetKnownErrorCode(error.Value(), Q_FUNC_INFO)) {
+            qOhosPrintfWarning(
+                "%s: cannot read the paired devices, error code: %u", Q_FUNC_INFO, qToUnderlying(*optErrorCode));
+        }
+        return {};
+    }
 }
 
-DiscoveryResult DiscoveryResult::makeFromOhosDiscoveryResultObject(QNapi::Object discoveryResultObject)
+std::vector<DiscoveryResult> readPairedDevices(QOhosJsState &jsState)
 {
+    auto pairedDeviceIds = readPairedDeviceIds(jsState);
+
+    std::vector<DiscoveryResult> pairedDevices;
+    pairedDevices.reserve(pairedDeviceIds.size());
+    for (auto &pairedDeviceId : pairedDeviceIds) {
+        if (isRemoteDeviceLowEnergyOnly(jsState, pairedDeviceId))
+            continue;
+
+        auto pairedDeviceName = readRemoteDeviceName(jsState, pairedDeviceId);
+        const auto optPairedDeviceClass = readRemoteDeviceClass(jsState, pairedDeviceId);
+
+        pairedDevices.push_back(
+            DiscoveryResult {
+                .deviceId = std::move(pairedDeviceId),
+                .deviceName = pairedDeviceName
+                    ? *pairedDeviceName
+                    : std::string(),
+                .classOfDevice = optPairedDeviceClass.value_or(0),
+                .rssi = unknownRssi,
+            });
+    }
+
+    return pairedDevices;
+}
+
+}
+
+DiscoveryResult DiscoveryResult::makeFromOhosDiscoveryResultObject(
+    QOhosJsState &jsState, QNapi::Object discoveryResultObject)
+{
+    auto deviceId = discoveryResultObject.get<QNapi::String>("deviceId").Utf8Value();
+
+    auto deviceName = discoveryResultObject.get<QNapi::String>("deviceName").Utf8Value();
+    if (deviceName.empty()) {
+        if (auto optRemoteDeviceName = readRemoteDeviceName(jsState, deviceId))
+            deviceName = std::move(*optRemoteDeviceName);
+    }
+
     return DiscoveryResult {
-        .deviceId = discoveryResultObject.get<QNapi::String>("deviceId").Utf8Value(),
-        .deviceName = discoveryResultObject.get<QNapi::String>("deviceName").Utf8Value(),
+        .deviceId = std::move(deviceId),
+        .deviceName = std::move(deviceName),
         .classOfDevice = discoveryResultObject.get<QNapi::Number>("deviceClass.classOfDevice").Uint32Value(),
         .rssi = static_cast<qint16>(discoveryResultObject.get<QNapi::Number>("rssi").Int32Value()),
     };
@@ -149,7 +207,11 @@ bool QOhosBluetoothDeviceDiscoveryAgentProxy::ensureDiscoveredDevicesConsumerReg
                     auto resultArray = cbInfo.getFirstArg<QNapi::Array>(Q_FUNC_INFO);
                     auto discoveredDevices =
                         QNapi::getArrayElements<std::vector<DiscoveryResult>, QNapi::Object>(
-                            resultArray, DiscoveryResult::makeFromOhosDiscoveryResultObject);
+                            resultArray,
+                            [&](QNapi::Object &&discoveryResultObject) {
+                                return DiscoveryResult::makeFromOhosDiscoveryResultObject(
+                                    cbInfo.jsState(), std::move(discoveryResultObject));
+                            });
 
                     selfRef.visitInQtThreadIfAlive(
                         [discoveredDevices = std::move(discoveredDevices)](auto &self) {
@@ -258,6 +320,14 @@ void QOhosBluetoothDeviceDiscoveryAgentProxy::stopBluetoothDiscovery()
 
     m_discoveryStoppedPollTimer.start();
     m_discoveryStoppedTimeoutTimer.start();
+}
+
+std::vector<DiscoveryResult> QOhosBluetoothDeviceDiscoveryAgentProxy::getPairedDevices()
+{
+    if (!checkAccessBluetoothPermissionGranted(Q_FUNC_INFO))
+        return {};
+
+    return QOhosJsThreadGateway::eval(readPairedDevices, Q_FUNC_INFO);
 }
 
 }
