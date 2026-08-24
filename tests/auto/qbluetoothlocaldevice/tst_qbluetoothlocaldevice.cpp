@@ -249,6 +249,10 @@ void tst_QBluetoothLocalDevice::tst_hostModes()
 
 void tst_QBluetoothLocalDevice::tst_address()
 {
+#ifdef QT_HARMONY_BLUETOOTH
+    QSKIP("HarmonyOS exposes no local adapter address");
+#endif
+
     if (numDevices == 0)
         QSKIP("Skipping test due to missing Bluetooth device");
 
@@ -312,6 +316,10 @@ void tst_QBluetoothLocalDevice::tst_allDevices()
 }
 void tst_QBluetoothLocalDevice::tst_construction()
 {
+#ifdef QT_HARMONY_BLUETOOTH
+    QSKIP("HarmonyOS exposes no local adapter address");
+#endif
+
     if (numDevices == 0)
         QSKIP("Skipping test due to missing Bluetooth device");
 

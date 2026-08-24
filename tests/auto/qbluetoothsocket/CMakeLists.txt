@@ -37,3 +37,8 @@ qt_internal_extend_target(tst_qbluetoothsocket CONDITION ANDROID AND NOT ANDROID
     DEFINES
         QT_ANDROID_BLUETOOTH
 )
+
+qt_internal_extend_target(tst_qbluetoothsocket CONDITION OHOS
+    DEFINES
+        QT_HARMONY_BLUETOOTH
+)
