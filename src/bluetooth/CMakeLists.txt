@@ -293,6 +293,13 @@ elseif(OHOS)
         NAME ohos.permission.ACCESS_BLUETOOTH
         REASON "Used to discover and connect to nearby Bluetooth devices."
     )
+
+    qt_internal_add_harmonyos_blocking_test_dialog(Bluetooth
+        NAME device-connection-permission
+        PROMPT "allow .+ to (discover|connect) [^?]*nearby devices|device connection (permission|access for this app)"
+        BUTTONS "^allow$" "^confirm$"
+        POSITION rightmost
+    )
 else()
     qt_internal_extend_target(Bluetooth
         SOURCES
