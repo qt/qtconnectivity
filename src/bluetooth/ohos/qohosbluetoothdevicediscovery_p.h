@@ -40,7 +40,8 @@ struct DiscoveryResult
     quint32 classOfDevice = 0;
     qint16 rssi = 0;
 
-    static DiscoveryResult makeFromOhosDiscoveryResultObject(QNapi::Object discoveryResultObject);
+    static DiscoveryResult makeFromOhosDiscoveryResultObject(
+        QOhosJsState &jsState, QNapi::Object discoveryResultObject);
 };
 
 class QOhosBluetoothDeviceDiscoveryAgentProxy : public QObject
@@ -50,6 +51,7 @@ public:
     static std::shared_ptr<QOhosBluetoothDeviceDiscoveryAgentProxy> instance();
 
     bool isForeignDiscoveryOngoing();
+    std::vector<DiscoveryResult> getPairedDevices();
 
     void startBluetoothDiscovery();
     void stopBluetoothDiscovery();

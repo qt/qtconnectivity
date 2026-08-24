@@ -217,6 +217,7 @@ private:
     void reportDiscoveryStopped(DiscoveryStopReason reason);
     void clearDiscoveryState();
     void emitAsyncError();
+    void reportPairedDevicesAsync();
     void reportDiscoveredDevices(const std::vector<QBluetoothDeviceInfo> &bluetoothDevicesInfos);
     std::shared_ptr<QtOhosBluetooth::QOhosBluetoothDeviceDiscoveryAgentProxy> m_discoveryAgentProxy;
     bool m_discoveryRequested = false;
