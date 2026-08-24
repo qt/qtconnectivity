@@ -4,9 +4,9 @@
 #include "qnearfieldmanager_neard_p.h"
 #include "qnearfieldtarget_neard_p.h"
 
-#include "adapter_interface.h"
-#include "properties_interface.h"
-#include "objectmanager_interface.h"
+#include "adapter_interface_p.h"
+#include "properties_interface_p.h"
+#include "objectmanager_interface_p.h"
 
 QT_BEGIN_NAMESPACE
 

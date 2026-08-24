@@ -24,9 +24,9 @@
 #include <qndefmessage.h>
 
 #include "neard/neard_helper_p.h"
-#include "properties_interface.h"
-#include "objectmanager_interface.h"
-#include "tag_interface.h"
+#include "properties_interface_p.h"
+#include "objectmanager_interface_p.h"
+#include "tag_interface_p.h"
 
 QT_BEGIN_NAMESPACE
 
