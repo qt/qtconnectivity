@@ -228,8 +228,6 @@ void QPcscCard::onReadNdefMessagesRequest(const QNearFieldTarget::RequestId &req
 
     Transaction transaction(this);
 
-    QList<QNdefMessage> messages;
-
     auto nextState = m_tagDetectionFsm->readMessages();
 
     while (true) {

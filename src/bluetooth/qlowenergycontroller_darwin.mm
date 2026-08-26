@@ -977,10 +977,10 @@ bool QLowEnergyControllerPrivateDarwin::connectSlots(DarwinBluetooth::LECBManage
                        this, &QLowEnergyControllerPrivateDarwin::_q_LEnotSupported);
     ok = ok && connect(notifier, SIGNAL(CBManagerError(QLowEnergyController::Error)),
                        this, SLOT(_q_CBManagerError(QLowEnergyController::Error)));
-    ok = ok && connect(notifier, SIGNAL(CBManagerError(const QBluetoothUuid &, QLowEnergyController::Error)),
-                       this, SLOT(_q_CBManagerError(const QBluetoothUuid &, QLowEnergyController::Error)));
-    ok = ok && connect(notifier, SIGNAL(CBManagerError(const QBluetoothUuid &, QLowEnergyService::ServiceError)),
-                       this, SLOT(_q_CBManagerError(const QBluetoothUuid &, QLowEnergyService::ServiceError)));
+    ok = ok && connect(notifier, SIGNAL(CBManagerError(QBluetoothUuid,QLowEnergyController::Error)),
+                       this, SLOT(_q_CBManagerError(QBluetoothUuid,QLowEnergyController::Error)));
+    ok = ok && connect(notifier, SIGNAL(CBManagerError(QBluetoothUuid,QLowEnergyService::ServiceError)),
+                       this, SLOT(_q_CBManagerError(QBluetoothUuid,QLowEnergyService::ServiceError)));
     ok = ok && connect(notifier, &LECBManagerNotifier::mtuChanged, this,
                        &QLowEnergyControllerPrivateDarwin::_q_mtuChanged);
     ok = ok && connect(notifier, &LECBManagerNotifier::rssiUpdated, q_ptr,

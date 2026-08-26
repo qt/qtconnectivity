@@ -219,9 +219,12 @@ void QLowEnergyControllerPrivateAndroid::writeCharacteristic(
         return;
 
     QJniEnvironment env;
+    const jsize nativeSize = (newValue.size() > std::numeric_limits<jsize>::max())
+                                ? std::numeric_limits<jsize>::max()
+                                : static_cast<jsize>(newValue.size());
     jbyteArray payload;
-    payload = env->NewByteArray(newValue.size());
-    env->SetByteArrayRegion(payload, 0, newValue.size(),
+    payload = env->NewByteArray(nativeSize);
+    env->SetByteArrayRegion(payload, 0, nativeSize,
                             (jbyte *)newValue.constData());
 
     bool result = false;
@@ -265,9 +268,12 @@ void QLowEnergyControllerPrivateAndroid::writeDescriptor(
     Q_ASSERT(!service.isNull());
 
     QJniEnvironment env;
+    const jsize nativeSize = (newValue.size() > std::numeric_limits<jsize>::max())
+                                ? std::numeric_limits<jsize>::max()
+                                : static_cast<jsize>(newValue.size());
     jbyteArray payload;
-    payload = env->NewByteArray(newValue.size());
-    env->SetByteArrayRegion(payload, 0, newValue.size(),
+    payload = env->NewByteArray(nativeSize);
+    env->SetByteArrayRegion(payload, 0, nativeSize,
                             (jbyte *)newValue.constData());
 
     bool result = false;
@@ -901,7 +907,10 @@ static QJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData &data)
 
     if (!data.manufacturerData().isEmpty()) {
         QJniEnvironment env;
-        const qint32 nativeSize = data.manufacturerData().size();
+        const qsizetype dataSize = data.manufacturerData().size();
+        const jsize nativeSize = (dataSize > std::numeric_limits<jsize>::max())
+                                    ? std::numeric_limits<jsize>::max()
+                                    : static_cast<jsize>(dataSize);
         jbyteArray nativeData = env->NewByteArray(nativeSize);
         env->SetByteArrayRegion(nativeData, 0, nativeSize,
                                 reinterpret_cast<const jbyte*>(data.manufacturerData().constData()));
@@ -919,7 +928,10 @@ static QJniObject createJavaAdvertiseData(const QLowEnergyAdvertisingData &data)
           -> Android pairs rawData() per service uuid
     if (!data.rawData().isEmpty()) {
         QJniEnvironment env;
-        qint32 nativeSize = data.rawData().size();
+        const qsizetype dataSize = data.rawData().size();
+        const jsize nativeSize = (dataSize > std::numeric_limits<jsize>::max())
+                                    ? std::numeric_limits<jsize>::max()
+                                    : static_cast<jsize>(dataSize);
         jbyteArray nativeData = env->NewByteArray(nativeSize);
         env->SetByteArrayRegion(nativeData, 0, nativeSize,
                                 reinterpret_cast<const jbyte*>(data.rawData().constData()));
@@ -1215,8 +1227,12 @@ void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEne
                            charData.maximumValueLength());
 
         QJniEnvironment env;
-        jbyteArray jb = env->NewByteArray(charData.value().size());
-        env->SetByteArrayRegion(jb, 0, charData.value().size(), (jbyte*)charData.value().data());
+        const qsizetype charSize = charData.value().size();
+        const jsize nativeCharSize = (charSize > std::numeric_limits<jsize>::max())
+                                        ? std::numeric_limits<jsize>::max()
+                                        : static_cast<jsize>(charSize);
+        jbyteArray jb = env->NewByteArray(nativeCharSize);
+        env->SetByteArrayRegion(jb, 0, nativeCharSize, (jbyte*)charData.value().data());
         jboolean success = javaChar.callMethod<jboolean>("setLocalValue", jb);
         if (!success)
             qCWarning(QT_BT_ANDROID) << "Cannot setup initial characteristic value for " << charData.uuid();
@@ -1228,8 +1244,12 @@ void QLowEnergyControllerPrivateAndroid::addToGenericAttributeList(const QLowEne
                                     javaUuidfromQtUuid(descData.uuid()).object<QtJniTypes::UUID>(),
                                     setupDescPermissions(descData));
 
-            jb = env->NewByteArray(descData.value().size());
-            env->SetByteArrayRegion(jb, 0, descData.value().size(), (jbyte*)descData.value().data());
+            const qsizetype descSize = descData.value().size();
+            const jsize nativeDescSize = (descSize > std::numeric_limits<jsize>::max())
+                                            ? std::numeric_limits<jsize>::max()
+                                            : static_cast<jsize>(descSize);
+            jb = env->NewByteArray(nativeDescSize);
+            env->SetByteArrayRegion(jb, 0, nativeDescSize, (jbyte*)descData.value().data());
             success = javaDesc.callMethod<jboolean>("setLocalValue", jb);
             if (!success) {
                 qCWarning(QT_BT_ANDROID) << "Cannot setup initial descriptor value for "
