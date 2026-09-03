@@ -607,14 +607,17 @@ qint64 QBluetoothSocketPrivateAndroid::writeData(const char *data, qint64 maxSiz
         return -1;
     }
 
+    const qint32 javaSize =
+            (maxSize > std::numeric_limits<qint32>::max()) ? std::numeric_limits<qint32>::max()
+                                                           : static_cast<qint32>(maxSize);
     QJniEnvironment env;
-    jbyteArray nativeData = env->NewByteArray((qint32)maxSize);
-    env->SetByteArrayRegion(nativeData, 0, (qint32)maxSize, reinterpret_cast<const jbyte*>(data));
+    jbyteArray nativeData = env->NewByteArray(javaSize);
+    env->SetByteArrayRegion(nativeData, 0, javaSize, reinterpret_cast<const jbyte*>(data));
     auto methodId = env.findMethod(outputStream.objectClass(),
                                    "write",
                                    "([BII)V");
     if (methodId)
-        env->CallVoidMethod(outputStream.object(), methodId, nativeData, 0, (qint32)maxSize);
+        env->CallVoidMethod(outputStream.object(), methodId, nativeData, 0, javaSize);
     env->DeleteLocalRef(nativeData);
 
     if (!methodId || env.checkAndClearExceptions()) {
@@ -624,8 +627,8 @@ qint64 QBluetoothSocketPrivateAndroid::writeData(const char *data, qint64 maxSiz
         return -1;
     }
 
-    emit q->bytesWritten(maxSize);
-    return maxSize;
+    emit q->bytesWritten(javaSize);
+    return javaSize;
 }
 
 qint64 QBluetoothSocketPrivateAndroid::readData(char *data, qint64 maxSize)

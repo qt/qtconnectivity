@@ -401,6 +401,11 @@ void HciManager::_q_readNotify()
         return;
     }
 
+    if (size == 0) {
+        qCWarning(QT_BT_BLUEZ) << "No data when trying to read HCI events";
+        return;
+    }
+
     switch (buffer[0]) {
     case HCI_EVENT_PKT:
         handleHciEventPacket(buffer + 1, size - 1);
@@ -435,7 +440,11 @@ void HciManager::handleHciEventPacket(const quint8 *data, int size)
 
     switch ((HciManager::HciEvent)header->evt) {
     case HciEvent::EVT_ENCRYPT_CHANGE: {
-        const evt_encrypt_change *event = (evt_encrypt_change *) data;
+        if (size < static_cast<int>(sizeof(evt_encrypt_change))) {
+            qCWarning(QT_BT_BLUEZ) << "EVT_ENCRYPT_CHANGE: unexpected event packet size";
+            return;
+        }
+        const evt_encrypt_change *event = reinterpret_cast<const evt_encrypt_change *>(data);
         qCDebug(QT_BT_BLUEZ) << "HCI Encrypt change, status:"
                              << (event->status == 0 ? "Success" : "Failed")
                              << "handle:" << Qt::hex << event->handle
@@ -446,18 +455,25 @@ void HciManager::handleHciEventPacket(const quint8 *data, int size)
             emit encryptionChangedEvent(remoteDevice, event->status == 0);
     } break;
     case HciEvent::EVT_CMD_COMPLETE: {
-        auto * const event = reinterpret_cast<const evt_cmd_complete *>(data);
-        static_assert(sizeof *event == 3, "unexpected struct size");
+        constexpr auto eventSize = sizeof(evt_cmd_complete);
+        static_assert(eventSize == 3, "unexpected struct size");
 
-        // There is always a status byte right after the generic structure.
-        Q_ASSERT(size > static_cast<int>(sizeof *event));
-        const quint8 status = data[sizeof *event];
+        // There is always a status byte right after the generic structure,
+        // that's why we need +1 here
+        if (size < static_cast<int>(eventSize + 1)) {
+            qCWarning(QT_BT_BLUEZ) << "EVT_CMD_COMPLETE: unexpected event packet size";
+            return;
+        }
+        auto * const event = reinterpret_cast<const evt_cmd_complete *>(data);
+
+        // Status byte is right after then event struct
+        const quint8 status = data[eventSize];
         const auto additionalData = QByteArray(reinterpret_cast<const char *>(data)
-                                               + sizeof *event + 1, size - sizeof *event - 1);
+                                               + eventSize + 1, size - eventSize - 1);
         emit commandCompleted(event->opcode, status, additionalData);
     } break;
     case HciEvent::EVT_LE_META_EVENT:
-        handleLeMetaEvent(data);
+        handleLeMetaEvent(data, size);
         break;
     default:
         break;
@@ -510,25 +526,37 @@ void HciManager::handleHciAclPacket(const quint8 *data, int size)
 //                         << "payload length:" << l2CapHeader.length;
     if (l2CapHeader.channelId != SECURITY_CHANNEL_ID)
         return;
-    if (*data != 0xa) // "Signing Information". Spec v4.2, Vol 3, Part H, 3.6.6
-        return;
     if (size != 17) {
         qCWarning(QT_BT_BLUEZ) << "Unexpected key size" << size << "in Signing Information packet";
         return;
     }
+    if (*data != 0xa) // "Signing Information". Spec v4.2, Vol 3, Part H, 3.6.6
+        return;
     quint128 csrk;
     memcpy(&csrk, data + 1, sizeof csrk);
     const bool isRemoteKey = aclData->pbFlag == 2;
     emit signatureResolvingKeyReceived(aclData->handle, isRemoteKey, csrk);
 }
 
-void HciManager::handleLeMetaEvent(const quint8 *data)
+void HciManager::handleLeMetaEvent(const quint8 *data, int size)
 {
+    if (size == 0) {
+        qCWarning(QT_BT_BLUEZ) << "LE Meta Event: not enough bytes to extract event code";
+        return;
+    }
+
     // Spec v5.3, Vol 4, part E, 7.7.65.*
     switch (*data) {
     case 0x1: // HCI_LE_Connection_Complete
     case 0xA: // HCI_LE_Enhanced_Connection_Complete
     {
+        // subevent code (1 byte) + status (1 byte) + handle (2 bytes)
+        if (size < 4) {
+            qCWarning(QT_BT_BLUEZ) << "LE Meta Event: not enough bytes to parse "
+                                      "Connection Complete event";
+            return;
+        }
+        // Skipping status here. TODO: should we process it?
         const quint16 handle = bt_get_le16(data + 2);
         emit connectionComplete(handle);
         break;
@@ -542,6 +570,13 @@ void HciManager::handleLeMetaEvent(const quint8 *data)
             quint16 latency;
             quint16 timeout;
         } __attribute((packed));
+        // +1 byte for a status!
+        if (size < static_cast<int>(sizeof(ConnectionUpdateData) + 1)) {
+            qCWarning(QT_BT_BLUEZ) << "LE Meta Event: not enough bytes to parse "
+                                      "Connection Update Complete event";
+            return;
+        }
+
         const auto * const updateData
                 = reinterpret_cast<const ConnectionUpdateData *>(data + 1);
         if (updateData->status == 0) {

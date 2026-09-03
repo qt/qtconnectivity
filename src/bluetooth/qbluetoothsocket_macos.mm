@@ -160,10 +160,13 @@ qint64 QBluetoothSocketPrivateDarwin::writeData(const char *data, qint64 maxSize
     if (!txBuffer.size())
         QMetaObject::invokeMethod(this, [this](){_q_writeNotify();}, Qt::QueuedConnection);
 
-    char *dst = txBuffer.reserve(int(maxSize));
-    std::copy(data, data + maxSize, dst);
+    const int adjustedMaxSize =
+            (maxSize > std::numeric_limits<int>::max()) ? std::numeric_limits<int>::max()
+                                                        : static_cast<int>(maxSize);
+    char *dst = txBuffer.reserve(adjustedMaxSize);
+    std::copy(data, data + adjustedMaxSize, dst);
 
-    return maxSize;
+    return adjustedMaxSize;
 }
 
 qint64 QBluetoothSocketPrivateDarwin::readData(char *data, qint64 maxSize)
@@ -516,8 +519,15 @@ void QBluetoothSocketPrivateDarwin::readChannelData(void *data, std::size_t size
     Q_ASSERT_X(q_ptr, Q_FUNC_INFO, "invalid q_ptr (null)");
 
     const char *src = static_cast<char *>(data);
-    char *dst = rxBuffer.reserve(int(size));
-    std::copy(src, src + size, dst);
+
+    int adjustedSize = static_cast<int>(size);
+    if (size > std::numeric_limits<int>::max()) {
+        qCWarning(QT_BT_DARWIN) << Q_FUNC_INFO << "Truncating the incoming data to INT_MAX";
+        adjustedSize = std::numeric_limits<int>::max();
+    }
+
+    char *dst = rxBuffer.reserve(adjustedSize);
+    std::copy(src, src + adjustedSize, dst);
 
     if (!isConnecting) {
         // If we're still in connectToService, do not emit.
