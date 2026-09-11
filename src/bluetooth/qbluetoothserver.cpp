@@ -28,7 +28,7 @@ QT_BEGIN_NAMESPACE
     Call serverPort() to get the channel number that is being used.
 
     If the \l QBluetoothServiceInfo::Protocol is not supported by a platform, \l listen() will return \c false.
-    Android and WinRT only support RFCOMM for example.
+    Android, HarmonyOS and WinRT only support RFCOMM for example.
 
     On iOS, this class cannot be used because the platform does not expose
     an API which may permit access to QBluetoothServer related features.
@@ -94,6 +94,15 @@ QT_BEGIN_NAMESPACE
 
     If the server object is already listening for incoming connections this function
     always returns \c false. \l close() should be called before calling this function.
+
+    \note On HarmonyOS the system service is registered by
+    \l QBluetoothServiceInfo::registerService(), which supplies the service
+    name and UUID this overload does not carry. Until then the server accepts
+    no connection, although \l isListening() already reports \c true. The
+    \l {QBluetoothServer::}{listen(const QBluetoothUuid &, const QString &)}
+    overload registers the service itself and is unaffected. \l serverAddress()
+    returns a null address, and \l serverPort() a key used only to identify
+    this server locally, because the platform exposes neither.
 
     \sa isListening(), newConnection()
 */

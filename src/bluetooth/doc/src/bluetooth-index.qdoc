@@ -15,12 +15,14 @@ Currently, the API is supported on the following platforms:
 \header
     \li API Feature
     \li \l {Qt for Android}{Android}
+    \li \l {Qt for HarmonyOS}{HarmonyOS}
     \li \l {Qt for iOS}{iOS}
     \li \l {Qt for Linux}{Linux (BlueZ 5.x)}
     \li \l {Qt for macOS}{\macos}
     \li \l {Qt for Windows}{Windows}
 \row
     \li Classic Bluetooth
+    \li x
     \li x
     \li
     \li x
@@ -29,6 +31,7 @@ Currently, the API is supported on the following platforms:
 \row
     \li Bluetooth LE Central
     \li x
+    \li
     \li x
     \li x
     \li x
@@ -36,6 +39,7 @@ Currently, the API is supported on the following platforms:
 \row
     \li Bluetooth LE Peripheral
     \li x
+    \li
     \li x
     \li x
     \li x
@@ -151,6 +155,9 @@ The \l QtBluetooth module exports the following
 \row
     \li qt.bluetooth.ios
     \li Enables logging of the \l {Qt for iOS} {iOS} implementation
+\row
+    \li qt.bluetooth.ohos
+    \li Enables logging of the \l {Qt for HarmonyOS} {HarmonyOS} implementation
 \row
     \li qt.bluetooth.osx
     \li Enables logging of the \l {Qt for macOS} {macOS} implementation
