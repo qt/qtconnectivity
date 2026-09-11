@@ -81,6 +81,14 @@ QT_IMPL_METATYPE_EXTERN_TAGGED(QBluetoothLocalDevice::Error, QBluetoothLocalDevi
     HostDiscoverable or HostDiscoverableLimitedInquiry. Using these modes is
     equivalent to HostConnectable.
 
+    \note On HarmonyOS, changing the power state of the adapter always raises a
+    system dialog that the user must answer. The request therefore completes
+    asynchronously and may be declined, in which case \l errorOccurred() is
+    emitted and the host mode is left unchanged. HostDiscoverableLimitedInquiry
+    is not given a timeout on this platform, so the device stays discoverable
+    until the host mode is changed again, and the adapter reports itself back
+    as \l {QBluetoothLocalDevice::}{HostDiscoverable}.
+
     \note Starting from Android 13 (API level 33) the HostPoweredOff state relies on
     non-public Android API as the public one has been deprecated, see
     (\l {https://developer.android.com/reference/android/bluetooth/BluetoothAdapter#disable()}
@@ -183,13 +191,21 @@ bool QBluetoothLocalDevice::isValid() const
     \note On Android, this function always returns the constant
     value \c {02:00:00:00:00:00} as local address starting with Android 6.0.
     The programmatic access to the device's local MAC address was removed.
+
+    \note On HarmonyOS, this function always returns a null address. The system
+    provides no API to read the local adapter address.
 */
 
 /*!
     \fn QList<QBluetoothLocalDevice> QBluetoothLocalDevice::allDevices()
 
-    Returns a list of all available local Bluetooth devices. On \macos, there is
-    only the "default" local device.
+    Returns a list of all available local Bluetooth devices. On \macos and
+    HarmonyOS, there is only the "default" local device.
+
+    \note On HarmonyOS the entry is reported only while the application holds
+    the Bluetooth access permission and the adapter is powered on, and its
+    address is null, see address(). An empty list therefore does not imply
+    the absence of an adapter.
 */
 
 /*!
@@ -250,6 +266,11 @@ bool QBluetoothLocalDevice::isValid() const
   Therefore it is possible that this function returns an empty list shortly after creating an
   instance.
 
+  On HarmonyOS, this function always returns an empty list. The system exposes no
+  device-level list of connected devices, and reports connection state only for
+  the individual profiles it implements, none of which Qt Bluetooth uses.
+  \l deviceConnected() and \l deviceDisconnected() are therefore never emitted.
+
   \sa deviceConnected(), deviceDisconnected()
 */
 
@@ -266,6 +287,10 @@ bool QBluetoothLocalDevice::isValid() const
 
   On Android and \macos, AuthorizedPaired is not possible and will have the same behavior as Paired.
   On Windows the exact pairing mode decision is up to the operating system.
+
+  On HarmonyOS, AuthorizedPaired has the same behavior as Paired, and it is not
+  possible to unpair a device. If Unpaired is requested for a paired device,
+  \l errorOccurred() is emitted and the device remains paired.
 
   On \macos, it is not possible to unpair a device. If Unpaired is requested, \l pairingFinished()
   is immediately emitted although the device remains paired. It is possible to request the pairing
@@ -287,7 +312,8 @@ bool QBluetoothLocalDevice::isValid() const
 
 /*!
   \fn QBluetoothLocalDevice::errorOccurred(QBluetoothLocalDevice::Error error)
-  Signal emitted if there's an exceptional \a error while pairing.
+  Signal emitted if there's an exceptional \a error while pairing or while
+  changing the host mode.
 
   \since 6.2
 */

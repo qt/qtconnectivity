@@ -116,7 +116,8 @@ QT_IMPL_METATYPE_EXTERN_TAGGED(QBluetoothServiceInfo::Alternative,
 
     \value UnknownProtocol  The service uses an unknown socket protocol.
     \value L2capProtocol    The service uses the L2CAP socket protocol. This protocol is not supported
-                            for direct socket connections on Android.
+                            for direct socket connections on Android, and the HarmonyOS
+                            backend implements RFCOMM only.
     \value RfcommProtocol   The service uses the RFCOMM socket protocol.
 */
 

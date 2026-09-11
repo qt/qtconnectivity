@@ -39,7 +39,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
 
     \l {QBluetoothServiceInfo::L2capProtocol}{L2CAP} is a low level datagram-oriented Bluetooth socket.
     Android does not support \l {QBluetoothServiceInfo::L2capProtocol}{L2CAP} for socket
-    connections.
+    connections, and the HarmonyOS backend implements RFCOMM only.
 
     \l {QBluetoothServiceInfo::RfcommProtocol}{RFCOMM} is a reliable, stream-oriented socket. RFCOMM
     sockets emulate an RS-232 serial port.
@@ -111,6 +111,13 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     \fn void QBluetoothSocket::disconnected()
 
     This signal is emitted when the socket is disconnected.
+
+    \note On HarmonyOS, this backend receives incoming data through the
+    system's \c sppRead subscription, which delivers neither an error nor an
+    end of stream. A disconnect initiated by the remote device is therefore
+    not reported on its own: it is noticed only when a local write fails, or
+    when Bluetooth is switched off. Until then the socket stays in
+    \l {QBluetoothSocket::SocketState::}{ConnectedState}.
 
     \sa QBluetoothSocket::SocketState::UnconnectedState, stateChanged()
 */
@@ -184,6 +191,9 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     Although some platforms may differ the socket must generally be connected to guarantee
     the return of a valid address. In particular, this is true when dealing with platforms
     that support multiple local Bluetooth adapters.
+
+    On HarmonyOS, this function always returns a null address, because the
+    platform exposes no local socket endpoint.
 */
 
 /*!
@@ -193,7 +203,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     Although some platforms may differ the socket must generally be connected to guarantee
     the return of a valid port number.
 
-    On Android and \macos, this feature is not supported and returns 0.
+    On Android, \macos and HarmonyOS, this feature is not supported and returns 0.
 */
 
 /*!
@@ -212,7 +222,7 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     \fn quint16 QBluetoothSocket::peerPort() const
 
     Return the port number of the peer socket if available, otherwise returns 0.
-    On Android, this feature is not supported.
+    On Android and HarmonyOS, this feature is not supported.
 */
 
 /*!
@@ -408,6 +418,10 @@ void QBluetoothSocket::connectToService(const QBluetoothAddress &address, const 
 
     On Android and BlueZ (version 5.46 or above), a connection to a service can not be established using a port.
     Calling this function will emit a \l {QBluetoothSocket::SocketError::ServiceNotFoundError}{ServiceNotFoundError}.
+
+    On HarmonyOS a service is identified by its UUID and the platform exposes
+    no RFCOMM channel number, so this function emits a
+    \l {QBluetoothSocket::SocketError::UnsupportedProtocolError}{UnsupportedProtocolError}.
 
     Note that most platforms require a pairing prior to connecting to the remote device. Otherwise
     the connection process may fail.

@@ -99,6 +99,16 @@ QT_BEGIN_NAMESPACE
     service if the target device advertises the service via SDP. This is required from device
     which support both, classic Bluetooth (BaseRate) and Low Energy services.
 
+    \note On HarmonyOS the system confirms only the audio and input profiles
+    it tracks itself and never an RFCOMM service, so no serial port service
+    is discoverable by an inquiry, whichever UUID it carries. When
+    \l setRemoteAddress() restricts the discovery to one device, the UUIDs
+    \l setUuidFilter() names are reported for that device without the
+    platform having confirmed them, and the application has to establish
+    whether such a service answers by connecting. That is the only way to
+    obtain an RFCOMM service record here; a discovery which is not restricted
+    to one device reports the tracked profiles only.
+
     \sa QBluetoothDeviceInfo::coreConfigurations()
 */
 
