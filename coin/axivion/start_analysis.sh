@@ -8,7 +8,7 @@ export PATH=/home/qt/bauhaus-suite/bin:$PATH
 
 export BAUHAUS_CONFIG=$(cd $(dirname $(readlink -f $0)) && pwd)
 export AXIVION_VERSION_NAME=$(git rev-parse HEAD)
-export EXCLUDE_FILES="build/*:src/3rdparty/*"
+export EXCLUDE_FILES="build/**:src/3rdparty/**"
 export CAFECC_BASEPATH="/home/qt/work/qt/$TESTED_MODULE_COIN"
 gccsetup --cc gcc --cxx g++ --config "$BAUHAUS_CONFIG"
 cd "$CAFECC_BASEPATH"
@@ -29,6 +29,11 @@ while IFS= read -r file; do
 done <<EOF
 $(grep -rl "$MAGIC" "$ROOT_DIR")
 EOF
+
+if [ -z "$INCLUDE_FILES" ]; then
+    echo "No Security Critical files found; running analysis with an explicit fallback sentinel."
+    INCLUDE_FILES="__NO_FILES_FOUND__"
+fi
 
 export INCLUDE_FILES
 
