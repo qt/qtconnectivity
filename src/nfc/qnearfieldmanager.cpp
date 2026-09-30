@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
     the stopTargetDetection() function. When the target is no longer required the target should be
     deleted as other applications may be blocked from accessing the target.
 
-    \section3 NFC on Linux
+    \section1 NFC on Linux
     The \l{https://github.com/linux-nfc/neard}{Linux NFC project} provides software to support NFC
     on Linux platforms. The neard daemon will allow access to the supported hardware via DBus
     interfaces. QtNfc requires neard version 0.14 which can be built from source or installed via
