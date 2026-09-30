@@ -39,7 +39,7 @@ public:
     \l QLowEnergyController::startAdvertising(). Objects of this class can represent an
     Advertising Data packet or a Scan Response packet.
 
-    \section2 Advertising Data Limitations
+    \section1 Advertising Data Limitations
 
     The maximum length of the advertisement data depends on the bluetooth
     device and the platform bluetooth stack. For maximum compatibility, it is
