@@ -36,6 +36,8 @@ private slots:
 
     void tst_ndefRecord_data();
     void tst_ndefRecord();
+
+    void fromOtherType();
 };
 
 tst_QNdefRecord::tst_QNdefRecord()
@@ -468,6 +470,51 @@ void tst_QNdefRecord::tst_ndefRecord()
         record.setType(type);
         QCOMPARE(record.typeNameFormat(), typeNameFormat);
         QCOMPARE(record.type(), type);
+    }
+}
+
+void tst_QNdefRecord::fromOtherType()
+{
+    QNdefRecord empty;
+
+    QNdefNfcTextRecord text;
+    text.setText("Hello, world!");
+    text.setLocale("en_US");
+    text.setEncoding(QNdefNfcTextRecord::Utf16);
+
+    QNdefNfcUriRecord uri;
+    uri.setUri(QUrl("http://qt-project.org/"));
+
+    // All constructors from incompatible type should yield records of
+    // the corresponding type with an empty payload
+
+    {
+        // text from empty
+        QNdefNfcTextRecord copy = empty;
+        QCOMPARE(copy.type(), "T");
+        QCOMPARE(copy.typeNameFormat(), QNdefRecord::NfcRtd);
+        QVERIFY(copy.payload().isEmpty());
+    }
+    {
+        // text from uri
+        QNdefNfcTextRecord copy = uri;
+        QCOMPARE(copy.type(), "T");
+        QCOMPARE(copy.typeNameFormat(), QNdefRecord::NfcRtd);
+        QVERIFY(copy.payload().isEmpty());
+    }
+    {
+        // uri from empty
+        QNdefNfcUriRecord copy = empty;
+        QCOMPARE(copy.type(), "U");
+        QCOMPARE(copy.typeNameFormat(), QNdefRecord::NfcRtd);
+        QVERIFY(copy.payload().isEmpty());
+    }
+    {
+        // uri from text
+        QNdefNfcUriRecord copy = text;
+        QCOMPARE(copy.type(), "U");
+        QCOMPARE(copy.typeNameFormat(), QNdefRecord::NfcRtd);
+        QVERIFY(copy.payload().isEmpty());
     }
 }
 
