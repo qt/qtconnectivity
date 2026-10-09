@@ -491,6 +491,15 @@ void tst_QNdefNfcSmartPosterRecord::tst_construct()
 
     QVERIFY(record == sprecord);
     QVERIFY(!(record != sprecord));
+
+    // Construct from an empty QNdefRecrod
+    {
+        QNdefRecord empty;
+        QNdefNfcSmartPosterRecord rec(empty);
+        QCOMPARE(rec.type(), "Sp");
+        QCOMPARE(rec.typeNameFormat(), QNdefRecord::NfcRtd);
+        QVERIFY(rec.payload().isEmpty());
+    }
 }
 
 void tst_QNdefNfcSmartPosterRecord::tst_assign()
