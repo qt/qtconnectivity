@@ -470,6 +470,94 @@ void tst_QNdefMessage::parseSingleRecordMessage_data()
         data.append(payload);
         QTest::newRow("truncated 10") << data << QNdefMessage() << QVariantList();
     }
+
+    // Chunk payload - the NFC-RTD URI split into 4 chunks, one chunk in the
+    // middle has length == 0
+    {
+        const QByteArray type("U");
+        const QByteArray id("test");
+        QByteArray payload1;
+        payload1.append(char(0x05));
+        payload1.append("+123");
+
+        const QByteArray payload2("456");
+        // payload 3 is empty
+        const QByteArray payload4("7890");
+
+        QByteArray data;
+        data.append(char(0xB9)); // MB=1, ME=0, CF=1, SR=1, IL=1, TNF=1 (NFC-RTD)
+        data.append(type.size());
+        data.append(payload1.size() & 0xff); // length fits into 1 byte
+        data.append(id.size());
+        data.append(type);
+        data.append(id);
+        data.append(payload1);
+        data.append(char(0x36)); // MB=0, ME=0, CF=1, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00));
+        data.append(payload2.size());
+        data.append(payload2);
+        data.append(char(0x36)); // MB=0, ME=0, CF=1, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00));
+        data.append(char(0x00)); // PAYLOAD_LENGTH=0
+        data.append(char(0x56)); // MB=0, ME=1, CF=0, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00));
+        data.append(payload4.size());
+        data.append(payload4);
+
+        QNdefRecord record;
+        record.setTypeNameFormat(QNdefRecord::NfcRtd);
+        record.setType(type);
+        record.setId(id);
+        record.setPayload(QByteArray("\005+1234567890", 12));
+        QList<QNdefRecord> recordList;
+        recordList.append(record);
+        QTest::newRow("4 chunk payloads with chunk 2 empty")
+                << data << QNdefMessage(recordList)
+                << (QVariantList() << QUrl(QStringLiteral("tel:+1234567890")));
+    }
+    // Chunk payload - the NFC-RTD URI split into 4 chunks, last chunk has
+    // length == 0
+    {
+        const QByteArray type("U");
+        const QByteArray id("test");
+        QByteArray payload1;
+        payload1.append(char(0x05));
+        payload1.append("+123");
+
+        const QByteArray payload2("456");
+        const QByteArray payload3("7890");
+
+        QByteArray data;
+        data.append(char(0xB9)); // MB=1, ME=0, CF=1, SR=1, IL=1, TNF=1 (NFC-RTD)
+        data.append(type.size());
+        data.append(payload1.size() & 0xff); // length fits into 1 byte
+        data.append(id.size());
+        data.append(type);
+        data.append(id);
+        data.append(payload1);
+        data.append(char(0x36)); // MB=0, ME=0, CF=1, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00));
+        data.append(payload2.size());
+        data.append(payload2);
+        data.append(char(0x36)); // MB=0, ME=0, CF=1, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00));
+        data.append(payload3.size());
+        data.append(payload3);
+        data.append(char(0x56)); // MB=0, ME=1, CF=0, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00));
+        data.append(char(0x00)); // PAYLOAD_LENGTH=0
+
+        QNdefRecord record;
+        record.setTypeNameFormat(QNdefRecord::NfcRtd);
+        record.setType(type);
+        record.setId(id);
+        record.setPayload(QByteArray("\005+1234567890", 12));
+        QList<QNdefRecord> recordList;
+        recordList.append(record);
+        QTest::newRow("4 chunk payloads with last chunk empty")
+                << data << QNdefMessage(recordList)
+                << (QVariantList() << QUrl(QStringLiteral("tel:+1234567890")));
+    }
 }
 
 void tst_QNdefMessage::parseSingleRecordMessage()
