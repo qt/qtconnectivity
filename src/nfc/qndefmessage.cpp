@@ -181,8 +181,12 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
             idx += idLength - 1;
         }
 
-        if (payloadLength > 0) {
-            QByteArray payload(&message.constData()[++idx], payloadLength);
+        {
+            QByteArray payload;
+            if (payloadLength > 0) {
+                payload = QByteArray(&message.constData()[++idx], payloadLength);
+                idx += payloadLength - 1;
+            }
 
             if (cf) {
                 // chunked payload, except last
@@ -197,8 +201,6 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
                 // non-chunked payload
                 record.setPayload(payload);
             }
-
-            idx += payloadLength - 1;
         }
 
         if (!cf) {
