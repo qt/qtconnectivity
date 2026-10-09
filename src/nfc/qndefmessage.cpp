@@ -65,6 +65,10 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
     bool seenMessageBegin = false;
     bool seenMessageEnd = false;
 
+    // We need a special flag to detect chunking, because any payload of a chunk
+    // (including the first and the last) can be empty, so using
+    // partialChunk.size() is not enough.
+    bool chunkStarted = false;
     QByteArray partialChunk;
     QNdefRecord record;
 
@@ -96,8 +100,13 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
             seenMessageEnd = true;
         }
         // TNF must be 0x06 even for the last chunk, when cf == 0.
-        if ((typeNameFormat != 0x06) && !partialChunk.isEmpty()) {
+        if ((typeNameFormat != 0x06) && chunkStarted) {
             qWarning("Partial chunk not empty, but TNF not 0x06 as expected");
+            return QNdefMessage();
+        }
+        // TNF cannot be 0x06 if the chunking was not started
+        if ((typeNameFormat == 0x06) && !chunkStarted) {
+            qWarning("Unexpected TNF=0x06 when chunking was not started");
             return QNdefMessage();
         }
 
@@ -177,11 +186,13 @@ QNdefMessage QNdefMessage::fromByteArray(const QByteArray &message)
 
             if (cf) {
                 // chunked payload, except last
+                chunkStarted = true;
                 partialChunk.append(payload);
             } else if (typeNameFormat == 0x06) {
                 // last chunk of chunked payload
                 record.setPayload(partialChunk + payload);
                 partialChunk.clear();
+                chunkStarted = false;
             } else {
                 // non-chunked payload
                 record.setPayload(payload);

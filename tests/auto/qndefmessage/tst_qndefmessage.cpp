@@ -692,6 +692,27 @@ void tst_QNdefMessage::parseCorruptedMessage_data()
 
         QTest::newRow("Max payload length") << data << warningMsg;
     }
+    {
+        // QByteArray::fromHex("91010154411101015441560000");
+        QByteArray data;
+        data.append(char(0x91)); // MB=1, ME=0, CF=0, SR=1, IL=0, TNF=1
+        data.append(char(0x01)); // type length
+        data.append(char(0x01)); // payload length
+        data.append('T'); // type
+        data.append('A'); // payload
+        data.append(char(0x11)); // MB=0, ME=0, CF=0, SR=1, IL=0, TNF=1
+        data.append(char(0x01)); // type length
+        data.append(char(0x01)); // payload length
+        data.append('T'); // type
+        data.append('A'); // payload
+        data.append(char(0x56)); // MB=0, ME=1, CF=0, SR=1, IL=0, TNF=6 (Unchanged)
+        data.append(char(0x00)); // type length
+        data.append(char(0x00)); // payload length
+
+        const QByteArray warningMsg = "Unexpected TNF=0x06 when chunking was not started";
+
+        QTest::newRow("Unexpected TNF == Unchanged") << data << warningMsg;
+    }
 }
 
 void tst_QNdefMessage::parseComplexMessage()
