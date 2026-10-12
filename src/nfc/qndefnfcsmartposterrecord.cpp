@@ -109,6 +109,8 @@ QNdefNfcSmartPosterRecord::QNdefNfcSmartPosterRecord(const QNdefNfcSmartPosterRe
 */
 QNdefNfcSmartPosterRecord &QNdefNfcSmartPosterRecord::operator=(const QNdefNfcSmartPosterRecord &other)
 {
+    QNdefRecord::operator=(other);
+
     if (this != &other)
         d = other.d;
 

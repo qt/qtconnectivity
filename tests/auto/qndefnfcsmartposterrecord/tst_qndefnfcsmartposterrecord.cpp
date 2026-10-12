@@ -78,6 +78,7 @@ private slots:
     void tst_size();
     void tst_typeInfo();
     void tst_construct();
+    void tst_assign();
     void tst_downcast();
     void tst_smartPosterRecordDoesNotLeak();
 };
@@ -490,6 +491,41 @@ void tst_QNdefNfcSmartPosterRecord::tst_construct()
 
     QVERIFY(record == sprecord);
     QVERIFY(!(record != sprecord));
+}
+
+void tst_QNdefNfcSmartPosterRecord::tst_assign()
+{
+    QNdefNfcTextRecord title;
+    title.setText("This is a title");
+    title.setLocale("en_US");
+    title.setEncoding(QNdefNfcTextRecord::Utf8);
+
+    {
+        QNdefNfcSmartPosterRecord spRec;
+        spRec.addTitle(title);
+        spRec.setUri(QUrl("https://contribute.qt-project.org/"));
+        const QByteArray originalPayload = spRec.payload();
+
+        QByteArray data((char *)payload, sizeof(payload));
+        QNdefMessage ndefMessage = QNdefMessage::fromByteArray(data);
+        QCOMPARE(ndefMessage.size(), 1);
+        QNdefRecord record = ndefMessage[0];
+
+        spRec = record;
+        const QByteArray newPayload = spRec.payload();
+
+        QCOMPARE_NE(newPayload, originalPayload);
+        QCOMPARE(newPayload, record.payload());
+    }
+    {
+        QNdefNfcSmartPosterRecord spRec;
+        spRec.addTitle(title);
+        spRec.setUri(QUrl("https://contribute.qt-project.org/"));
+        QVERIFY(!spRec.payload().isEmpty());
+
+        spRec = QNdefRecord();
+        QVERIFY(spRec.payload().isEmpty());
+    }
 }
 
 void tst_QNdefNfcSmartPosterRecord::tst_downcast()
