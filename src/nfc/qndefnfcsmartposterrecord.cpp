@@ -61,18 +61,17 @@ QT_BEGIN_NAMESPACE
 
 QNdefNfcSmartPosterRecordPrivate::~QNdefNfcSmartPosterRecordPrivate()
 {
-    cleanup();
 }
 
 void QNdefNfcSmartPosterRecordPrivate::cleanup()
 {
     // Clean-up existing internal structure
     m_titleList.clear();
-    delete m_uri;
-    delete m_action;
+    m_uri.reset();
+    m_action.reset();
     m_iconList.clear();
-    delete m_size;
-    delete m_type;
+    m_size.reset();
+    m_type.reset();
 }
 
 /*!
@@ -153,12 +152,12 @@ void QNdefNfcSmartPosterRecord::setPayload(const QByteArray &payload)
 
             // URI
             else if (record.isRecordType<QNdefNfcUriRecord>()) {
-                d->m_uri = new QNdefNfcUriRecord(record);
+                d->m_uri = QNdefNfcUriRecord(record);
             }
 
             // Action
             else if (record.isRecordType<QNdefNfcActRecord>()) {
-                d->m_action = new QNdefNfcActRecord(record);
+                d->m_action = QNdefNfcActRecord(record);
             }
 
             // Icon
@@ -168,12 +167,12 @@ void QNdefNfcSmartPosterRecord::setPayload(const QByteArray &payload)
 
             // Size
             else if (record.isRecordType<QNdefNfcSizeRecord>()) {
-                d->m_size = new QNdefNfcSizeRecord(record);
+                d->m_size = QNdefNfcSizeRecord(record);
             }
 
             // Type
             else if (record.isRecordType<QNdefNfcTypeRecord>()) {
-                d->m_type = new QNdefNfcTypeRecord(record);
+                d->m_type = QNdefNfcTypeRecord(record);
             }
         }
     }
@@ -234,7 +233,7 @@ bool QNdefNfcSmartPosterRecord::hasTitle(const QString &locale) const
  */
 bool QNdefNfcSmartPosterRecord::hasAction() const
 {
-    return d->m_action != nullptr;
+    return d->m_action.has_value();
 }
 
 /*!
@@ -261,7 +260,7 @@ bool QNdefNfcSmartPosterRecord::hasIcon(const QByteArray &mimetype) const
  */
 bool QNdefNfcSmartPosterRecord::hasSize() const
 {
-    return d->m_size != nullptr;
+    return d->m_size.has_value();
 }
 
 /*!
@@ -270,7 +269,7 @@ bool QNdefNfcSmartPosterRecord::hasSize() const
  */
 bool QNdefNfcSmartPosterRecord::hasTypeInfo() const
 {
-    return d->m_type != nullptr;
+    return d->m_type.has_value();
 }
 
 /*!
@@ -456,10 +455,7 @@ QNdefNfcUriRecord QNdefNfcSmartPosterRecord::uriRecord() const
  */
 void QNdefNfcSmartPosterRecord::setUri(const QNdefNfcUriRecord &url)
 {
-    if (d->m_uri)
-        delete d->m_uri;
-
-    d->m_uri = new QNdefNfcUriRecord(url);
+    d->m_uri = QNdefNfcUriRecord(url);
 
     // Convert to payload
     convertToPayload();
@@ -493,7 +489,7 @@ QNdefNfcSmartPosterRecord::Action QNdefNfcSmartPosterRecord::action() const
 void QNdefNfcSmartPosterRecord::setAction(Action act)
 {
     if (!d->m_action)
-        d->m_action = new QNdefNfcActRecord();
+        d->m_action = QNdefNfcActRecord();
 
     d->m_action->setAction(act);
 
@@ -678,7 +674,7 @@ quint32 QNdefNfcSmartPosterRecord::size() const
 void QNdefNfcSmartPosterRecord::setSize(quint32 size)
 {
     if (!d->m_size)
-        d->m_size = new QNdefNfcSizeRecord();
+        d->m_size = QNdefNfcSizeRecord();
 
     d->m_size->setSize(size);
 
@@ -710,10 +706,7 @@ QString QNdefNfcSmartPosterRecord::typeInfo() const
  */
 void QNdefNfcSmartPosterRecord::setTypeInfo(const QString &type)
 {
-    if (d->m_type)
-        delete d->m_type;
-
-    d->m_type = new QNdefNfcTypeRecord();
+    d->m_type = QNdefNfcTypeRecord();
     d->m_type->setTypeInfo(type);
 
     // Convert to payload
