@@ -15,6 +15,13 @@
 // We mean it.
 //
 
+#include "qndefrecord.h"
+#include "qndefnfcsmartposterrecord.h"
+#include "qndefnfctextrecord.h"
+#include "qndefnfcurirecord.h"
+
+#include <optional>
+
 QT_BEGIN_NAMESPACE
 
 class QNdefNfcActRecord : public QNdefRecord
@@ -54,11 +61,11 @@ public:
 
 public:
     QList<QNdefNfcTextRecord> m_titleList;
-    QNdefNfcUriRecord *m_uri = nullptr;
-    QNdefNfcActRecord *m_action = nullptr;
+    std::optional<QNdefNfcUriRecord> m_uri;
+    std::optional<QNdefNfcActRecord> m_action;
     QList<QNdefNfcIconRecord> m_iconList;
-    QNdefNfcSizeRecord *m_size = nullptr;
-    QNdefNfcTypeRecord *m_type = nullptr;
+    std::optional<QNdefNfcSizeRecord> m_size;
+    std::optional<QNdefNfcTypeRecord> m_type;
 };
 
 QT_END_NAMESPACE
