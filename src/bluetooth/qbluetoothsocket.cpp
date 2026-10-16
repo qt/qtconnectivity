@@ -266,11 +266,8 @@ static QBluetoothSocketBasePrivate *createSocketPrivate()
     Constructs a Bluetooth socket of \a socketType type, with \a parent.
 */
 QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, QObject *parent)
-: QIODevice(parent)
+    : QBluetoothSocket(parent)
 {
-    d_ptr = createSocketPrivate();
-    d_ptr->q_ptr = this;
-
     Q_D(QBluetoothSocketBase);
     d->ensureNativeSocket(socketType);
 }
