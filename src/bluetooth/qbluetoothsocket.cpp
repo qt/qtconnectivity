@@ -273,8 +273,6 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
 
     Q_D(QBluetoothSocketBase);
     d->ensureNativeSocket(socketType);
-
-    setOpenMode(QIODevice::NotOpen);
 }
 
 /*!
@@ -285,7 +283,6 @@ QBluetoothSocket::QBluetoothSocket(QObject *parent)
 {
     d_ptr = createSocketPrivate();
     d_ptr->q_ptr = this;
-    setOpenMode(QIODevice::NotOpen);
 }
 
 #if QT_CONFIG(bluez)
@@ -303,8 +300,6 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothSocketBasePrivate *dPrivate,
 
     Q_D(QBluetoothSocketBase);
     d->ensureNativeSocket(socketType);
-
-    setOpenMode(QIODevice::NotOpen);
 }
 
 #endif
