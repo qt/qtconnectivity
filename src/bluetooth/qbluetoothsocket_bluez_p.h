@@ -24,7 +24,7 @@ class QBluetoothSocketPrivateBluez final: public QBluetoothSocketBasePrivate
     Q_OBJECT
 
 public:
-    QBluetoothSocketPrivateBluez();
+    explicit QBluetoothSocketPrivateBluez(QBluetoothSocket *qq);
     ~QBluetoothSocketPrivateBluez() override;
 
     void connectToServiceHelper(const QBluetoothAddress &address,

@@ -27,7 +27,7 @@ class QBluetoothSocketPrivateDummy final : public QBluetoothSocketBasePrivate
     friend class QBluetoothServerPrivate;
 
 public:
-    QBluetoothSocketPrivateDummy();
+    explicit QBluetoothSocketPrivateDummy(QBluetoothSocket *qq);
     ~QBluetoothSocketPrivateDummy() override;
 
     void connectToServiceHelper(const QBluetoothAddress &address,

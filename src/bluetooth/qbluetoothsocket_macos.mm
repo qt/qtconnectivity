@@ -32,10 +32,10 @@ using DarwinBluetooth::RetainPolicy;
 
 } // unnamed namespace
 
-QBluetoothSocketPrivateDarwin::QBluetoothSocketPrivateDarwin()
-  : writeChunk(std::numeric_limits<UInt16>::max())
+QBluetoothSocketPrivateDarwin::QBluetoothSocketPrivateDarwin(QBluetoothSocket *qq)
+    : QBluetoothSocketBasePrivate{qq},
+      writeChunk(std::numeric_limits<UInt16>::max())
 {
-    q_ptr = nullptr;
 }
 
 QBluetoothSocketPrivateDarwin::~QBluetoothSocketPrivateDarwin()

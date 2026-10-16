@@ -239,26 +239,26 @@ Q_DECLARE_LOGGING_CATEGORY(QT_BT)
     \reimp
 */
 
-static QBluetoothSocketBasePrivate *createSocketPrivate()
+static QBluetoothSocketBasePrivate *createSocketPrivate(QBluetoothSocket *qq)
 {
 #if QT_CONFIG(bluez)
     if (bluetoothdVersion() >= QVersionNumber(5, 46)) {
         qCDebug(QT_BT) << "Using Bluetooth dbus socket implementation";
-        return new QBluetoothSocketPrivateBluezDBus();
+        return new QBluetoothSocketPrivateBluezDBus(qq);
     } else {
         qCDebug(QT_BT) << "Using Bluetooth raw socket implementation";
-        return new QBluetoothSocketPrivateBluez();
+        return new QBluetoothSocketPrivateBluez(qq);
     }
 #elif defined(QT_ANDROID_BLUETOOTH)
-    return new QBluetoothSocketPrivateAndroid();
+    return new QBluetoothSocketPrivateAndroid(qq);
 #elif defined(QT_WINRT_BLUETOOTH)
-    return new QBluetoothSocketPrivateWinRT();
+    return new QBluetoothSocketPrivateWinRT(qq);
 #elif defined(QT_OSX_BLUETOOTH)
-    return new QBluetoothSocketPrivateDarwin();
+    return new QBluetoothSocketPrivateDarwin(qq);
 #elif defined(QT_HARMONY_BLUETOOTH)
-    return new QBluetoothSocketPrivateOhos();
+    return new QBluetoothSocketPrivateOhos(qq);
 #else
-    return new QBluetoothSocketPrivateDummy();
+    return new QBluetoothSocketPrivateDummy(qq);
 #endif
 }
 
@@ -278,8 +278,7 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothServiceInfo::Protocol socketType, Q
 QBluetoothSocket::QBluetoothSocket(QObject *parent)
   : QIODevice(parent)
 {
-    d_ptr = createSocketPrivate();
-    d_ptr->q_ptr = this;
+    d_ptr = createSocketPrivate(this);
 }
 
 #if QT_CONFIG(bluez)
@@ -293,7 +292,7 @@ QBluetoothSocket::QBluetoothSocket(QBluetoothSocketBasePrivate *dPrivate,
     : QIODevice(parent)
 {
     d_ptr = dPrivate;
-    d_ptr->q_ptr = this;
+    d_ptr->q_ptr = this; // adopt
 
     Q_D(QBluetoothSocketBase);
     d->ensureNativeSocket(socketType);
