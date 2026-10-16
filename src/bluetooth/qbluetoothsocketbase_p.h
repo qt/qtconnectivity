@@ -58,7 +58,7 @@ class QBluetoothSocketBasePrivate : public QObject
     Q_OBJECT
 
 public:
-    explicit QBluetoothSocketBasePrivate(QObject *parent = nullptr);
+    explicit QBluetoothSocketBasePrivate();
     virtual ~QBluetoothSocketBasePrivate();
 
     virtual bool ensureNativeSocket(QBluetoothServiceInfo::Protocol type) = 0;

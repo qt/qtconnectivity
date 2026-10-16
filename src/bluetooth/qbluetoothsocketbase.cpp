@@ -5,7 +5,7 @@
 
 QT_BEGIN_NAMESPACE
 
-QBluetoothSocketBasePrivate::QBluetoothSocketBasePrivate(QObject *parent) : QObject(parent)
+QBluetoothSocketBasePrivate::QBluetoothSocketBasePrivate() : QObject()
 {
 
 }
