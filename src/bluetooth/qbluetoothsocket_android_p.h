@@ -31,7 +31,7 @@ class QBluetoothSocketPrivateAndroid final : public QBluetoothSocketBasePrivate
     friend class QBluetoothServerPrivate;
 
 public:
-    QBluetoothSocketPrivateAndroid();
+    explicit QBluetoothSocketPrivateAndroid(QBluetoothSocket *qq);
     ~QBluetoothSocketPrivateAndroid() override;
 
     //On Android we connect using the uuid not the port

@@ -30,7 +30,8 @@ using namespace QtBluetoothPrivate; // for D-Bus wrappers
 
 Q_DECLARE_LOGGING_CATEGORY(QT_BT_BLUEZ)
 
-QBluetoothSocketPrivateBluezDBus::QBluetoothSocketPrivateBluezDBus()
+QBluetoothSocketPrivateBluezDBus::QBluetoothSocketPrivateBluezDBus(QBluetoothSocket *qq)
+    : QBluetoothSocketBasePrivate{qq}
 {
     secFlags = QBluetooth::Security::NoSecurity;
 }

@@ -26,7 +26,7 @@ QT_BEGIN_NAMESPACE
 class QBluetoothSocketPrivateOhos final : public QBluetoothSocketBasePrivate
 {
 public:
-    QBluetoothSocketPrivateOhos();
+    explicit QBluetoothSocketPrivateOhos(QBluetoothSocket *qq);
     ~QBluetoothSocketPrivateOhos() override;
 
     void connectToServiceHelper(

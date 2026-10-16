@@ -42,7 +42,7 @@ class QBluetoothSocketPrivateWinRT final: public QBluetoothSocketBasePrivate
     friend class QBluetoothServerPrivate;
 
 public:
-    QBluetoothSocketPrivateWinRT();
+    explicit QBluetoothSocketPrivateWinRT(QBluetoothSocket *qq);
     ~QBluetoothSocketPrivateWinRT() override;
 
     void connectToServiceHelper(const QBluetoothAddress &address,

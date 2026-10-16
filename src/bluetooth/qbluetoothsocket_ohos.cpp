@@ -65,7 +65,8 @@ SocketErrorReport makeSocketErrorReport(QOhosBluetoothErrorCode errorCode)
 
 }
 
-QBluetoothSocketPrivateOhos::QBluetoothSocketPrivateOhos()
+QBluetoothSocketPrivateOhos::QBluetoothSocketPrivateOhos(QBluetoothSocket *qq)
+    : QBluetoothSocketBasePrivate{qq}
 {
     secFlags = QBluetooth::Security::Secure;
 

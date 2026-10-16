@@ -47,7 +47,7 @@ class QBluetoothSocketPrivateDarwin : public QBluetoothSocketBasePrivate, public
     friend class QBluetoothServer;
 
 public:
-    QBluetoothSocketPrivateDarwin();
+    explicit QBluetoothSocketPrivateDarwin(QBluetoothSocket *qq);
     ~QBluetoothSocketPrivateDarwin();
 
     //

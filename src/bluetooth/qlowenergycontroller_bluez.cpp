@@ -3089,7 +3089,7 @@ void QLowEnergyControllerPrivateBluez::handleConnectionRequest()
     }
     closeServerSocket();
 
-    QBluetoothSocketPrivateBluez *rawSocketPrivate = new QBluetoothSocketPrivateBluez();
+    QBluetoothSocketPrivateBluez *rawSocketPrivate = new QBluetoothSocketPrivateBluez(nullptr);
     l2cpSocket = new QBluetoothSocket(
                 rawSocketPrivate, QBluetoothServiceInfo::L2capProtocol, this);
     connect(l2cpSocket, &QBluetoothSocket::disconnected,

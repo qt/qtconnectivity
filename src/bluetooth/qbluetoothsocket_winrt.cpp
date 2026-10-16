@@ -267,8 +267,9 @@ private:
     ComPtr<IAsyncOperationWithProgress<IBuffer *, UINT32>> m_readOp;
 };
 
-QBluetoothSocketPrivateWinRT::QBluetoothSocketPrivateWinRT()
-    : m_worker(new SocketWorker())
+QBluetoothSocketPrivateWinRT::QBluetoothSocketPrivateWinRT(QBluetoothSocket *qq)
+    : QBluetoothSocketBasePrivate{qq},
+      m_worker(new SocketWorker())
 {
     threadCoInit(this);
     secFlags = QBluetooth::Security::NoSecurity;

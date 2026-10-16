@@ -25,7 +25,7 @@ QBluetoothSocket *QBluetoothServerPrivate::createSocketForServer(
     // Usually the private implementation is picked based on detected BlueZ version.
 
     // ownership of these objects is taken care of inside QBluetoothSocket and QBluetoothServer
-    QBluetoothSocketPrivateBluez *rawSocketPrivate = new QBluetoothSocketPrivateBluez();
+    QBluetoothSocketPrivateBluez *rawSocketPrivate = new QBluetoothSocketPrivateBluez(nullptr);
     QBluetoothSocket *socket = new QBluetoothSocket(rawSocketPrivate, socketType);
     return socket;
 }

@@ -136,8 +136,8 @@ private:
     QPointer<SocketConnectWorker> workerPointer;
 };
 
-QBluetoothSocketPrivateAndroid::QBluetoothSocketPrivateAndroid()
-  :
+QBluetoothSocketPrivateAndroid::QBluetoothSocketPrivateAndroid(QBluetoothSocket *qq)
+  : QBluetoothSocketBasePrivate{qq},
     inputThread(0)
 {
     secFlags = QBluetooth::Security::Secure;
