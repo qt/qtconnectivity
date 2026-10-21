@@ -309,7 +309,8 @@ int main(int argc, char *argv[])
             charData.setValue(initialValue);
             charData.setValueLength(8, 8);
             charData.setProperties(QLowEnergyCharacteristic::PropertyType::Read
-                                   | QLowEnergyCharacteristic::PropertyType::Write);
+                                   | QLowEnergyCharacteristic::PropertyType::Write
+                                   | QLowEnergyCharacteristic::PropertyType::WriteNoResponse);
 
             serviceData.addCharacteristic(charData);
         }
