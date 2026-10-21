@@ -101,6 +101,7 @@ private slots:
     void readDuringServiceDiscovery();
     void readNotificationAndIndicationProperty();
     void testNotificationAndIndication();
+    void testRepeatedCharacteristicsWrite_data();
     void testRepeatedCharacteristicsWrite();
 
 public:
@@ -864,6 +865,14 @@ void tst_qlowenergycontroller_device::testNotificationAndIndication()
     }
 }
 
+void tst_qlowenergycontroller_device::testRepeatedCharacteristicsWrite_data()
+{
+    QTest::addColumn<QLowEnergyService::WriteMode>("writeMode");
+
+    QTest::newRow("with_response") << QLowEnergyService::WriteWithResponse;
+    QTest::newRow("without_response") << QLowEnergyService::WriteWithoutResponse;
+}
+
 void tst_qlowenergycontroller_device::testRepeatedCharacteristicsWrite()
 {
     // This test generates multiple consecutive writes to the same characteristic
@@ -871,6 +880,8 @@ void tst_qlowenergycontroller_device::testRepeatedCharacteristicsWrite()
     // values. After that it verifies that the received values are the same (and
     // in the same order) as written values. The server writes each received
     // value to a notifying characteristic, which allows us to perform the check.
+
+    QFETCH(const QLowEnergyService::WriteMode, writeMode);
 
     // Discover services
     QVERIFY(mController->services().isEmpty());
@@ -931,7 +942,7 @@ void tst_qlowenergycontroller_device::testRepeatedCharacteristicsWrite()
     for (int i = 0; i < totalWrites; ++i) {
         value[0] += 1;
         value[7] += 1;
-        service->writeCharacteristic(writeChar, value);
+        service->writeCharacteristic(writeChar, value, writeMode);
         sentValues.push_back(value);
     }
 
