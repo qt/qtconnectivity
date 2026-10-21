@@ -724,7 +724,7 @@ bool QLowEnergyControllerPrivateWinRT::getNativeService(const QBluetoothUuid &se
 
     QPointer<QLowEnergyControllerPrivateWinRT> thisPtr(this);
     bool ok = TRY(servicesResultOperation.Completed(
-        [thisPtr, callback, &serviceUuid](
+        [thisPtr, callback, serviceUuid](
             IAsyncOperation<GattDeviceServicesResult> const &op, winrt::AsyncStatus const status)
         {
             if (!thisPtr) {
