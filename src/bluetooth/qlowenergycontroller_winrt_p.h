@@ -16,6 +16,7 @@
 //
 
 #include <qglobal.h>
+#include <QtCore/qhash.h>
 #include <QtCore/QList>
 #include <QtCore/QQueue>
 #include <QtBluetooth/qbluetooth.h>
@@ -122,6 +123,10 @@ private:
     QMap<QBluetoothUuid, GattDeviceService> m_openedServices;
     QSet<QBluetoothUuid> m_requestDetailsServiceUuids;
 
+    using NativeCharacteristicKey = std::pair<QBluetoothUuid/* service UUID */,
+                                              QBluetoothUuid/* characteristic UUID */>;
+    QHash<NativeCharacteristicKey, GattCharacteristic> m_openedCharacteristics;
+
     using NativeServiceCallback = std::function<void(GattDeviceService)>;
     bool getNativeService(const QBluetoothUuid &serviceUuid, NativeServiceCallback callback);
 
@@ -168,6 +173,11 @@ private:
 
     void clearAllServices();
     void closeAndRemoveService(const QBluetoothUuid &uuid);
+
+    void cacheCharacteristic(const NativeCharacteristicKey &key,
+                             GattDeviceService service,
+                             GattCharacteristic characteristic);
+    void removeCachedCharacteristics(const QBluetoothUuid &serviceUuid);
 };
 
 QT_END_NAMESPACE
