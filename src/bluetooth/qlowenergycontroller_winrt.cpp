@@ -772,15 +772,37 @@ bool QLowEnergyControllerPrivateWinRT::getNativeCharacteristic(
         const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid,
         NativeCharacteristicCallback callback)
 {
+    // Directly execute the callback if the characteristic is already opened.
+    const NativeCharacteristicKey key = std::make_pair(serviceUuid, charUuid);
+    auto cachedChar = m_openedCharacteristics.constFind(key);
+    if (cachedChar != m_openedCharacteristics.cend()) {
+        callback(cachedChar.value());
+        return true;
+    }
+
     QPointer<QLowEnergyControllerPrivateWinRT> thisPtr(this);
-    auto serviceCallback = [thisPtr, callback, charUuid](GattDeviceService service) {
+
+    auto serviceCallback = [thisPtr, callback, charUuid, key](GattDeviceService service) {
+
+        // cache the characteristic and execute the callback on the main thread
+        auto cacheCharAndExecuteCallback = [thisPtr, key](GattDeviceService service,
+                                                          GattCharacteristic characteristic,
+                                                          NativeCharacteristicCallback callback) {
+            if (!thisPtr)
+                return;
+            QMetaObject::invokeMethod(thisPtr.get(),
+                                      [thisPtr, key, service, characteristic, callback] {
+                                          thisPtr->cacheCharacteristic(key, service, characteristic);
+                                          callback(characteristic);
+                                      });
+        };
 
         auto characteristicRequestOp = SAFE(service.GetCharacteristicsForUuidAsync(GUID(charUuid)));
         if (!characteristicRequestOp)
             RETURN_MSG("Could not start async characteristics request");
 
         TRY(characteristicRequestOp.Completed(
-            [thisPtr, callback](
+            [thisPtr, callback, service, cacheCharAndExecuteCallback](
                 IAsyncOperation<GattCharacteristicsResult> const &op, winrt::AsyncStatus const status)
             {
                 if (!thisPtr)
@@ -817,7 +839,8 @@ bool QLowEnergyControllerPrivateWinRT::getNativeCharacteristic(
                 if (!characteristic)
                     RETURN_MSG("Could not obtain first characteristic for service");
 
-                callback(characteristic); // use the characteristic in a custom callback
+                // use the characteristic in a custom callback
+                cacheCharAndExecuteCallback(service, characteristic, callback);
             }));
     };
 
@@ -1120,6 +1143,7 @@ void QLowEnergyControllerPrivateWinRT::clearAllServices()
     for (auto service : m_openedServices)
         TRY(service.Close());
     m_openedServices.clear();
+    m_openedCharacteristics.clear();
 }
 
 void QLowEnergyControllerPrivateWinRT::closeAndRemoveService(const QBluetoothUuid &uuid)
@@ -1130,6 +1154,28 @@ void QLowEnergyControllerPrivateWinRT::closeAndRemoveService(const QBluetoothUui
         m_openedServices.erase(record);
         if (service)
             TRY(service.Close());
+    }
+    removeCachedCharacteristics(uuid);
+}
+
+void QLowEnergyControllerPrivateWinRT::cacheCharacteristic(const NativeCharacteristicKey &key,
+                                                           GattDeviceService service,
+                                                           GattCharacteristic characteristic)
+{
+    // only cache the characteristic if the service is still open
+    auto serviceIt = m_openedServices.constFind(key.first);
+    if (serviceIt != m_openedServices.cend() && serviceIt.value() == service)
+        m_openedCharacteristics.insert(key, characteristic);
+}
+
+void QLowEnergyControllerPrivateWinRT::removeCachedCharacteristics(const QBluetoothUuid &serviceUuid)
+{
+    auto it = m_openedCharacteristics.begin();
+    while (it != m_openedCharacteristics.end()) {
+        if (it.key().first == serviceUuid)
+            it = m_openedCharacteristics.erase(it);
+        else
+            ++it;
     }
 }
 
