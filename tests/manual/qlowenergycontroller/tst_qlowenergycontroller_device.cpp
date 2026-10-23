@@ -503,6 +503,9 @@ void tst_qlowenergycontroller_device::readWriteLargeCharacteristic()
 void tst_qlowenergycontroller_device::readWriteLargeDescriptor()
 {
     // This tests reading and writing a large descriptor value
+    if (mServerPlatform == "darwin")
+        QSKIP("Darwin peripheral cannot advertise large descriptors.");
+
     QVERIFY(mController->services().isEmpty());
     mController->discoverServices();
     QTRY_COMPARE(mController->state(), QLowEnergyController::DiscoveredState);
