@@ -127,13 +127,32 @@ private:
                                               QBluetoothUuid/* characteristic UUID */>;
     QHash<NativeCharacteristicKey, GattCharacteristic> m_openedCharacteristics;
 
+    // Note: the callback can be called with a null GattDeviceService.
+    // This means that the service discovery has failed, and can be used
+    // to run some cleanup logic.
     using NativeServiceCallback = std::function<void(GattDeviceService)>;
     bool getNativeService(const QBluetoothUuid &serviceUuid, NativeServiceCallback callback);
 
+    // Note: the callback is only called with a valid characteristic. If the
+    // service or characteristic lookup fails, all queued callbacks for that
+    // characteristic are dropped without being called and do not report any
+    // errors.
     using NativeCharacteristicCallback = std::function<void(GattCharacteristic)>;
     bool getNativeCharacteristic(const QBluetoothUuid &serviceUuid,
         const QBluetoothUuid &charUuid,
         NativeCharacteristicCallback callback);
+
+    // The generation counter is needed to prevent the cases when a stale
+    // lookup clears a new operations queue. That's possible if a device
+    // was disconnected, and then quickly connected again (even though very
+    // unlikely in practice).
+    struct PendingCharOperations
+    {
+        quint64 generation = 0;
+        QList<NativeCharacteristicCallback> callbacks;
+    };
+    QHash<NativeCharacteristicKey, PendingCharOperations> m_pendingCharOperations;
+    quint64 m_charOperationsGeneration = 0;
 
     void registerForValueChanges(const QBluetoothUuid &serviceUuid, const QBluetoothUuid &charUuid);
     void unregisterFromValueChanges();
@@ -174,9 +193,10 @@ private:
     void clearAllServices();
     void closeAndRemoveService(const QBluetoothUuid &uuid);
 
-    void cacheCharacteristic(const NativeCharacteristicKey &key,
-                             GattDeviceService service,
-                             GattCharacteristic characteristic);
+    void handleCharacteristic(const NativeCharacteristicKey &key,
+                              quint64 generation,
+                              GattDeviceService service,
+                              GattCharacteristic characteristic);
     void removeCachedCharacteristics(const QBluetoothUuid &serviceUuid);
 };
 

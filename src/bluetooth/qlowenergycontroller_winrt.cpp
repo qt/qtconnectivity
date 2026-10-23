@@ -727,49 +727,65 @@ bool QLowEnergyControllerPrivateWinRT::getNativeService(const QBluetoothUuid &se
         [thisPtr, callback, serviceUuid](
             IAsyncOperation<GattDeviceServicesResult> const &op, winrt::AsyncStatus const status)
         {
-            if (!thisPtr) {
-                qCWarning(QT_BT_WINDOWS) << "LE controller was removed while getting native service";
-                return;
-            }
+            // returns the service or nullptr in case of an error
+            auto getService = [&]() -> GattDeviceService {
+                if (!thisPtr) {
+                    qCWarning(QT_BT_WINDOWS) << "LE controller was removed while getting native service";
+                    return nullptr;
+                }
 
-            if (status != winrt::AsyncStatus::Completed) {
-                qCDebug(QT_BT_WINDOWS) << "Failed to get result of async service request";
-                return;
-            }
+                if (status != winrt::AsyncStatus::Completed) {
+                    qCDebug(QT_BT_WINDOWS) << "Failed to get result of async service request";
+                    return nullptr;
+                }
 
-            auto result = SAFE(op.GetResults());
-            if (!result)
-                RETURN_MSG("Failed to get result of async service request");
+                auto result = SAFE(op.GetResults());
+                if (!result) {
+                    qErrnoWarning("Failed to get result of async service request");
+                    return nullptr;
+                }
 
-            auto services = SAFE(result.Services());
-            if (!services)
-                RETURN_MSG("Failed to extract services from the result");
+                auto services = SAFE(result.Services());
+                if (!services) {
+                    qErrnoWarning("Failed to extract services from the result");
+                    return nullptr;
+                }
 
-            uint servicesCount = 0;
-            if (!TRY(servicesCount = services.Size()))
-                RETURN_MSG("Failed to extract services count");
+                uint servicesCount = 0;
+                if (!TRY(servicesCount = services.Size())) {
+                    qErrnoWarning("Failed to extract services count");
+                    return nullptr;
+                }
 
-            if (servicesCount > 0) {
+                if (servicesCount == 0) {
+                    qCWarning(QT_BT_WINDOWS) << "No services found for Uuid" << serviceUuid;
+                    return nullptr;
+                }
+
                 if (servicesCount > 1) {
-                    qWarning() << "getNativeService: more than one service detected for UUID"
-                        << serviceUuid << "The first service will be used.";
+                    qCWarning(QT_BT_WINDOWS)
+                            << "getNativeService: more than one service detected for UUID"
+                            << serviceUuid << "The first service will be used.";
                 }
 
                 auto service = SAFE(services.GetAt(0));
                 if (!service) {
                     qCDebug(QT_BT_WINDOWS) << "Could not obtain native service for Uuid"
-                        << serviceUuid;
-                } else {
-                    // Update the cache and execute the callback in the main thread
-                    QMetaObject::invokeMethod(thisPtr.get(),
-                                              [thisPtr, callback, service, serviceUuid]() {
-                        thisPtr->m_openedServices.insert(serviceUuid, service);
-                        callback(service); // Use the service in a custom callback
-                    });
+                                           << serviceUuid;
                 }
-            } else {
-                qCWarning(QT_BT_WINDOWS) << "No services found for Uuid" << serviceUuid;
-            }
+                return service;
+            };
+
+            auto service = getService();
+            // Update the cache and execute the callback in the main thread.
+            // We invoke the callback even with the null service in order to
+            // do the proper cleanup.
+            QMetaObject::invokeMethod(thisPtr.get(),
+                                      [thisPtr, callback, service, serviceUuid]() {
+                if (service)
+                    thisPtr->m_openedServices.insert(serviceUuid, service);
+                callback(service); // Use the service in a custom callback
+            });
         }));
 
     return ok;
@@ -787,72 +803,110 @@ bool QLowEnergyControllerPrivateWinRT::getNativeCharacteristic(
         return true;
     }
 
+    auto pendingIt = m_pendingCharOperations.find(key);
+    if (pendingIt != m_pendingCharOperations.end()) {
+        // service or characteristic lookup is already in progress, no need
+        // to start a new one.
+        pendingIt->callbacks.append(std::move(callback));
+        return true;
+    }
+
+    // insert new operation to the list
+    const quint64 generation = ++m_charOperationsGeneration;
+    m_pendingCharOperations.insert(key, { generation, { std::move(callback) } });
+
     QPointer<QLowEnergyControllerPrivateWinRT> thisPtr(this);
 
-    auto serviceCallback = [thisPtr, callback, charUuid, key](GattDeviceService service) {
+    auto serviceCallback = [thisPtr, charUuid, key, generation](GattDeviceService service) {
 
-        // cache the characteristic and execute the callback on the main thread
-        auto cacheCharAndExecuteCallback = [thisPtr, key](GattDeviceService service,
-                                                          GattCharacteristic characteristic,
-                                                          NativeCharacteristicCallback callback) {
+        // Cache the characteristic and execute the callback on the main thread.
+        // We need to call this lambda also in case of a failure with a null
+        // characteristic to make sure that the queue is cleared.
+        auto cacheCharAndExecuteCallback = [thisPtr, key, generation](
+                                                   GattDeviceService service,
+                                                   GattCharacteristic characteristic) {
             if (!thisPtr)
                 return;
             QMetaObject::invokeMethod(thisPtr.get(),
-                                      [thisPtr, key, service, characteristic, callback] {
-                                          thisPtr->cacheCharacteristic(key, service, characteristic);
-                                          callback(characteristic);
+                                      [thisPtr, key, generation, service, characteristic]() {
+                                          thisPtr->handleCharacteristic(key, generation, service,
+                                                                        characteristic);
                                       });
         };
 
-        auto characteristicRequestOp = SAFE(service.GetCharacteristicsForUuidAsync(GUID(charUuid)));
-        if (!characteristicRequestOp)
-            RETURN_MSG("Could not start async characteristics request");
+        if (!service) {
+            cacheCharAndExecuteCallback(nullptr, nullptr);
+            return;
+        }
 
-        TRY(characteristicRequestOp.Completed(
-            [thisPtr, callback, service, cacheCharAndExecuteCallback](
+        auto characteristicRequestOp = SAFE(service.GetCharacteristicsForUuidAsync(GUID(charUuid)));
+        if (!characteristicRequestOp) {
+            qErrnoWarning("Could not start async characteristics request");
+            cacheCharAndExecuteCallback(service, nullptr);
+            return;
+        }
+
+        const bool ok = TRY(characteristicRequestOp.Completed(
+            [thisPtr, service, cacheCharAndExecuteCallback](
                 IAsyncOperation<GattCharacteristicsResult> const &op, winrt::AsyncStatus const status)
             {
-                if (!thisPtr)
-                    return;
+                auto getCharacteristic = [&]() -> GattCharacteristic {
+                    if (!thisPtr)
+                        return nullptr;
 
-                if (status != winrt::AsyncStatus::Completed) {
-                    qCDebug(QT_BT_WINDOWS) << "Failed to get result of async characteristic "
-                                              "operation";
-                    return;
-                }
+                    if (status != winrt::AsyncStatus::Completed) {
+                        qCDebug(QT_BT_WINDOWS) << "Failed to get result of async characteristic "
+                                                  "operation";
+                        return nullptr;
+                    }
 
-                auto result = SAFE(op.GetResults());
-                if (!result)
-                    RETURN_MSG("Failed to get result of async characteristic operation");
+                    auto result = SAFE(op.GetResults());
+                    if (!result) {
+                        qErrnoWarning("Failed to get result of async characteristic operation");
+                        return nullptr;
+                    }
 
-                GattCommunicationStatus commStatus;
-                if (!TRY(commStatus = result.Status()) || commStatus != GattCommunicationStatus::Success) {
-                    qErrnoWarning("Native characteristic operation failed.");
-                    return;
-                }
+                    GattCommunicationStatus commStatus;
+                    if (!TRY(commStatus = result.Status()) || commStatus != GattCommunicationStatus::Success) {
+                        qErrnoWarning("Native characteristic operation failed.");
+                        return nullptr;
+                    }
 
-                auto characteristics = SAFE(result.Characteristics());
-                if (!characteristics)
-                    RETURN_MSG("Could not obtain characteristic list.");
+                    auto characteristics = SAFE(result.Characteristics());
+                    if (!characteristics) {
+                        qErrnoWarning("Could not obtain characteristic list.");
+                        return nullptr;
+                    }
 
-                uint size;
-                if (!TRY(size = characteristics.Size()))
-                    RETURN_MSG("Could not obtain characteristic list's size.");
+                    uint size;
+                    if (!TRY(size = characteristics.Size())) {
+                        qErrnoWarning("Could not obtain characteristic list's size.");
+                        return nullptr;
+                    }
 
-                if (size != 1)
-                    qErrnoWarning("More than 1 characteristic found.");
+                    if (size != 1)
+                        qErrnoWarning("More than 1 characteristic found.");
 
-                auto characteristic = SAFE(characteristics.GetAt(0));
-                if (!characteristic)
-                    RETURN_MSG("Could not obtain first characteristic for service");
+                    auto characteristic = SAFE(characteristics.GetAt(0));
+                    if (!characteristic)
+                        qErrnoWarning("Could not obtain first characteristic for service");
+
+                    return characteristic;
+                };
 
                 // use the characteristic in a custom callback
-                cacheCharAndExecuteCallback(service, characteristic, callback);
+                cacheCharAndExecuteCallback(service, getCharacteristic());
             }));
+
+        if (!ok) {
+            qErrnoWarning("Characteristic request failed");
+            cacheCharAndExecuteCallback(service, nullptr);
+        }
     };
 
     if (!getNativeService(serviceUuid, serviceCallback)) {
         qCDebug(QT_BT_WINDOWS) << "Failed to get native service for" << serviceUuid;
+        m_pendingCharOperations.remove(key); // all operations will fail anyway
         return false;
     }
 
@@ -1151,6 +1205,7 @@ void QLowEnergyControllerPrivateWinRT::clearAllServices()
         TRY(service.Close());
     m_openedServices.clear();
     m_openedCharacteristics.clear();
+    m_pendingCharOperations.clear();
 }
 
 void QLowEnergyControllerPrivateWinRT::closeAndRemoveService(const QBluetoothUuid &uuid)
@@ -1165,18 +1220,38 @@ void QLowEnergyControllerPrivateWinRT::closeAndRemoveService(const QBluetoothUui
     removeCachedCharacteristics(uuid);
 }
 
-void QLowEnergyControllerPrivateWinRT::cacheCharacteristic(const NativeCharacteristicKey &key,
-                                                           GattDeviceService service,
-                                                           GattCharacteristic characteristic)
+void QLowEnergyControllerPrivateWinRT::handleCharacteristic(const NativeCharacteristicKey &key,
+                                                            quint64 generation,
+                                                            GattDeviceService service,
+                                                            GattCharacteristic characteristic)
 {
+    auto pendingOpIt = m_pendingCharOperations.find(key);
+    if (pendingOpIt == m_pendingCharOperations.end() || pendingOpIt->generation != generation) {
+        // This is a stale lookup callback, so the queue was already dropped.
+        // A new queue (if it exists) refers to a newer lookup, so we do not
+        // touch it.
+        return;
+    }
+    const QList<NativeCharacteristicCallback> callbacks = std::move(pendingOpIt->callbacks);
+    m_pendingCharOperations.erase(pendingOpIt);
+    if (!characteristic)
+        return; // nothing to execute
+
     // only cache the characteristic if the service is still open
     auto serviceIt = m_openedServices.constFind(key.first);
     if (serviceIt != m_openedServices.cend() && serviceIt.value() == service)
         m_openedCharacteristics.insert(key, characteristic);
+
+    // execute all callbacks
+    for (const auto &callback : callbacks)
+        callback(characteristic);
 }
 
 void QLowEnergyControllerPrivateWinRT::removeCachedCharacteristics(const QBluetoothUuid &serviceUuid)
 {
+    // If the characteristics is cached, then it cannot have a pending
+    // operations queue, so we do not need to touch m_pendingCharOperations
+    // here.
     auto it = m_openedCharacteristics.begin();
     while (it != m_openedCharacteristics.end()) {
         if (it.key().first == serviceUuid)
@@ -1250,6 +1325,9 @@ void QLowEnergyControllerPrivateWinRT::discoverServiceDetailsHelper(
     }
     qCDebug(QT_BT_WINDOWS_SERVICE_THREAD) << __FUNCTION__ << "Changing service pointer from thread"
                                           << QThread::currentThread();
+    if (!deviceService)
+        return reactOnDiscoveryError(pointer, "Device service was not discovered");
+
     pointer->setState(QLowEnergyService::RemoteServiceDiscovering);
 
     auto result = SAFE(await_forever(deviceService.GetIncludedServicesAsync()));
