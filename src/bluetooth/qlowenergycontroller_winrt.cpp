@@ -760,8 +760,12 @@ bool QLowEnergyControllerPrivateWinRT::getNativeService(const QBluetoothUuid &se
                     qCDebug(QT_BT_WINDOWS) << "Could not obtain native service for Uuid"
                         << serviceUuid;
                 } else {
-                    thisPtr->m_openedServices.insert(serviceUuid, service);
-                    callback(service); // Use the service in a custom callback
+                    // Update the cache and execute the callback in the main thread
+                    QMetaObject::invokeMethod(thisPtr.get(),
+                                              [thisPtr, callback, service, serviceUuid]() {
+                        thisPtr->m_openedServices.insert(serviceUuid, service);
+                        callback(service); // Use the service in a custom callback
+                    });
                 }
             } else {
                 qCWarning(QT_BT_WINDOWS) << "No services found for Uuid" << serviceUuid;
@@ -1146,7 +1150,17 @@ void QLowEnergyControllerPrivateWinRT::discoverServices()
     if (!asyncResult)
         return handleConnectionError("Could not obtain services");
 
-    if (!TRY(asyncResult.Completed({ this, &QLowEnergyControllerPrivateWinRT::onServiceDiscoveryFinished })))
+    QPointer<QLowEnergyControllerPrivateWinRT> thisPtr(this);
+    auto discoveryCallback = [thisPtr](IAsyncOperation<GattDeviceServicesResult> const &op,
+                                       winrt::AsyncStatus status) {
+        if (!thisPtr)
+            return;
+        QMetaObject::invokeMethod(thisPtr.get(), [thisPtr, op, status]() {
+            thisPtr->onServiceDiscoveryFinished(op, status);
+        });
+    };
+
+    if (!TRY(asyncResult.Completed(discoveryCallback)))
         return handleConnectionError("Could not register services discovery callback");
 }
 
