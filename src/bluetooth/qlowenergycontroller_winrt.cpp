@@ -954,6 +954,7 @@ void QLowEnergyControllerPrivateWinRT::onStatusChange(BluetoothLEDevice dev, win
         unregisterFromValueChanges();
         unregisterFromStatusChanges();
         unregisterFromMtuChanges();
+        clearAllServices();
         mGattSession = nullptr;
         mDevice = nullptr;
         setError(QLowEnergyController::RemoteHostClosedError);
