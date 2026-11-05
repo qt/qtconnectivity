@@ -970,7 +970,17 @@ bool QLowEnergyControllerPrivateWinRT::registerForMtuChanges()
     if (!mDevice || !mGattSession)
         return false;
     qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
-    if (!TRY(mMtuChangedToken = mGattSession.MaxPduSizeChanged({ this, &QLowEnergyControllerPrivateWinRT::onMtuChange })))
+
+    QPointer<QLowEnergyControllerPrivateWinRT> thisPtr(this);
+    auto mtuChangeCallback = [thisPtr](GattSession session, winrt::IInspectable args) {
+        if (!thisPtr)
+            return;
+        QMetaObject::invokeMethod(thisPtr.get(), [thisPtr, session, args]() {
+            thisPtr->onMtuChange(session, args);
+        });
+    };
+
+    if (!TRY(mMtuChangedToken = mGattSession.MaxPduSizeChanged(mtuChangeCallback)))
         RETURN_FALSE("Could not add MTU callback");
     return true;
 }
@@ -1003,7 +1013,16 @@ bool QLowEnergyControllerPrivateWinRT::registerForStatusChanges()
 
     qCDebug(QT_BT_WINDOWS) << __FUNCTION__;
 
-    if (!TRY(mStatusChangedToken = mDevice.ConnectionStatusChanged({ this, &QLowEnergyControllerPrivateWinRT::onStatusChange })))
+    QPointer<QLowEnergyControllerPrivateWinRT> thisPtr(this);
+    auto statusChangeCallback = [thisPtr](BluetoothLEDevice dev, winrt::IInspectable args) {
+        if (!thisPtr)
+            return;
+        QMetaObject::invokeMethod(thisPtr.get(), [thisPtr, dev, args]() {
+            thisPtr->onStatusChange(dev, args);
+        });
+    };
+
+    if (!TRY(mStatusChangedToken = mDevice.ConnectionStatusChanged(statusChangeCallback)))
         RETURN_FALSE("Could not add status callback");
     return true;
 }
