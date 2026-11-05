@@ -103,6 +103,7 @@ private slots:
     void testNotificationAndIndication();
     void testRepeatedCharacteristicsWrite_data();
     void testRepeatedCharacteristicsWrite();
+    void testDisconnectDuringWriteReportsErrors();
 
 public:
     void checkconnectionCounter(std::unique_ptr<QLowEnergyController> &control);
@@ -953,6 +954,50 @@ void tst_qlowenergycontroller_device::testRepeatedCharacteristicsWrite()
     // We set a large timeout to be on a safe side.
     QTRY_COMPARE_WITH_TIMEOUT(receivedValues.size(), totalWrites, 60000);
     QCOMPARE(receivedValues, sentValues);
+}
+
+void tst_qlowenergycontroller_device::testDisconnectDuringWriteReportsErrors()
+{
+#ifndef Q_OS_WIN
+    QSKIP("This test works reliably only on Windows.");
+#endif
+    // This test checks that disconnecting while the operations on
+    // a characteristic are still in progress will correctly report
+    // errors.
+
+    // Discover services
+    QVERIFY(mController->services().isEmpty());
+    mController->discoverServices();
+    QTRY_COMPARE(mController->state(), QLowEnergyController::DiscoveredState);
+
+    checkconnectionCounter(mController);
+
+    // Get service object.
+    QSharedPointer<QLowEnergyService> service(mController->createServiceObject(
+            QBluetoothUuid(repeatedWriteServiceUuid)));
+    QVERIFY(service != nullptr);
+    service->discoverDetails(QLowEnergyService::FullDiscovery);
+    QTRY_COMPARE(service->state(), QLowEnergyService::ServiceState::RemoteServiceDiscovered);
+
+    // Write characteristics multiple times and then disconnect.
+    QSignalSpy errorSpy(service.get(), &QLowEnergyService::errorOccurred);
+    QLowEnergyCharacteristic writeChar =
+            service->characteristic(QBluetoothUuid(repeatedWriteTargetCharUuid));
+    static const int totalWrites = 50;
+    QByteArray value(8, 0);
+    for (int i = 0; i < totalWrites; ++i) {
+        value[0] += 1;
+        value[7] += 1;
+        service->writeCharacteristic(writeChar, value, QLowEnergyService::WriteWithoutResponse);
+    }
+    mController->disconnectFromDevice();
+    QTRY_VERIFY(mController->state() == QLowEnergyController::UnconnectedState);
+    QTRY_VERIFY(errorSpy.size() > 0);
+    for (qsizetype i = 0; i < errorSpy.size(); ++i) {
+        QCOMPARE(errorSpy[i].at(0).value<QLowEnergyService::ServiceError>(),
+                 QLowEnergyService::CharacteristicWriteError);
+    }
+    QCOMPARE(service->error(), QLowEnergyService::CharacteristicWriteError);
 }
 
 QTEST_MAIN(tst_qlowenergycontroller_device)
