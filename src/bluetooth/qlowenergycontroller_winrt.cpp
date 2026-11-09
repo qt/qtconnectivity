@@ -116,17 +116,13 @@ template <typename T>
 static T await(IAsyncOperation<T> asyncInfo, GlobalCondition canceled = never, int timeout = 5000)
 {
     QDeadlineTimer awaitTime(timeout);
-    auto *dispatch = QAbstractEventDispatcher::instance();
-    if (!dispatch)
-        dispatch = QCoreApplication::eventDispatcher();
     do {
         QThread::yieldCurrentThread();
         if (asyncInfo.Status() != winrt::AsyncStatus::Started) {
             check_hresult(asyncInfo.ErrorCode());
             return asyncInfo.GetResults();
         }
-        if (dispatch)
-            dispatch->processEvents(QEventLoop::AllEvents);
+        QCoreApplication::processEvents(QEventLoop::AllEvents);
     } while (!canceled() && !awaitTime.hasExpired());
     asyncInfo.Cancel();
     throw hresult_error(E_ABORT);
