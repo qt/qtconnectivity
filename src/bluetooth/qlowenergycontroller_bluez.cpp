@@ -2253,8 +2253,11 @@ void QLowEnergyControllerPrivateBluez::handleFindInformationRequest(const QByteA
 
     if (!checkPacketSize(packet, 5))
         return;
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Warray-bounds")
     const QLowEnergyHandle startingHandle = bt_get_le16(packet.constData() + 1);
     const QLowEnergyHandle endingHandle = bt_get_le16(packet.constData() + 3);
+QT_WARNING_POP
     qCDebug(QT_BT_BLUEZ) << "client sends find information request; start:" << startingHandle
                          << "end:" << endingHandle;
     if (!checkHandlePair(static_cast<QBluezConst::AttCommand>(packet.at(0)), startingHandle,
@@ -2289,9 +2292,12 @@ void QLowEnergyControllerPrivateBluez::handleFindByTypeValueRequest(const QByteA
 
     if (!checkPacketSize(packet, 7, mtuSize))
         return;
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Warray-bounds")
     const QLowEnergyHandle startingHandle = bt_get_le16(packet.constData() + 1);
     const QLowEnergyHandle endingHandle = bt_get_le16(packet.constData() + 3);
     const quint16 type = bt_get_le16(packet.constData() + 5);
+QT_WARNING_POP
     const QByteArray value = QByteArray::fromRawData(packet.constData() + 7, packet.size() - 7);
     qCDebug(QT_BT_BLUEZ) << "client sends find by type value request; start:" << startingHandle
                          << "end:" << endingHandle << "type:" << type
@@ -2327,8 +2333,11 @@ void QLowEnergyControllerPrivateBluez::handleReadByTypeRequest(const QByteArray 
 
     if (!checkPacketSize(packet, 7, 21))
         return;
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Warray-bounds")
     const QLowEnergyHandle startingHandle = bt_get_le16(packet.constData() + 1);
     const QLowEnergyHandle endingHandle = bt_get_le16(packet.constData() + 3);
+QT_WARNING_POP
     const void * const typeStart = packet.constData() + 5;
     const bool is16BitUuid = packet.size() == 7;
     const bool is128BitUuid = packet.size() == 21;
@@ -2413,8 +2422,11 @@ void QLowEnergyControllerPrivateBluez::handleReadBlobRequest(const QByteArray &p
 
     if (!checkPacketSize(packet, 5))
         return;
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Warray-bounds")
     const QLowEnergyHandle handle = bt_get_le16(packet.constData() + 1);
     const quint16 valueOffset = bt_get_le16(packet.constData() + 3);
+QT_WARNING_POP
     qCDebug(QT_BT_BLUEZ) << "client sends read blob request; handle:" << handle
                          << "offset:" << valueOffset;
 
@@ -2495,8 +2507,11 @@ void QLowEnergyControllerPrivateBluez::handleReadByGroupTypeRequest(const QByteA
 
     if (!checkPacketSize(packet, 7, 21))
         return;
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Warray-bounds")
     const QLowEnergyHandle startingHandle = bt_get_le16(packet.constData() + 1);
     const QLowEnergyHandle endingHandle = bt_get_le16(packet.constData() + 3);
+QT_WARNING_POP
     const bool is16BitUuid = packet.size() == 7;
     const bool is128BitUuid = packet.size() == 21;
     const void * const typeStart = packet.constData() + 5;
@@ -2822,7 +2837,11 @@ void QLowEnergyControllerPrivateBluez::handleWriteRequestOrCommand(const QByteAr
             return;
         }
 
+QT_WARNING_PUSH
+QT_WARNING_DISABLE_GCC("-Warray-bounds")
+        // This is a signed write packet, so it has at least 15 bytes.
         const quint64 macFromClient = getBtData<quint64>(packet.data() + packet.size() - 8);
+QT_WARNING_POP
         const bool signatureCorrect = verifyMac(packet.left(packet.size() - 12),
                 signingDataIt.value().key, signCounter, macFromClient);
         if (!signatureCorrect) {
