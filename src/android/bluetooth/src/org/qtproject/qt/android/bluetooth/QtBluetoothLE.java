@@ -1217,11 +1217,16 @@ class QtBluetoothLE {
     // if no actual MTU exchange is initiated
     private boolean executeMtuExchange()
     {
-        if (mBluetoothGatt.requestMtu(MAX_MTU)) {
-            Log.w(TAG, "MTU change initiated");
-            return false;
-        } else {
-            Log.w(TAG, "MTU change request failed");
+        try {
+            if (mBluetoothGatt.requestMtu(MAX_MTU)) {
+                Log.w(TAG, "MTU change initiated");
+                return false;
+            } else {
+                Log.w(TAG, "MTU change request failed");
+            }
+        } catch (RuntimeException ex) {
+            // fallthrough to default MTU
+            Log.d(TAG, "requestMtu failed with an exception: " + ex);
         }
 
         Log.w(TAG, "Assuming default MTU value of 23 bytes");
@@ -1231,9 +1236,14 @@ class QtBluetoothLE {
 
     private boolean executeRemoteRssiRead()
     {
-        if (mBluetoothGatt.readRemoteRssi()) {
-            Log.d(TAG, "RSSI read initiated");
-            return false;
+        try {
+            if (mBluetoothGatt.readRemoteRssi()) {
+                Log.d(TAG, "RSSI read initiated");
+                return false;
+            }
+        } catch (RuntimeException ex) {
+            // fallthrough
+            Log.d(TAG, "readRemoteRssi failed with an exception: " + ex);
         }
         Log.w(TAG, "Initiating remote RSSI read failed");
         leRemoteRssiRead(qtObject, 0, false);
@@ -1692,61 +1702,67 @@ class QtBluetoothLE {
     // Returns true if nextJob should be skipped.
     private boolean executeWriteJob(ReadWriteJob nextJob)
     {
-        boolean result;
-        switch (nextJob.entry.type) {
-            case Characteristic:
-                if (Build.VERSION.SDK_INT >= 33) {
-                    int writeResult = mBluetoothGatt.writeCharacteristic(
-                       nextJob.entry.characteristic, nextJob.newValue, nextJob.requestedWriteType);
-                    return (writeResult != BluetoothStatusCodes.SUCCESS);
-                }
-                return executeCharacteristicWriteJob(nextJob);
-            case Descriptor:
-                if (nextJob.entry.descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
-                        /*
-                            For some reason, Android splits characteristic notifications
-                            into two operations. BluetoothGatt.enableCharacteristicNotification
-                            ensures the local Bluetooth stack forwards the notifications. In addition,
-                            BluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
-                            must be written to the peripheral.
-                         */
+        try {
+            boolean result;
+            switch (nextJob.entry.type) {
+                case Characteristic:
+                    if (Build.VERSION.SDK_INT >= 33) {
+                        int writeResult = mBluetoothGatt.writeCharacteristic(
+                           nextJob.entry.characteristic, nextJob.newValue, nextJob.requestedWriteType);
+                        return (writeResult != BluetoothStatusCodes.SUCCESS);
+                    }
+                    return executeCharacteristicWriteJob(nextJob);
+                case Descriptor:
+                    if (nextJob.entry.descriptor.getUuid().compareTo(clientCharacteristicUuid) == 0) {
+                            /*
+                                For some reason, Android splits characteristic notifications
+                                into two operations. BluetoothGatt.enableCharacteristicNotification
+                                ensures the local Bluetooth stack forwards the notifications. In addition,
+                                BluetoothGattDescriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE)
+                                must be written to the peripheral.
+                             */
 
 
-                        /*  There is no documentation on indication behavior. The assumption is
-                            that when indication or notification are requested we call
-                            BluetoothGatt.setCharacteristicNotification. Furthermore it is assumed
-                            indications are send via onCharacteristicChanged too and Android itself
-                            will do the confirmation required for an indication as per
-                            Bluetooth spec Vol 3, Part G, 4.11 . If neither of the two bits are set
-                            we disable the signals.
-                         */
-                    boolean enableNotifications = false;
-                    int value = (nextJob.newValue[0] & 0xff);
-                    // first or second bit must be set
-                    if (((value & 0x1) == 1) || (((value >> 1) & 0x1) == 1)) {
-                        enableNotifications = true;
+                            /*  There is no documentation on indication behavior. The assumption is
+                                that when indication or notification are requested we call
+                                BluetoothGatt.setCharacteristicNotification. Furthermore it is assumed
+                                indications are send via onCharacteristicChanged too and Android itself
+                                will do the confirmation required for an indication as per
+                                Bluetooth spec Vol 3, Part G, 4.11 . If neither of the two bits are set
+                                we disable the signals.
+                             */
+                        boolean enableNotifications = false;
+                        int value = (nextJob.newValue[0] & 0xff);
+                        // first or second bit must be set
+                        if (((value & 0x1) == 1) || (((value >> 1) & 0x1) == 1)) {
+                            enableNotifications = true;
+                        }
+
+                        result = mBluetoothGatt.setCharacteristicNotification(
+                                nextJob.entry.descriptor.getCharacteristic(), enableNotifications);
+                        if (!result) {
+                            Log.w(TAG, "Cannot set characteristic notification");
+                            //we continue anyway to ensure that we write the requested value
+                            //to the device
+                        }
+
+                        Log.d(TAG, "Enable notifications: " + enableNotifications);
                     }
 
-                    result = mBluetoothGatt.setCharacteristicNotification(
-                            nextJob.entry.descriptor.getCharacteristic(), enableNotifications);
-                    if (!result) {
-                        Log.w(TAG, "Cannot set characteristic notification");
-                        //we continue anyway to ensure that we write the requested value
-                        //to the device
+                    if (Build.VERSION.SDK_INT >= 33) {
+                        int writeResult = mBluetoothGatt.writeDescriptor(
+                                            nextJob.entry.descriptor, nextJob.newValue);
+                        return (writeResult != BluetoothStatusCodes.SUCCESS);
                     }
-
-                    Log.d(TAG, "Enable notifications: " + enableNotifications);
-                }
-
-                if (Build.VERSION.SDK_INT >= 33) {
-                    int writeResult = mBluetoothGatt.writeDescriptor(
-                                        nextJob.entry.descriptor, nextJob.newValue);
-                    return (writeResult != BluetoothStatusCodes.SUCCESS);
-                }
-                return executeDescriptorWriteJob(nextJob);
-            case Service:
-            case CharacteristicValue:
-                return true;
+                    return executeDescriptorWriteJob(nextJob);
+                case Service:
+                case CharacteristicValue:
+                    return true;
+            }
+        } catch (RuntimeException ex) {
+            // skip the job - this will raise a proper Qt error
+            Log.d(TAG, "Write job failed with an exception " + ex);
+            return true;
         }
         return false;
     }
@@ -1754,34 +1770,40 @@ class QtBluetoothLE {
     // Returns true if nextJob should be skipped.
     private boolean executeReadJob(ReadWriteJob nextJob)
     {
-        boolean result;
-        switch (nextJob.entry.type) {
-            case Characteristic:
-                try {
-                    result = mBluetoothGatt.readCharacteristic(nextJob.entry.characteristic);
-                } catch (java.lang.SecurityException se) {
-                    // QTBUG-59917 -> HID services cause problems since Android 5.1
-                    se.printStackTrace();
-                    result = false;
-                }
-                if (!result)
-                    return true; // skip
-                break;
-            case Descriptor:
-                try {
-                    result = mBluetoothGatt.readDescriptor(nextJob.entry.descriptor);
-                } catch (java.lang.SecurityException se) {
-                    // QTBUG-59917 -> HID services cause problems since Android 5.1
-                    se.printStackTrace();
-                    result = false;
-                }
-                if (!result)
-                    return true; // skip
-                break;
-            case Service:
-                return true;
-            case CharacteristicValue:
-                return true; //skip
+        try {
+            boolean result;
+            switch (nextJob.entry.type) {
+                case Characteristic:
+                    try {
+                        result = mBluetoothGatt.readCharacteristic(nextJob.entry.characteristic);
+                    } catch (java.lang.SecurityException se) {
+                        // QTBUG-59917 -> HID services cause problems since Android 5.1
+                        se.printStackTrace();
+                        result = false;
+                    }
+                    if (!result)
+                        return true; // skip
+                    break;
+                case Descriptor:
+                    try {
+                        result = mBluetoothGatt.readDescriptor(nextJob.entry.descriptor);
+                    } catch (java.lang.SecurityException se) {
+                        // QTBUG-59917 -> HID services cause problems since Android 5.1
+                        se.printStackTrace();
+                        result = false;
+                    }
+                    if (!result)
+                        return true; // skip
+                    break;
+                case Service:
+                    return true;
+                case CharacteristicValue:
+                    return true; //skip
+            }
+        } catch (RuntimeException ex) {
+            // skip the job - this will raise a proper Qt error
+            Log.d(TAG, "Read job failed with an exception " + ex);
+            return true;
         }
         return false;
     }
